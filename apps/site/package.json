@@ -1,0 +1,17 @@
+{
+  "name": "site",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "astro": "4.3.7",
+    "@astrojs/cloudflare": "experimental--cf-10",
+    "@astrojs/markdoc": "0.9.0",
+    "@astrojs/rss": "4.0.5",
+    "astro-icon": "1.1.0",
+    "@astrojs/check":"0.5.4"
+  },
+  "scripts": {
+    "astro": "astro"
+  }
+}

@@ -1,3 +1,6 @@
+projects:
+  site: 'apps/site'
+
 codeowners:
   syncOnRun: true
   orderBy: project-name

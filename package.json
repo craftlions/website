@@ -1,12 +1,23 @@
 {
-  "name": "nbhr",
+  "name": "@alexanderniebuhr/nbhr",
   "version": "0.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "moon": "moon"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "packageManager": "pnpm@8.15.2",
+  "engines": {
+    "node": "21.6.2"
+  },
+  "author": {
+    "name": "Alexander Niebuhr",
+    "url": "https://github.com/alexanderniebuhr"
+  },
+  "devDependencies": {
+    "typescript": "5.3.3",
+    "@types/node": "20.11.17",
+    "@biomejs/biome": "1.5.3"
+  }
 }
