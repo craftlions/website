@@ -1,0 +1,152 @@
+@import url('blue.css') layer(harmony.blue);
+@import url('neutral.css') layer(harmony.neutral);
+@import url('orange.css') layer(harmony.orange);
+@import url('rose.css') layer(harmony.rose);
+@import url('teal.css') layer(harmony.teal);
+
+@layer reset {
+
+  /* https://piccalil.li/blog/a-more-modern-css-reset/ */
+  /* https://www.joshwcomeau.com/css/custom-css-reset/ */
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -moz-text-size-adjust: none;
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
+  }
+
+  body,
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  figure,
+  blockquote,
+  dl,
+  dd {
+    margin: unset;
+    font-weight: unset;
+    font-size: unset;
+  }
+
+  body {
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  a:not([class]) {
+    text-decoration: none;
+    text-decoration-skip-ink: auto;
+    color: currentColor;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html:focus-within {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utopia {
+
+  /* https://utopia.fyi/ */
+
+  :root {
+    /* Step -2: 12.5px → 12.8px */
+    --step--2: clamp(0.7813rem, 0.7759rem + 0.0261cqi, 0.8rem);
+    /* Step -1: 15px → 16px */
+    --step--1: clamp(0.9375rem, 0.9196rem + 0.087cqi, 1rem);
+    /* Step 0: 18px → 20px */
+    --step-0: clamp(1.125rem, 1.0891rem + 0.1739cqi, 1.25rem);
+    /* Step 1: 21.6px → 25px */
+    --step-1: clamp(1.35rem, 1.289rem + 0.2957cqi, 1.5625rem);
+    /* Step 2: 25.92px → 31.25px */
+    --step-2: clamp(1.62rem, 1.5244rem + 0.4635cqi, 1.9531rem);
+    /* Step 3: 31.104px → 39.0625px */
+    --step-3: clamp(1.944rem, 1.8013rem + 0.692cqi, 2.4414rem);
+    /* Step 4: 37.3248px → 48.8281px */
+    --step-4: clamp(2.3328rem, 2.1265rem + 1.0003cqi, 3.0518rem);
+    /* Step 5: 44.7898px → 61.0352px */
+    --step-5: clamp(2.7994rem, 2.508rem + 1.4126cqi, 3.8147rem);
+
+    /* Space 3xs: 5px → 5px */
+    --space-3xs: clamp(0.3125rem, 0.3125rem + 0cqi, 0.3125rem);
+    /* Space 2xs: 9px → 10px */
+    --space-2xs: clamp(0.5625rem, 0.5446rem + 0.087cqi, 0.625rem);
+    /* Space xs: 14px → 15px */
+    --space-xs: clamp(0.875rem, 0.8571rem + 0.087cqi, 0.9375rem);
+    /* Space s: 18px → 20px */
+    --space-s: clamp(1.125rem, 1.0891rem + 0.1739cqi, 1.25rem);
+    /* Space m: 27px → 30px */
+    --space-m: clamp(1.6875rem, 1.6337rem + 0.2609cqi, 1.875rem);
+    /* Space l: 36px → 40px */
+    --space-l: clamp(2.25rem, 2.1783rem + 0.3478cqi, 2.5rem);
+    /* Space xl: 54px → 60px */
+    --space-xl: clamp(3.375rem, 3.2674rem + 0.5217cqi, 3.75rem);
+    /* Space 2xl: 72px → 80px */
+    --space-2xl: clamp(4.5rem, 4.3565rem + 0.6957cqi, 5rem);
+    /* Space 3xl: 108px → 120px */
+    --space-3xl: clamp(6.75rem, 6.5348rem + 1.0435cqi, 7.5rem);
+
+    /* One-up pairs */
+    /* Space 3xs-2xs: 5px → 10px */
+    --space-3xs-2xs: clamp(0.3125rem, 0.2228rem + 0.4348cqi, 0.625rem);
+    /* Space 2xs-xs: 9px → 15px */
+    --space-2xs-xs: clamp(0.5625rem, 0.4549rem + 0.5217cqi, 0.9375rem);
+    /* Space xs-s: 14px → 20px */
+    --space-xs-s: clamp(0.875rem, 0.7674rem + 0.5217cqi, 1.25rem);
+    /* Space s-m: 18px → 30px */
+    --space-s-m: clamp(1.125rem, 0.9098rem + 1.0435cqi, 1.875rem);
+    /* Space m-l: 27px → 40px */
+    --space-m-l: clamp(1.6875rem, 1.4543rem + 1.1304cqi, 2.5rem);
+    /* Space l-xl: 36px → 60px */
+    --space-l-xl: clamp(2.25rem, 1.8196rem + 2.087cqi, 3.75rem);
+    /* Space xl-2xl: 54px → 80px */
+    --space-xl-2xl: clamp(3.375rem, 2.9087rem + 2.2609cqi, 5rem);
+    /* Space 2xl-3xl: 72px → 120px */
+    --space-2xl-3xl: clamp(4.5rem, 3.6391rem + 4.1739cqi, 7.5rem);
+
+    /* Custom pairs */
+    /* Space s-l: 18px → 40px */
+    --space-s-l: clamp(1.125rem, 0.7304rem + 1.913cqi, 2.5rem);
+  }
+}
+
+@layer global {
+  html {
+    scroll-behavior: smooth;
+  }
+}

@@ -1,0 +1,281 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<article>
+  <h2>Experience Unmatched IT Quality</h2>
+  <p style="text-align: center;">
+    Replace the unpredictability of freelancers and the high costs of agencies
+    with our monthly subscriptions. Enjoy lightning-fast deliveries that will
+    astonish you.
+  </p>
+  <section id="one">
+    <div class="wrapper">
+      <Icon name="solar:globus-line-duotone" />
+      <h3>Fully Remote Operations</h3>
+      <span
+        >Dislike unnecessary meetings? So do we. That's why we operate fully
+        asynchronously. Prefer a call? We're flexible to discuss your needs.</span
+      >
+    </div>
+    <div class="wrapper">
+      <Icon name="solar:infinity-bold-duotone" />
+      <h3>Seamless Team Collaboration</h3>
+      <span>
+        Onboard your entire team without additional costs. Allow them to send
+        requests and monitor progress effortlessly.</span
+      >
+    </div>
+    <div class="wrapper">
+      <Icon name="solar:users-group-rounded-line-duotone" />
+      <h3>Continuous Learning</h3>
+      <span
+        >Benefit from pair programming, pull request reviews, and technical
+        workshops. Empower your team with new approaches for long-term success.</span
+      >
+    </div>
+    <div class="wrapper">
+      <Icon name="solar:heart-line-duotone" />
+      <h3>Innovative Concepts</h3>
+      <span
+        >Design your next big features with our expertise. With years of
+        experience and knowledge of the latest tech developments, we help you
+        stay ahead of the competition.</span
+      >
+    </div>
+  </section>
+  <br />
+  <br />
+  <a href="/#plans">
+    <button>
+      <!-- <svg aria-hidden="true">...</svg> -->
+      <span>Get started!</span>
+    </button>
+  </a>
+</article>
+<article>
+  <h2>Exclusive Membership Benefits</h2>
+  <p style="text-align: center;">
+    Discover perks so good you'll never look elsewhere for your IT needs.
+    Seriously.
+  </p>
+  <section id="two">
+    <div class="wrapper">
+      <Icon name="solar:dollar-line-duotone" />
+      <h3>Predictable costs</h3>
+      <span>No surprises. Enjoy a fixed monthly price with no hidden fees.</span
+      >
+    </div>
+    <div class="wrapper">
+      <Icon name="solar:scale-bold-duotone" />
+      <h3>Flexible and Scalable</h3>
+      <span
+        >Adjust your plan as needed. Scale up, scale down, pause, or cancel
+        anytime.</span
+      >
+    </div>
+    <div class="wrapper">
+      <Icon name="solar:stars-line-line-duotone" />
+      <h3>Efficient and Fast</h3>
+      <span
+        >Receive your deliveries in just a few days on average, depending on
+        your plan.</span
+      >
+    </div>
+    <div class="wrapper">
+      <Icon name="solar:settings-line-duotone" />
+      <h3>Streamlined Management</h3>
+      <span
+        >Seamlessly integrate with your processes. Manage requests and tasks
+        with familiar systems or use our platform. Easily track active, pending,
+        and completed projects.</span
+      >
+    </div>
+  </section>
+</article>
+
+<style>
+  #one {
+    background: linear-gradient(
+        25deg,
+        light-dark(var(--neutral-50), var(--neutral-950)) 40%,
+        transparent 41%,
+        transparent 59%,
+        light-dark(var(--neutral-50), var(--neutral-950)) 60%
+      ),
+      linear-gradient(
+        90deg,
+        transparent 45%,
+        var(--blue-400) 45%,
+        var(--blue-600) 55%,
+        transparent 55%,
+        transparent 20%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 20%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 30%,
+        transparent 30%
+      ),
+      linear-gradient(
+        90deg,
+        light-dark(var(--neutral-200), var(--neutral-800)) 9%,
+        transparent 10%
+      );
+    background-color: light-dark(var(--neutral-50), var(--neutral-950));
+    background-position: center center;
+    background-repeat: repeat;
+    background-size: 6em 6em;
+  }
+
+  #two {
+    background: linear-gradient(
+        -25deg,
+        light-dark(var(--neutral-50), var(--neutral-950)) 40%,
+        transparent 41%,
+        transparent 59%,
+        light-dark(var(--neutral-50), var(--neutral-950)) 60%
+      ),
+      linear-gradient(
+        90deg,
+        transparent 45%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 45%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 55%,
+        transparent 55%,
+        transparent 20%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 20%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 30%,
+        transparent 30%
+      ),
+      linear-gradient(90deg, var(--blue-500) 9%, transparent 10%);
+    background-color: light-dark(var(--neutral-50), var(--neutral-950));
+    background-position: center center;
+    background-repeat: repeat;
+    background-size: 6em 6em;
+  }
+
+  article {
+    display: flex;
+    max-width: 92.5rem;
+    flex-direction: column;
+    color: light-dark(black, white);
+    margin-inline: auto;
+    padding-block: var(--space-l-xl);
+    text-align: center;
+  }
+
+  section {
+    display: flex;
+    max-width: 92.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: var(--space-l-xl);
+    column-gap: var(--space-s-m);
+    font-family: Inter, sans-serif;
+    font-size: var(--step-0);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%;
+    margin-inline: auto;
+    row-gap: var(--space-m);
+  }
+
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: var(--space-3xs-2xs);
+
+    [data-icon] {
+      font-size: var(--step-4);
+    }
+  }
+
+  div {
+    display: flex;
+    min-width: calc((100% - var(--space-s-m)) / 2);
+    flex: 1 1 calc(330px - var(--space-l-xl) * 2);
+    flex-direction: column;
+    padding: var(--space-m);
+    border: 1px solid var(--neutral-800);
+    border-radius: var(--space-xs);
+    backdrop-filter: blur(8px) saturate(140%);
+    background: color-mix(
+      in srgb,
+      light-dark(var(--neutral-50), var(--neutral-950)) 40%,
+      transparent
+    );
+    row-gap: var(--space-3xs-2xs);
+  }
+
+  p {
+    font-size: var(--step-1);
+    font-weight: 400;
+    line-height: 160%;
+  }
+
+  h2 {
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 120%;
+  }
+
+  h3 {
+    font-weight: 700;
+    line-height: 120%;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid light-dark(var(--blue-300), var(--blue-700));
+    border-radius: var(--space-3xs);
+    background-color: light-dark(var(--blue-400), var(--blue-600));
+
+    /* box-shadow:
+    var(--_shadow-2),
+    var(--_shadow-depth),
+    0 0 0 var(--_hightlight-size) var(--_highlight); */
+    /* color: light-dark(black, white); */
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--step-2);
+    font-weight: 700;
+    gap: 1ch;
+    letter-spacing: inherit;
+    line-height: 120%;
+    padding-block: var(--space-2xs);
+    padding-inline: var(--space-xs);
+    -webkit-tap-highlight-color: transparent;
+    text-align: center;
+    -webkit-touch-callout: none;
+    user-select: none;
+
+    /* text-shadow: var(--_ink-shadow); */
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition:
+        box-shadow 145ms ease,
+        outline-offset 145ms ease;
+    }
+
+    &:where([data-icon]) {
+      flex-shrink: 0;
+      block-size: 2ch;
+      fill: none;
+      inline-size: 2ch;
+      stroke: white;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+
+      /* filter: drop-shadow(var(--_ink-shadow)); */
+    }
+
+    &:where(:not(:active)) {
+      &:focus-visible {
+        outline-offset: 5px;
+      }
+    }
+
+    /* &:is(:hover, :focus) {
+    } */
+  }
+</style>

@@ -1,0 +1,9 @@
+{
+  "title": "Unlimited requests",
+  "help": "We don't limit the amount of request you can send us. Fill up your task queue without the need to wait. The only limitation is that we work on one request per time.",
+  "map": {
+    "lite": true,
+    "plus": true,
+    "pro": true
+  }
+}

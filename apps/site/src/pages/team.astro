@@ -1,0 +1,44 @@
+---
+import TeamMember from "../components/TeamMember.astro";
+import Navigation from "../components/Navigation.astro";
+import Shell from "../layouts/Shell.astro";
+---
+
+<Shell title="craftlions | About">
+  <Navigation />
+
+  <section>
+    <div>
+      <h2>Our Team</h2>
+      <h3>craftlions is completly creative, innovative, effeciteve Agency.</h3>
+    </div>
+    <TeamMember />
+  </section>
+</Shell>
+
+<style>
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-xl);
+  }
+
+  h2 {
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 120%;
+  }
+
+  h3 {
+    font-size: var(--step-1);
+    font-weight: 700;
+    line-height: 120%;
+  }
+
+  div {
+    text-align: center;
+  }
+</style>

@@ -1,0 +1,9 @@
+{
+  "title": "Unlimited users",
+  "help": "We don't bill per seat. Your entire team can use our product, we don't have limits. Regardless if your workflow allows every team member to reach out to us and request work or you funnel those through a dedicated contact person, everything works for us and our system.",
+  "map": {
+    "lite": true,
+    "plus": true,
+    "pro": true
+  }
+}

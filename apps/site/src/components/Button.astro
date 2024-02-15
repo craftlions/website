@@ -1,0 +1,42 @@
+---
+import { Icon } from "astro-icon/components";
+
+export interface Props {
+  iconLeft?: string;
+  iconRight?: string;
+}
+
+const { iconLeft, iconRight } = Astro.props;
+---
+
+<button>
+  {iconLeft && <Icon name={iconLeft} />}
+  <slot />
+  {iconRight && <Icon name={iconRight} />}
+</button>
+
+<style>
+  button {
+    cursor: pointer;
+    color: #fff;
+    width: auto;
+    min-height: var(--space-l);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3xs);
+    justify-content: center;
+    background-color: var(--blue-600);
+    border: 1px solid var(--blue-800);
+    border-radius: var(--space-2xs);
+    padding-inline: var(--space-xs);
+    padding-block: var(--space-3xs);
+    font-size: var(--step--1);
+    font-weight: 400;
+    line-height: 120%;
+    &:hover {
+      background-color: var(--blue-800);
+      border: 1px solid var(--blue-700);
+    }
+  }
+</style>

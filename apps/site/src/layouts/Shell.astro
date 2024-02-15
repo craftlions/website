@@ -1,0 +1,123 @@
+---
+import "../styles/utils.css";
+
+import Button from "../components/Button.astro";
+
+export interface Props {
+  frontmatter?: {
+    title: string;
+  };
+  title: string;
+}
+
+const { title } = Astro.props.frontmatter || Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title}</title>
+    <meta name="generator" content={Astro.generator} />
+    <meta
+      name="description"
+      content="craftlions revolutionizes IT services with unmatched passion and dedication.
+    Say goodbye to unreliable freelancers and overpriced agencies. For a flat
+    monthly fee, enjoy top-tier IT solutions with remarkable delivery times and
+    exceptional quality. Discover the craftlions difference today - it's IT
+    services reimagined to exceed your expectations. Explore our innovative
+    approach now. Pause or cancel anytime!"
+    />
+
+    <!-- Facebook Meta Tags -->
+    <meta property="og:url" content="https://craftlions.pages.dev" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="craftlions" />
+    <meta
+      property="og:description"
+      content="craftlions revolutionizes IT services with unmatched passion and dedication.
+    Say goodbye to unreliable freelancers and overpriced agencies. For a flat
+    monthly fee, enjoy top-tier IT solutions with remarkable delivery times and
+    exceptional quality. Discover the craftlions difference today - it's IT
+    services reimagined to exceed your expectations. Explore our innovative
+    approach now. Pause or cancel anytime!"
+    />
+    <meta property="og:image" content="https://craftlions.pages.dev/og.jpg" />
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="craftlions.pages.dev" />
+    <meta property="twitter:url" content="https://craftlions.pages.dev" />
+    <meta name="twitter:title" content="craftlions" />
+    <meta
+      name="twitter:description"
+      content="craftlions revolutionizes IT services with unmatched passion and dedication.
+    Say goodbye to unreliable freelancers and overpriced agencies. For a flat
+    monthly fee, enjoy top-tier IT solutions with remarkable delivery times and
+    exceptional quality. Discover the craftlions difference today - it's IT
+    services reimagined to exceed your expectations. Explore our innovative
+    approach now. Pause or cancel anytime!"
+    />
+    <meta name="twitter:image" content="" />
+  </head>
+  <body>
+    <script is:inline async src="https://js.stripe.com/v3/buy-button.js"
+    ></script>
+    <!-- header, nav -->
+    <slot />
+    <footer
+      style="text-align: center; padding: var(--space-m-l); padding-bottom: var(--space-m); display: flex; flex-direction: column; gap: var(--space-m);"
+    >
+      <div
+        style="display: flex; flex-direction: column; gap: var(--space-xs);align-items: center;"
+      >
+        <h3 style="font-size: var(--step-3);">
+          <b>
+            Discover if <i>craftlions</i> works for you.
+            <br />
+            (We think it does!)
+          </b>
+        </h3>
+        <span>
+          Explore our platform with a personalized demo and see how we can
+          revolutionize your tech processes.
+        </span>
+        <Button>Schedule a Demo</Button>
+      </div>
+      <div style="font-size: var(--step--1);">
+        <span>© 2024. All Rights Reserved |</span>
+        <a href="/privacy">Datenschutzerklärung</a>
+        <span> | </span>
+        <a href="/tos">AGB</a>
+        <span> | </span>
+        <a href="/imprint">Impressums</a>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    background-color: light-dark(var(--neutral-50), var(--neutral-950));
+    color: light-dark(black, white);
+    font-family: Inter, sans-serif;
+    font-size: var(--step-0);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%;
+
+    b {
+      font-weight: 700;
+      line-height: 120%;
+    }
+
+    p {
+      font-weight: 400;
+      line-height: 160%;
+    }
+  }
+</style>

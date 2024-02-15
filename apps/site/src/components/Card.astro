@@ -1,0 +1,126 @@
+---
+import type { CollectionEntry } from 'astro:content';
+export interface Props {
+	tier: CollectionEntry<'tiers'>;
+}
+
+const { tier } = Astro.props;
+---
+
+<style>
+  article {
+    display: flex;
+    min-width: 300px;
+    min-height: 460px;
+    padding: 20px;
+    flex-direction: column;
+    align-items: center;
+    gap: 29px;
+    flex: 1 0 0;
+    background: #fff;
+    color: #000;
+
+    &.primary {
+      border: 4px solid #d95f3a;
+      box-shadow: 4px 4px 0px 0px rgba(217, 95, 58, 0.5);
+    }
+    &.secondary {
+      border: 4px solid #000;
+      box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.5);
+    }
+
+    > header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+
+      > h2 {
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      > h3 {
+        font-size: 14px;
+        font-weight: 400;
+      }
+    }
+
+    .price {
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .line {
+      width: 100%;
+      height: 1px;
+      background-color: #000;
+    }
+
+    button {
+      border: none;
+      display: flex;
+      width: 200px;
+      height: 60px;
+      padding: 13px 18px 14px 18px;
+      justify-content: center;
+      align-items: center;
+      background: #1e1e1e;
+      box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.5);
+      color: #fff;
+      transition:
+        background 250ms ease-in-out,
+        transform 150ms ease;
+      cursor: pointer;
+      text-decoration: none;
+      margin: 0;
+      color: #fff;
+      font-size: 24px;
+      font-weight: 800;
+
+      &:hover,
+      &:focus {
+        background-color: oklch(from #1e1e1e 50% c h);
+      }
+
+      &:active {
+        transform: scale(0.99);
+      }
+    }
+  }
+</style>
+
+<article
+  class:list={{
+    primary: tier.data.title === "Pro",
+    secondary: tier.data.title !== "Pro",
+  }}
+>
+  <header>
+    <h2>{tier.data.title}</h2>
+    <h3>Our most popular plan.</h3>
+  </header>
+  <span class="price"
+    >{
+      new Intl.NumberFormat("de-DE", {
+        style: "currency",
+        currency: "EUR",
+      }).format(tier.data.price)
+    }/{
+      new Intl.NumberFormat("de-DE", {
+        style: "unit",
+        unit: "day",
+        unitDisplay: "short",
+      }).format(30)
+    }</span
+  >
+  <div class="line"></div>
+  <ul>
+    <li>A</li>
+    <li>A</li>
+    <li>A</li>
+    <li>A</li>
+    <li>A</li>
+  </ul>
+  <button>GET STARTED</button>
+</article>

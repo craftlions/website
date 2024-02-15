@@ -1,0 +1,9 @@
+{
+  "title": "Pull Request Reviews",
+  "help": "We will review your selected pull request, to ensure code quality stays high in your code-base. Additionally we will check for security issues, or other potential problems. The goal is to get an external view on your changes, without interruption of the developer flow, we aim to not have long-living branches.",
+  "map": {
+    "lite": false,
+    "plus": true,
+    "pro": true
+  }
+}

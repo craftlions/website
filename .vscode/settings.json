@@ -1,0 +1,20 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "json.schemas": [
+    {
+      "fileMatch": [
+        "/src/content/features/**"
+      ],
+      "url": "./apps/site/.astro/collections/features.schema.json"
+    }
+  ],
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false,
+  "stylelint.validate": [
+    "astro"
+  ],
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  }
+}

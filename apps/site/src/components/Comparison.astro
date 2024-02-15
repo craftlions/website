@@ -1,0 +1,116 @@
+---
+import Feature from "./Feature.astro";
+import { getCollection } from "astro:content";
+---
+
+<article id="plans">
+  <div>
+    <h2 style="text-align: center;">Plans</h2>
+    <p style="text-align: center;">
+      We have a plan for everyone. Explore our options and find the perfect plan
+      designed to meet your needs.
+    </p>
+  </div>
+  <section>
+    <div>
+      <div id="placeholder">
+        <stripe-buy-button
+          buy-button-id="buy_btn_1PIlvTLrZna9OPX5bElqHCTj"
+          publishable-key="pk_test_51PHghCLrZna9OPX5SBcI8KbmnkWJwAiILEyaLyIHHtcAecmtfAfWhUX0GK5moUbj7phovZaCeBz5gmSIckERBMLM00s4AI27UH"
+        >
+        </stripe-buy-button>
+      </div>
+      {
+        (await getCollection("features")).map((feature) => (
+          <Feature
+            title={feature.data.title}
+            help={feature.data.help}
+            included={feature.data.map.lite}
+          />
+        ))
+      }
+    </div>
+    <div>
+      <div id="placeholder">
+        <stripe-buy-button
+          buy-button-id="buy_btn_1PIm3hLrZna9OPX5r5YZtRA4"
+          publishable-key="pk_test_51PHghCLrZna9OPX5SBcI8KbmnkWJwAiILEyaLyIHHtcAecmtfAfWhUX0GK5moUbj7phovZaCeBz5gmSIckERBMLM00s4AI27UH"
+        >
+        </stripe-buy-button>
+      </div>
+      {
+        (await getCollection("features")).map((feature) => (
+          <Feature
+            title={feature.data.title}
+            help={feature.data.help}
+            included={feature.data.map.plus}
+          />
+        ))
+      }
+    </div>
+
+    <div>
+      <div id="placeholder">
+        <stripe-buy-button
+          buy-button-id="buy_btn_1PIm4xLrZna9OPX54worQBVx"
+          publishable-key="pk_test_51PHghCLrZna9OPX5SBcI8KbmnkWJwAiILEyaLyIHHtcAecmtfAfWhUX0GK5moUbj7phovZaCeBz5gmSIckERBMLM00s4AI27UH"
+        >
+        </stripe-buy-button>
+      </div>
+      {
+        (await getCollection("features")).map((feature) => (
+          <Feature
+            title={feature.data.title}
+            help={feature.data.help}
+            included={feature.data.map.pro}
+          />
+        ))
+      }
+    </div>
+  </section>
+</article>
+
+<style>
+  article {
+    color: light-dark(black, white);
+    font-size: var(--step--1);
+
+    > div {
+      padding: var(--space-s-l);
+    }
+  }
+
+  h2 {
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 120%;
+  }
+
+  section {
+    display: grid;
+    max-width: 92.5rem;
+    padding-bottom: var(--space-xs);
+    gap: var(--space-xs-s);
+    grid-auto-flow: column;
+    margin-inline: auto;
+    overflow-x: scroll;
+    overscroll-behavior-x: contain;
+    padding-inline: var(--space-s-l);
+    scroll-snap-type: x mandatory;
+    transform: rotateX(180deg);
+
+    > div {
+      scroll-snap-align: center;
+      transform: rotateX(180deg);
+    }
+
+    @media (width >= 959px) {
+      justify-content: center;
+    }
+  }
+
+  #placeholder {
+    min-width: 288px;
+    min-height: 229.492px;
+  }
+</style>
