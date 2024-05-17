@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "moon": "moon"
+    "moon": "moon",
+    "sync": "pnpm run \"/^.+:sync:.+/\"",
+    "moon:sync:codeowners": "moon sync codeowners --clean",
+    "moon:sync:hooks": "moon sync hooks --clean"
   },
   "license": "MIT",
-  "packageManager": "pnpm@8.15.2",
+  "packageManager": "pnpm@8.15.4",
   "engines": {
     "node": "21.6.2"
   },
@@ -16,8 +19,13 @@
     "url": "https://github.com/alexanderniebuhr"
   },
   "devDependencies": {
-    "typescript": "5.3.3",
-    "@types/node": "20.11.17",
-    "@biomejs/biome": "1.5.3"
+    "@biomejs/biome": "1.5.3",
+    "@types/node": "20.11.24",
+    "postcss-html": "1.6.0",
+    "stylelint": "16.3.1",
+    "stylelint-config-idiomatic-order": "^10.0.0",
+    "stylelint-config-standard": "^36.0.0",
+    "stylelint-order": "^6.0.4",
+    "typescript": "5.3.3"
   }
 }

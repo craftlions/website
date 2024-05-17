@@ -1,0 +1,21 @@
+{
+  "title": "Individual",
+  "description": "For individual needs",
+  "order": 4,
+  "isActive": true,
+  "price": null,
+  "benefits": {
+    "Number of concurrent requests": 2,
+    "Number of concurrent active projects": "∞",
+    "Average time to response": "up to 2 days",
+    "Included logins": "∞",
+    "Ticket triage": "∞",
+    "Technical advisory": "✓",
+    "Pull-Request reviews": "✓",
+    "Consulting": "✓",
+    "Coding": "✓",
+    "Refer & Earn": "up to 15%",
+    "Pause your subscription": "7 days intervals",
+    "Cancel notice period": "7 days"
+  }
+}

@@ -1,0 +1,60 @@
+---
+import "../styles/utils.css";
+
+import Button from "../components/Button.astro";
+
+export interface Props {
+  frontmatter?: {
+    title: string;
+  };
+  title: string;
+}
+
+const { title } = Astro.props.frontmatter || Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <!-- header, nav -->
+    <slot />
+    <footer
+      style="text-align: center; padding: var(--space-m-l); padding-bottom: var(--space-m); display: flex; flex-direction: column; gap: var(--space-m);"
+    >
+      <div
+        style="display: flex; flex-direction: column; gap: var(--space-xs);align-items: center;"
+      >
+        <h3 style="font-size: var(--step-3);">
+          <b>
+            Discover if our solutions fit your needs.<br />(We're confident they
+            do.)
+          </b>
+        </h3>
+        <span>
+          Explore our platform with a personalized demo and see how we can
+          revolutionize your tech processes.
+        </span>
+        <Button>Schedule a Demo</Button>
+      </div>
+      <div style="font-size: var(--step--1);">
+        <span>© 2024. All Rights Reserved |</span>
+        <a href="/privacy">Datenschutzerklärung</a>
+        <span> | </span>
+        <a href="/tos">AGB</a>
+        <span> | </span>
+        <a href="/imprint">Impressums</a>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: light dark;
+  }
+</style>

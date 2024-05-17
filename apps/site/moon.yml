@@ -1,5 +1,6 @@
-type: "application"
-language: "typescript"
+type: application
+language: typescript
+stack: frontend
 
 fileGroups:
   sources:
@@ -19,7 +20,14 @@ tasks:
     inputs:
       - "@group(sources)"
 
+  imports:
+    command: "biome check --apply --formatter-enabled=false --linter-enabled=false ./"
+    inputs:
+      - "@group(sources)"
+
   format:
+    deps:
+      - "~:imports"
     command: "biome format --write ./"
     inputs:
       - "@group(sources)"

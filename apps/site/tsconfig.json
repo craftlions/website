@@ -1,6 +1,9 @@
 {
   "extends": "../../.config/tsconfig.json",
-  "include": ["src/**/*", "*.ts"],
+  "include": [
+    "src/**/*",
+    "*.ts"
+  ],
   "references": [],
   "compilerOptions": {
     "outDir": "../../.moon/cache/types/apps/site",
@@ -24,6 +27,8 @@
     "exactOptionalPropertyTypes": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "allowJs": false
+    "allowJs": false,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   }
 }

@@ -1,11 +1,14 @@
-import cloudflare from '@astrojs/cloudflare';
 import { defineConfig } from 'astro/config';
+import cloudflare from '@astrojs/cloudflare';
+import icon from 'astro-icon';
+import react from '@astrojs/react';
 
+// https://astro.build/config
 export default defineConfig({
 	build: {
 		inlineStylesheets: 'auto',
 	},
-	scopedStyleStrategy: 'class',
+	scopedStyleStrategy: 'attribute',
 	base: '/',
 	devToolbar: {
 		enabled: true,
@@ -18,26 +21,60 @@ export default defineConfig({
 	experimental: {
 		clientPrerender: true,
 		globalRoutePriority: true,
-		optimizeHoistedScript: true,
+		contentCollectionJsonSchema: true,
 	},
-	i18n: {
-		defaultLocale: 'en',
-		locales: ['en', 'de'],
-		fallback: {
-			de: 'en',
-		},
-		routing: {
-			prefixDefaultLocale: true,
-			redirectToDefaultLocale: true,
-			strategy: 'pathname',
-		},
-	},
+	// i18n: {
+	// 	defaultLocale: 'en',
+	// 	locales: ['en', 'de'],
+	// 	fallback: {
+	// 		de: 'en',
+	// 	},
+	// 	routing: {
+	// 		prefixDefaultLocale: true,
+	// 		redirectToDefaultLocale: false,
+	// 		strategy: 'pathname',
+	// 	},
+	// },
 	// markdown: {
 	// 	shikiConfig: {
 
 	// 	}
 	// }
-	integrations: [],
+	integrations: [
+		icon({
+			include: {
+				ph: [
+					'map-pin-duotone',
+					'translate-duotone',
+					'clock-duotone',
+					'calendar-dots-duotone',
+					'download-duotone',
+					'plus-bold',
+					'currency-dollar-duotone',
+				],
+				solar: [
+					'stars-minimalistic-line-duotone',
+					'double-alt-arrow-right-line-duotone',
+					'infinity-bold-duotone',
+					'scale-bold-duotone',
+					'dollar-line-duotone',
+					'heart-line-duotone',
+					'globus-line-duotone',
+					'users-group-rounded-line-duotone',
+					'stars-line-line-duotone',
+					'settings-line-duotone',
+					'close-circle-line-duotone',
+					'check-circle-bold',
+					'question-circle-bold-duotone',
+				],
+				octicon: ['mark-github-24'],
+				'vscode-icons': ['file-type-astro', 'file-type-typescript-official'],
+				'fluent-emoji': ['green-circle'],
+				'emojione-monotone': ['lion-face'],
+			},
+		}),
+		react(),
+	],
 	output: 'server',
 	adapter: cloudflare({
 		imageService: 'passthrough',

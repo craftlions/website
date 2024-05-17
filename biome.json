@@ -1,9 +1,10 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": true
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
   },
   "files": {
     "ignoreUnknown": true
@@ -26,6 +27,7 @@
     "enabled": true
   },
   "linter": {
-    "enabled": true
+    "enabled": true,
+    "rules": { "recommended": true }
   }
 }

@@ -1,0 +1,68 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<nav>
+  <section id="logo">
+    <a href="/">
+      <Icon name="logo" />
+    </a>
+  </section>
+  <section id="links">
+    <a href="/#benefits">Benefits</a>
+    <a href="/#plans">Plans</a>
+    <a href="/#faqs">FAQ</a>
+    <a href="/team">Team</a>
+  </section>
+</nav>
+
+<style>
+  nav {
+    display: flex;
+    max-width: 92.5rem;
+    flex-direction: column;
+    padding: var(--space-xs-s) var(--space-m-l);
+    background-image: radial-gradient(
+      circle,
+      var(--neutral-900) 2px,
+      var(--neutral-950) 2px
+    );
+    background-position: center center;
+    background-size: 2.5rem 2.5rem;
+    color: #fff;
+    font-family: Inter, sans-serif;
+    font-size: var(--step-0);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%;
+    margin-inline: auto;
+    row-gap: var(--space-s-m);
+  }
+
+  section {
+    display: flex;
+  }
+
+  #logo {
+    justify-content: center;
+
+    [data-icon] {
+      width: calc(var(--space-2xl-3xl) * 1.25);
+      height: calc(var(--space-2xl-3xl) * 1.25);
+    }
+  }
+
+  #socials {
+    display: flex;
+    column-gap: var(--space-xs);
+  }
+
+  #links {
+    flex-flow: row wrap;
+    justify-content: center;
+    font-weight: 700;
+    gap: var(--space-xs) var(--space-m-l);
+    line-height: 120%;
+    outline: none;
+  }
+</style>

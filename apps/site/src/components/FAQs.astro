@@ -1,0 +1,158 @@
+---
+import { getCollection } from "astro:content";
+---
+
+<section id="faqs">
+  <h2 style="text-align: center;">FAQs</h2>
+  <p>
+    Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quis quaerat cum
+    omnis, cumque minus nesciunt veniam fugit ipsam! In aliquid eum tenetur id,
+    minus veritatis voluptatibus nisi sunt neque aperiam?
+  </p>
+  <article>
+    <h3>General Information</h3>
+    {
+      (await getCollection("faqs", ({ data }) => data.category === "general"))
+        .sort((a, b) => (a.data.position > b.data.position ? 1 : -1))
+        .map((faq) => (
+          <details class="wrapper">
+            <summary>{faq.data.question}</summary>
+            <p>{faq.data.answer}</p>
+          </details>
+        ))
+    }
+  </article>
+  <article>
+    <h3>Service Details</h3>
+    {
+      (await getCollection("faqs", ({ data }) => data.category === "service"))
+        .sort((a, b) => (a.data.position > b.data.position ? 1 : -1))
+        .map((faq) => (
+          <details class="wrapper">
+            <summary>{faq.data.question}</summary>
+            <p>{faq.data.answer}</p>
+          </details>
+        ))
+    }
+  </article>
+  <article>
+    <h3>Pricing</h3>
+    {
+      (await getCollection("faqs", ({ data }) => data.category === "pricing"))
+        .sort((a, b) => (a.data.position > b.data.position ? 1 : -1))
+        .map((faq) => (
+          <details class="wrapper">
+            <summary>{faq.data.question}</summary>
+            <p>{faq.data.answer}</p>
+          </details>
+        ))
+    }
+  </article>
+  <article>
+    <h3>Submitting Requests</h3>
+    {
+      (await getCollection("faqs", ({ data }) => data.category === "requests"))
+        .sort((a, b) => (a.data.position > b.data.position ? 1 : -1))
+        .map((faq) => (
+          <details class="wrapper">
+            <summary>{faq.data.question}</summary>
+            <p>{faq.data.answer}</p>
+          </details>
+        ))
+    }
+  </article>
+</section>
+
+<style>
+  section {
+    color: white;
+
+    /* container-type: size; */
+    font-family: Inter, sans-serif;
+    font-style: normal;
+
+    font-size: var(--step-0);
+    font-weight: 400;
+    line-height: 120%;
+    max-width: 92.5rem;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-l-xl);
+    column-gap: var(--space-s-m);
+    row-gap: var(--space-l);
+  }
+
+  article {
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--space-s);
+  }
+
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--space-3xs-2xs);
+    padding: var(--space-s);
+    align-items: center;
+    [data-icon] {
+      font-size: var(--step-4);
+    }
+  }
+
+  details {
+    padding: var(--space-s);
+    border: 1px solid var(--neutral-800);
+    border-radius: var(--space-xs);
+  }
+
+  summary {
+    cursor: pointer;
+  }
+
+  details[open] {
+    summary {
+      padding-bottom: var(--space-xs);
+      border-bottom: 1px solid var(--neutral-800);
+    }
+
+    p {
+      padding-top: var(--space-xs);
+    }
+  }
+
+  div {
+    @supports (color: oklch(0% 0 0)) {
+      background: color-mix(in oklch, var(--neutral-950) 40%, transparent);
+    }
+
+    background: color-mix(in srgb, var(--neutral-950) 40%, transparent);
+
+    backdrop-filter: blur(8px) saturate(140%);
+    border-radius: var(--space-xs);
+    border: 1px solid var(--neutral-800);
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--space-2xs-xs);
+    min-width: calc((100% - var(--space-s-m)) / 1);
+    /* flex: 1 1 calc(330px - var(--space-l-xl) * 2); */
+  }
+
+  p {
+    font-size: var(--step-0);
+    font-weight: 400;
+    line-height: 160%;
+  }
+
+  h2 {
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 120%;
+  }
+
+  h3 {
+    font-size: var(--step-1);
+    font-weight: 700;
+    line-height: 120%;
+  }
+</style>

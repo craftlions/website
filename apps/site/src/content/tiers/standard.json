@@ -1,0 +1,21 @@
+{
+  "title": "Scale",
+  "description": "For business projects with the option to scale.",
+  "order": 2,
+  "isActive": true,
+  "price": 1000,
+  "benefits": {
+    "Number of concurrent requests": 1,
+    "Number of concurrent active projects": "∞",
+    "Average time to response": "up to 2 days",
+    "Included logins": "∞",
+    "Ticket triage": "∞",
+    "Technical advisory": "✓",
+    "Pull-Request reviews": "✓",
+    "Consulting": "x",
+    "Coding": "x",
+    "Refer & Earn": "up to 10%",
+    "Pause your subscription": "14 days intervals",
+    "Cancel notice period": "14 days"
+  }
+}
