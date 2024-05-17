@@ -5,31 +5,34 @@ import { Icon } from "astro-icon/components";
 ---
 
 <article>
-  <Image src={profileImage} alt="John Doe" width="300" height="300" />
-  <h1>John Doe</h1>
-  <h2>CEO & Founder, Example</h2>
-  <p>Harvard University</p>
-  <a href="#">
-    <Icon name="solar:scale-bold-duotone" />
-  </a>
-  <a href="#">
-    <Icon name="solar:scale-bold-duotone" />
-  </a>
-  <a href="#">
-    <Icon name="solar:scale-bold-duotone" />
-  </a>
-  <a href="#">
-    <Icon name="solar:scale-bold-duotone" />
-  </a>
-  <p><button>Contact</button></p>
+  <Image src={profileImage} alt="John Doe" width="200%" />
+  <h1>Alexander Niebuhr</h1>
+  <h2>CEO & Founder, craftlions</h2>
+
+  <div>
+    <a href="https://github.com/alexanderniebuhr">
+      <Icon name="octicon:mark-github-24" />
+    </a>
+    <a href="https://twitter.com/realalexniebuhr">
+      <Icon name="ph:twitter-logo-fill" />
+    </a>
+    <a href="https://www.linkedin.com/in/alexanderniebuhr/">
+      <Icon name="ph:linkedin-logo-fill" />
+    </a>
+  </div>
 </article>
 
 <style>
-  .article {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  article {
+    color: white;
+    background-color: var(--neutral-800);
+    padding: var(--space-m);
     max-width: 300px;
     margin: auto;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
   }
 
   h2 {
@@ -37,23 +40,15 @@ import { Icon } from "astro-icon/components";
     font-size: 18px;
   }
 
-  button {
-    border: none;
-    outline: 0;
-    display: inline-block;
-    padding: 8px;
-    color: white;
-    background-color: #000;
-    text-align: center;
-    cursor: pointer;
-    width: 100%;
-    font-size: 18px;
+  div {
+    display: flex;
+    justify-content: center;
+    gap: 1ch;
   }
 
   a {
     text-decoration: none;
     font-size: 22px;
-    color: black;
   }
 
   button:hover,

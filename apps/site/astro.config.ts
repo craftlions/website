@@ -51,6 +51,8 @@ export default defineConfig({
 					'download-duotone',
 					'plus-bold',
 					'currency-dollar-duotone',
+					'twitter-logo-fill',
+					'linkedin-logo-fill',
 				],
 				solar: [
 					'stars-minimalistic-line-duotone',
