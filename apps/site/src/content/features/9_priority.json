@@ -1,0 +1,9 @@
+{
+  "title": "Priority",
+  "help": "As a Pro customer, we will prioritize your requests and make sure to also be available for contact requests.",
+  "map": {
+    "lite": false,
+    "plus": false,
+    "pro": true
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Ticket Triage",
+  "help": "We help you scan, analyze, organize, manage, follow-up your tickets. E.g. we can triage the inbox of issues, add additional context to make them more actiaonable, label them, and make sure they are addressed and your backlog is not filled up with junk.",
+  "map": {
+    "lite": true,
+    "plus": true,
+    "pro": true
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "title": "DevOps (passive)",
+  "help": "We analyze your infrastructure, to make sure it aligns with your business goal. We present suggestions to you how to change it.",
+  "map": {
+    "lite": false,
+    "plus": true,
+    "pro": true
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Coding",
+  "help": "Our coding offer is based on credits. Coding tasks will use up credits, based on complexy. The amount of credits is specified in advance, and the customer can accept or reject the offer. We have a limited amount of credits each month, additional credits can be purchased as an addon. We discuss the amount of default credits which each customer, the goal is to find a good balance, so that you don't need to buy additional credits for a general month, but we can't cover months with high requests, which would mean you need to buy additional credits.",
+  "map": {
+    "lite": false,
+    "plus": false,
+    "pro": true
+  }
+}

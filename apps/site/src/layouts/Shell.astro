@@ -21,6 +21,8 @@ const { title } = Astro.props.frontmatter || Astro.props;
     <title>{title}</title>
   </head>
   <body>
+    <script is:inline async src="https://js.stripe.com/v3/buy-button.js"
+    ></script>
     <!-- header, nav -->
     <slot />
     <footer

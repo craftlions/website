@@ -6,27 +6,15 @@ import { defineCollection, z } from 'astro:content';
 //   image: z.string().optional(),
 // }),
 
-const tierCollection = defineCollection({
+const featureCollection = defineCollection({
 	type: 'data',
 	schema: z.object({
 		title: z.string(),
-		description: z.string(),
-		order: z.number(),
-		price: z.number().safe().nullable(),
-		isActive: z.boolean(),
-		benefits: z.object({
-			'Number of concurrent requests': z.number(),
-			'Number of concurrent active projects': z.string(),
-			'Average time to response': z.string(),
-			'Included logins': z.string(),
-			'Ticket triage': z.string(),
-			'Technical advisory': z.string(),
-			'Pull-Request reviews': z.string(),
-			Consulting: z.string(),
-			Coding: z.string(),
-			'Refer & Earn': z.string(),
-			'Pause your subscription': z.string(),
-			'Cancel notice period': z.string(),
+		help: z.string(),
+		map: z.object({
+			lite: z.boolean(),
+			plus: z.boolean(),
+			pro: z.boolean(),
 		}),
 	}),
 });
@@ -42,6 +30,6 @@ const faqCollection = defineCollection({
 });
 
 export const collections = {
-	tiers: tierCollection,
+	features: featureCollection,
 	faqs: faqCollection,
 };

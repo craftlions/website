@@ -68,6 +68,7 @@ export default defineConfig({
 					'close-circle-line-duotone',
 					'check-circle-bold',
 					'question-circle-bold-duotone',
+					'info-square-broken',
 				],
 				octicon: ['mark-github-24'],
 				'vscode-icons': ['file-type-astro', 'file-type-typescript-official'],
