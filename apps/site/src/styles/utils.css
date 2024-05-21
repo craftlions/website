@@ -144,3 +144,9 @@
     --space-s-l: clamp(1.125rem, 0.7304rem + 1.913cqi, 2.5rem);
   }
 }
+
+@layer global {
+  body {
+    scroll-behavior: smooth;
+  }
+}

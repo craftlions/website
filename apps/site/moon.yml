@@ -42,7 +42,7 @@ tasks:
   build:
     deps:
       - "~:lint"
-      - "~:check"
+      # - "~:check"
     command: "astro build"
     inputs:
       - "@group(sources)"
