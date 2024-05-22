@@ -1,0 +1,43 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices", ":semanticCommitsDisabled"],
+  "ignorePresets": ["mergeConfidence:all-badges"],
+  "dependencyDashboard": true,
+  "commitMessageAction": "updates",
+  "pin": {
+    "commitMessageAction": "pins"
+  },
+  "pinDigest": {
+    "commitMessageAction": "pins"
+  },
+  "replacement": {
+    "commitMessageAction": "replaces"
+  },
+  "rollback": {
+    "commitMessageAction": "rolls back"
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "commitMessageAction": "maintains lockfile"
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^.prototools$"],
+      "matchStrings": [
+        "datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.*?=\\s\"(?<currentValue>.*)\"\\s"
+      ]
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/)(workflow-templates|\\.(?:github|gitea|forgejo)/(?:workflows|actions))/.+\\.ya?ml$",
+        "(^|/)action\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.*?:\\s\"(?<currentValue>.*)\"\\s"
+      ]
+    }
+  ],
+  "prHourlyLimit": 0
+}
