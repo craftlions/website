@@ -72,6 +72,7 @@ import { getCollection } from "astro:content";
 
 <style>
   article {
+    color: light-dark(black, white);
     font-size: var(--step--1);
 
     > div {
@@ -88,15 +89,19 @@ import { getCollection } from "astro:content";
   section {
     display: grid;
     max-width: 92.5rem;
+    padding-bottom: var(--space-xs);
     gap: var(--space-xs-s);
     grid-auto-flow: column;
+    margin-inline: auto;
     overflow-x: scroll;
     overscroll-behavior-x: contain;
     padding-inline: var(--space-s-l);
     scroll-snap-type: x mandatory;
+    transform: rotateX(180deg);
 
     > div {
       scroll-snap-align: center;
+      transform: rotateX(180deg);
     }
 
     @media (width >= 959px) {

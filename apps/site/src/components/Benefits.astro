@@ -44,6 +44,8 @@ import { Icon } from "astro-icon/components";
       >
     </div>
   </section>
+  <br />
+  <br />
   <a href="/#plans">
     <button>
       <!-- <svg aria-hidden="true">...</svg> -->
@@ -51,9 +53,6 @@ import { Icon } from "astro-icon/components";
     </button>
   </a>
 </article>
-<br />
-<br />
-<br />
 <article>
   <h2>Exclusive Membership Benefits</h2>
   <p style="text-align: center;">
@@ -97,75 +96,113 @@ import { Icon } from "astro-icon/components";
 
 <style>
   #one {
-    width: 100%;
-    height: 100%;
-    background-size: 100%;
+    background: linear-gradient(
+        25deg,
+        light-dark(var(--neutral-50), var(--neutral-950)) 40%,
+        transparent 41%,
+        transparent 59%,
+        light-dark(var(--neutral-50), var(--neutral-950)) 60%
+      ),
+      linear-gradient(
+        90deg,
+        transparent 45%,
+        var(--blue-400) 45%,
+        var(--blue-600) 55%,
+        transparent 55%,
+        transparent 20%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 20%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 30%,
+        transparent 30%
+      ),
+      linear-gradient(
+        90deg,
+        light-dark(var(--neutral-200), var(--neutral-800)) 9%,
+        transparent 10%
+      );
+    background-color: light-dark(var(--neutral-50), var(--neutral-950));
     background-position: center center;
     background-repeat: repeat;
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwMCAyMDAwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGw9IiMxNDE0MTQiIGQ9Ik0wIDBoMjAwMHYyMDAwSDB6Ii8+PHBhdGggZD0ibTAgOTA5IDQxLjcgMWM0MS42IDEgMTI1IDMgMjA4LjMgNDQuNXMxNjYuNyAxMjIuNSAyNTAgMTU3LjJjODMuMyAzNC42IDE2Ni43IDIzIDI1MCAxOS44czE2Ni43IDIuMiAyNTAtMjQuNSAxNjYuNy04NS4zIDI1MC0xMzUuMmM4My4zLTQ5LjggMTY2LjctOTAuOCAyNTAtOTUuNiA4My4zLTQuOSAxNjYuNyAyNi41IDI1MCA0OHMxNjYuNyAzMy4xIDIwOC4zIDM5bDQxLjcgNS44djEwMzJIMFoiIGZpbGw9IiM0YjRiNGIiLz48cGF0aCBkPSJtMCAxMjQ1IDQxLjcuN2M0MS42LjYgMTI1IDIgMjA4LjMtMjMuMnMxNjYuNy03Ni44IDI1MC04MCAxNjYuNyA0Mi4yIDI1MCA3NC4yIDE2Ni43IDUwLjYgMjUwIDQ5LjMgMTY2LjctMjIuNyAyNTAtNTUgMTY2LjctNzUuNyAyNTAtOTAuM2M4My4zLTE0LjcgMTY2LjctLjcgMjUwLTExIDgzLjMtMTAuNCAxNjYuNy00NSAyMDguMy02Mi40bDQxLjctMTcuM3Y5NzFIMFoiIGZpbGw9IiMzZjNmM2YiLz48cGF0aCBkPSJtMCAxNDExIDQxLjctMTQuMmM0MS42LTE0LjEgMTI1LTQyLjUgMjA4LjMtNTBzMTY2LjcgNS45IDI1MCA1LjcgMTY2LjctMTMuOCAyNTAtNDMgMTY2LjctNzMuOCAyNTAtNjQuNSAxNjYuNyA3Mi43IDI1MCA4OC4zYzgzLjMgMTUuNyAxNjYuNy0xNi4zIDI1MC00Ny4zczE2Ni43LTYxIDI1MC01NC4yYzgzLjMgNi45IDE2Ni43IDUwLjUgMjA4LjMgNzIuNGw0MS43IDIxLjh2Njc1SDBaIiBmaWxsPSIjMzQzNDM0Ii8+PHBhdGggZD0ibTAgMTU3OCA0MS43LTI2LjNjNDEuNi0yNi40IDEyNS03OSAyMDguMy05MC4yczE2Ni43IDE5LjIgMjUwIDI0IDE2Ni43LTE1LjggMjUwLTYuN2M4My4zIDkuMiAxNjYuNyA0OC4yIDI1MCA2NS45IDgzLjMgMTcuNiAxNjYuNyAxNCAyNTAtLjVzMTY2LjctMzkuOSAyNTAtNDkuOSAxNjYuNy00LjYgMjUwLTEuNiAxNjYuNyAzLjYgMjA4LjMgNGw0MS43LjN2NTA0SDBaIiBmaWxsPSIjMjkyOTI5Ii8+PHBhdGggZD0ibTAgMTYyNSA0MS43LjVjNDEuNi41IDEyNSAxLjUgMjA4LjMgMTNzMTY2LjcgMzMuNSAyNTAgMzcuOGM4My4zIDQuNCAxNjYuNy05IDI1MC0yMHMxNjYuNy0xOS42IDI1MC0zMC4xIDE2Ni43LTIyLjkgMjUwLTE3LjkgMTY2LjcgMjcuNCAyNTAgMzAuOSAxNjYuNy0xMS45IDI1MC0yNy45IDE2Ni43LTMyLjYgMjA4LjMtNDFsNDEuNy04LjN2NDM5SDBaIiBmaWxsPSIjMWUxZTFlIi8+PHBhdGggZD0ibTAgMTc2OCA0MS43IDE3YzQxLjYgMTcgMTI1IDUxIDIwOC4zIDQ2LjcgODMuMy00LjQgMTY2LjctNDcgMjUwLTQ2LjkgODMuMy4yIDE2Ni43IDQzLjIgMjUwIDU5LjQgODMuMyAxNi4xIDE2Ni43IDUuNSAyNTAtMTEuMnMxNjYuNy0zOS4zIDI1MC00Mi41IDE2Ni43IDEzLjIgMjUwIDE4LjhjODMuMyA1LjcgMTY2LjcuNyAyNTAtLjNzMTY2LjcgMiAyMDguMyAzLjVsNDEuNyAxLjV2MTg3SDBaIiBmaWxsPSIjMTQxNDE0Ii8+PC9zdmc+");
+    background-size: 6em 6em;
   }
 
   #two {
-    width: 100%;
-    height: 100%;
-    background-size: 100%;
+    background: linear-gradient(
+        -25deg,
+        light-dark(var(--neutral-50), var(--neutral-950)) 40%,
+        transparent 41%,
+        transparent 59%,
+        light-dark(var(--neutral-50), var(--neutral-950)) 60%
+      ),
+      linear-gradient(
+        90deg,
+        transparent 45%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 45%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 55%,
+        transparent 55%,
+        transparent 20%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 20%,
+        light-dark(var(--neutral-200), var(--neutral-800)) 30%,
+        transparent 30%
+      ),
+      linear-gradient(90deg, var(--blue-500) 9%, transparent 10%);
+    background-color: light-dark(var(--neutral-50), var(--neutral-950));
     background-position: center center;
     background-repeat: repeat;
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwMCAyMDAwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGw9IiMxNDE0MTQiIGQ9Ik0wIDBoMjAwMHYyMDAwSDB6Ii8+PHBhdGggZD0iTTcwMy45IDEzODUuNmMyNy45IDMyIDMyLjMgODUuOCAyMi4yIDEzOC44LTEwLjIgNTIuOS0zNC44IDEwNC45LTc0LjEgMTIyLTM5LjIgMTcuMS05My0uOC0xMzMuOS0yNy40LTQxLTI2LjYtNjktNjEuOS04Mi41LTEwNS4yLTEzLjUtNDMuMi0xMi40LTk0LjMgMTIuOS0xMjUuOHM3NC45LTQzLjMgMTI1LjUtNDQuMWM1MC41LS43IDEwMiA5LjYgMTI5LjkgNDEuN1pNMzM0LjcgMjMxLjVjMTYuMSAxOC4xIDI0IDQ0LjkgMTkuNiA3MC42cy0yMS4yIDUwLjQtNDMuNCA1OS41Yy0yMi4yIDktNDkuOSAyLjQtNzcuMy05LjItMjcuMy0xMS42LTU0LjItMjguMS02NC44LTU0LjEtMTAuNi0yNi4xLTQuOC02MS42IDE0LjgtODAuNXM1My0yMS4xIDgxLjgtMTcuNWMyOC45IDMuNiA1My4xIDEzLjEgNjkuMyAzMS4yWm0xMDY4LjYgMTMxMGMyMiAzMi44IDM0LjggNjcuNyAyOS40IDEwMS4zcy0yOC45IDY1LjktNjMuMiA4Ni40LTc5LjIgMjkuMS0xMTQuMSAxMy42Yy0zNC44LTE1LjYtNTkuNi01NS4zLTY2LjctOTYuMi03LTQxIDMuNi04My4xIDI4LjItMTE2LjYgMjQuNy0zMy40IDYzLjQtNTguMiA5OC4zLTU1LjIgMzUgMyA2Ni4xIDMzLjggODguMSA2Ni43Wk04MTkuMiA0NDEuN2M4LjkgMTEuNCAxMSAyNy45IDYuOSA0MS45cy0xNC40IDI1LjQtMjcgMzAuOWMtMTIuNSA1LjUtMjcuMiA1LjEtNDAuOS0uNC0xMy43LTUuNC0yNi4zLTE1LjktMzAuNC0yOS42LTQtMTMuNi43LTMwLjQgMTAuNi00MiAxMC0xMS42IDI1LjMtMTguMSA0MC44LTE4LjIgMTUuNC0uMSAzMS4xIDYuMSA0MCAxNy40Wm01MTYuNiA0NTguOGMxMS4zIDEzIDE3LjMgMzEuNSAxMy42IDQ3LjlzLTE3IDMwLjgtMzQgNDAuMWMtMTcuMSA5LjMtMzcuOSAxMy41LTU0LjggNi42LTE2LjgtNy0yOS43LTI1LjItMzQuNC00NS41LTQuOC0yMC4zLTEuNS00Mi42IDEwLjYtNTUuNyAxMi4yLTEzLjEgMzMuMi0xNy4xIDUyLjEtMTUuNCAxOC44IDEuNyAzNS42IDkuMSA0Ni45IDIyWm0yNDYuNi02NDAuN2MxNi4zIDI0IDIxIDUzLjggMTUuNiA4Mi45LTUuMyAyOS4yLTIwLjYgNTcuOC00My4yIDY3cy01Mi40LS45LTgxLjQtMTQuM2MtMjkuMS0xMy4zLTU3LjQtMjkuOS02NS42LTU0LjQtOC4zLTI0LjUgMy41LTU2LjkgMjMuOC04MS44IDIwLjQtMjQuOSA0OS40LTQyLjIgNzcuOS00MS44czU2LjYgMTguNSA3Mi45IDQyLjRabTI0Ny42IDk3NC40YzI1LjEgMjcuMiA0MS41IDY1LjcgMzguNyAxMDguNi0yLjggNDIuOC0yNC45IDg5LjktNTkuNSAxMDMuOHMtODEuNy01LjUtMTIzLjQtMjguNWMtNDEuNi0yMy4xLTc3LjgtNDkuNy05My43LTg5LjUtMTUuOC0zOS45LTExLjQtOTIuOCAxNi4xLTEyMC41czc4LjItMzAuMiAxMjAuNC0yMy42YzQyLjMgNi43IDc2LjIgMjIuNiAxMDEuNCA0OS43WiIgc3Ryb2tlPSIjYWNhZWQxIiBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjE1Ii8+PC9zdmc+");
+    background-size: 6em 6em;
   }
 
   article {
-    max-width: 92.5rem;
-    margin-inline: auto;
     display: flex;
+    max-width: 92.5rem;
     flex-direction: column;
-    text-align: center;
+    color: light-dark(black, white);
+    margin-inline: auto;
     padding-block: var(--space-l-xl);
+    text-align: center;
   }
 
   section {
-    color: white;
-    font-family: Inter, sans-serif;
-    font-style: normal;
-    font-size: var(--step-0);
-    font-weight: 400;
-    line-height: 120%;
-    max-width: 92.5rem;
-    margin-inline: auto;
     display: flex;
+    max-width: 92.5rem;
     flex-wrap: wrap;
     justify-content: center;
     padding: var(--space-l-xl);
     column-gap: var(--space-s-m);
+    font-family: Inter, sans-serif;
+    font-size: var(--step-0);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%;
+    margin-inline: auto;
     row-gap: var(--space-m);
   }
 
   .wrapper {
     display: flex;
     flex-direction: column;
-    row-gap: var(--space-3xs-2xs);
     align-items: center;
+    row-gap: var(--space-3xs-2xs);
+
     [data-icon] {
       font-size: var(--step-4);
     }
   }
 
   div {
-    @supports (color: oklch(0% 0 0)) {
-      background: color-mix(in oklch, var(--neutral-950) 40%, transparent);
-    }
-
-    background: color-mix(in srgb, var(--neutral-950) 40%, transparent);
-
-    backdrop-filter: blur(8px) saturate(140%);
-    border-radius: var(--space-xs);
-    border: 1px solid var(--neutral-800);
     display: flex;
-    flex-direction: column;
-    row-gap: var(--space-3xs-2xs);
-    padding: var(--space-m);
     min-width: calc((100% - var(--space-s-m)) / 2);
     flex: 1 1 calc(330px - var(--space-l-xl) * 2);
+    flex-direction: column;
+    padding: var(--space-m);
+    border: 1px solid var(--neutral-800);
+    border-radius: var(--space-xs);
+    backdrop-filter: blur(8px) saturate(140%);
+    background: color-mix(
+      in srgb,
+      light-dark(var(--neutral-50), var(--neutral-950)) 40%,
+      transparent
+    );
+    row-gap: var(--space-3xs-2xs);
   }
 
   p {
@@ -184,6 +221,7 @@ import { Icon } from "astro-icon/components";
     font-weight: 700;
     line-height: 120%;
   }
+
   button {
     display: inline-flex;
     align-items: center;

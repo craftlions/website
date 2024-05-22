@@ -146,7 +146,7 @@
 }
 
 @layer global {
-  body {
+  html {
     scroll-behavior: smooth;
   }
 }

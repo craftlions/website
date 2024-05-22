@@ -60,7 +60,7 @@ import { getCollection } from "astro:content";
 
 <style>
   section {
-    color: white;
+    color: light-dark(black, white);
 
     /* container-type: size; */
     font-family: Inter, sans-serif;
@@ -117,10 +117,6 @@ import { getCollection } from "astro:content";
   }
 
   div {
-    @supports (color: oklch(0% 0 0)) {
-      background: color-mix(in oklch, var(--neutral-950) 40%, transparent);
-    }
-
     background: color-mix(in srgb, var(--neutral-950) 40%, transparent);
 
     backdrop-filter: blur(8px) saturate(140%);
