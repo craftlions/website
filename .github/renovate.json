@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices", ":semanticCommitsDisabled"],
+  "ignorePresets": ["mergeConfidence:all-badges"],
+  "dependencyDashboard": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "commitMessageAction": "Maintain lockfile"
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^.prototools$"],
+      "matchStrings": [
+        "datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.*?=\\s\"(?<currentValue>.*)\"\\s"
+      ]
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/)(workflow-templates|\\.(?:github|gitea|forgejo)/(?:workflows|actions))/.+\\.ya?ml$",
+        "(^|/)action\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s.*?:\\s\"(?<currentValue>.*)\"\\s"
+      ]
+    }
+  ],
+  "prHourlyLimit": 0
+}
