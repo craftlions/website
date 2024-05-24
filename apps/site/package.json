@@ -10,7 +10,7 @@
     "@astrojs/react": "3.3.0",
     "@astrojs/rss": "4.0.5",
     "@calcom/embed-react": "1.4.0",
-    "@fontsource-variable/nunito": "5.0.17",
+    "@fontsource-variable/nunito": "5.0.19",
     "@iconify-json/emojione-monotone": "1.1.8",
     "@iconify-json/fluent-emoji": "1.1.18",
     "@iconify-json/octicon": "1.1.53",
