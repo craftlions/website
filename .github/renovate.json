@@ -3,6 +3,10 @@
   "extends": ["config:best-practices", ":semanticCommitsDisabled"],
   "ignorePresets": ["mergeConfidence:all-badges"],
   "dependencyDashboard": true,
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
   "lockFileMaintenance": {
     "enabled": true,
     "commitMessageAction": "Maintain lockfile"
