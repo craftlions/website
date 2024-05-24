@@ -19,31 +19,31 @@ importers:
         version: 1.7.0
       stylelint:
         specifier: 16.6.0
-        version: 16.6.0(typescript@5.3.3)
+        version: 16.6.0(typescript@5.4.5)
       stylelint-config-idiomatic-order:
         specifier: 10.0.0
-        version: 10.0.0(stylelint@16.6.0(typescript@5.3.3))
+        version: 10.0.0(stylelint@16.6.0(typescript@5.4.5))
       stylelint-config-standard:
         specifier: 36.0.0
-        version: 36.0.0(stylelint@16.6.0(typescript@5.3.3))
+        version: 36.0.0(stylelint@16.6.0(typescript@5.4.5))
       stylelint-order:
         specifier: 6.0.4
-        version: 6.0.4(stylelint@16.6.0(typescript@5.3.3))
+        version: 6.0.4(stylelint@16.6.0(typescript@5.4.5))
       typescript:
-        specifier: 5.3.3
-        version: 5.3.3
+        specifier: 5.4.5
+        version: 5.4.5
 
   apps/site:
     dependencies:
       '@astrojs/check':
         specifier: 0.5.6
-        version: 0.5.6(typescript@5.3.3)
+        version: 0.5.6(typescript@5.4.5)
       '@astrojs/cloudflare':
         specifier: 10.1.0
-        version: 10.1.0(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3))
+        version: 10.1.0(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5))
       '@astrojs/markdoc':
         specifier: 0.9.0
-        version: 0.9.0(@types/react@18.2.78)(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3))(react@18.2.0)
+        version: 0.9.0(@types/react@18.2.78)(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5))(react@18.2.0)
       '@astrojs/react':
         specifier: 3.3.0
         version: 3.3.0(@types/react-dom@18.2.25)(@types/react@18.2.78)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(vite@5.1.4(@types/node@20.12.12)(lightningcss@1.25.0))
@@ -82,7 +82,7 @@ importers:
         version: 18.2.25
       astro:
         specifier: 4.6.1
-        version: 4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3)
+        version: 4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5)
       astro-icon:
         specifier: 1.1.0
         version: 1.1.0
@@ -103,7 +103,7 @@ importers:
         version: 0.33.3
       simple-stack-form:
         specifier: 0.1.12
-        version: 0.1.12(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3))(zod@3.22.4)
+        version: 0.1.12(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5))(zod@3.22.4)
       zod:
         specifier: 3.22.4
         version: 3.22.4
@@ -394,22 +394,10 @@ packages:
     resolution: {integrity: sha512-EeEjMobfuJrwoctj7FA1y1KEbM0+Q1xSjobIEyie9k4haVEBB7vkDvsasw1pM3rO39mL2akxIAzLMUAtrMHZhA==}
     engines: {node: '>=16.13'}
 
-  '@cloudflare/workerd-darwin-64@1.20240404.0':
-    resolution: {integrity: sha512-rc/ov3I9GwgKRtUnkShNW3TIoZEPHzExrMRNlHq1VpXQRBSchHdMw8meMn54+oqgxW1AKLmPWj/c0A7EnYAsIw==}
-    engines: {node: '>=16'}
-    cpu: [x64]
-    os: [darwin]
-
   '@cloudflare/workerd-darwin-64@1.20240512.0':
     resolution: {integrity: sha512-VMp+CsSHFALQiBzPdQ5dDI4T1qwLu0mQ0aeKVNDosXjueN0f3zj/lf+mFil5/9jBbG3t4mG0y+6MMnalP9Lobw==}
     engines: {node: '>=16'}
     cpu: [x64]
-    os: [darwin]
-
-  '@cloudflare/workerd-darwin-arm64@1.20240404.0':
-    resolution: {integrity: sha512-V9oPjeC2PYBCoAYnjbO2bsjT7PtzxfUHnh780FUi1r59Hwxd7FNlojwsIidA0nS/1WV5UKeJusIdrYlQbsketA==}
-    engines: {node: '>=16'}
-    cpu: [arm64]
     os: [darwin]
 
   '@cloudflare/workerd-darwin-arm64@1.20240512.0':
@@ -418,22 +406,10 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@cloudflare/workerd-linux-64@1.20240404.0':
-    resolution: {integrity: sha512-ndO7q6G2X8uYd5byGFzow4SWPqINQcmJ7pKKATNa+9vh/YMO0of2ihPntnm9uv577l8nRiAwRkHbnsWoEI33qQ==}
-    engines: {node: '>=16'}
-    cpu: [x64]
-    os: [linux]
-
   '@cloudflare/workerd-linux-64@1.20240512.0':
     resolution: {integrity: sha512-wrHvqCZZqXz6Y3MUTn/9pQNsvaoNjbJpuA6vcXsXu8iCzJi911iVW2WUEBX+MpUWD+mBIP0oXni5tTlhkokOPw==}
     engines: {node: '>=16'}
     cpu: [x64]
-    os: [linux]
-
-  '@cloudflare/workerd-linux-arm64@1.20240404.0':
-    resolution: {integrity: sha512-hto5pjKYFqFu2Rvxnh84TzgDwalBRXQSwOVHltcgqo48en9TJDCN48ZtLj2G7QTGUOMW88h+nqdbj8+P7S/GXQ==}
-    engines: {node: '>=16'}
-    cpu: [arm64]
     os: [linux]
 
   '@cloudflare/workerd-linux-arm64@1.20240512.0':
@@ -441,12 +417,6 @@ packages:
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [linux]
-
-  '@cloudflare/workerd-windows-64@1.20240404.0':
-    resolution: {integrity: sha512-DpCLvNkOeFinKGJwv9qbyT7RLZ1168dhPx85IHSqAYVWZIszNSmNOkEDqklvoJoab01AqETrrEhwBdmjCA7qfA==}
-    engines: {node: '>=16'}
-    cpu: [x64]
-    os: [win32]
 
   '@cloudflare/workerd-windows-64@1.20240512.0':
     resolution: {integrity: sha512-SxKapDrIYSscMR7lGIp/av0l6vokjH4xQ9ACxHgXh+OdOus9azppSmjaPyw4/ePvg7yqpkaNjf9o258IxWtvKQ==}
@@ -2311,11 +2281,6 @@ packages:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
 
-  miniflare@3.20240404.0:
-    resolution: {integrity: sha512-+FOTcztPMW3akmucX4vE0PWMNvP4JBwl4s9ieA84fcOaDtTbtfU1rHXpcacj16klpUpvSnD6xd8Sjsn6SJXPfg==}
-    engines: {node: '>=16.13'}
-    hasBin: true
-
   miniflare@3.20240512.0:
     resolution: {integrity: sha512-X0PlKR0AROKpxFoJNmRtCMIuJxj+ngEcyTOlEokj2rAQ0TBwUhB4/1uiPvdI6ofW5NugPOD1uomAv+gLjwsLDQ==}
     engines: {node: '>=16.13'}
@@ -2498,9 +2463,6 @@ packages:
 
   pend@1.2.0:
     resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
-
-  picocolors@1.0.0:
-    resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
 
   picocolors@1.0.1:
     resolution: {integrity: sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==}
@@ -2986,8 +2948,8 @@ packages:
   typescript-auto-import-cache@0.3.2:
     resolution: {integrity: sha512-+laqe5SFL1vN62FPOOJSUDTZxtgsoOXjneYOXIpx5rQ4UMiN89NAtJLpqLqyebv9fgQ/IMeeTX+mQyRnwvJzvg==}
 
-  typescript@5.3.3:
-    resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
+  typescript@5.4.5:
+    resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -3231,11 +3193,6 @@ packages:
     resolution: {integrity: sha512-o0cyEG0e8GPzT4iGHphIOh0cJOV8fivsXxddQasHPHfoZf1ZexrfeA21w2NaEN1RHE+fXlfISmOE8R9N3u3Qig==}
     engines: {node: '>=12'}
 
-  workerd@1.20240404.0:
-    resolution: {integrity: sha512-U4tfnvBcPMsv7pmRGuF0J5UnoZi6tbc64tXNfyijI74r6w6Vlb2+a6eibdQL8g0g46+4vjuTKME9G5RvSvdc8g==}
-    engines: {node: '>=16'}
-    hasBin: true
-
   workerd@1.20240512.0:
     resolution: {integrity: sha512-VUBmR1PscAPHEE0OF/G2K7/H1gnr9aDWWZzdkIgWfNKkv8dKFCT75H+GJtUHjfwqz3rYCzaNZmatSXOpLGpF8A==}
     engines: {node: '>=16'}
@@ -3338,26 +3295,26 @@ snapshots:
 
   '@antfu/utils@0.7.7': {}
 
-  '@astrojs/check@0.5.6(typescript@5.3.3)':
+  '@astrojs/check@0.5.6(typescript@5.4.5)':
     dependencies:
-      '@astrojs/language-server': 2.7.6(typescript@5.3.3)
+      '@astrojs/language-server': 2.7.6(typescript@5.4.5)
       chokidar: 3.6.0
       fast-glob: 3.3.2
       kleur: 4.1.5
-      typescript: 5.3.3
+      typescript: 5.4.5
       yargs: 17.7.2
     transitivePeerDependencies:
       - prettier
       - prettier-plugin-astro
 
-  '@astrojs/cloudflare@10.1.0(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3))':
+  '@astrojs/cloudflare@10.1.0(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5))':
     dependencies:
       '@astrojs/internal-helpers': 0.3.0
       '@astrojs/underscore-redirects': 0.3.3
       '@cloudflare/workers-types': 4.20240512.0
-      astro: 4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3)
+      astro: 4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5)
       esbuild: 0.19.12
-      miniflare: 3.20240404.0
+      miniflare: 3.20240512.0
       tiny-glob: 0.2.9
       wrangler: 3.57.1(@cloudflare/workers-types@4.20240512.0)
     transitivePeerDependencies:
@@ -3373,11 +3330,11 @@ snapshots:
 
   '@astrojs/internal-helpers@0.4.0': {}
 
-  '@astrojs/language-server@2.7.6(typescript@5.3.3)':
+  '@astrojs/language-server@2.7.6(typescript@5.4.5)':
     dependencies:
       '@astrojs/compiler': 2.7.1
       '@jridgewell/sourcemap-codec': 1.4.15
-      '@volar/kit': 2.0.4(typescript@5.3.3)
+      '@volar/kit': 2.0.4(typescript@5.4.5)
       '@volar/language-core': 2.0.4
       '@volar/language-server': 2.0.4
       '@volar/language-service': 2.0.4
@@ -3394,12 +3351,12 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@astrojs/markdoc@0.9.0(@types/react@18.2.78)(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3))(react@18.2.0)':
+  '@astrojs/markdoc@0.9.0(@types/react@18.2.78)(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5))(react@18.2.0)':
     dependencies:
       '@astrojs/internal-helpers': 0.2.1
       '@astrojs/prism': 3.0.0
       '@markdoc/markdoc': 0.3.5(@types/react@18.2.78)(react@18.2.0)
-      astro: 4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3)
+      astro: 4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5)
       esbuild: 0.19.12
       github-slugger: 2.0.0
       gray-matter: 4.0.3
@@ -3678,44 +3635,29 @@ snapshots:
 
   '@clack/core@0.3.4':
     dependencies:
-      picocolors: 1.0.0
+      picocolors: 1.0.1
       sisteransi: 1.0.5
 
   '@clack/prompts@0.7.0':
     dependencies:
       '@clack/core': 0.3.4
-      picocolors: 1.0.0
+      picocolors: 1.0.1
       sisteransi: 1.0.5
 
   '@cloudflare/kv-asset-handler@0.3.2':
     dependencies:
       mime: 3.0.0
 
-  '@cloudflare/workerd-darwin-64@1.20240404.0':
-    optional: true
-
   '@cloudflare/workerd-darwin-64@1.20240512.0':
-    optional: true
-
-  '@cloudflare/workerd-darwin-arm64@1.20240404.0':
     optional: true
 
   '@cloudflare/workerd-darwin-arm64@1.20240512.0':
     optional: true
 
-  '@cloudflare/workerd-linux-64@1.20240404.0':
-    optional: true
-
   '@cloudflare/workerd-linux-64@1.20240512.0':
     optional: true
 
-  '@cloudflare/workerd-linux-arm64@1.20240404.0':
-    optional: true
-
   '@cloudflare/workerd-linux-arm64@1.20240512.0':
-    optional: true
-
-  '@cloudflare/workerd-windows-64@1.20240404.0':
     optional: true
 
   '@cloudflare/workerd-windows-64@1.20240512.0':
@@ -4257,12 +4199,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@volar/kit@2.0.4(typescript@5.3.3)':
+  '@volar/kit@2.0.4(typescript@5.4.5)':
     dependencies:
       '@volar/language-service': 2.0.4
       '@volar/typescript': 2.0.4
       typesafe-path: 0.2.2
-      typescript: 5.3.3
+      typescript: 5.4.5
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
 
@@ -4379,7 +4321,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3):
+  astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5):
     dependencies:
       '@astrojs/compiler': 2.7.1
       '@astrojs/internal-helpers': 0.4.0
@@ -4434,7 +4376,7 @@ snapshots:
       shiki: 1.3.0
       string-width: 7.1.0
       strip-ansi: 7.1.0
-      tsconfck: 3.0.2(typescript@5.3.3)
+      tsconfck: 3.0.2(typescript@5.4.5)
       unist-util-visit: 5.0.0
       vfile: 6.0.1
       vite: 5.1.4(@types/node@20.12.12)(lightningcss@1.25.0)
@@ -4663,14 +4605,14 @@ snapshots:
 
   cookie@0.6.0: {}
 
-  cosmiconfig@9.0.0(typescript@5.3.3):
+  cosmiconfig@9.0.0(typescript@5.4.5):
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.0
       js-yaml: 4.1.0
       parse-json: 5.2.0
     optionalDependencies:
-      typescript: 5.3.3
+      typescript: 5.4.5
 
   cross-spawn@7.0.3:
     dependencies:
@@ -5727,25 +5669,6 @@ snapshots:
   mimic-response@3.1.0:
     optional: true
 
-  miniflare@3.20240404.0:
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      acorn: 8.11.3
-      acorn-walk: 8.3.2
-      capnp-ts: 0.7.0
-      exit-hook: 2.2.1
-      glob-to-regexp: 0.4.1
-      stoppable: 1.1.0
-      undici: 5.28.3
-      workerd: 1.20240404.0
-      ws: 8.16.0
-      youch: 3.3.3
-      zod: 3.22.4
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
   miniflare@3.20240512.0:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
@@ -5938,8 +5861,6 @@ snapshots:
 
   pend@1.2.0: {}
 
-  picocolors@1.0.0: {}
-
   picocolors@1.0.1: {}
 
   picomatch@2.3.1: {}
@@ -5987,7 +5908,7 @@ snapshots:
   postcss@8.4.38:
     dependencies:
       nanoid: 3.3.7
-      picocolors: 1.0.0
+      picocolors: 1.0.1
       source-map-js: 1.2.0
 
   prebuild-install@7.1.2:
@@ -6304,10 +6225,10 @@ snapshots:
       simple-concat: 1.0.1
     optional: true
 
-  simple-stack-form@0.1.12(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3))(zod@3.22.4):
+  simple-stack-form@0.1.12(astro@4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5))(zod@3.22.4):
     dependencies:
       '@clack/prompts': 0.7.0
-      astro: 4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.3.3)
+      astro: 4.6.1(@types/node@20.12.12)(lightningcss@1.25.0)(typescript@5.4.5)
       fs-extra: 11.2.0
       just-map-values: 3.2.0
       kleur: 4.1.5
@@ -6410,27 +6331,27 @@ snapshots:
 
   strnum@1.0.5: {}
 
-  stylelint-config-idiomatic-order@10.0.0(stylelint@16.6.0(typescript@5.3.3)):
+  stylelint-config-idiomatic-order@10.0.0(stylelint@16.6.0(typescript@5.4.5)):
     dependencies:
-      stylelint: 16.6.0(typescript@5.3.3)
-      stylelint-order: 6.0.4(stylelint@16.6.0(typescript@5.3.3))
+      stylelint: 16.6.0(typescript@5.4.5)
+      stylelint-order: 6.0.4(stylelint@16.6.0(typescript@5.4.5))
 
-  stylelint-config-recommended@14.0.0(stylelint@16.6.0(typescript@5.3.3)):
+  stylelint-config-recommended@14.0.0(stylelint@16.6.0(typescript@5.4.5)):
     dependencies:
-      stylelint: 16.6.0(typescript@5.3.3)
+      stylelint: 16.6.0(typescript@5.4.5)
 
-  stylelint-config-standard@36.0.0(stylelint@16.6.0(typescript@5.3.3)):
+  stylelint-config-standard@36.0.0(stylelint@16.6.0(typescript@5.4.5)):
     dependencies:
-      stylelint: 16.6.0(typescript@5.3.3)
-      stylelint-config-recommended: 14.0.0(stylelint@16.6.0(typescript@5.3.3))
+      stylelint: 16.6.0(typescript@5.4.5)
+      stylelint-config-recommended: 14.0.0(stylelint@16.6.0(typescript@5.4.5))
 
-  stylelint-order@6.0.4(stylelint@16.6.0(typescript@5.3.3)):
+  stylelint-order@6.0.4(stylelint@16.6.0(typescript@5.4.5)):
     dependencies:
       postcss: 8.4.38
       postcss-sorting: 8.0.2(postcss@8.4.38)
-      stylelint: 16.6.0(typescript@5.3.3)
+      stylelint: 16.6.0(typescript@5.4.5)
 
-  stylelint@16.6.0(typescript@5.3.3):
+  stylelint@16.6.0(typescript@5.4.5):
     dependencies:
       '@csstools/css-parser-algorithms': 2.6.3(@csstools/css-tokenizer@2.3.1)
       '@csstools/css-tokenizer': 2.3.1
@@ -6439,7 +6360,7 @@ snapshots:
       '@dual-bundle/import-meta-resolve': 4.1.0
       balanced-match: 2.0.0
       colord: 2.9.3
-      cosmiconfig: 9.0.0(typescript@5.3.3)
+      cosmiconfig: 9.0.0(typescript@5.4.5)
       css-functions-list: 3.2.2
       css-tree: 2.3.1
       debug: 4.3.4
@@ -6499,7 +6420,7 @@ snapshots:
       css-select: 5.1.0
       css-tree: 2.3.1
       csso: 5.0.5
-      picocolors: 1.0.0
+      picocolors: 1.0.1
 
   table@6.8.2:
     dependencies:
@@ -6566,9 +6487,9 @@ snapshots:
 
   trough@2.2.0: {}
 
-  tsconfck@3.0.2(typescript@5.3.3):
+  tsconfck@3.0.2(typescript@5.4.5):
     optionalDependencies:
-      typescript: 5.3.3
+      typescript: 5.4.5
 
   tslib@2.6.2: {}
 
@@ -6585,7 +6506,7 @@ snapshots:
     dependencies:
       semver: 7.6.0
 
-  typescript@5.3.3: {}
+  typescript@5.4.5: {}
 
   ufo@1.4.0: {}
 
@@ -6686,7 +6607,7 @@ snapshots:
     dependencies:
       browserslist: 4.23.0
       escalade: 3.1.2
-      picocolors: 1.0.0
+      picocolors: 1.0.1
 
   uri-js@4.4.1:
     dependencies:
@@ -6839,14 +6760,6 @@ snapshots:
   widest-line@4.0.1:
     dependencies:
       string-width: 5.1.2
-
-  workerd@1.20240404.0:
-    optionalDependencies:
-      '@cloudflare/workerd-darwin-64': 1.20240404.0
-      '@cloudflare/workerd-darwin-arm64': 1.20240404.0
-      '@cloudflare/workerd-linux-64': 1.20240404.0
-      '@cloudflare/workerd-linux-arm64': 1.20240404.0
-      '@cloudflare/workerd-windows-64': 1.20240404.0
 
   workerd@1.20240512.0:
     optionalDependencies:
