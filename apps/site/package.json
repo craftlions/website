@@ -21,7 +21,7 @@
     "@types/react-dom": "18.2.25",
     "astro": "4.6.1",
     "astro-icon": "1.1.0",
-    "lightningcss": "1.24.0",
+    "lightningcss": "1.25.0",
     "motion": "10.17.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
