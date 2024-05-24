@@ -10,7 +10,7 @@
     "moon:sync:hooks": "moon sync hooks --clean"
   },
   "license": "MIT",
-  "packageManager": "pnpm@8.15.4",
+  "packageManager": "pnpm@9.1.2",
   "engines": {
     "node": "21.6.2"
   },
@@ -20,9 +20,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.5.3",
-    "@types/node": "20.11.24",
-    "postcss-html": "1.6.0",
-    "stylelint": "16.3.1",
+    "@types/node": "20.12.12",
+    "postcss-html": "1.7.0",
+    "stylelint": "16.6.0",
     "stylelint-config-idiomatic-order": "10.0.0",
     "stylelint-config-standard": "36.0.0",
     "stylelint-order": "6.0.4",
