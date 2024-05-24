@@ -39,8 +39,8 @@ importers:
         specifier: 0.5.6
         version: 0.5.6(typescript@5.3.3)
       '@astrojs/cloudflare':
-        specifier: 10.1.0
-        version: 10.1.0(astro@4.6.1)
+        specifier: 10.2.6
+        version: 10.2.6(astro@4.6.1)
       '@astrojs/markdoc':
         specifier: 0.9.0
         version: 0.9.0(@types/react@18.2.78)(astro@4.6.1)(react@18.2.0)
@@ -153,8 +153,8 @@ packages:
       - prettier-plugin-astro
     dev: false
 
-  /@astrojs/cloudflare@10.1.0(astro@4.6.1):
-    resolution: {integrity: sha512-26+mkkMNQ7lHQ9wEwPxNS/zUEZj/emYkHTmlmvgzkEq9J/vFI5QVtTur2R/ZIZ8SimpLqZJtsn584716Jqq1Nw==}
+  /@astrojs/cloudflare@10.2.6(astro@4.6.1):
+    resolution: {integrity: sha512-pgAT9+D866T/ER/L1+t2HvTtJzWhnZF7h7g2ur2ssv3AriJsXrS+Pny6ZTLYY11tuCx7GNxjY4H0jz1AOxuLig==}
     peerDependencies:
       astro: ^4.2.0
     dependencies:
@@ -163,6 +163,8 @@ packages:
       '@cloudflare/workers-types': 4.20240405.0
       astro: 4.6.1(@types/node@20.11.24)(lightningcss@1.24.0)(typescript@5.3.3)
       esbuild: 0.19.12
+      estree-walker: 3.0.3
+      magic-string: 0.30.10
       miniflare: 3.20240404.0
       tiny-glob: 0.2.9
       wrangler: 3.48.0(@cloudflare/workers-types@4.20240405.0)
@@ -3749,6 +3751,12 @@ packages:
     resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
     dependencies:
       sourcemap-codec: 1.4.8
+
+  /magic-string@0.30.10:
+    resolution: {integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==}
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.4.15
+    dev: false
 
   /magic-string@0.30.7:
     resolution: {integrity: sha512-8vBuFF/I/+OSLRmdf2wwFCJCz+nSn0m6DPvGH1fS/KiQoSaR+sETbov0eIk9KhEKy8CYqIkIAnbohxT/4H0kuA==}
