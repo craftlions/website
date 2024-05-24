@@ -19,7 +19,7 @@
     "url": "https://github.com/alexanderniebuhr"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.5.3",
+    "@biomejs/biome": "1.7.3",
     "@types/node": "20.11.24",
     "postcss-html": "1.6.0",
     "stylelint": "16.3.1",
