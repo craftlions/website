@@ -3,6 +3,7 @@
   "extends": ["config:best-practices", ":semanticCommitsDisabled"],
   "ignorePresets": ["mergeConfidence:all-badges"],
   "dependencyDashboard": true,
+  "postUpdateOptions": ["pnpmDedupe"],
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
     "enabled": true
