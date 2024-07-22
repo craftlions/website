@@ -103,10 +103,10 @@ importers:
         version: 0.33.4
       simple-stack-form:
         specifier: 0.1.12
-        version: 0.1.12(astro@4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5))(zod@3.22.4)
+        version: 0.1.12(astro@4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5))(zod@3.23.8)
       zod:
-        specifier: 3.22.4
-        version: 3.22.4
+        specifier: 3.23.8
+        version: 3.23.8
     devDependencies:
       '@cloudflare/workers-types':
         specifier: 4.20240512.0
@@ -3289,8 +3289,8 @@ packages:
     peerDependencies:
       zod: ^3.22.4
 
-  zod@3.22.4:
-    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
+  zod@3.23.8:
+    resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -3376,7 +3376,7 @@ snapshots:
       gray-matter: 4.0.3
       htmlparser2: 9.1.0
       kleur: 4.1.5
-      zod: 3.22.4
+      zod: 3.23.8
     transitivePeerDependencies:
       - '@types/react'
       - react
@@ -4417,8 +4417,8 @@ snapshots:
       vitefu: 0.2.5(vite@5.1.4(@types/node@20.13.0)(lightningcss@1.25.1))
       which-pm: 2.1.1
       yargs-parser: 21.1.1
-      zod: 3.22.4
-      zod-to-json-schema: 3.22.5(zod@3.22.4)
+      zod: 3.23.8
+      zod-to-json-schema: 3.22.5(zod@3.23.8)
     optionalDependencies:
       sharp: 0.32.6
     transitivePeerDependencies:
@@ -5716,7 +5716,7 @@ snapshots:
       workerd: 1.20240512.0
       ws: 8.16.0
       youch: 3.3.3
-      zod: 3.22.4
+      zod: 3.23.8
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -6259,14 +6259,14 @@ snapshots:
       simple-concat: 1.0.1
     optional: true
 
-  simple-stack-form@0.1.12(astro@4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5))(zod@3.22.4):
+  simple-stack-form@0.1.12(astro@4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5))(zod@3.23.8):
     dependencies:
       '@clack/prompts': 0.7.0
       astro: 4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5)
       fs-extra: 11.2.0
       just-map-values: 3.2.0
       kleur: 4.1.5
-      zod: 3.22.4
+      zod: 3.23.8
 
   simple-swizzle@0.2.2:
     dependencies:
@@ -6884,10 +6884,10 @@ snapshots:
       mustache: 4.2.0
       stacktracey: 2.1.8
 
-  zod-to-json-schema@3.22.5(zod@3.22.4):
+  zod-to-json-schema@3.22.5(zod@3.23.8):
     dependencies:
-      zod: 3.22.4
+      zod: 3.23.8
 
-  zod@3.22.4: {}
+  zod@3.23.8: {}
 
   zwitch@2.0.4: {}
