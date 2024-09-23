@@ -5,7 +5,7 @@
   "private": true,
   "dependencies": {
     "@astrojs/check": "0.7.0",
-    "@astrojs/cloudflare": "10.1.0",
+    "@astrojs/cloudflare": "11.1.0",
     "@astrojs/markdoc": "0.9.0",
     "@astrojs/react": "3.3.0",
     "@astrojs/rss": "4.0.5",
