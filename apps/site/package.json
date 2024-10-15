@@ -6,9 +6,9 @@
   "dependencies": {
     "@astrojs/check": "0.7.0",
     "@astrojs/cloudflare": "10.1.0",
-    "@astrojs/markdoc": "0.9.0",
-    "@astrojs/react": "3.3.0",
-    "@astrojs/rss": "4.0.5",
+    "@astrojs/markdoc": "0.11.5",
+    "@astrojs/react": "3.6.2",
+    "@astrojs/rss": "4.0.9",
     "@calcom/embed-react": "1.4.0",
     "@fontsource-variable/nunito": "5.0.19",
     "@iconify-json/emojione-monotone": "1.1.8",
