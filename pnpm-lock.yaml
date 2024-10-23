@@ -43,16 +43,16 @@ importers:
         version: 10.1.0(astro@4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5))
       '@astrojs/markdoc':
         specifier: 0.9.0
-        version: 0.9.0(@types/react@18.2.78)(astro@4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5))(react@18.2.0)
+        version: 0.9.0(@types/react@18.3.12)(astro@4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5))(react@18.3.1)
       '@astrojs/react':
         specifier: 3.3.0
-        version: 3.3.0(@types/react-dom@18.2.25)(@types/react@18.2.78)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(vite@5.1.4(@types/node@20.13.0)(lightningcss@1.25.1))
+        version: 3.3.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@5.1.4(@types/node@20.13.0)(lightningcss@1.25.1))
       '@astrojs/rss':
         specifier: 4.0.5
         version: 4.0.5
       '@calcom/embed-react':
         specifier: 1.4.0
-        version: 1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        version: 1.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@fontsource-variable/nunito':
         specifier: 5.0.19
         version: 5.0.19
@@ -75,11 +75,11 @@ importers:
         specifier: 1.1.34
         version: 1.1.34
       '@types/react':
-        specifier: 18.2.78
-        version: 18.2.78
+        specifier: 18.3.12
+        version: 18.3.12
       '@types/react-dom':
-        specifier: 18.2.25
-        version: 18.2.25
+        specifier: 18.3.1
+        version: 18.3.1
       astro:
         specifier: 4.6.1
         version: 4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5)
@@ -93,11 +93,11 @@ importers:
         specifier: 10.17.0
         version: 10.17.0
       react:
-        specifier: 18.2.0
-        version: 18.2.0
+        specifier: 18.3.1
+        version: 18.3.1
       react-dom:
-        specifier: 18.2.0
-        version: 18.2.0(react@18.2.0)
+        specifier: 18.3.1
+        version: 18.3.1(react@18.3.1)
       sharp:
         specifier: 0.33.4
         version: 0.33.4
@@ -1097,11 +1097,11 @@ packages:
   '@types/prop-types@15.7.12':
     resolution: {integrity: sha512-5zvhXYtRNRluoE/jAp4GVsSduVUzNWKkOZrCDBWYtE7biZywwdC2AcEzg+cSMLFRfVgeAFqpfNabiPjxFddV1Q==}
 
-  '@types/react-dom@18.2.25':
-    resolution: {integrity: sha512-o/V48vf4MQh7juIKZU2QGDfli6p1+OOi5oXx36Hffpc9adsHeXjVp8rHuPkjd8VT8sOJ2Zp05HR7CdpGTIUFUA==}
+  '@types/react-dom@18.3.1':
+    resolution: {integrity: sha512-qW1Mfv8taImTthu4KoXgDfLuk4bydU6Q/TkADnDWWHwi4NX4BR+LWfTp2sVmTqRrsHvyDDTelgelxJ+SsejKKQ==}
 
-  '@types/react@18.2.78':
-    resolution: {integrity: sha512-qOwdPnnitQY4xKlKayt42q5W5UQrSHjgoXNVEtxeqdITJ99k4VXJOP3vt8Rkm9HmgJpH50UNU+rlqfkfWOqp0A==}
+  '@types/react@18.3.12':
+    resolution: {integrity: sha512-D2wOSq/d6Agt28q7rSI3jhU7G6aiuzljDGZ2hTZHIkrTLUI+AF3WMeKkEZ9nN2fkBAlcktT6vcZjDFiIhMYEQw==}
 
   '@types/tar@6.1.11':
     resolution: {integrity: sha512-ThA1WD8aDdVU4VLuyq5NEqriwXErF5gEIJeyT6gHBWU7JtSmW2a5qjNv3/vR82O20mW+1vhmeZJfBQPT3HCugg==}
@@ -2572,17 +2572,17 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  react-dom@18.2.0:
-    resolution: {integrity: sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==}
+  react-dom@18.3.1:
+    resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
     peerDependencies:
-      react: ^18.2.0
+      react: ^18.3.1
 
   react-refresh@0.14.0:
     resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
     engines: {node: '>=0.10.0'}
 
-  react@18.2.0:
-    resolution: {integrity: sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==}
+  react@18.3.1:
+    resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
     engines: {node: '>=0.10.0'}
 
   readable-stream@3.6.2:
@@ -3365,11 +3365,11 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@astrojs/markdoc@0.9.0(@types/react@18.2.78)(astro@4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5))(react@18.2.0)':
+  '@astrojs/markdoc@0.9.0(@types/react@18.3.12)(astro@4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5))(react@18.3.1)':
     dependencies:
       '@astrojs/internal-helpers': 0.2.1
       '@astrojs/prism': 3.0.0
-      '@markdoc/markdoc': 0.3.5(@types/react@18.2.78)(react@18.2.0)
+      '@markdoc/markdoc': 0.3.5(@types/react@18.3.12)(react@18.3.1)
       astro: 4.6.1(@types/node@20.13.0)(lightningcss@1.25.1)(typescript@5.4.5)
       esbuild: 0.19.12
       github-slugger: 2.0.0
@@ -3412,13 +3412,13 @@ snapshots:
     dependencies:
       prismjs: 1.29.0
 
-  '@astrojs/react@3.3.0(@types/react-dom@18.2.25)(@types/react@18.2.78)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(vite@5.1.4(@types/node@20.13.0)(lightningcss@1.25.1))':
+  '@astrojs/react@3.3.0(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@5.1.4(@types/node@20.13.0)(lightningcss@1.25.1))':
     dependencies:
-      '@types/react': 18.2.78
-      '@types/react-dom': 18.2.25
+      '@types/react': 18.3.12
+      '@types/react-dom': 18.3.1
       '@vitejs/plugin-react': 4.2.1(vite@5.1.4(@types/node@20.13.0)(lightningcss@1.25.1))
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
       ultrahtml: 1.5.3
     transitivePeerDependencies:
       - supports-color
@@ -3636,12 +3636,12 @@ snapshots:
 
   '@calcom/embed-core@1.4.0': {}
 
-  '@calcom/embed-react@1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+  '@calcom/embed-react@1.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@calcom/embed-core': 1.4.0
       '@calcom/embed-snippet': 1.2.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@calcom/embed-snippet@1.2.0':
     dependencies:
@@ -4034,11 +4034,11 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
-  '@markdoc/markdoc@0.3.5(@types/react@18.2.78)(react@18.2.0)':
+  '@markdoc/markdoc@0.3.5(@types/react@18.3.12)(react@18.3.1)':
     optionalDependencies:
       '@types/markdown-it': 12.2.3
-      '@types/react': 18.2.78
-      react: 18.2.0
+      '@types/react': 18.3.12
+      react: 18.3.1
 
   '@motionone/animation@10.17.0':
     dependencies:
@@ -4197,11 +4197,11 @@ snapshots:
 
   '@types/prop-types@15.7.12': {}
 
-  '@types/react-dom@18.2.25':
+  '@types/react-dom@18.3.1':
     dependencies:
-      '@types/react': 18.2.78
+      '@types/react': 18.3.12
 
-  '@types/react@18.2.78':
+  '@types/react@18.3.12':
     dependencies:
       '@types/prop-types': 15.7.12
       csstype: 3.1.3
@@ -5999,15 +5999,15 @@ snapshots:
       strip-json-comments: 2.0.1
     optional: true
 
-  react-dom@18.2.0(react@18.2.0):
+  react-dom@18.3.1(react@18.3.1):
     dependencies:
       loose-envify: 1.4.0
-      react: 18.2.0
+      react: 18.3.1
       scheduler: 0.23.2
 
   react-refresh@0.14.0: {}
 
-  react@18.2.0:
+  react@18.3.1:
     dependencies:
       loose-envify: 1.4.0
 
