@@ -30,7 +30,7 @@
     "zod": "3.22.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20240512.0",
+    "@cloudflare/workers-types": "4.20241022.0",
     "wrangler": "3.57.1"
   },
   "scripts": {
