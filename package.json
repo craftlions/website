@@ -1,40 +1,39 @@
 {
-  "name": "CHANGEME_PROJECT_NAME",
-  "type": "module",
-  "license": "MIT",
-  "scripts": {
-    "astro": "astro",
-    "biome": "biome",
-    "dev": "astro dev",
-    "types": "wrangler types --include-runtime --include-env",
-    "check": "wrangler types --include-runtime --include-env --check true && astro check",
-    "build": "astro build",
-    "preview": "astro build && astro preview",
-    "preview:wrangler": "astro build && wrangler dev",
-    "deploy": "astro build && wrangler deploy"
-  },
-  "devDependencies": {
-    "@astrojs/check": "*",
-    "@astrojs/cloudflare": "*",
-    "@astrojs/compiler-rs": "*",
-    "@astrojs/sitemap": "*",
-    "@biomejs/biome": "*",
-    "@cloudflare/vite-plugin": "*",
-    "@tailwindcss/vite": "*",
-    "@types/node": "*",
-    "@typescript/native-preview": "*",
-    "astro": "*",
-    "browserslist": "*",
-    "lightningcss": "*",
-    "tailwindcss": "*",
-    "update-browserslist-db": "*",
-    "wrangler": "*"
-  },
-  "dependencies": {},
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": "25.8.1"
-    }
-  }
+	"name": "website",
+	"type": "module",
+	"license": "MIT",
+	"scripts": {
+		"astro": "astro",
+		"biome": "biome",
+		"dev": "astro dev",
+		"types": "wrangler types --include-runtime --include-env",
+		"check": "wrangler types --include-runtime --include-env --check && astro check",
+		"build": "astro build",
+		"preview": "astro build && astro preview",
+		"preview:wrangler": "astro build && wrangler dev",
+		"deploy": "astro build && wrangler deploy"
+	},
+	"devDependencies": {
+		"@astrojs/check": "0.9.8",
+		"@astrojs/cloudflare": "13.1.10",
+		"@astrojs/compiler-rs": "0.1.7",
+		"@astrojs/sitemap": "3.7.2",
+		"@biomejs/biome": "2.4.12",
+		"@cloudflare/vite-plugin": "1.32.3",
+		"@tailwindcss/vite": "4.2.2",
+		"@types/node": "25.6.0",
+		"@typescript/native-preview": "7.0.0-dev.20260416.2",
+		"astro": "6.1.7",
+		"browserslist": "4.28.2",
+		"lightningcss": "1.32.0",
+		"tailwindcss": "4.2.2",
+		"update-browserslist-db": "1.2.3",
+		"wrangler": "4.83.0"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "25.8.1"
+		}
+	}
 }

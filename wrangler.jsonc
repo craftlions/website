@@ -1,10 +1,10 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"account_id": "CHANGEME_ACCOUNT_ID",
-	"compatibility_date": "CHANGEME_TODAYS_DATE",
+	"account_id": "1dc7f5dfd6f1830ea5b903d051c6d624",
+	"compatibility_date": "2026-04-08",
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "./src/worker.ts",
-	"name": "CHANGEME_PROJECT_NAME",
+	"name": "craftlions-website",
 	"assets": {
 		"binding": "ASSETS"
 	},
@@ -12,7 +12,7 @@
 	"preview_urls": true,
 	"routes": [
 		{
-			"pattern": "CHANGEME_CUSTOM_DOMAIN",
+			"pattern": "craftlions.com",
 			"custom_domain": true
 		}
 	],
@@ -41,7 +41,8 @@
 	},
 	"kv_namespaces": [
 		{
-			"binding": "SESSION"
+			"binding": "SESSION",
+			"id": "988dbc04d7e84fdca174d4b899123594"
 		}
 	],
 	"upload_source_maps": true

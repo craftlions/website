@@ -3,3 +3,4 @@ allowBuilds:
   lefthook: true
   sharp: true
   workerd: true
+minimumReleaseAge: 0
