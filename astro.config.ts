@@ -6,10 +6,10 @@ import browserslist from "browserslist";
 import { browserslistToTargets } from "lightningcss";
 
 export default defineConfig({
-	site: "CHANGEME_CUSTOM_DOMAIN",
+	site: "https://craftlions.com",
 	output: "server",
 	adapter: cloudflare({
-		imageService: { build: 'compile', runtime: 'cloudflare-binding' },
+		imageService: { build: "compile", runtime: "cloudflare-binding" },
 	}),
 	compressHTML: false,
 	experimental: {
