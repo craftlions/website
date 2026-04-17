@@ -9,6 +9,7 @@
 		":disableRateLimiting",
 		":configMigration",
 		"replacements:all",
+		":reviewer(alexanderniebuhr)",
 		":gitSignOff",
 		":maintainLockFilesWeekly",
 		":semanticCommitsDisabled"
