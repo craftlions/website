@@ -16,7 +16,7 @@
 	"devDependencies": {
 		"@astrojs/check": "0.9.8",
 		"@astrojs/cloudflare": "13.1.10",
-		"@astrojs/compiler-rs": "0.1.7",
+		"@astrojs/compiler-rs": "0.1.8",
 		"@astrojs/sitemap": "3.7.2",
 		"@biomejs/biome": "2.4.12",
 		"@cloudflare/vite-plugin": "1.32.3",
