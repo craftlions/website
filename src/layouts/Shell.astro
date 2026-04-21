@@ -1,0 +1,16 @@
+---
+import "../styles/global.css";
+const lang = Astro.currentLocale;
+---
+
+<html lang={lang ?? "en"}>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="generator" content={Astro.generator}>
+
+		<slot name="head" />
+		<link rel="sitemap" href="/sitemap-index.xml">
+	</head>
+	<slot name="body" />
+</html>

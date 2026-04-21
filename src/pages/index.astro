@@ -1,17 +1,255 @@
 ---
 export const prerender = true;
 
-import "../styles/global.css";
+import LogoWithTextVertical from "../assets/logoWithTextVertical.svg";
+import Shell from "../layouts/Shell.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="generator" content={Astro.generator}>
-		<link rel="sitemap" href="/sitemap-index.xml">
-	</head>
-	<body
-		class="bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100"
-	> </body>
-</html>
+<Shell>
+	<Fragment slot="head">
+		<title>
+			craftlions | Modern Freelance IT Services, Technical Advisory & Product
+			Development
+		</title>
+		<meta
+			name="description"
+			content="Craftlions delivers modern IT services, technical advisory, pair programming, workshops, and high-quality digital solutions for businesses that want reliable expertise without overpriced agencies or unreliable freelancers."
+		>
+		<meta
+			name="keywords"
+			content="IT services, technical advisory, freelance developer, software consultant, modern web development, pair programming, workshops, asynchronous collaboration, future-proof technology, external technical expertise, software architecture, digital product development"
+		>
+		<meta
+			property="og:title"
+			content="Craftlions | Modern IT Services & Technical Advisory"
+		>
+		<meta
+			property="og:description"
+			content="Reliable, high-quality IT services and technical expertise for businesses that want innovation, flexibility, and long-term success."
+		>
+		<meta property="og:type" content="website">
+	</Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh flex flex-col bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-12 p-4 text-pretty"
+		>
+			<header class="flex flex-col gap-6 items-center max-w-3xl mx-auto">
+				<nav class="py-6"><LogoWithTextVertical class="h-28" /></nav>
+				<section class="flex flex-col gap-4">
+					<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
+						Modern IT services for ambitious companies
+					</h1>
+					<p class="pl-3">
+						craftlions revolutionizes IT services with unmatched passion,
+						dedication, and a pratical innovative mindset. We help businesses by
+						delivering modern digital solutions, technical advisory, and
+						future-proof decisions designed for real business outcomes.
+					</p>
+					<p class="pl-3">
+						From product development and technical strategy to workshops, and
+						hands-on delivery, Craftlions brings external expertise that
+						integrates seamlessly into your existing processes. Our focus is
+						simple:
+						<strong>
+							top-tier quality, customer satisfaction, and innovative ideas that
+							help you stay ahead of the competition.
+						</strong>
+					</p>
+				</section>
+				<section>
+					<a
+						href="mailto:alexander@craftlions.com"
+						class="bg-cyan-700 text-neutral-50 px-6 py-3 font-bold hover:bg-cyan-800 transition-colors"
+					>
+						Start your project with us
+					</a>
+				</section>
+			</header>
+
+			<main
+				class="flex-1 w-full flex flex-col min-h-0 pl-3 max-w-3xl mx-auto gap-12"
+			>
+				<!-- <section class="text-center flex flex-col gap-2">
+					<h3 class="font-bold text-xl">Trusted by:</h3>
+					<ul class="flex flex-row gap-6">
+						<li>Cloudflare</li>
+						<li>Astro</li>
+						<li>AWS Amplify</li>
+						<li>Google Cloud Platform</li>
+					</ul>
+				</section> -->
+				<section class="flex flex-col gap-6">
+					<h2 class="font-extrabold text-2xl">
+						Services reimagined to exceed modern innovative expectations
+					</h2>
+					<article class="flex flex-col gap-3">
+						<h3 class="text-xl font-bold">
+							State-of-the-art software development
+						</h3>
+						<p>
+							craftlions specializes in innovative and modern technologies to
+							ensure every project is future-proof, scalable and maintainable
+							and built to industry standards. The result is software that
+							performs exceptionally well today and remains valuable tomorrow.
+						</p>
+					</article>
+					<article class="flex flex-col gap-3">
+						<h3 class="text-xl font-bold">Flexible & Asynchronous</h3>
+						<p>
+							Prefer fewer unproductive meetings and more momentum? So do we.
+							craftlions supports flexibility that matches your preferences,
+							strcutrures and processes. We embrace an async-first approach, but
+							are always available for real-time collaboration when needed. We
+							adapt to your rhythm, not the other way around, to ensure smooth
+							communication and efficient progress without unnecessary
+							disruptions.
+						</p>
+					</article>
+					<article class="flex flex-col gap-3">
+						<h3 class="text-xl font-bold">
+							Technical Advisory & Strategic Guidance
+						</h3>
+						<p>
+							Strong products require more than code. craftlions helps you make
+							smarter technical decisions with confidence. We provide external
+							expertise to evaluate ideas, define clear implementation paths,
+							and ensure your technical direction supports your goals. We help
+							you choose solutions that support growth, reduce future risk, and
+							create solutions that are truly unique.
+						</p>
+					</article>
+					<article class="flex flex-col gap-3">
+						<h3 class="text-xl font-bold">Workshops & Continuous Learning</h3>
+						<p>
+							Great results come from strong teams and knowledge-sharing. We
+							support continuous learning through workshops. craftlions offers
+							teams the opportunity to learn from our expertise, stay up-to-date
+							with the latest technologies, and develop skills that empower them
+							to build better products and make informed technical decisions.
+						</p>
+					</article>
+					<section>
+						<a
+							href="mailto:alexander@craftlions.com"
+							class="border border-cyan-700 hover:bg-cyan-800 px-4 py-2"
+						>
+							Learn more about our services
+						</a>
+					</section>
+				</section>
+				<section class="flex flex-col gap-6">
+					<h2 class="font-extrabold text-2xl">Why choose craftlions?</h2>
+					<p>
+						At craftlions, quality is not an afterthought. it is the foundation
+						of everything we do. We beleive that balancing innovation,
+						maintainability, performance and business value are key factors to
+						success.
+					</p>
+					<ul>
+						<li>
+							* Years of experience with modern technology across multiple
+							sectors
+						</li>
+						<li>
+							* Professionals with a proven track record of reliable delivery
+						</li>
+						<li>
+							* High innovative thinking with practicallity and technical depth
+						</li>
+						<li>
+							* Individualized solutions tailored to your business goals and
+							operational realities
+						</li>
+						<li>
+							* A commitment to quality, customer satisfaction, and long-term
+							success
+						</li>
+						<li>
+							* Seamless integration with your processes, tools, and preferred
+							ways of working
+						</li>
+						<li>* Commitment to top-tier quality in every engagement</li>
+						<li>
+							* A clear standard: we only undertake tasks we are confident we
+							can deliver at exceptional quality
+						</li>
+					</ul>
+				</section>
+				<section class="flex flex-col gap-6">
+					<h2 class="font-extrabold text-2xl">
+						Let's build something better together
+					</h2>
+					<p>
+						craftlions helps businesses build smarter with modern IT services,
+						technical advisory, and hands-on product development support.
+						Whether you need a reliable technology partner, software
+						architecture expertise, or strategic technical guidance, we create
+						practical, scalable solutions built for long-term success.
+					</p>
+					<p>
+						We approach every project with curiosity, clarity, and full
+						ownership. By challenging outdated thinking and introducing fresh,
+						effective ideas, craftlions helps move your business forward with
+						confidence. From technical strategy and system architecture to
+						collaborative product development, our work is focused on delivering
+						results that exceed expectations.
+					</p>
+					<p>
+						Our mission goes beyond writing code. We help you strengthen your
+						technical foundation, make better technology decisions, reduce
+						unnecessary complexity, and build products and systems designed to
+						last. That is what future-proof services should deliver:
+						reliability, maintainability, and real business value.
+					</p>
+					<p>
+						Every solution we create is shaped around quality, innovation, and
+						customer satisfaction. We align technical decisions with your
+						business goals, minimize risk, and prepare your company for
+						sustainable growth. By combining modern technologies with proven
+						engineering practices, craftlions helps you stay competitive without
+						compromising stability or performance.
+					</p>
+					<p>
+						If you are looking for a technical partner that brings external
+						expertise, strategic clarity, creative problem-solving, and a
+						commitment to high-quality delivery, craftlions is ready to help.
+						Get in touch to discuss your project, challenge, or idea, and
+						discover how we can help you move faster, build smarter, and achieve
+						better technical outcomes.
+					</p>
+					<section>
+						<a
+							href="mailto:alexander@craftlions.com"
+							class="border border-cyan-700 hover:bg-cyan-800 px-4 py-2"
+						>
+							Get in touch.
+						</a>
+					</section>
+				</section>
+			</main>
+			<footer
+				class="grid grid-cols-4 gap-4 items-center justify-items-center bg-neutral-850 px-4"
+			>
+				<section><LogoWithTextVertical class="w-20" /></section>
+				<p class="col-span-2">
+					Discover if craftlions works for you. (We think it does.) Explore our
+					platform with a personalized demo and see how we can revolutionize
+					your tech processes.
+				</p>
+				<section>
+					<ul>
+						<li><a href="mailto:alexander@craftlions.com">Contact</a></li>
+						<li><a href="https://github.com/craftlions">GitHub</a></li>
+						<li>
+							<a href="https://www.linkedin.com/company/craftlions">LinkedIn</a>
+						</li>
+						<li><a href="/imprint">Imprint</a></li>
+					</ul>
+				</section>
+				<p class="col-span-4 flex justify-center py-4 text-sm text-neutral-500">
+					&copy; 2026 Craftlions. All rights reserved.
+				</p>
+			</footer>
+		</body>
+	</Fragment>
+</Shell>
