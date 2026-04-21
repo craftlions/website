@@ -19,7 +19,7 @@
 		"@astrojs/compiler-rs": "0.1.8",
 		"@astrojs/sitemap": "3.7.2",
 		"@biomejs/biome": "2.4.12",
-		"@cloudflare/vite-plugin": "1.32.3",
+		"@cloudflare/vite-plugin": "1.33.1",
 		"@tailwindcss/vite": "4.2.4",
 		"@types/node": "25.6.0",
 		"@typescript/native-preview": "7.0.0-dev.20260421.1",
