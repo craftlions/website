@@ -28,7 +28,7 @@
 		"lightningcss": "1.32.0",
 		"tailwindcss": "4.2.2",
 		"update-browserslist-db": "1.2.3",
-		"wrangler": "4.83.0"
+		"wrangler": "4.84.1"
 	},
 	"devEngines": {
 		"runtime": {
