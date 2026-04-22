@@ -1,0 +1,51 @@
+---
+export const prerender = true;
+
+import LogoWithTextVertical from "../assets/logoWithTextVertical.svg";
+import Shell from "../layouts/Shell.astro";
+import { authClient } from "../lib/auth-client.ts";
+
+// const { data, error } = await authClient.organization.list();
+---
+
+<Shell>
+	<Fragment slot="head"> <title>craftlions | Dashboard</title> </Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh flex flex-col bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-12 p-4 text-pretty"
+		>
+			<header class="flex flex-col gap-6 items-center max-w-3xl mx-auto">
+				<nav class="py-6"><LogoWithTextVertical class="h-28" /></nav>
+			</header>
+
+			<main
+				class="flex-1 w-full flex flex-col min-h-0 pl-3 max-w-3xl mx-auto gap-12"
+			>
+				<section><p>DASHBOARD</p></section>
+			</main>
+			<footer
+				class="grid grid-cols-4 gap-4 items-center justify-items-center bg-neutral-850 px-4"
+			>
+				<section><LogoWithTextVertical class="w-20" /></section>
+				<p class="col-span-2">
+					Discover if craftlions works for you. (We think it does.) Explore our
+					platform with a personalized demo and see how we can revolutionize
+					your tech processes.
+				</p>
+				<section>
+					<ul>
+						<li><a href="mailto:alexander@craftlions.com">Contact</a></li>
+						<li><a href="https://github.com/craftlions">GitHub</a></li>
+						<li>
+							<a href="https://www.linkedin.com/company/craftlions">LinkedIn</a>
+						</li>
+						<li><a href="/imprint">Imprint</a></li>
+					</ul>
+				</section>
+				<p class="col-span-4 flex justify-center py-4 text-sm text-neutral-500">
+					&copy; 2026 Craftlions. All rights reserved.
+				</p>
+			</footer>
+		</body>
+	</Fragment>
+</Shell>

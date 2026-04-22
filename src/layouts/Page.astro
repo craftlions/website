@@ -6,9 +6,7 @@ import Shell from "./Shell.astro";
 <Shell>
 	<Fragment slot="head"> <slot name="head" /> </Fragment>
 	<Fragment slot="body">
-		<header>
-			<slot name="header" />
-		</header>
+		<header> <slot name="header" /> </header>
 
 		<main class="flex-1 w-full flex flex-col min-h-0">
 			<slot name="main" />
@@ -16,9 +14,7 @@ import Shell from "./Shell.astro";
 		<footer
 			class="grid grid-cols-4 gap-4 items-center justify-items-center bg-neutral-850 px-4"
 		>
-			<section>
-				<LogoWithTextVertical class="w-20" />
-			</section>
+			<section> <LogoWithTextVertical class="w-20" /> </section>
 			<p class="col-span-2">
 				Discover if craftlions works for you. (We think it does.) Explore our
 				platform with a personalized demo and see how we can revolutionize your
