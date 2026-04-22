@@ -24,7 +24,7 @@
 		"@cloudflare/vite-plugin": "1.33.1",
 		"@tailwindcss/vite": "4.2.4",
 		"@types/node": "25.6.0",
-		"@typescript/native-preview": "7.0.0-dev.20260421.2",
+		"@typescript/native-preview": "7.0.0-dev.20260422.1",
 		"astro": "6.1.8",
 		"auth": "1.6.6",
 		"better-auth": "1.6.6",
