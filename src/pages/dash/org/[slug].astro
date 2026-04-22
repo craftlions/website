@@ -1,0 +1,89 @@
+---
+export const prerender = false;
+
+import { isAPIError } from "better-auth/api";
+import LogoWithTextVertical from "../../../assets/logoWithTextVertical.svg";
+import Button from "../../../components/Button.astro";
+import Footer from "../../../components/Footer.astro";
+import Shell from "../../../layouts/Shell.astro";
+import { auth } from "../../../lib/auth.ts";
+
+const { slug } = Astro.params;
+
+const session = await auth.api.getSession({
+	headers: Astro.request.headers,
+});
+
+if (!session) {
+	return Astro.redirect("/login");
+}
+
+if (!session.session.activeOrganizationId) {
+	try {
+		await auth.api.setActiveOrganization({
+			body: {
+				organizationSlug: slug,
+			},
+			headers: Astro.request.headers,
+		});
+	} catch (error) {
+		if (isAPIError(error) && error.body?.code === "ORGANIZATION_NOT_FOUND") {
+			return Astro.redirect("/dash");
+		}
+	}
+}
+
+const organization = await auth.api.getFullOrganization({
+	query: {
+		organizationSlug: slug,
+		membersLimit: 0,
+	},
+	headers: Astro.request.headers,
+});
+---
+
+<Shell>
+	<Fragment slot="head"> <title>craftlions | Dashboard</title> </Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+		>
+			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+				<nav class="grid grid-cols-[1fr_auto_1fr] w-full items-center">
+					<LogoWithTextVertical
+						class="h-10"
+						style="view-transition-name: nav-logo;"
+					/>
+					<section class="justify-self-end col-start-3">
+						<Button type="button" id="logout-button">Logout</Button>
+					</section>
+				</nav>
+			</header>
+
+			<main
+				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
+			>
+				user: {session.user.name} <br>
+				org: {organization?.name}
+			</main>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>
+
+<script>
+	import { authClient } from "../../../lib/auth-client.ts";
+
+	const logoutButton = document.getElementById("logout-button");
+	if (logoutButton && logoutButton instanceof HTMLButtonElement) {
+		logoutButton.addEventListener("click", async () => {
+			await authClient.signOut({
+				fetchOptions: {
+					onSuccess: () => {
+						window.location.replace("/");
+					},
+				},
+			});
+		});
+	}
+</script>
