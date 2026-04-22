@@ -184,3 +184,18 @@ const data = await auth.api.addMember({
 ```
 
 https://better-auth.com/docs/plugins/organization#access-control
+
+
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && !document.cookie.match(/my-cookie)) {
+    // Force a reload if the user has logged out.
+    location.reload();
+  }
+});
+
+const reloadOnBfCache = (e) => {
+  if (e.persisted) {
+    globalThis.location.reload();
+  }
+};
+window.addEventListener('pageshow', reloadOnBfCache);
