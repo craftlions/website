@@ -9,6 +9,14 @@ const lang = Astro.currentLocale;
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="generator" content={Astro.generator}>
 
+		<style is:inline>
+			@media (prefers-reduced-motion: no-preference) {
+				@view-transition {
+					navigation: auto;
+				}
+			}
+		</style>
+
 		<slot name="head" />
 		<link rel="sitemap" href="/sitemap-index.xml">
 	</head>

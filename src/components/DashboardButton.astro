@@ -1,0 +1,22 @@
+---
+import { auth } from "../lib/auth.ts";
+import Button from "./Button.astro";
+
+const session = await auth.api.getSession({
+	headers: await Astro.request.headers,
+});
+---
+
+{session ? (
+  <a href="/dashboard">
+    <Button type="button">
+      Dashboard
+    </Button>
+  </a>
+) : (
+  <a href="/login">
+    <Button type="button">
+      Login
+    </Button>
+  </a>
+)}

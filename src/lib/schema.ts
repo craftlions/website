@@ -18,6 +18,7 @@ export const user = sqliteTable(
 export const session = sqliteTable(
 	"session",
 	{
+		id: t.text("id").primaryKey(),
 		userId: t
 			.text("user_id")
 			.notNull()
