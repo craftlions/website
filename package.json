@@ -15,7 +15,7 @@
 	},
 	"devDependencies": {
 		"@astrojs/check": "0.9.8",
-		"@astrojs/cloudflare": "13.1.10",
+		"@astrojs/cloudflare": "13.2.0",
 		"@astrojs/compiler-rs": "0.1.8",
 		"@astrojs/sitemap": "3.7.2",
 		"@better-auth/drizzle-adapter": "1.6.6",
@@ -25,7 +25,7 @@
 		"@tailwindcss/vite": "4.2.4",
 		"@types/node": "25.6.0",
 		"@typescript/native-preview": "7.0.0-dev.20260422.1",
-		"astro": "6.1.8",
+		"astro": "6.1.9",
 		"auth": "1.6.6",
 		"better-auth": "1.6.7",
 		"browserslist": "4.28.2",
