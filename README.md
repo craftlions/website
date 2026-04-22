@@ -45,7 +45,7 @@ const { data, error } = await authClient.signIn.email({
     email: "john.doe@example.com", // required
     password: "password1234", // required
     rememberMe: true,
-    callbackURL: "https://example.com/callback",
+    callbackURL: "/dashboard",
 },{
     onError: (ctx) => {
       // Handle the error
