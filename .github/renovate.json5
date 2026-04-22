@@ -16,5 +16,15 @@
 	],
 	"ignorePresets": ["security:minimumReleaseAgeNpm"],
 	"osvVulnerabilityAlerts": true,
-	"postUpdateOptions": ["pnpmDedupe"],
+  "postUpdateOptions": ["pnpmDedupe"],
+	"packageRules": [
+    {
+      "matchPackageNames": ["better-auth", "@better-auth/**"],
+      "groupName": "Better Auth"
+    },
+    {
+      "matchPackageNames": ["drizzle-kit", "drizzle-orm"],
+      "groupName": "Drizzle"
+    }
+  ],
 }
