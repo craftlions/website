@@ -21,7 +21,7 @@
 		"@better-auth/drizzle-adapter": "1.6.9",
 		"@better-auth/infra": "0.2.5",
 		"@biomejs/biome": "2.4.13",
-		"@cloudflare/vite-plugin": "1.33.1",
+		"@cloudflare/vite-plugin": "1.33.2",
 		"@tailwindcss/vite": "4.2.4",
 		"@types/node": "25.6.0",
 		"@typescript/native-preview": "7.0.0-dev.20260423.1",
