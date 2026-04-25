@@ -16,7 +16,7 @@
 	"devDependencies": {
 		"@astrojs/check": "0.9.8",
 		"@astrojs/cloudflare": "13.2.1",
-		"@astrojs/compiler-rs": "0.1.9",
+		"@astrojs/compiler-rs": "0.1.10",
 		"@astrojs/sitemap": "3.7.2",
 		"@better-auth/drizzle-adapter": "1.6.9",
 		"@better-auth/infra": "0.2.5",
