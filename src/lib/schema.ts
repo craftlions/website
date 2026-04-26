@@ -1,4 +1,3 @@
-import idleDirective from "astro/runtime/client/idle.js";
 import * as t from "drizzle-orm/sqlite-core";
 import { sqliteTable } from "drizzle-orm/sqlite-core";
 

@@ -8,6 +8,18 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.user.id,
 		}),
 	},
+	organization: {
+		projects: r.many.project({
+			from: r.organization.id,
+			to: r.project.organizationId,
+		}),
+	},
+	project: {
+		organization: r.one.organization({
+			from: r.project.organizationId,
+			to: r.organization.id,
+		}),
+	},
 	session: {
 		user: r.one.user({
 			from: r.session.userId,
