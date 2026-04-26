@@ -4,4 +4,6 @@ allowBuilds:
   sharp: true
   workerd: true
 minimumReleaseAge: 0
+patchedDependencies:
+  wrangler@4.85.0: patches/wrangler.patch
 shellEmulator: true

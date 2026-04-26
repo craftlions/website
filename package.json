@@ -11,7 +11,8 @@
 		"dev": "astro dev",
 		"preview": "astro build && astro preview",
 		"preview:wrangler": "astro build && wrangler dev",
-		"types": "wrangler types --include-runtime --include-env --strict-vars"
+		"types": "wrangler types --include-runtime --include-env --strict-vars",
+		"cf-check": "wrangler types --include-runtime --include-env --strict-vars --check"
 	},
 	"devDependencies": {
 		"@astrojs/check": "0.9.8",
