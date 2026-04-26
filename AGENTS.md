@@ -13,9 +13,12 @@ pn astro sync
 
 ## Hard Requirements
 
+- Never run a dev server; assume one is already running.
 - Use inline Tailwind utility classes only; avoid standalone CSS rules or style blocks.
 - Use CSS grid, never flexbox.
 - Keep markup minimal and semantic.
+- Prefer accessing values directly where they are used instead of creating one-off aliases or derived variables. Add variables only when reused, needed for type narrowing, or when they remove real complexity.
+- Use Drizzle Relational Query Builder v2 (`db.query.*`) for reads when relations or simple table lookups are involved.
 
 ## Validation
 
