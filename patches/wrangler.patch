@@ -1,0 +1,14 @@
+diff --git a/wrangler-dist/cli.js b/wrangler-dist/cli.js
+index 8da7c4f0aa3856c007f81e0a317dd2c7f26d2533..abe24fd43c8aabcd4f6d5695a23c8b4302b4bf96 100644
+--- a/wrangler-dist/cli.js
++++ b/wrangler-dist/cli.js
+@@ -294529,6 +294529,9 @@ var init_helpers7 = __esm({
+       return `${RUNTIME_HEADER_COMMENT_PREFIX}${workerdVersion} ${compatibilityDate} ${compatibilityFlags.sort().join(",")}`;
+     }, "getRuntimeHeader");
+     unsafeParseBooleanString = /* @__PURE__ */ __name((value) => {
++      if (typeof value === "boolean") {
++        return value;
++      }
+       if (typeof value !== "string") {
+         throw new ParseError({
+           text: `Invalid value: ${value}`,
