@@ -26,10 +26,11 @@ pn astro sync
 Run these commands after making changes:
 
 ```shell
-pn biome check --write
+pn drizzle-kit check
 pn types
+pn run cf-check
 pn astro sync
 pn run check
-pn run cf-check
-pn drizzle-kit check
+pn biome check --write
+pn run build
 ```
