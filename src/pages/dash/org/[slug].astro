@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 
+import { actions, isInputError } from "astro:actions";
 import { isAPIError } from "better-auth/api";
 import LogoWithTextVertical from "../../../assets/logoWithTextVertical.svg";
 import Footer from "../../../components/Footer.astro";
@@ -42,13 +43,32 @@ const organization = await auth.api.getFullOrganization({
 	headers: Astro.request.headers,
 });
 
+const updateMetadataResult = Astro.getActionResult(
+	actions.updateOrganizationMetadata,
+);
+const metadataInputErrors = isInputError(updateMetadataResult?.error)
+	? updateMetadataResult.error.fields
+	: {};
+
+if (updateMetadataResult && !updateMetadataResult.error) {
+	return Astro.redirect(`/dash/org/${slug}`, 303);
+}
+
 const projects = organization
 	? await db.query.project.findMany({
-			columns: { id: true, name: true },
+			columns: { id: true, name: true, budget: true },
 			where: { organizationId: organization.id },
 			orderBy: { name: "asc" },
 		})
 	: [];
+
+const metadata = organization
+	? await db.query.organizationMetadata.findFirst({
+			where: { organizationId: organization.id },
+		})
+	: null;
+
+const totalBudget = metadata?.yearlyBudget ?? 0;
 ---
 
 <Shell>
@@ -78,6 +98,47 @@ const projects = organization
 					</h1>
 				</section>
 
+				<section class="grid content-start gap-3">
+					<h2
+						class="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+					>
+						Yearly Budget
+					</h2>
+					<form
+						method="post"
+						action={actions.updateOrganizationMetadata}
+						class="grid grid-cols-[1fr_auto] gap-3 items-center"
+					>
+						<input type="hidden" name="organizationId" value={organization?.id}>
+						<input
+							type="number"
+							name="yearlyBudget"
+							min="0"
+							step="1"
+							placeholder="Enter yearly budget"
+							value={metadata?.yearlyBudget ?? ""}
+							aria-describedby={metadataInputErrors.yearlyBudget
+								? "yearly-budget-error"
+								: undefined}
+							class="bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+						>
+						<button
+							type="submit"
+							class="px-3 py-2 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
+						>
+							Save
+						</button>
+						{metadataInputErrors.yearlyBudget && (
+							<p
+								id="yearly-budget-error"
+								class="col-span-2 text-sm text-red-700 dark:text-red-300"
+							>
+								{metadataInputErrors.yearlyBudget.join(", ")}
+							</p>
+						)}
+					</form>
+				</section>
+
 				<section
 					aria-labelledby="projects-list-heading"
 					class="grid content-start gap-3"
@@ -95,12 +156,22 @@ const projects = organization
 									<article class="grid gap-1">
 										<h3 class="font-semibold">{projectRecord.name}</h3>
 									</article>
+									{projectRecord.budget != null && (
+										<p class="text-sm text-neutral-600 dark:text-neutral-400">
+											{projectRecord.budget.toLocaleString()} €
+										</p>
+									)}
 								</li>
 							))}
 						</ul>
 					) : (
 						<p class="border border-dashed border-neutral-200 dark:border-neutral-800 p-4 text-sm text-neutral-600 dark:text-neutral-400">
 							No projects yet.
+						</p>
+					)}
+					{totalBudget > 0 && (
+						<p class="border-t border-dashed border-neutral-200 dark:border-neutral-800 pt-3 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+							Total budget: {totalBudget.toLocaleString()} €
 						</p>
 					)}
 				</section>
