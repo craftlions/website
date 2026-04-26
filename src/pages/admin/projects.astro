@@ -127,11 +127,12 @@ const organizationGroups = await db.query.organization.findMany({
 													{organizationRecord.name}
 												</p>
 											</article>
-											<form
-												method="post"
-												action={actions.deleteProject}
-												class="grid justify-self-start sm:justify-self-end"
-											>
+										<form
+											method="post"
+											action={actions.deleteProject}
+											class="grid justify-self-start sm:justify-self-end"
+											data-confirm="Are you sure you want to delete this project?"
+										>
 												<input
 													type="hidden"
 													name="projectId"
@@ -179,6 +180,7 @@ const organizationGroups = await db.query.organization.findMany({
 									class="border border-dashed border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300"
 								>
 									Unable to create project. Please check the fields and try again.
+									{createProjectResult?.error}
 								</p>
 							)}
 
@@ -273,4 +275,16 @@ const organizationGroups = await db.query.organization.findMany({
 			});
 		});
 	}
+
+	const deleteForms = document.querySelectorAll("form[data-confirm]");
+	deleteForms.forEach((form) => {
+		if (form instanceof HTMLFormElement) {
+			form.addEventListener("submit", (event) => {
+				event.preventDefault();
+				if (window.confirm(form.dataset.confirm)) {
+					form.submit();
+				}
+			});
+		}
+	});
 </script>
