@@ -29,6 +29,15 @@ Biome
 ```shell
 pn biome check --write
 ```
+sync astro
+```shell
+pn astro sync
+```
+
+Types
+```shell
+pn run check
+```
 
 ```shell
 pn auth info
