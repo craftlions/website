@@ -128,7 +128,7 @@ export const server = {
 			yearlyBudget: z.coerce
 				.number()
 				.int()
-				.min(0, "Budget must be a positive number.")
+				.min(0, "Budget must be a non-negative number.")
 				.optional(),
 		}),
 		handler: async ({ organizationId, yearlyBudget }, context) => {
