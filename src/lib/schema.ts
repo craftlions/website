@@ -11,6 +11,10 @@ export const user = sqliteTable(
 		image: t.text("image"),
 		createdAt: t.integer("created_at", { mode: "timestamp_ms" }).notNull(),
 		updatedAt: t.integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+		role: t.text("role"),
+		banned: t.integer("banned"),
+		banReason: t.text("ban_reason"),
+		banExpires: t.integer("ban_expires", { mode: "timestamp_ms" }),
 	},
 	(table) => [t.uniqueIndex("user_email_idx").on(table.email)],
 );
@@ -31,6 +35,7 @@ export const session = sqliteTable(
 		updatedAt: t.integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 		activeOrganizationId: t.text("active_organization_id"),
 		activeTeamId: t.text("active_team_id"),
+		impersonatedBy: t.text("impersonated_by"),
 	},
 	(table) => [
 		t.index("session_user_id_idx").on(table.userId),

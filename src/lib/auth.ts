@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { dash } from "@better-auth/infra";
 import { betterAuth } from "better-auth/minimal";
-import { organization } from "better-auth/plugins";
+import { admin, organization } from "better-auth/plugins";
 import { db } from "./database.ts";
 
 export const auth = betterAuth({
@@ -93,6 +93,7 @@ export const auth = betterAuth({
 			// teams
 			// sendInvitationEmail
 		}),
+		admin(),
 	],
 	rateLimit: {
 		storage: "database",
