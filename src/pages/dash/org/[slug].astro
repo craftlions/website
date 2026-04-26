@@ -7,6 +7,7 @@ import Button from "../../../components/Button.astro";
 import Footer from "../../../components/Footer.astro";
 import Shell from "../../../layouts/Shell.astro";
 import { auth } from "../../../lib/auth.ts";
+import { db } from "../../../lib/database.ts";
 
 const { slug } = Astro.params;
 
@@ -40,6 +41,14 @@ const organization = await auth.api.getFullOrganization({
 	},
 	headers: Astro.request.headers,
 });
+
+const projects = organization
+	? await db.query.project.findMany({
+			columns: { id: true, name: true },
+			where: { organizationId: organization.id },
+			orderBy: { name: "asc" },
+		})
+	: [];
 ---
 
 <Shell>
@@ -63,8 +72,38 @@ const organization = await auth.api.getFullOrganization({
 			<main
 				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
 			>
-				user: {session.user.name} <br>
-				org: {organization?.name}
+				<section class="grid grid-cols-[1fr_auto] items-start gap-4">
+					<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
+						{organization?.name}
+					</h1>
+				</section>
+
+				<section
+					aria-labelledby="projects-list-heading"
+					class="grid content-start gap-3"
+				>
+					<h2
+						id="projects-list-heading"
+						class="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+					>
+						Projects
+					</h2>
+					{projects.length > 0 ? (
+						<ul class="grid gap-3">
+							{projects.map((projectRecord) => (
+								<li class="grid gap-3 border border-dashed border-neutral-200 dark:border-neutral-800 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+									<article class="grid gap-1">
+										<h3 class="font-semibold">{projectRecord.name}</h3>
+									</article>
+								</li>
+							))}
+						</ul>
+					) : (
+						<p class="border border-dashed border-neutral-200 dark:border-neutral-800 p-4 text-sm text-neutral-600 dark:text-neutral-400">
+							No projects yet.
+						</p>
+					)}
+				</section>
 			</main>
 			<Footer />
 		</body>
