@@ -1,0 +1,35 @@
+---
+import type { HTMLAttributes } from "astro/types";
+---
+
+<logout-button>
+	<button
+		class="px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
+		type="button"
+	>
+		<slot>Logout</slot>
+	</button>
+</logout-button>
+
+<script>
+	class LogoutButton extends HTMLElement {
+		connectedCallback() {
+			const button = this.querySelector("button");
+			if (button && button instanceof HTMLButtonElement) {
+				button.addEventListener("click", async () => {
+					try {
+						const { authClient } = await import("../../lib/auth-client.ts");
+						await authClient.signOut();
+						window.location.replace("/login");
+					} catch {
+						alert("Unable to sign out. Please try again.");
+					}
+				});
+			}
+		}
+	}
+
+	if (!customElements.get("logout-button")) {
+		customElements.define("logout-button", LogoutButton);
+	}
+</script>
