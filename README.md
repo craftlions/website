@@ -36,9 +36,9 @@ pn auth generate
 
 pn drizzle-kit generate
 pn drizzle-kit migrate
-
-pn drizzle-kit push
 ```
+
+NOTES
 
 ```ALWAYS CLIENT
 const { data, error } = await authClient.signIn.email({
