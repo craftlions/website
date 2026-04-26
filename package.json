@@ -37,6 +37,9 @@
 		"update-browserslist-db": "1.2.3",
 		"wrangler": "4.85.0"
 	},
+	"browserslist": [
+		"last 2 Chrome versions"
+	],
 	"devEngines": {
 		"runtime": {
 			"name": "node",
