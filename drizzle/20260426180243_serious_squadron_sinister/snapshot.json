@@ -1,8 +1,8 @@
 {
 	"version": "7",
 	"dialect": "sqlite",
-	"id": "6102324f-bfd8-4a44-b40b-f77b8e30a235",
-	"prevIds": ["d63f3f1e-1db1-4efb-99ca-e68246cbc846"],
+	"id": "e60fa6b1-a556-4186-a1d3-e35e3973d3f8",
+	"prevIds": ["6102324f-bfd8-4a44-b40b-f77b8e30a235"],
 	"ddl": [
 		{
 			"name": "account",
@@ -18,6 +18,10 @@
 		},
 		{
 			"name": "organization",
+			"entityType": "tables"
+		},
+		{
+			"name": "project",
 			"entityType": "tables"
 		},
 		{
@@ -355,6 +359,36 @@
 			"name": "created_at",
 			"entityType": "columns",
 			"table": "organization"
+		},
+		{
+			"type": "text",
+			"notNull": false,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "id",
+			"entityType": "columns",
+			"table": "project"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "organization_id",
+			"entityType": "columns",
+			"table": "project"
+		},
+		{
+			"type": "text",
+			"notNull": true,
+			"autoincrement": false,
+			"default": null,
+			"generated": null,
+			"name": "name",
+			"entityType": "columns",
+			"table": "project"
 		},
 		{
 			"type": "text",
@@ -732,6 +766,17 @@
 			"table": "member"
 		},
 		{
+			"columns": ["organization_id"],
+			"tableTo": "organization",
+			"columnsTo": ["id"],
+			"onUpdate": "NO ACTION",
+			"onDelete": "CASCADE",
+			"nameExplicit": false,
+			"name": "fk_project_organization_id_organization_id_fk",
+			"entityType": "fks",
+			"table": "project"
+		},
+		{
 			"columns": ["user_id"],
 			"tableTo": "user",
 			"columnsTo": ["id"],
@@ -768,6 +813,13 @@
 			"nameExplicit": false,
 			"name": "organization_pk",
 			"table": "organization",
+			"entityType": "pks"
+		},
+		{
+			"columns": ["id"],
+			"nameExplicit": false,
+			"name": "project_pk",
+			"table": "project",
 			"entityType": "pks"
 		},
 		{
@@ -881,6 +933,20 @@
 			"name": "organization_slug_idx",
 			"entityType": "indexes",
 			"table": "organization"
+		},
+		{
+			"columns": [
+				{
+					"value": "organization_id",
+					"isExpression": false
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"origin": "manual",
+			"name": "project_organization_id_idx",
+			"entityType": "indexes",
+			"table": "project"
 		},
 		{
 			"columns": [
