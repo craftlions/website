@@ -7,13 +7,14 @@ import Button from "./Button.astro";
 </logout-button>
 
 <script>
+	import { authClient } from "../lib/auth-client.ts";
+
 	class LogoutButton extends HTMLElement {
 		connectedCallback() {
 			const button = this.querySelector("button");
 			if (button && button instanceof HTMLButtonElement) {
 				button.addEventListener("click", async () => {
 					try {
-						const { authClient } = await import("../../lib/auth-client.ts");
 						await authClient.signOut();
 						window.location.replace("/login");
 					} catch {

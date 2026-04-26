@@ -2,8 +2,8 @@
 export const prerender = false;
 
 import LogoWithTextVertical from "../../assets/logoWithTextVertical.svg";
-import Button from "../../components/Button.astro";
 import Footer from "../../components/Footer.astro";
+import LogoutButton from "../../components/LogoutButton.astro";
 import Shell from "../../layouts/Shell.astro";
 import { auth } from "../../lib/auth.ts";
 
@@ -37,7 +37,7 @@ if (organizations.length === 1 && organizations[0]) {
 						style="view-transition-name: nav-logo;"
 					/>
 					<section class="justify-self-end col-start-3">
-						<Button type="button" id="logout-button">Logout</Button>
+						<LogoutButton />
 					</section>
 				</nav>
 			</header>
@@ -53,20 +53,3 @@ if (organizations.length === 1 && organizations[0]) {
 		</body>
 	</Fragment>
 </Shell>
-
-<script>
-	import { authClient } from "../../lib/auth-client.ts";
-
-	const logoutButton = document.getElementById("logout-button");
-	if (logoutButton && logoutButton instanceof HTMLButtonElement) {
-		logoutButton.addEventListener("click", async () => {
-			await authClient.signOut({
-				fetchOptions: {
-					onSuccess: () => {
-						window.location.replace("/login");
-					},
-				},
-			});
-		});
-	}
-</script>
