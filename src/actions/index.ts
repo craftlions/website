@@ -134,31 +134,22 @@ export const server = {
 		handler: async ({ organizationId, yearlyBudget }, context) => {
 			await assertOrganizationMember(context.request.headers, organizationId);
 
-			const existing = await db.query.organizationMetadata.findFirst({
-				where: {
-					organizationId,
-				},
-			});
-
-			if (existing) {
-				await db
-					.update(organizationMetadata)
-					.set({
-						yearlyBudget: yearlyBudget ?? null,
-						updatedAt: sql`(cast(unixepoch('subsecond') * 1000 as integer))`,
-					})
-					.where(eq(organizationMetadata.id, existing.id));
-
-				return { id: existing.id };
-			}
-
 			const id = crypto.randomUUID();
 
-			await db.insert(organizationMetadata).values({
-				id,
-				organizationId,
-				yearlyBudget: yearlyBudget ?? null,
-			});
+			await db
+				.insert(organizationMetadata)
+				.values({
+					id,
+					organizationId,
+					yearlyBudget: yearlyBudget ?? null,
+				})
+				.onConflictDoUpdate({
+					target: organizationMetadata.organizationId,
+					set: {
+						yearlyBudget: yearlyBudget ?? null,
+						updatedAt: sql`(cast(unixepoch('subsecond') * 1000 as integer))`,
+					},
+				});
 
 			return { id };
 		},

@@ -68,10 +68,7 @@ const metadata = organization
 		})
 	: null;
 
-const totalBudget = projects.reduce(
-	(sum, projectRecord) => sum + (projectRecord.budget ?? 0),
-	0,
-);
+const totalBudget = metadata?.yearlyBudget ?? 0;
 ---
 
 <Shell>
@@ -107,14 +104,6 @@ const totalBudget = projects.reduce(
 					>
 						Yearly Budget
 					</h2>
-					{!isInputError(updateMetadataResult?.error) && (
-						<p
-							role="alert"
-							class="border border-dashed border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300"
-						>
-							Unable to update budget. Please try again later.
-						</p>
-					)}
 					<form
 						method="post"
 						action={actions.updateOrganizationMetadata}
