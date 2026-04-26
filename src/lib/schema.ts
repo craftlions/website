@@ -1,3 +1,4 @@
+import idleDirective from "astro/runtime/client/idle.js";
 import * as t from "drizzle-orm/sqlite-core";
 import { sqliteTable } from "drizzle-orm/sqlite-core";
 
@@ -146,4 +147,17 @@ export const invitation = sqliteTable(
 		t.index("invitation_email_idx").on(table.email),
 		t.index("invitation_organization_id_idx").on(table.organizationId),
 	],
+);
+
+export const project = sqliteTable(
+	"project",
+	{
+		id: t.text("id").primaryKey(),
+		organizationId: t
+			.text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		name: t.text("name").notNull(),
+	},
+	(table) => [t.index("project_organization_id_idx").on(table.organizationId)],
 );
