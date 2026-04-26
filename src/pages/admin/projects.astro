@@ -1,0 +1,275 @@
+---
+export const prerender = false;
+
+import { actions, isInputError } from "astro:actions";
+import LogoWithTextVertical from "../../assets/logoWithTextVertical.svg";
+import Button from "../../components/Button.astro";
+import Footer from "../../components/Footer.astro";
+import Shell from "../../layouts/Shell.astro";
+import { auth } from "../../lib/auth.ts";
+import { db } from "../../lib/database.ts";
+
+const session = await auth.api.getSession({
+	headers: Astro.request.headers,
+});
+
+if (!session) {
+	return Astro.redirect("/login");
+}
+
+if (session.user.role !== "admin") {
+	return Astro.redirect("/dash");
+}
+
+const createProjectResult = Astro.getActionResult(actions.createProject);
+const deleteProjectResult = Astro.getActionResult(actions.deleteProject);
+const inputErrors = isInputError(createProjectResult?.error)
+	? createProjectResult.error.fields
+	: {};
+if (
+	(createProjectResult && !createProjectResult.error) ||
+	(deleteProjectResult && !deleteProjectResult.error)
+) {
+	return Astro.redirect("/admin/projects", 303);
+}
+
+const organizationGroups = await db.query.organization.findMany({
+	columns: {
+		id: true,
+		name: true,
+	},
+	with: {
+		projects: {
+			columns: {
+				id: true,
+				name: true,
+			},
+			orderBy: {
+				name: "asc",
+			},
+		},
+	},
+	orderBy: {
+		name: "asc",
+	},
+});
+---
+
+<Shell>
+	<Fragment slot="head"> <title>craftlions | Admin Projects</title> </Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+		>
+			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+				<nav class="grid grid-cols-[1fr_auto_1fr] w-full items-center">
+					<LogoWithTextVertical
+						class="h-10"
+						style="view-transition-name: nav-logo;"
+					/>
+					<section class="justify-self-end col-start-3">
+						<Button type="button" id="logout-button">Logout</Button>
+					</section>
+				</nav>
+			</header>
+
+			<main
+				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
+			>
+				<a href="/admin"><span>Back to Admin Overview</span></a>
+				<section class="grid grid-cols-[1fr_auto] items-start gap-4">
+					<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
+						Admin Projects
+					</h1>
+					<Button
+						type="button"
+						command="show-modal"
+						commandfor="project-modal"
+						disabled={organizationGroups.length === 0}
+					>
+						Add
+					</Button>
+				</section>
+
+				{organizationGroups.length === 0 && (
+						<p class="border border-dashed border-neutral-200 dark:border-neutral-800 p-4 text-sm text-neutral-600 dark:text-neutral-400">
+							Create an organization before adding projects.
+						</p>
+					)}
+
+				<section
+					aria-labelledby="projects-list-heading"
+					class="grid content-start gap-3"
+				>
+					{deleteProjectResult?.error && (
+							<p
+								role="alert"
+								class="border border-dashed border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+							>
+								Unable to delete project. Please try again later.
+							</p>
+						)}
+					<h2
+						id="projects-list-heading"
+						class="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+					>
+						Projects
+					</h2>
+					{organizationGroups.some(({ projects }) => projects.length > 0) ? (
+							<ul class="grid gap-3">
+								{organizationGroups.map((organizationRecord) =>
+									organizationRecord.projects.map((projectRecord) => (
+										<li class="grid gap-3 border border-dashed border-neutral-200 dark:border-neutral-800 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+											<article class="grid gap-1">
+												<h3 class="font-semibold">{projectRecord.name}</h3>
+												<p class="text-sm text-neutral-600 dark:text-neutral-400">
+													{organizationRecord.name}
+												</p>
+											</article>
+											<form
+												method="post"
+												action={actions.deleteProject}
+												class="grid justify-self-start sm:justify-self-end"
+											>
+												<input
+													type="hidden"
+													name="projectId"
+													value={projectRecord.id}
+												/>
+												<Button type="submit">Delete</Button>
+											</form>
+										</li>
+									)),
+								)}
+							</ul>
+						) : (
+							<p class="border border-dashed border-neutral-200 dark:border-neutral-800 p-4 text-sm text-neutral-600 dark:text-neutral-400">
+								No projects yet.
+							</p>
+						)}
+				</section>
+			</main>
+
+			<dialog
+				id="project-modal"
+				open={Boolean(createProjectResult?.error)}
+				class="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-xl overflow-hidden rounded-none border-l border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 text-neutral-950 dark:text-neutral-50 p-0 shadow-2xl backdrop:bg-neutral-950/40 backdrop:backdrop-blur-[1px]"
+			>
+				<form
+					method="post"
+					action={actions.createProject}
+					class="grid grid-rows-[auto_1fr_auto] h-full"
+				>
+					<header
+						class="grid grid-cols-[1fr_auto] items-center border-b border-dashed border-neutral-200 dark:border-neutral-800 px-6 py-4"
+					>
+						<h2 class="text-base font-semibold">New Project</h2>
+						<Button type="button" command="close" commandfor="project-modal">
+							X
+						</Button>
+					</header>
+
+					<section
+						class="min-h-0 overflow-y-auto px-6 py-6 grid content-start gap-5"
+					>
+						{createProjectResult?.error && (
+								<p
+									role="alert"
+									class="border border-dashed border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300"
+								>
+									Unable to create project. Please check the fields and try again.
+								</p>
+							)}
+
+						<div class="grid gap-1.5">
+							<label
+								for="name"
+								class="text-sm font-semibold text-neutral-700 dark:text-neutral-300"
+							>
+								Project name
+							</label>
+							<input
+								type="text"
+								id="name"
+								name="name"
+								required
+								maxlength="120"
+								aria-describedby={inputErrors.name ? "name-error" : undefined}
+								class="bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+							>
+							{inputErrors.name && (
+									<p id="name-error" class="text-sm text-red-700 dark:text-red-300">
+										{inputErrors.name.join(", ")}
+									</p>
+								)}
+						</div>
+
+						<div class="grid gap-1.5">
+							<label
+								for="organizationId"
+								class="text-sm font-semibold text-neutral-700 dark:text-neutral-300"
+							>
+								Organization
+							</label>
+							<select
+								id="organizationId"
+								name="organizationId"
+								required
+								disabled={organizationGroups.length === 0}
+								aria-describedby={inputErrors.organizationId
+										? "organizationId-error"
+										: undefined}
+								class="bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm outline-none focus:border-cyan-500 transition-colors"
+							>
+								<option value="" disabled selected
+									>Select an organization</option
+								>
+								{organizationGroups.map((organizationRecord) => (
+										<option
+											value={organizationRecord.id}
+										>
+											{organizationRecord.name}
+										</option>
+									))}
+							</select>
+							{inputErrors.organizationId && (
+									<p
+										id="organizationId-error"
+										class="text-sm text-red-700 dark:text-red-300"
+									>
+										{inputErrors.organizationId.join(", ")}
+									</p>
+								)}
+						</div>
+					</section>
+
+					<footer
+						class="grid grid-flow-col justify-end gap-3 border-t border-dashed border-neutral-200 dark:border-neutral-800 px-6 py-4"
+					>
+						<Button type="submit" disabled={organizationGroups.length === 0}>
+							Create Project
+						</Button>
+					</footer>
+				</form>
+			</dialog>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>
+
+<script>
+	import { authClient } from "../../lib/auth-client.ts";
+
+	const logoutButton = document.getElementById("logout-button");
+	if (logoutButton && logoutButton instanceof HTMLButtonElement) {
+		logoutButton.addEventListener("click", async () => {
+			await authClient.signOut({
+				fetchOptions: {
+					onSuccess: () => {
+						window.location.replace("/login");
+					},
+				},
+			});
+		});
+	}
+</script>

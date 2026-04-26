@@ -4,7 +4,7 @@ export default defineConfig({
 	dbCredentials: {
 		accountId: "1dc7f5dfd6f1830ea5b903d051c6d624",
 		databaseId: "78c70e61-7e19-4ebe-8cf0-7bde68d1b911",
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
+		// biome-ignore lint/style/noNonNullAssertion: Drizzle migrations require this token.
 		token: process.env.CLOUDFLARE_D1_TOKEN!,
 	},
 	dialect: "sqlite",
