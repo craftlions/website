@@ -44,6 +44,7 @@ const organization = await auth.api.getFullOrganization({
 
 const projects = organization
 	? await db.query.project.findMany({
+			columns: { id: true, name: true },
 			where: { organizationId: organization.id },
 			orderBy: { name: "asc" },
 		})
