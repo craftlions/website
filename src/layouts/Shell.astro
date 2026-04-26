@@ -1,5 +1,7 @@
 ---
 import "../styles/global.css";
+import BrowserWarning from "../components/BrowserWarning.astro";
+
 const lang = Astro.currentLocale;
 ---
 
@@ -20,5 +22,8 @@ const lang = Astro.currentLocale;
 		<slot name="head" />
 		<link rel="sitemap" href="/sitemap-index.xml">
 	</head>
-	<slot name="body" />
+	<body>
+		<BrowserWarning />
+		<slot name="body" />
+	</body>
 </html>

@@ -1,0 +1,19 @@
+<script>
+	const ua = navigator.userAgent;
+	const isChrome = /Chrome\/(\d+)/.test(ua);
+	const chromeVersion = isChrome
+		? parseInt(ua.match(/Chrome\/(\d+)/)?.[1] ?? "0", 10)
+		: 0;
+	const minVersion = 120;
+
+	if (!isChrome || chromeVersion < minVersion) {
+		const banner = document.createElement("div");
+		banner.className =
+			"grid grid-cols-[1fr_auto] gap-4 items-center bg-yellow-500 text-black px-4 py-2 text-sm";
+		banner.innerHTML = `
+				<span>Your browser is not fully supported. For the best experience, please use the latest version of Chrome.</span>
+				<button onclick="this.parentElement.remove()" class="hover:opacity-70">✕</button>
+			`;
+		document.body.insertBefore(banner, document.body.firstChild);
+	}
+</script>
