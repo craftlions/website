@@ -1,0 +1,31 @@
+---
+import Button from "./Button.astro";
+---
+
+<logout-button>
+	<Button type="button"> <slot>Logout</slot> </Button>
+</logout-button>
+
+<script>
+	import { authClient } from "../lib/auth-client.ts";
+
+	class LogoutButton extends HTMLElement {
+		connectedCallback() {
+			const button = this.querySelector("button");
+			if (button && button instanceof HTMLButtonElement) {
+				button.addEventListener("click", async () => {
+					try {
+						await authClient.signOut();
+						window.location.replace("/login");
+					} catch {
+						alert("Unable to sign out. Please try again.");
+					}
+				});
+			}
+		}
+	}
+
+	if (!customElements.get("logout-button")) {
+		customElements.define("logout-button", LogoutButton);
+	}
+</script>
