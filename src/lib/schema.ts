@@ -158,10 +158,36 @@ export const project = sqliteTable(
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 		name: t.text("name").notNull(),
+		budget: t.integer("budget"),
 		createdAt: t
 			.integer("created_at", { mode: "timestamp_ms" })
 			.notNull()
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`),
 	},
 	(table) => [t.index("project_organization_id_idx").on(table.organizationId)],
+);
+
+export const organizationMetadata = sqliteTable(
+	"organization_metadata",
+	{
+		id: t.text("id").primaryKey(),
+		organizationId: t
+			.text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		yearlyBudget: t.integer("yearly_budget"),
+		createdAt: t
+			.integer("created_at", { mode: "timestamp_ms" })
+			.notNull()
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`),
+		updatedAt: t
+			.integer("updated_at", { mode: "timestamp_ms" })
+			.notNull()
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`),
+	},
+	(table) => [
+		t
+			.uniqueIndex("organization_metadata_organization_id_idx")
+			.on(table.organizationId),
+	],
 );

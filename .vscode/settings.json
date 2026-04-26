@@ -19,5 +19,6 @@
 	"[astro]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
-	"astro.content-intellisense": true
+	"astro.content-intellisense": true,
+	"typescript.native-preview.tsdk": "/Users/alexanderniebuhr/.local/share/opencode/worktree/f43b9dc2280f61a81ba6c41046870951c79cc77b/brave-eagle/node_modules/@typescript/native-preview"
 }
