@@ -44,6 +44,8 @@ pn auth info
 pn auth generate
 
 pn drizzle-kit generate
+pn drizzle-kit check
+
 pn drizzle-kit migrate
 ```
 

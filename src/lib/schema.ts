@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import * as t from "drizzle-orm/sqlite-core";
 import { sqliteTable } from "drizzle-orm/sqlite-core";
 
@@ -157,6 +158,10 @@ export const project = sqliteTable(
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 		name: t.text("name").notNull(),
+		createdAt: t
+			.integer("created_at", { mode: "timestamp_ms" })
+			.notNull()
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`),
 	},
 	(table) => [t.index("project_organization_id_idx").on(table.organizationId)],
 );
