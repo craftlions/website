@@ -56,7 +56,13 @@ if (updateMetadataResult && !updateMetadataResult.error) {
 
 const projects = organization
 	? await db.query.project.findMany({
-			columns: { id: true, name: true, budget: true },
+			columns: {
+				id: true,
+				name: true, budget: true,
+				deadline: true,
+				stateOfWork: true,
+				stateOfPayment: true,
+			},
 			where: { organizationId: organization.id },
 			orderBy: { name: "asc" },
 		})
@@ -155,6 +161,34 @@ const totalBudget = metadata?.yearlyBudget ?? 0;
 								<li class="grid gap-3 border border-dashed border-neutral-200 dark:border-neutral-800 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
 									<article class="grid gap-1">
 										<h3 class="font-semibold">{projectRecord.name}</h3>
+										{projectRecord.deadline || projectRecord.stateOfWork || projectRecord.stateOfPayment || projectRecord.amount != null ? (
+											<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm text-neutral-600 dark:text-neutral-400">
+												{projectRecord.deadline && (
+													<>
+														<dt class="font-medium">Deadline</dt>
+														<dd>{projectRecord.deadline.toLocaleDateString()}</dd>
+													</>
+												)}
+												{projectRecord.stateOfWork && (
+													<>
+														<dt class="font-medium">Work</dt>
+														<dd>{projectRecord.stateOfWork}</dd>
+													</>
+												)}
+												{projectRecord.stateOfPayment && (
+													<>
+														<dt class="font-medium">Payment</dt>
+														<dd>{projectRecord.stateOfPayment}</dd>
+													</>
+												)}
+												{projectRecord.amount != null && (
+													<>
+														<dt class="font-medium">Amount</dt>
+														<dd>{projectRecord.amount}</dd>
+													</>
+												)}
+											</dl>
+										) : null}
 									</article>
 									{projectRecord.budget != null && (
 										<p class="text-sm text-neutral-600 dark:text-neutral-400">
