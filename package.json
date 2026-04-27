@@ -1,46 +1,48 @@
 {
-	"name": "website",
-	"type": "module",
-	"license": "MIT",
-	"scripts": {
-		"astro": "astro",
-		"biome": "biome",
-		"build": "astro build",
-		"check": "astro check",
-		"deploy": "astro build && wrangler deploy",
-		"dev": "astro dev",
-		"preview": "astro build && astro preview",
-		"preview:wrangler": "astro build && wrangler dev",
-		"types": "wrangler types --include-runtime --include-env --strict-vars",
-		"cf-check": "wrangler types --include-runtime --include-env --strict-vars --check"
-	},
-	"devDependencies": {
-		"@astrojs/check": "0.9.8",
-		"@astrojs/cloudflare": "13.2.1",
-		"@astrojs/compiler-rs": "0.1.10",
-		"@astrojs/sitemap": "3.7.2",
-		"@better-auth/drizzle-adapter": "1.6.9",
-		"@better-auth/infra": "0.2.5",
-		"@biomejs/biome": "2.4.13",
-		"@cloudflare/vite-plugin": "1.33.2",
-		"@tailwindcss/vite": "4.2.4",
-		"@types/node": "25.6.0",
-		"@typescript/native-preview": "7.0.0-dev.20260426.1",
-		"astro": "6.1.9",
-		"auth": "1.6.9",
-		"better-auth": "1.6.9",
-		"browserslist": "4.28.2",
-		"drizzle-kit": "1.0.0-beta.22",
-		"drizzle-orm": "1.0.0-beta.22",
-		"lightningcss": "1.32.0",
-		"tailwindcss": "4.2.4",
-		"update-browserslist-db": "1.2.3",
-		"wrangler": "4.85.0"
-	},
-	"devEngines": {
-		"runtime": {
-			"name": "node",
-			"version": "25.8.1"
-		}
-	}
+  "name": "website",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "astro": "astro",
+    "biome": "biome",
+    "build": "astro build",
+    "check": "astro check",
+    "deploy": "astro build && wrangler deploy",
+    "dev": "astro dev",
+    "preview": "astro build && astro preview",
+    "preview:wrangler": "astro build && wrangler dev",
+    "types": "wrangler types --include-runtime --include-env --strict-vars",
+    "cf-check": "wrangler types --include-runtime --include-env --strict-vars --check"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.8",
+    "@astrojs/cloudflare": "13.2.1",
+    "@astrojs/compiler-rs": "0.1.10",
+    "@astrojs/sitemap": "3.7.2",
+    "@better-auth/drizzle-adapter": "1.6.9",
+    "@better-auth/infra": "0.2.5",
+    "@biomejs/biome": "2.4.13",
+    "@cloudflare/vite-plugin": "1.33.2",
+    "@tailwindcss/vite": "4.2.4",
+    "@types/node": "25.6.0",
+    "@types/pg": "8.20.0",
+    "@typescript/native-preview": "7.0.0-dev.20260426.1",
+    "astro": "6.1.9",
+    "auth": "1.6.9",
+    "better-auth": "1.6.9",
+    "browserslist": "4.28.2",
+    "drizzle-kit": "1.0.0-beta.22",
+    "drizzle-orm": "1.0.0-beta.22",
+    "lightningcss": "1.32.0",
+    "pg": "8.20.0",
+    "tailwindcss": "4.2.4",
+    "update-browserslist-db": "1.2.3",
+    "wrangler": "4.85.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "25.8.1"
+    }
+  }
 }
