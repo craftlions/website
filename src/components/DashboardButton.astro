@@ -2,7 +2,7 @@
 import Button from "./Button.astro";
 
 const session = await Astro.locals.auth.api.getSession({
-	headers: await Astro.request.headers,
+	headers: Astro.request.headers,
 });
 ---
 

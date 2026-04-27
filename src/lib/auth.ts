@@ -1,4 +1,3 @@
-import { env } from "cloudflare:workers";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { dash } from "@better-auth/infra";
 import { betterAuth } from "better-auth/minimal";
@@ -115,7 +114,5 @@ export function createAuth(env: Cloudflare.Env) {
 		},
 	});
 }
-
-export const auth = createAuth(env);
 
 export type Auth = ReturnType<typeof createAuth>;

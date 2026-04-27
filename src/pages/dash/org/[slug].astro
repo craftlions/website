@@ -174,7 +174,7 @@ if (budgetPercentage > 100) {
 								<li class="grid gap-3 border border-dashed border-neutral-200 dark:border-neutral-800 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
 									<article class="grid gap-1">
 										<h3 class="font-semibold">{projectRecord.name}</h3>
-										{projectRecord.deadline || projectRecord.stateOfWork || projectRecord.stateOfPayment || projectRecord.amount != null ? (
+										{projectRecord.deadline || projectRecord.stateOfWork || projectRecord.stateOfPayment || projectRecord.budget != null ? (
 											<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm text-neutral-600 dark:text-neutral-400">
 												{projectRecord.deadline && (
 													<>
