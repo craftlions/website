@@ -3,7 +3,12 @@ import type { Db } from "../lib/database.ts";
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro/zod";
 import { eq, sql } from "drizzle-orm";
-import { organizationMetadata, project } from "../lib/schema.ts";
+import {
+	organizationMetadata,
+	project,
+	projectInsertSchema,
+	projectUpdateSchema,
+} from "../lib/schema.ts";
 
 const assertAdmin = async (headers: Headers, auth: Auth) => {
 	const session = await auth.api.getSession({ headers });
@@ -61,18 +66,24 @@ export const server = {
 	createProject: defineAction({
 		accept: "form",
 		input: z.object({
-			name: z.string().trim().min(1, "Enter a project name.").max(120),
 			organizationId: z.string().trim().min(1, "Choose an organization."),
-			deadline: z.string().trim().optional(),
+			name: z.string().trim().min(1, "Enter a project name.").max(120),
+			deadline: z.coerce.date().optional(),
 			stateOfWork: z.string().trim().optional(),
 			stateOfPayment: z.string().trim().optional(),
-			amount: z.string().trim().optional(),
+			budget: z.number().positive().optional(),
+			createdAt: z.coerce.date().optional(),
 		}),
-		handler: async (
-			{ name, organizationId, deadline, stateOfWork, stateOfPayment, amount },
-			context,
-		) => {
+		handler: async (input, context) => {
 			await assertAdmin(context.request.headers, context.locals.auth);
+			const parsedInput = projectInsertSchema.safeParse(input);
+
+			if (!parsedInput.success) {
+				throw new ActionError({
+					code: "BAD_REQUEST",
+					message: "Invalid input data.",
+				});
+			}
 
 			const selectedOrganization =
 				await context.locals.db.query.organization.findFirst({
@@ -80,7 +91,7 @@ export const server = {
 						id: true,
 					},
 					where: {
-						id: organizationId,
+						id: input.organizationId,
 					},
 				});
 
@@ -91,19 +102,12 @@ export const server = {
 				});
 			}
 
-			const id = crypto.randomUUID();
+			const rows = await context.locals.db
+				.insert(project)
+				.values(parsedInput.data)
+				.returning({ id: project.id });
 
-			await context.locals.db.insert(project).values({
-				id,
-				organizationId,
-				name,
-				deadline: new Date(deadline ?? ""),
-				stateOfWork: stateOfWork || null,
-				stateOfPayment: stateOfPayment || null,
-				budget: amount ? Number.parseInt(amount, 10) : null,
-			});
-
-			return { id };
+			return { id: rows[0]?.id };
 		},
 	}),
 	updateProject: defineAction({
@@ -111,23 +115,19 @@ export const server = {
 		input: z.object({
 			projectId: z.string().trim().min(1, "Choose a project."),
 			name: z.string().trim().min(1, "Enter a project name.").max(120),
-			deadline: z.string().trim().optional(),
+			deadline: z.coerce.date().optional(),
 			stateOfWork: z.string().trim().optional(),
 			stateOfPayment: z.string().trim().optional(),
-			amount: z.string().trim().optional(),
+			budget: z.number().positive().optional(),
 		}),
-		handler: async (
-			{ projectId, name, deadline, stateOfWork, stateOfPayment, amount },
-			context,
-		) => {
+		handler: async (input, context) => {
 			await assertAdmin(context.request.headers, context.locals.auth);
-
 			const selectedProject = await context.locals.db.query.project.findFirst({
 				columns: {
 					id: true,
 				},
 				where: {
-					id: projectId,
+					id: input.projectId,
 				},
 			});
 
@@ -138,18 +138,20 @@ export const server = {
 				});
 			}
 
-			await context.locals.db
-				.update(project)
-				.set({
-					name,
-					deadline: new Date(deadline ?? ""),
-					stateOfWork: stateOfWork || null,
-					stateOfPayment: stateOfPayment || null,
-					budget: amount ? Number.parseInt(amount, 10) : null,
-				})
-				.where(eq(project.id, projectId));
+			const parsedInput = projectUpdateSchema.safeParse(input);
+			if (!parsedInput.success) {
+				throw new ActionError({
+					code: "BAD_REQUEST",
+					message: "Invalid input data.",
+				});
+			}
 
-			return { id: projectId };
+			const rows = await context.locals.db
+				.update(project)
+				.set(parsedInput.data)
+				.where(eq(project.id, input.projectId))
+				.returning();
+			return { id: rows[0]?.id };
 		},
 	}),
 	deleteProject: defineAction({

@@ -19,6 +19,6 @@
   "[astro]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-	"astro.content-intellisense": true,
-	"typescript.native-preview.tsdk": "/Users/alexanderniebuhr/Developer/craftlions/website/node_modules/@typescript/native-preview",
+  "astro.content-intellisense": true,
+  "typescript.native-preview.tsdk": "/Users/alexanderniebuhr/Developer/craftlions/website/node_modules/@typescript/native-preview"
 }

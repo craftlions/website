@@ -1,5 +1,6 @@
 import * as t from "drizzle-orm/pg-core";
 import { pgTable } from "drizzle-orm/pg-core";
+import { createInsertSchema, createUpdateSchema } from "drizzle-orm/zod";
 
 export const user = pgTable("user", {
 	id: t.text("id").primaryKey(),
@@ -160,7 +161,7 @@ export const rateLimit = pgTable("rate_limit", {
 });
 
 export const project = pgTable("project", {
-	id: t.text("id").primaryKey(),
+	id: t.uuid("id").defaultRandom().primaryKey(),
 	organizationId: t
 		.text("organization_id")
 		.notNull()
@@ -175,8 +176,11 @@ export const project = pgTable("project", {
 		.notNull(),
 });
 
+export const projectInsertSchema = createInsertSchema(project);
+export const projectUpdateSchema = createUpdateSchema(project);
+
 export const organizationMetadata = pgTable("organization_metadata", {
-	id: t.text("id").primaryKey(),
+	id: t.uuid("id").defaultRandom().primaryKey(),
 	organizationId: t
 		.text("organization_id")
 		.notNull()
