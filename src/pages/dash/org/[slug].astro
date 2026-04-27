@@ -56,7 +56,14 @@ if (updateMetadataResult && !updateMetadataResult.error) {
 
 const projects = organization
 	? await db.query.project.findMany({
-			columns: { id: true, name: true, budget: true },
+			columns: {
+				id: true,
+				name: true,
+				budget: true,
+				deadline: true,
+				stateOfWork: true,
+				stateOfPayment: true,
+			},
 			where: { organizationId: organization.id },
 			orderBy: { name: "asc" },
 		})
@@ -69,6 +76,20 @@ const metadata = organization
 	: null;
 
 const totalBudget = metadata?.yearlyBudget ?? 0;
+
+const totalProjectBudget = projects.reduce(
+	(sum, project) => sum + (project.budget ?? 0),
+	0,
+);
+const budgetPercentage =
+	totalBudget > 0 ? (totalProjectBudget / totalBudget) * 100 : 0;
+
+let budgetColorClass = "text-green-600 dark:text-green-400";
+if (budgetPercentage > 100) {
+	budgetColorClass = "text-red-600 dark:text-red-400";
+} else if (budgetPercentage >= 80) {
+	budgetColorClass = "text-yellow-600 dark:text-yellow-400";
+}
 ---
 
 <Shell>
@@ -155,6 +176,34 @@ const totalBudget = metadata?.yearlyBudget ?? 0;
 								<li class="grid gap-3 border border-dashed border-neutral-200 dark:border-neutral-800 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
 									<article class="grid gap-1">
 										<h3 class="font-semibold">{projectRecord.name}</h3>
+										{projectRecord.deadline || projectRecord.stateOfWork || projectRecord.stateOfPayment || projectRecord.amount != null ? (
+											<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm text-neutral-600 dark:text-neutral-400">
+												{projectRecord.deadline && (
+													<>
+														<dt class="font-medium">Deadline</dt>
+														<dd>{projectRecord.deadline.toLocaleDateString()}</dd>
+													</>
+												)}
+												{projectRecord.stateOfWork && (
+													<>
+														<dt class="font-medium">Work</dt>
+														<dd>{projectRecord.stateOfWork}</dd>
+													</>
+												)}
+												{projectRecord.stateOfPayment && (
+													<>
+														<dt class="font-medium">Payment</dt>
+														<dd>{projectRecord.stateOfPayment}</dd>
+													</>
+												)}
+												{projectRecord.budget != null && (
+													<>
+														<dt class="font-medium">Amount</dt>
+														<dd>{projectRecord.budget}</dd>
+													</>
+												)}
+											</dl>
+										) : null}
 									</article>
 									{projectRecord.budget != null && (
 										<p class="text-sm text-neutral-600 dark:text-neutral-400">
@@ -169,11 +218,15 @@ const totalBudget = metadata?.yearlyBudget ?? 0;
 							No projects yet.
 						</p>
 					)}
-					{totalBudget > 0 && (
-						<p class="border-t border-dashed border-neutral-200 dark:border-neutral-800 pt-3 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-							Total budget: {totalBudget.toLocaleString()} €
-						</p>
-					)}
+				{totalBudget > 0 && (
+					<p class="border-t border-dashed border-neutral-200 dark:border-neutral-800 pt-3 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+						Projects total:{" "}
+						<span class={budgetColorClass}>
+							{totalProjectBudget.toLocaleString()} € /{" "}
+							{totalBudget.toLocaleString()} € ({budgetPercentage.toFixed(0)}%)
+						</span>
+					</p>
+				)}
 				</section>
 			</main>
 			<Footer />

@@ -159,6 +159,9 @@ export const project = sqliteTable(
 			.references(() => organization.id, { onDelete: "cascade" }),
 		name: t.text("name").notNull(),
 		budget: t.integer("budget"),
+		deadline: t.integer("deadline", { mode: "timestamp_ms" }),
+		stateOfWork: t.text("state_of_work"),
+		stateOfPayment: t.text("state_of_payment"),
 		createdAt: t
 			.integer("created_at", { mode: "timestamp_ms" })
 			.notNull()

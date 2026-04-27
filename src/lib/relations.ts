@@ -9,7 +9,7 @@ export const relations = defineRelations(schema, (r) => ({
 		}),
 	},
 	organization: {
-		metadata: r.one.organizationMetadata({
+		data: r.one.organizationMetadata({
 			from: r.organization.id,
 			to: r.organizationMetadata.organizationId,
 		}),

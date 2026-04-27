@@ -5,6 +5,15 @@ import { auth } from "../lib/auth.ts";
 import { db } from "../lib/database.ts";
 import { organizationMetadata, project } from "../lib/schema.ts";
 
+function parseDateToTimestamp(
+	dateString: string | undefined | null,
+): number | null {
+	if (!dateString) return null;
+	const date = new Date(dateString);
+	if (Number.isNaN(date.getTime())) return null;
+	return date.getTime();
+}
+
 const assertAdmin = async (headers: Headers) => {
 	const session = await auth.api.getSession({ headers });
 
@@ -61,8 +70,15 @@ export const server = {
 		input: z.object({
 			name: z.string().trim().min(1, "Enter a project name.").max(120),
 			organizationId: z.string().trim().min(1, "Choose an organization."),
+			deadline: z.string().trim().optional(),
+			stateOfWork: z.string().trim().optional(),
+			stateOfPayment: z.string().trim().optional(),
+			amount: z.string().trim().optional(),
 		}),
-		handler: async ({ name, organizationId }, context) => {
+		handler: async (
+			{ name, organizationId, deadline, stateOfWork, stateOfPayment, amount },
+			context,
+		) => {
 			await assertAdmin(context.request.headers);
 
 			const selectedOrganization = await db.query.organization.findFirst({
@@ -87,9 +103,59 @@ export const server = {
 				id,
 				organizationId,
 				name,
+				deadline: parseDateToTimestamp(deadline),
+				stateOfWork: stateOfWork || null,
+				stateOfPayment: stateOfPayment || null,
+				budget: amount ? Number.parseInt(amount, 10) : null,
 			});
 
 			return { id };
+		},
+	}),
+	updateProject: defineAction({
+		accept: "form",
+		input: z.object({
+			projectId: z.string().trim().min(1, "Choose a project."),
+			name: z.string().trim().min(1, "Enter a project name.").max(120),
+			deadline: z.string().trim().optional(),
+			stateOfWork: z.string().trim().optional(),
+			stateOfPayment: z.string().trim().optional(),
+			amount: z.string().trim().optional(),
+		}),
+		handler: async (
+			{ projectId, name, deadline, stateOfWork, stateOfPayment, amount },
+			context,
+		) => {
+			await assertAdmin(context.request.headers);
+
+			const selectedProject = await db.query.project.findFirst({
+				columns: {
+					id: true,
+				},
+				where: {
+					id: projectId,
+				},
+			});
+
+			if (!selectedProject) {
+				throw new ActionError({
+					code: "BAD_REQUEST",
+					message: "Choose an existing project.",
+				});
+			}
+
+			await db
+				.update(project)
+				.set({
+					name,
+					deadline: parseDateToTimestamp(deadline),
+					stateOfWork: stateOfWork || null,
+					stateOfPayment: stateOfPayment || null,
+					budget: amount ? Number.parseInt(amount, 10) : null,
+				})
+				.where(eq(project.id, projectId));
+
+			return { id: projectId };
 		},
 	}),
 	deleteProject: defineAction({
