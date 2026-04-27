@@ -576,33 +576,36 @@ const organizationGroups = await db.query.organization.findMany({
 		}
 	});
 
-	document.querySelectorAll<HTMLElement>("[data-action='edit-project']").forEach((btn) => {
-		btn.addEventListener("click", () => {
-			const modal = document.getElementById("edit-project-modal");
-			if (!(modal instanceof HTMLDialogElement)) return;
+	document
+		.querySelectorAll<HTMLElement>("[data-action='edit-project']")
+		.forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const modal = document.getElementById("edit-project-modal");
+				if (!(modal instanceof HTMLDialogElement)) return;
 
-			const projectIdInput =
-				modal.querySelector<HTMLInputElement>("#edit-projectId");
-			const nameInput = modal.querySelector<HTMLInputElement>("#edit-name");
-			const deadlineInput =
-				modal.querySelector<HTMLInputElement>("#edit-deadline");
-			const stateOfWorkInput =
-				modal.querySelector<HTMLInputElement>("#edit-stateOfWork");
-			const stateOfPaymentInput = modal.querySelector<HTMLInputElement>(
-				"#edit-stateOfPayment",
-			);
-			const amountInput = modal.querySelector<HTMLInputElement>("#edit-amount");
+				const projectIdInput =
+					modal.querySelector<HTMLInputElement>("#edit-projectId");
+				const nameInput = modal.querySelector<HTMLInputElement>("#edit-name");
+				const deadlineInput =
+					modal.querySelector<HTMLInputElement>("#edit-deadline");
+				const stateOfWorkInput =
+					modal.querySelector<HTMLInputElement>("#edit-stateOfWork");
+				const stateOfPaymentInput = modal.querySelector<HTMLInputElement>(
+					"#edit-stateOfPayment",
+				);
+				const amountInput =
+					modal.querySelector<HTMLInputElement>("#edit-amount");
 
-			if (projectIdInput) projectIdInput.value = btn.dataset.id || "";
-			if (nameInput) nameInput.value = btn.dataset.name || "";
-			if (deadlineInput) deadlineInput.value = btn.dataset.deadline || "";
-			if (stateOfWorkInput)
-				stateOfWorkInput.value = btn.dataset.stateOfWork || "";
-			if (stateOfPaymentInput)
-				stateOfPaymentInput.value = btn.dataset.stateOfPayment || "";
-			if (amountInput) amountInput.value = btn.dataset.amount || "";
+				if (projectIdInput) projectIdInput.value = btn.dataset.id || "";
+				if (nameInput) nameInput.value = btn.dataset.name || "";
+				if (deadlineInput) deadlineInput.value = btn.dataset.deadline || "";
+				if (stateOfWorkInput)
+					stateOfWorkInput.value = btn.dataset.stateOfWork || "";
+				if (stateOfPaymentInput)
+					stateOfPaymentInput.value = btn.dataset.stateOfPayment || "";
+				if (amountInput) amountInput.value = btn.dataset.amount || "";
 
-			modal.showModal();
+				modal.showModal();
+			});
 		});
-	});
 </script>

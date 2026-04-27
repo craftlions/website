@@ -46,22 +46,27 @@
 		}
 	],
 	"upload_source_maps": true,
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_id": "78c70e61-7e19-4ebe-8cf0-7bde68d1b911",
-			"database_name": "craftlions-website",
-			"migrations_dir": "drizzle",
-			"remote": true
-		}
-	],
 	"secrets": {
-		"required": ["BETTER_AUTH_SECRETS", "BETTER_AUTH_API_KEY"]
+		"required": [
+			"BETTER_AUTH_SECRETS",
+			"BETTER_AUTH_API_KEY",
+			// "PLANETSCALE_CONNECTION_STRING"
+		]
 	},
 	"send_email": [
 		{
 			"name": "MAIL",
 			"remote": true
 		}
-	]
+	],
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "7f520825d909442e9778976a76271b7c",
+			"localConnectionString": "postgres://user:password@localhost:5432/postgres"
+		}
+	],
+	"placement": {
+		"region": "aws:eu-central-1"
+	}
 }
