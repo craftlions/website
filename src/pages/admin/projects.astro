@@ -192,7 +192,7 @@ const organizationGroups = await Astro.locals.db.query.organization.findMany({
 													data-deadline={formatDateForInput(projectRecord.deadline)}
 													data-state-of-work={projectRecord.stateOfWork || ""}
 													data-state-of-payment={projectRecord.stateOfPayment || ""}
-													data-amount={projectRecord.budget ?? ""}
+													data-budget={projectRecord.budget ?? ""}
 												>
 													Edit
 												</Button>
@@ -380,23 +380,44 @@ const organizationGroups = await Astro.locals.db.query.organization.findMany({
 
 						<div class="grid gap-1.5">
 							<label
-								for="create-amount"
+								for="create-budget"
 								class="text-sm font-semibold text-neutral-700 dark:text-neutral-300"
 							>
-								Amount
+								budget
 							</label>
 							<input
 								type="number"
-								id="create-amount"
-								name="amount"
+								id="create-budget"
+								name="budget"
 								min="0"
 								step="1"
-								aria-describedby={createInputErrors.amount ? "create-amount-error" : undefined}
+								aria-describedby={createInputErrors.budget ? "create-budget-error" : undefined}
 								class="bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
 							>
-							{createInputErrors.amount && (
-									<p id="create-amount-error" class="text-sm text-red-700 dark:text-red-300">
-										{createInputErrors.amount.join(", ")}
+							{createInputErrors.budget && (
+									<p id="create-budget-error" class="text-sm text-red-700 dark:text-red-300">
+										{createInputErrors.budget.join(", ")}
+									</p>
+								)}
+						</div>
+						<div class="grid gap-1.5">
+							<label
+								for="create-deadline"
+								class="text-sm font-semibold text-neutral-700 dark:text-neutral-300"
+							>
+								Deadline
+							</label>
+							<input
+								type="date"
+								id="create-createdAt"
+								name="createdAt"
+								aria-describedby={createInputErrors.createdAt ? "create-createdAt-error" : undefined}
+								class="bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-600 dark:[color-scheme:dark]"
+								value={new Date().toISOString().slice(0, 10)}
+							>
+							{createInputErrors.createdAt && (
+									<p id="create-createdAt-error" class="text-sm text-red-700 dark:text-red-300">
+										{createInputErrors.createdAt.join(", ")}
 									</p>
 								)}
 						</div>
@@ -527,23 +548,23 @@ const organizationGroups = await Astro.locals.db.query.organization.findMany({
 
 						<div class="grid gap-1.5">
 							<label
-								for="edit-amount"
+								for="edit-budget"
 								class="text-sm font-semibold text-neutral-700 dark:text-neutral-300"
 							>
-								Amount
+								budget
 							</label>
 							<input
 								type="number"
-								id="edit-amount"
-								name="amount"
+								id="edit-budget"
+								name="budget"
 								min="0"
 								step="1"
-								aria-describedby={updateInputErrors.amount ? "edit-amount-error" : undefined}
+								aria-describedby={updateInputErrors.budget ? "edit-budget-error" : undefined}
 								class="bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
 							>
-							{updateInputErrors.amount && (
-									<p id="edit-amount-error" class="text-sm text-red-700 dark:text-red-300">
-										{updateInputErrors.amount.join(", ")}
+							{updateInputErrors.budget && (
+									<p id="edit-budget-error" class="text-sm text-red-700 dark:text-red-300">
+										{updateInputErrors.budget.join(", ")}
 									</p>
 								)}
 						</div>
@@ -591,8 +612,8 @@ const organizationGroups = await Astro.locals.db.query.organization.findMany({
 				const stateOfPaymentInput = modal.querySelector<HTMLInputElement>(
 					"#edit-stateOfPayment",
 				);
-				const amountInput =
-					modal.querySelector<HTMLInputElement>("#edit-amount");
+				const budgetInput =
+					modal.querySelector<HTMLInputElement>("#edit-budget");
 
 				if (projectIdInput) projectIdInput.value = btn.dataset.id || "";
 				if (nameInput) nameInput.value = btn.dataset.name || "";
@@ -601,7 +622,7 @@ const organizationGroups = await Astro.locals.db.query.organization.findMany({
 					stateOfWorkInput.value = btn.dataset.stateOfWork || "";
 				if (stateOfPaymentInput)
 					stateOfPaymentInput.value = btn.dataset.stateOfPayment || "";
-				if (amountInput) amountInput.value = btn.dataset.amount || "";
+				if (budgetInput) budgetInput.value = btn.dataset.budget || "";
 
 				modal.showModal();
 			});
