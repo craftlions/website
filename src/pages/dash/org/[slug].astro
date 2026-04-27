@@ -80,6 +80,11 @@ const totalProjectBudget = projects.reduce(
 	(sum, project) => sum + (project.budget ?? 0),
 	0,
 );
+
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+});
 ---
 
 <Shell>
@@ -126,37 +131,69 @@ const totalProjectBudget = projects.reduce(
 							class="bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300"
 						>
 							<tr>
-								<th class="text-left font-semibold px-4 py-3">Name</th>
-								<th class="text-left font-semibold px-4 py-3">Status</th>
-								<th class="text-right font-semibold px-4 py-3">Budget</th>
+								<th scope="col" class="text-left font-semibold px-4 py-3">
+									Name
+								</th>
+								<th scope="col" class="text-left font-semibold px-4 py-3">
+									Status
+								</th>
+								<th scope="col" class="text-right font-semibold px-4 py-3">
+									Budget
+								</th>
+								<th scope="col" class="text-left font-semibold px-4 py-3">
+									Actions
+								</th>
 							</tr>
 						</thead>
 						<tbody
 							class="divide-y divide-dashed divide-neutral-200 dark:divide-neutral-800"
 						>
-							{projects.length > 0 &&
+							{projects.length > 0 ? (
 									projects.map((project) => (
 										<tr>
-											<td class="px-4 py-3">{project.name}</td>
+											<th scope="row" class="px-4 py-3 text-left font-medium">
+												{project.name}
+											</th>
 											<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
 												{project.stateOfWork ?? "-"}
 											</td>
 											<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400 text-right">
-												{project.budget &&
-													new Intl.NumberFormat("de-DE", {
-														style: "currency",
-														currency: "EUR",
-													}).format(project.budget)}
+												{project.budget != null
+													? currencyFormatter.format(project.budget)
+													: "-"}
+											</td>
+											<td class="px-4 py-3">
+												<a
+													href={`/dash/org/${slug}/project/${project.id}`}
+												>
+													<Button type="button" disabled>Details</Button>
+												</a>
 											</td>
 										</tr>
-									))}
+									))
+								) : (
+									<tr>
+										<td
+											colspan="4"
+											class="px-4 py-6 text-center text-neutral-600 dark:text-neutral-400"
+										>
+											No projects yet.
+										</td>
+									</tr>
+								)}
 						</tbody>
 						<tfoot
 							class="border-t border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 font-semibold text-neutral-900 dark:text-neutral-100"
 						>
 							<tr>
-								<td class="px-4 py-3">Total</td>
-								<td></td>
+								<td colspan="2"></td>
+								<th scope="col" class="px-4 py-3 text-right">Sum</th>
+								<th scope="col" class="px-4 py-3 text-left">Yearly Budget</th>
+							</tr>
+							<tr>
+								<th colspan="2" scope="row" class="px-4 py-3 text-left">
+									Total
+								</th>
 								<td
 									class="px-4 py-3 text-right"
 									class:list={[
@@ -168,29 +205,20 @@ const totalProjectBudget = projects.reduce(
 										},
 									]}
 								>
+									{currencyFormatter.format(totalProjectBudget)}
+								</td>
+								<td class="px-4 py-3">
 									<details
-										class="grid justify-items-end gap-2"
+										class="grid justify-items-start gap-2"
 										open={Boolean(updateMetadataResult?.error)}
 									>
 										<summary
-											class="grid cursor-pointer list-none justify-items-end [&::-webkit-details-marker]:hidden"
+											class="grid cursor-pointer list-none justify-items-start [&::-webkit-details-marker]:hidden"
 										>
 											<span
 												class="grid grid-flow-col auto-cols-max items-center gap-2"
 											>
-												<span>
-													{new Intl.NumberFormat("de-DE", {
-															style: "currency",
-															currency: "EUR",
-														}).format(totalProjectBudget)}
-												</span>
-												<span>/</span>
-												<span>
-													{new Intl.NumberFormat("de-DE", {
-															style: "currency",
-															currency: "EUR",
-														}).format(totalBudget)}
-												</span>
+												<span>{currencyFormatter.format(totalBudget)}</span>
 												<span
 													class="px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
 												>
@@ -201,7 +229,7 @@ const totalProjectBudget = projects.reduce(
 										<form
 											method="post"
 											action={actions.mutateOrganizationMetadata}
-											class="mt-2 grid justify-items-end gap-2"
+											class="mt-2 grid justify-items-start gap-2"
 										>
 											<input
 												type="hidden"
