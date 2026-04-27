@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions, isInputError } from "astro:actions";
 import { isAPIError } from "better-auth/api";
 import LogoWithTextVertical from "../../../assets/logoWithTextVertical.svg";
+import Button from "../../../components/Button.astro";
 import Footer from "../../../components/Footer.astro";
 import LogoutButton from "../../../components/LogoutButton.astro";
 import Shell from "../../../layouts/Shell.astro";
@@ -41,8 +42,12 @@ const organization = await Astro.locals.auth.api.getFullOrganization({
 	headers: Astro.request.headers,
 });
 
+if (!organization) {
+	return Astro.redirect("/dash");
+}
+
 const updateMetadataResult = Astro.getActionResult(
-	actions.updateOrganizationMetadata,
+	actions.mutateOrganizationMetadata,
 );
 const metadataInputErrors = isInputError(updateMetadataResult?.error)
 	? updateMetadataResult.error.fields
@@ -52,26 +57,22 @@ if (updateMetadataResult && !updateMetadataResult.error) {
 	return Astro.redirect(`/dash/org/${slug}`, 303);
 }
 
-const projects = organization
-	? await Astro.locals.db.query.project.findMany({
-			columns: {
-				id: true,
-				name: true,
-				budget: true,
-				deadline: true,
-				stateOfWork: true,
-				stateOfPayment: true,
-			},
-			where: { organizationId: organization.id },
-			orderBy: { name: "asc" },
-		})
-	: [];
+const projects = await Astro.locals.db.query.project.findMany({
+	columns: {
+		id: true,
+		name: true,
+		budget: true,
+		deadline: true,
+		stateOfWork: true,
+		stateOfPayment: true,
+	},
+	where: { organizationId: organization.id },
+	orderBy: { name: "asc" },
+});
 
-const metadata = organization
-	? await Astro.locals.db.query.organizationMetadata.findFirst({
-			where: { organizationId: organization.id },
-		})
-	: null;
+const metadata = await Astro.locals.db.query.organizationMetadata.findFirst({
+	where: { organizationId: organization.id },
+});
 
 const totalBudget = metadata?.yearlyBudget ?? 0;
 
@@ -79,15 +80,6 @@ const totalProjectBudget = projects.reduce(
 	(sum, project) => sum + (project.budget ?? 0),
 	0,
 );
-const budgetPercentage =
-	totalBudget > 0 ? (totalProjectBudget / totalBudget) * 100 : 0;
-
-let budgetColorClass = "text-green-600 dark:text-green-400";
-if (budgetPercentage > 100) {
-	budgetColorClass = "text-red-600 dark:text-red-400";
-} else if (budgetPercentage >= 80) {
-	budgetColorClass = "text-yellow-600 dark:text-yellow-400";
-}
 ---
 
 <Shell>
@@ -113,49 +105,8 @@ if (budgetPercentage > 100) {
 			>
 				<section class="grid grid-cols-[1fr_auto] items-start gap-4">
 					<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
-						{organization?.name}
+						{organization.name}'s Dashboard
 					</h1>
-				</section>
-
-				<section class="grid content-start gap-3">
-					<h2
-						class="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
-					>
-						Yearly Budget
-					</h2>
-					<form
-						method="post"
-						action={actions.updateOrganizationMetadata}
-						class="grid grid-cols-[1fr_auto] gap-3 items-center"
-					>
-						<input type="hidden" name="organizationId" value={organization?.id}>
-						<input
-							type="number"
-							name="yearlyBudget"
-							min="0"
-							step="1"
-							placeholder="Enter yearly budget"
-							value={metadata?.yearlyBudget ?? ""}
-							aria-describedby={metadataInputErrors.yearlyBudget
-								? "yearly-budget-error"
-								: undefined}
-							class="bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
-						>
-						<button
-							type="submit"
-							class="px-3 py-2 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
-						>
-							Save
-						</button>
-						{metadataInputErrors.yearlyBudget && (
-							<p
-								id="yearly-budget-error"
-								class="col-span-2 text-sm text-red-700 dark:text-red-300"
-							>
-								{metadataInputErrors.yearlyBudget.join(", ")}
-							</p>
-						)}
-					</form>
 				</section>
 
 				<section
@@ -168,63 +119,135 @@ if (budgetPercentage > 100) {
 					>
 						Projects
 					</h2>
-					{projects.length > 0 ? (
-						<ul class="grid gap-3">
-							{projects.map((projectRecord) => (
-								<li class="grid gap-3 border border-dashed border-neutral-200 dark:border-neutral-800 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
-									<article class="grid gap-1">
-										<h3 class="font-semibold">{projectRecord.name}</h3>
-										{projectRecord.deadline || projectRecord.stateOfWork || projectRecord.stateOfPayment || projectRecord.budget != null ? (
-											<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm text-neutral-600 dark:text-neutral-400">
-												{projectRecord.deadline && (
-													<>
-														<dt class="font-medium">Deadline</dt>
-														<dd>{projectRecord.deadline.toLocaleDateString()}</dd>
-													</>
+					<table
+						class="w-full text-sm border border-dashed border-neutral-200 dark:border-neutral-800"
+					>
+						<thead
+							class="bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300"
+						>
+							<tr>
+								<th class="text-left font-semibold px-4 py-3">Name</th>
+								<th class="text-left font-semibold px-4 py-3">Status</th>
+								<th class="text-right font-semibold px-4 py-3">Budget</th>
+							</tr>
+						</thead>
+						<tbody
+							class="divide-y divide-dashed divide-neutral-200 dark:divide-neutral-800"
+						>
+							{projects.length > 0 &&
+									projects.map((project) => (
+										<tr>
+											<td class="px-4 py-3">{project.name}</td>
+											<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
+												{project.stateOfWork ?? "-"}
+											</td>
+											<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400 text-right">
+												{project.budget &&
+													new Intl.NumberFormat("de-DE", {
+														style: "currency",
+														currency: "EUR",
+													}).format(project.budget)}
+											</td>
+										</tr>
+									))}
+						</tbody>
+						<tfoot
+							class="border-t border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 font-semibold text-neutral-900 dark:text-neutral-100"
+						>
+							<tr>
+								<td class="px-4 py-3">Total</td>
+								<td></td>
+								<td
+									class="px-4 py-3 text-right"
+									class:list={[
+										{
+											"text-red-700 dark:text-red-400":
+												totalProjectBudget > totalBudget,
+											"text-green-700 dark:text-green-400":
+												totalProjectBudget <= totalBudget,
+										},
+									]}
+								>
+									<details
+										class="grid justify-items-end gap-2"
+										open={Boolean(updateMetadataResult?.error)}
+									>
+										<summary
+											class="grid cursor-pointer list-none justify-items-end [&::-webkit-details-marker]:hidden"
+										>
+											<span
+												class="grid grid-flow-col auto-cols-max items-center gap-2"
+											>
+												<span>
+													{new Intl.NumberFormat("de-DE", {
+															style: "currency",
+															currency: "EUR",
+														}).format(totalProjectBudget)}
+												</span>
+												<span>/</span>
+												<span>
+													{new Intl.NumberFormat("de-DE", {
+															style: "currency",
+															currency: "EUR",
+														}).format(totalBudget)}
+												</span>
+												<span
+													class="px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
+												>
+													Edit
+												</span>
+											</span>
+										</summary>
+										<form
+											method="post"
+											action={actions.mutateOrganizationMetadata}
+											class="mt-2 grid justify-items-end gap-2"
+										>
+											<input
+												type="hidden"
+												name="organizationId"
+												value={organization.id}
+											>
+											<label for="yearly-budget" class="sr-only">
+												Yearly budget
+											</label>
+											<span
+												class="grid grid-flow-col auto-cols-max items-start gap-2"
+											>
+												<input
+													type="number"
+													id="yearly-budget"
+													name="yearlyBudget"
+													min="1"
+													step="1"
+													value={metadata?.yearlyBudget ?? ""}
+													aria-describedby={metadataInputErrors.yearlyBudget
+														? "yearly-budget-error"
+														: undefined}
+													class="w-32 bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-1 text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+												>
+												<Button type="submit">Save</Button>
+											</span>
+											{metadataInputErrors.yearlyBudget && (
+												<p
+													id="yearly-budget-error"
+													class="max-w-56 text-sm font-normal text-red-700 dark:text-red-300"
+												>
+													{metadataInputErrors.yearlyBudget.join(", ")}
+												</p>
+											)}
+											{updateMetadataResult?.error &&
+												!metadataInputErrors.yearlyBudget && (
+													<p class="max-w-56 text-sm font-normal text-red-700 dark:text-red-300">
+														Unable to update yearly budget.
+													</p>
 												)}
-												{projectRecord.stateOfWork && (
-													<>
-														<dt class="font-medium">Work</dt>
-														<dd>{projectRecord.stateOfWork}</dd>
-													</>
-												)}
-												{projectRecord.stateOfPayment && (
-													<>
-														<dt class="font-medium">Payment</dt>
-														<dd>{projectRecord.stateOfPayment}</dd>
-													</>
-												)}
-												{projectRecord.budget != null && (
-													<>
-														<dt class="font-medium">Amount</dt>
-														<dd>{projectRecord.budget}</dd>
-													</>
-												)}
-											</dl>
-										) : null}
-									</article>
-									{projectRecord.budget != null && (
-										<p class="text-sm text-neutral-600 dark:text-neutral-400">
-											{projectRecord.budget.toLocaleString()} €
-										</p>
-									)}
-								</li>
-							))}
-						</ul>
-					) : (
-						<p class="border border-dashed border-neutral-200 dark:border-neutral-800 p-4 text-sm text-neutral-600 dark:text-neutral-400">
-							No projects yet.
-						</p>
-					)}
-					{totalBudget > 0 && (
-					<p class="border-t border-dashed border-neutral-200 dark:border-neutral-800 pt-3 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-						Projects total:{" "}
-						<span class={budgetColorClass}>
-							{totalProjectBudget.toLocaleString()} € /{" "}
-							{totalBudget.toLocaleString()} € ({budgetPercentage.toFixed(0)}%)
-						</span>
-					</p>
-				)}
+										</form>
+									</details>
+								</td>
+							</tr>
+						</tfoot>
+					</table>
 				</section>
 			</main>
 			<Footer />
