@@ -83,21 +83,25 @@ export const account = pgTable(
 	(table) => [t.index("account_userId_idx").on(table.userId)],
 );
 
-export const verification = pgTable("verification", {
-	id: t.text("id").primaryKey(),
-	identifier: t.text("identifier").notNull(),
-	value: t.text("value").notNull(),
-	expiresAt: t.timestamp("expires_at", { withTimezone: true }).notNull(),
-	createdAt: t
-		.timestamp("created_at", { withTimezone: true })
-		.defaultNow()
-		.notNull(),
-	updatedAt: t
-		.timestamp("updated_at", { withTimezone: true })
-		.defaultNow()
-		.$onUpdate(() => /* @__PURE__ */ new Date())
-		.notNull(),
-});
+export const verification = pgTable(
+	"verification",
+	{
+		id: t.text("id").primaryKey(),
+		identifier: t.text("identifier").notNull(),
+		value: t.text("value").notNull(),
+		expiresAt: t.timestamp("expires_at", { withTimezone: true }).notNull(),
+		createdAt: t
+			.timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: t
+			.timestamp("updated_at", { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
+	},
+	(table) => [t.index("verification_identifier_idx").on(table.identifier)],
+);
 
 export const organization = pgTable(
 	"organization",
@@ -112,19 +116,26 @@ export const organization = pgTable(
 	(table) => [t.uniqueIndex("organization_slug_uidx").on(table.slug)],
 );
 
-export const member = pgTable("member", {
-	id: t.text("id").primaryKey(),
-	organizationId: t
-		.text("organization_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	userId: t
-		.text("user_id")
-		.notNull()
-		.references(() => user.id, { onDelete: "cascade" }),
-	role: t.text("role").default("member").notNull(),
-	createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
-});
+export const member = pgTable(
+	"member",
+	{
+		id: t.text("id").primaryKey(),
+		organizationId: t
+			.text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		userId: t
+			.text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		role: t.text("role").default("member").notNull(),
+		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
+	},
+	(table) => [
+		t.index("member_organizationId_idx").on(table.organizationId),
+		t.index("member_userId_idx").on(table.userId),
+	],
+);
 
 export const invitation = pgTable(
 	"invitation",
@@ -160,36 +171,48 @@ export const rateLimit = pgTable("rate_limit", {
 	lastRequest: t.bigint("last_request", { mode: "number" }).notNull(),
 });
 
-export const project = pgTable("project", {
-	id: t.uuid("id").defaultRandom().primaryKey(),
-	organizationId: t
-		.text("organization_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	name: t.text("name").notNull(),
-	budget: t.integer("budget"),
-	deadline: t.timestamp("deadline", { precision: 6, withTimezone: true }),
-	stateOfWork: t.text("state_of_work"),
-	stateOfPayment: t.text("state_of_payment"),
-	createdAt: t
-		.timestamp("created_at", { precision: 6, withTimezone: true })
-		.notNull(),
-});
+export const project = pgTable(
+	"project",
+	{
+		id: t.uuid("id").defaultRandom().primaryKey(),
+		organizationId: t
+			.text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		name: t.text("name").notNull(),
+		budget: t.integer("budget"),
+		deadline: t.timestamp("deadline", { precision: 6, withTimezone: true }),
+		stateOfWork: t.text("state_of_work"),
+		stateOfPayment: t.text("state_of_payment"),
+		createdAt: t
+			.timestamp("created_at", { precision: 6, withTimezone: true })
+			.notNull(),
+	},
+	(table) => [t.index("project_organizationId_idx").on(table.organizationId)],
+);
 
 export const projectInsertSchema = createInsertSchema(project);
 export const projectUpdateSchema = createUpdateSchema(project);
 
-export const organizationMetadata = pgTable("organization_metadata", {
-	id: t.uuid("id").defaultRandom().primaryKey(),
-	organizationId: t
-		.text("organization_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	yearlyBudget: t.integer("yearly_budget"),
-	createdAt: t
-		.timestamp("created_at", { precision: 6, withTimezone: true })
-		.notNull(),
-	updatedAt: t
-		.timestamp("updated_at", { precision: 6, withTimezone: true })
-		.notNull(),
-});
+export const organizationMetadata = pgTable(
+	"organization_metadata",
+	{
+		id: t.uuid("id").defaultRandom().primaryKey(),
+		organizationId: t
+			.text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		yearlyBudget: t.integer("yearly_budget"),
+		createdAt: t
+			.timestamp("created_at", { precision: 6, withTimezone: true })
+			.notNull(),
+		updatedAt: t
+			.timestamp("updated_at", { precision: 6, withTimezone: true })
+			.notNull(),
+	},
+	(table) => [
+		t
+			.uniqueIndex("organization_metadata_organizationId_uidx")
+			.on(table.organizationId),
+	],
+);
