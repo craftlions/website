@@ -129,7 +129,15 @@ export const member = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		role: t.text("role").default("member").notNull(),
-		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
+		createdAt: t
+			.timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: t
+			.timestamp("updated_at", { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
 	},
 	(table) => [
 		t.index("member_organizationId_idx").on(table.organizationId),
@@ -181,11 +189,17 @@ export const project = pgTable(
 			.references(() => organization.id, { onDelete: "cascade" }),
 		name: t.text("name").notNull(),
 		budget: t.integer("budget"),
-		deadline: t.timestamp("deadline", { precision: 6, withTimezone: true }),
+		deadline: t.timestamp("deadline", { withTimezone: true }),
 		stateOfWork: t.text("state_of_work"),
 		stateOfPayment: t.text("state_of_payment"),
 		createdAt: t
-			.timestamp("created_at", { precision: 6, withTimezone: true })
+			.timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: t
+			.timestamp("updated_at", { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
 			.notNull(),
 	},
 	(table) => [t.index("project_organizationId_idx").on(table.organizationId)],
@@ -204,10 +218,13 @@ export const organizationMetadata = pgTable(
 			.references(() => organization.id, { onDelete: "cascade" }),
 		yearlyBudget: t.integer("yearly_budget"),
 		createdAt: t
-			.timestamp("created_at", { precision: 6, withTimezone: true })
+			.timestamp("created_at", { withTimezone: true })
+			.defaultNow()
 			.notNull(),
 		updatedAt: t
-			.timestamp("updated_at", { precision: 6, withTimezone: true })
+			.timestamp("updated_at", { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
 			.notNull(),
 	},
 	(table) => [
@@ -216,3 +233,8 @@ export const organizationMetadata = pgTable(
 			.on(table.organizationId),
 	],
 );
+
+export const organizationMetadataInsertSchema =
+	createInsertSchema(organizationMetadata);
+export const organizationMetadataUpdateSchema =
+	createUpdateSchema(organizationMetadata);

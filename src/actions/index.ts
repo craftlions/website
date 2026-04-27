@@ -2,7 +2,7 @@ import type { Auth } from "../lib/auth.ts";
 import type { Db } from "../lib/database.ts";
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro/zod";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
 	organizationMetadata,
 	project,
@@ -183,15 +183,11 @@ export const server = {
 			return { id: projectId };
 		},
 	}),
-	updateOrganizationMetadata: defineAction({
+	mutateOrganizationMetadata: defineAction({
 		accept: "form",
 		input: z.object({
 			organizationId: z.string().trim().min(1, "Choose an organization."),
-			yearlyBudget: z.coerce
-				.number()
-				.int()
-				.min(0, "Budget must be a non-negative number.")
-				.optional(),
+			yearlyBudget: z.coerce.number().int().positive().optional(),
 		}),
 		handler: async ({ organizationId, yearlyBudget }, context) => {
 			await assertOrganizationMember(
@@ -201,12 +197,9 @@ export const server = {
 				context.locals.db,
 			);
 
-			const id = crypto.randomUUID();
-
-			await context.locals.db
+			const rows = await context.locals.db
 				.insert(organizationMetadata)
 				.values({
-					id,
 					organizationId,
 					yearlyBudget: yearlyBudget ?? null,
 				})
@@ -214,11 +207,11 @@ export const server = {
 					target: organizationMetadata.organizationId,
 					set: {
 						yearlyBudget: yearlyBudget ?? null,
-						updatedAt: sql`(cast(unixepoch('subsecond') * 1000 as integer))`,
 					},
-				});
+				})
+				.returning();
 
-			return { id };
+			return { id: rows[0]?.id };
 		},
 	}),
 };
