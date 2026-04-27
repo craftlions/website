@@ -106,7 +106,7 @@ export const server = {
 				deadline: parseDateToTimestamp(deadline),
 				stateOfWork: stateOfWork || null,
 				stateOfPayment: stateOfPayment || null,
-				amount: amount ? Number.parseInt(amount, 10) : null,
+				budget: amount ? Number.parseInt(amount, 10) : null,
 			});
 
 			return { id };
@@ -151,7 +151,7 @@ export const server = {
 					deadline: parseDateToTimestamp(deadline),
 					stateOfWork: stateOfWork || null,
 					stateOfPayment: stateOfPayment || null,
-					amount: amount ? Number.parseInt(amount, 10) : null,
+					budget: amount ? Number.parseInt(amount, 10) : null,
 				})
 				.where(eq(project.id, projectId));
 

@@ -43,7 +43,7 @@ if (
 
 function formatDateForInput(date: Date | null | undefined): string {
 	if (!date) return "";
-	return date.toISOString().split("T")[0];
+	return date.toISOString().slice(0, 10);
 }
 
 function formatDateDisplay(date: Date | null | undefined): string {
@@ -64,7 +64,7 @@ const organizationGroups = await db.query.organization.findMany({
 				deadline: true,
 				stateOfWork: true,
 				stateOfPayment: true,
-				amount: true,
+				budget: true,
 			},
 			orderBy: {
 				name: "asc",
@@ -156,7 +156,7 @@ const organizationGroups = await db.query.organization.findMany({
 												<p class="text-sm text-neutral-600 dark:text-neutral-400">
 													{organizationRecord.name}
 												</p>
-												{projectRecord.deadline || projectRecord.stateOfWork || projectRecord.stateOfPayment || projectRecord.amount != null ? (
+												{projectRecord.deadline || projectRecord.stateOfWork || projectRecord.stateOfPayment || projectRecord.budget != null ? (
 													<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm text-neutral-600 dark:text-neutral-400">
 														{projectRecord.deadline && (
 															<>
@@ -176,10 +176,10 @@ const organizationGroups = await db.query.organization.findMany({
 																<dd>{projectRecord.stateOfPayment}</dd>
 															</>
 														)}
-														{projectRecord.amount != null && (
+														{projectRecord.budget != null && (
 															<>
-																<dt class="font-medium">Amount</dt>
-																<dd>{projectRecord.amount}</dd>
+																<dt class="font-medium">Budget</dt>
+																<dd>{projectRecord.budget}</dd>
 															</>
 														)}
 													</dl>
@@ -188,13 +188,13 @@ const organizationGroups = await db.query.organization.findMany({
 											<div class="grid grid-flow-col gap-2 justify-self-start sm:justify-self-end">
 												<Button
 													type="button"
-													class="edit-project-btn"
+												data-action="edit-project"
 													data-id={projectRecord.id}
 													data-name={projectRecord.name}
 													data-deadline={formatDateForInput(projectRecord.deadline)}
 													data-state-of-work={projectRecord.stateOfWork || ""}
 													data-state-of-payment={projectRecord.stateOfPayment || ""}
-													data-amount={projectRecord.amount ?? ""}
+													data-amount={projectRecord.budget ?? ""}
 												>
 													Edit
 												</Button>
@@ -576,8 +576,7 @@ const organizationGroups = await db.query.organization.findMany({
 		}
 	});
 
-	const editButtons = document.querySelectorAll(".edit-project-btn");
-	editButtons.forEach((btn) => {
+	document.querySelectorAll<HTMLElement>("[data-action='edit-project']").forEach((btn) => {
 		btn.addEventListener("click", () => {
 			const modal = document.getElementById("edit-project-modal");
 			if (!(modal instanceof HTMLDialogElement)) return;

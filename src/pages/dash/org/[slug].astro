@@ -58,7 +58,8 @@ const projects = organization
 	? await db.query.project.findMany({
 			columns: {
 				id: true,
-				name: true, budget: true,
+				name: true,
+				budget: true,
 				deadline: true,
 				stateOfWork: true,
 				stateOfPayment: true,
@@ -181,10 +182,10 @@ const totalBudget = metadata?.yearlyBudget ?? 0;
 														<dd>{projectRecord.stateOfPayment}</dd>
 													</>
 												)}
-												{projectRecord.amount != null && (
+												{projectRecord.budget != null && (
 													<>
 														<dt class="font-medium">Amount</dt>
-														<dd>{projectRecord.amount}</dd>
+														<dd>{projectRecord.budget}</dd>
 													</>
 												)}
 											</dl>
