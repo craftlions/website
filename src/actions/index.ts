@@ -1,20 +1,11 @@
+import type { Auth } from "../lib/auth.ts";
+import type { Db } from "../lib/database.ts";
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro/zod";
 import { eq, sql } from "drizzle-orm";
-import { auth } from "../lib/auth.ts";
-import { db } from "../lib/database.ts";
 import { organizationMetadata, project } from "../lib/schema.ts";
 
-function parseDateToTimestamp(
-	dateString: string | undefined | null,
-): number | null {
-	if (!dateString) return null;
-	const date = new Date(dateString);
-	if (Number.isNaN(date.getTime())) return null;
-	return date.getTime();
-}
-
-const assertAdmin = async (headers: Headers) => {
+const assertAdmin = async (headers: Headers, auth: Auth) => {
 	const session = await auth.api.getSession({ headers });
 
 	if (!session) {
@@ -37,6 +28,8 @@ const assertAdmin = async (headers: Headers) => {
 const assertOrganizationMember = async (
 	headers: Headers,
 	organizationId: string,
+	auth: Auth,
+	db: Db,
 ) => {
 	const session = await auth.api.getSession({ headers });
 
@@ -79,16 +72,17 @@ export const server = {
 			{ name, organizationId, deadline, stateOfWork, stateOfPayment, amount },
 			context,
 		) => {
-			await assertAdmin(context.request.headers);
+			await assertAdmin(context.request.headers, context.locals.auth);
 
-			const selectedOrganization = await db.query.organization.findFirst({
-				columns: {
-					id: true,
-				},
-				where: {
-					id: organizationId,
-				},
-			});
+			const selectedOrganization =
+				await context.locals.db.query.organization.findFirst({
+					columns: {
+						id: true,
+					},
+					where: {
+						id: organizationId,
+					},
+				});
 
 			if (!selectedOrganization) {
 				throw new ActionError({
@@ -99,11 +93,11 @@ export const server = {
 
 			const id = crypto.randomUUID();
 
-			await db.insert(project).values({
+			await context.locals.db.insert(project).values({
 				id,
 				organizationId,
 				name,
-				deadline: parseDateToTimestamp(deadline),
+				deadline: new Date(deadline ?? ""),
 				stateOfWork: stateOfWork || null,
 				stateOfPayment: stateOfPayment || null,
 				budget: amount ? Number.parseInt(amount, 10) : null,
@@ -126,9 +120,9 @@ export const server = {
 			{ projectId, name, deadline, stateOfWork, stateOfPayment, amount },
 			context,
 		) => {
-			await assertAdmin(context.request.headers);
+			await assertAdmin(context.request.headers, context.locals.auth);
 
-			const selectedProject = await db.query.project.findFirst({
+			const selectedProject = await context.locals.db.query.project.findFirst({
 				columns: {
 					id: true,
 				},
@@ -144,11 +138,11 @@ export const server = {
 				});
 			}
 
-			await db
+			await context.locals.db
 				.update(project)
 				.set({
 					name,
-					deadline: parseDateToTimestamp(deadline),
+					deadline: new Date(deadline ?? ""),
 					stateOfWork: stateOfWork || null,
 					stateOfPayment: stateOfPayment || null,
 					budget: amount ? Number.parseInt(amount, 10) : null,
@@ -164,9 +158,9 @@ export const server = {
 			projectId: z.string().trim().min(1, "Choose a project to delete."),
 		}),
 		handler: async ({ projectId }, context) => {
-			await assertAdmin(context.request.headers);
+			await assertAdmin(context.request.headers, context.locals.auth);
 
-			const selectedProject = await db.query.project.findFirst({
+			const selectedProject = await context.locals.db.query.project.findFirst({
 				columns: {
 					id: true,
 				},
@@ -182,7 +176,7 @@ export const server = {
 				});
 			}
 
-			await db.delete(project).where(eq(project.id, projectId));
+			await context.locals.db.delete(project).where(eq(project.id, projectId));
 
 			return { id: projectId };
 		},
@@ -198,11 +192,16 @@ export const server = {
 				.optional(),
 		}),
 		handler: async ({ organizationId, yearlyBudget }, context) => {
-			await assertOrganizationMember(context.request.headers, organizationId);
+			await assertOrganizationMember(
+				context.request.headers,
+				organizationId,
+				context.locals.auth,
+				context.locals.db,
+			);
 
 			const id = crypto.randomUUID();
 
-			await db
+			await context.locals.db
 				.insert(organizationMetadata)
 				.values({
 					id,

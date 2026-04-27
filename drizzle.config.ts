@@ -5,6 +5,6 @@ export default defineConfig({
 	schema: "./src/lib/schema.ts",
 	dialect: "postgresql",
 	dbCredentials: {
-		url: process.env.PLANETSCALE_CONNECTION_STRING,
+		url: process.env.CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE,
 	},
 });

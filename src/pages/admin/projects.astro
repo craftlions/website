@@ -7,10 +7,8 @@ import Button from "../../components/Button.astro";
 import Footer from "../../components/Footer.astro";
 import LogoutButton from "../../components/LogoutButton.astro";
 import Shell from "../../layouts/Shell.astro";
-import { auth } from "../../lib/auth.ts";
-import { db } from "../../lib/database.ts";
 
-const session = await auth.api.getSession({
+const session = await Astro.locals.auth.api.getSession({
 	headers: Astro.request.headers,
 });
 
@@ -51,7 +49,7 @@ function formatDateDisplay(date: Date | null | undefined): string {
 	return date.toLocaleDateString();
 }
 
-const organizationGroups = await db.query.organization.findMany({
+const organizationGroups = await Astro.locals.db.query.organization.findMany({
 	columns: {
 		id: true,
 		name: true,

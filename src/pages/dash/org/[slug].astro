@@ -7,12 +7,10 @@ import LogoWithTextVertical from "../../../assets/logoWithTextVertical.svg";
 import Footer from "../../../components/Footer.astro";
 import LogoutButton from "../../../components/LogoutButton.astro";
 import Shell from "../../../layouts/Shell.astro";
-import { auth } from "../../../lib/auth.ts";
-import { db } from "../../../lib/database.ts";
 
 const { slug } = Astro.params;
 
-const session = await auth.api.getSession({
+const session = await Astro.locals.auth.api.getSession({
 	headers: Astro.request.headers,
 });
 
@@ -22,7 +20,7 @@ if (!session) {
 
 if (!session.session.activeOrganizationId) {
 	try {
-		await auth.api.setActiveOrganization({
+		await Astro.locals.auth.api.setActiveOrganization({
 			body: {
 				organizationSlug: slug,
 			},
@@ -35,7 +33,7 @@ if (!session.session.activeOrganizationId) {
 	}
 }
 
-const organization = await auth.api.getFullOrganization({
+const organization = await Astro.locals.auth.api.getFullOrganization({
 	query: {
 		organizationSlug: slug,
 		membersLimit: 0,
@@ -55,7 +53,7 @@ if (updateMetadataResult && !updateMetadataResult.error) {
 }
 
 const projects = organization
-	? await db.query.project.findMany({
+	? await Astro.locals.db.query.project.findMany({
 			columns: {
 				id: true,
 				name: true,
@@ -70,7 +68,7 @@ const projects = organization
 	: [];
 
 const metadata = organization
-	? await db.query.organizationMetadata.findFirst({
+	? await Astro.locals.db.query.organizationMetadata.findFirst({
 			where: { organizationId: organization.id },
 		})
 	: null;
