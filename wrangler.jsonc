@@ -1,67 +1,68 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"account_id": "1dc7f5dfd6f1830ea5b903d051c6d624",
-	"compatibility_date": "2026-04-08",
-	"compatibility_flags": ["nodejs_compat"],
-	"main": "./src/worker.ts",
-	"name": "craftlions-website",
-	"assets": {
-		"binding": "ASSETS"
-	},
-	"workers_dev": true,
-	"preview_urls": true,
-	"routes": [
-		{
-			"pattern": "craftlions.com",
-			"custom_domain": true
-		}
-	],
-	"images": {
-		"binding": "IMAGES",
-		"remote": true
-	},
-	"version_metadata": {
-		"binding": "CF_VERSION_METADATA"
-	},
-	"observability": {
-		"logs": {
-			"enabled": true,
-			"invocation_logs": true,
-			"head_sampling_rate": 1,
-			"persist": true
-		},
-		"traces": {
-			"enabled": true,
-			"head_sampling_rate": 1,
-			"persist": true
-		}
-	},
-	"limits": {
-		"cpu_ms": 60000
-	},
-	"kv_namespaces": [
-		{
-			"binding": "SESSION",
-			"id": "988dbc04d7e84fdca174d4b899123594"
-		}
-	],
-	"upload_source_maps": true,
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_id": "78c70e61-7e19-4ebe-8cf0-7bde68d1b911",
-			"database_name": "craftlions-website",
-			"migrations_dir": "drizzle",
-			"remote": true
-		}
-	],
-	"secrets": {
-		"required": ["BETTER_AUTH_SECRETS", "BETTER_AUTH_API_KEY"]
-	},
-	"send_email": [
-		{
-			"name": "MAIL",
-			"remote": true
-		}
-	]
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "1dc7f5dfd6f1830ea5b903d051c6d624",
+  "compatibility_date": "2026-04-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./src/worker.ts",
+  "name": "craftlions-website",
+  "assets": {
+    "binding": "ASSETS"
+  },
+  "workers_dev": true,
+  "preview_urls": true,
+  "routes": [
+    {
+      "pattern": "craftlions.com",
+      "custom_domain": true
+    }
+  ],
+  "images": {
+    "binding": "IMAGES",
+    "remote": true
+  },
+  "version_metadata": {
+    "binding": "CF_VERSION_METADATA"
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "head_sampling_rate": 1,
+      "persist": true
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true
+    }
+  },
+  "limits": {
+    "cpu_ms": 60000
+  },
+  "kv_namespaces": [
+    {
+      "binding": "SESSION",
+      "id": "988dbc04d7e84fdca174d4b899123594"
+    }
+  ],
+  "upload_source_maps": true,
+  "secrets": {
+    "required": ["BETTER_AUTH_SECRETS", "BETTER_AUTH_API_KEY"]
+  },
+  "send_email": [
+    {
+      "name": "MAIL",
+      "remote": true
+    }
+  ],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "7f520825d909442e9778976a76271b7c",
+      "localConnectionString": "postgres://user:password@localhost:5432/database"
+    }
+  ],
+  "placement": {
+    "region": "aws:eu-central-1"
+  }
 }

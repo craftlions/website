@@ -5,9 +5,8 @@ import LogoWithTextVertical from "../../assets/logoWithTextVertical.svg";
 import Footer from "../../components/Footer.astro";
 import LogoutButton from "../../components/LogoutButton.astro";
 import Shell from "../../layouts/Shell.astro";
-import { auth } from "../../lib/auth.ts";
 
-const session = await auth.api.getSession({
+const session = await Astro.locals.auth.api.getSession({
 	headers: Astro.request.headers,
 });
 
@@ -15,7 +14,7 @@ if (!session) {
 	return Astro.redirect("/login");
 }
 
-const organizations = await auth.api.listOrganizations({
+const organizations = await Astro.locals.auth.api.listOrganizations({
 	headers: Astro.request.headers,
 });
 

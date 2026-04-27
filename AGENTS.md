@@ -34,3 +34,9 @@ pn run check
 pn biome check --write
 pn run build
 ```
+
+## PlanetScale Database
+
+- **Organization:** `craftlions`
+- **Database:** `website`
+- **Branch:** `main`

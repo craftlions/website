@@ -17,3 +17,5 @@ node_modules/
 
 # cloudflare
 .wrangler
+
+auth-schema.ts
