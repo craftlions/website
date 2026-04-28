@@ -1,3 +1,4 @@
+import { create } from "domain";
 import * as t from "drizzle-orm/pg-core";
 import { pgTable } from "drizzle-orm/pg-core";
 import { createInsertSchema, createUpdateSchema } from "drizzle-orm/zod";
@@ -238,3 +239,21 @@ export const organizationMetadataInsertSchema =
 	createInsertSchema(organizationMetadata);
 export const organizationMetadataUpdateSchema =
 	createUpdateSchema(organizationMetadata);
+
+export const invoice = pgTable("invoice", {
+	id: t.uuid("id").defaultRandom().notNull(),
+	projectId: t.uuid("project_id").notNull(),
+	invoiceNumber: t.text("invoice_number").notNull(),
+	stripeId: t.text("stripe_id").notNull(),
+	stripePaymentPage: t.text("payment_page").notNull(),
+	createdAt: t.timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+	t.primaryKey({
+		columns: [table.id],
+	}),
+	t.unique().on(table.stripeId),
+	t.foreignKey({
+		foreignColumns: [project.id],
+		columns: [table.projectId],
+	})
+])
