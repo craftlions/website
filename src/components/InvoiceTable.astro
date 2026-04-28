@@ -94,7 +94,8 @@ const { invoices, pageSize = 5 } = Astro.props;
 			const rows = Array.from(
 				this.querySelectorAll<HTMLTableRowElement>("tbody tr"),
 			);
-			const pageSize = Math.max(1, Number(this.dataset.pageSize) || 10);
+			const parsed = Number(this.dataset.pageSize);
+		const pageSize = Math.max(1, Number.isFinite(parsed) ? parsed : 5);
 			const pageCount = Math.ceil(rows.length / pageSize);
 			const controls = this.querySelector<HTMLElement>(
 				'[data-invoice-pagination="controls"]',
