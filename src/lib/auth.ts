@@ -1,19 +1,31 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { dash } from "@better-auth/infra";
 import { betterAuth } from "better-auth/minimal";
-import { admin, organization } from "better-auth/plugins";
+import { admin, oAuthProxy, organization } from "better-auth/plugins";
 import { createDb } from "./database.ts";
 
 export function createAuth(env: Cloudflare.Env) {
 	const db = env ? createDb(env) : null;
 
 	return betterAuth({
+		socialProviders: {
+			github: {
+				clientId: env.GITHUB_CLIENT_ID,
+				clientSecret: env.GITHUB_CLIENT_SECRET,
+				redirectURI: "https://craftlions.com/api/auth/callback/github",
+			},
+		},
 		account: {
 			encryptOAuthTokens: true,
-			skipStateCookieCheck: false,
+			skipStateCookieCheck: true,
 			storeAccountCookie: false,
 			storeStateStrategy: "database",
 			updateAccountOnSignIn: true,
+			accountLinking: {
+				enabled: true,
+				allowDifferentEmails: true,
+				updateUserInfoOnLinking: true,
+			},
 		},
 		advanced: {
 			ipAddress: {
@@ -98,6 +110,9 @@ export function createAuth(env: Cloudflare.Env) {
 				// sendInvitationEmail
 			}),
 			admin(),
+			oAuthProxy({
+				productionURL: "https://craftlions.com",
+			}),
 		],
 		rateLimit: {
 			storage: "database",

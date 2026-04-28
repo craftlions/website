@@ -1,0 +1,69 @@
+---
+export const prerender = false;
+
+import LogoWithTextVertical from "../../assets/logoWithTextVertical.svg";
+import Button from "../../components/Button.astro";
+import Footer from "../../components/Footer.astro";
+import LogoutButton from "../../components/LogoutButton.astro";
+import Shell from "../../layouts/Shell.astro";
+
+const session = await Astro.locals.auth.api.getSession({
+	headers: Astro.request.headers,
+});
+
+if (!session) {
+	return Astro.redirect("/login");
+}
+
+if (session.user.role !== "admin") {
+	return Astro.redirect("/dash");
+}
+---
+
+<Shell>
+	<Fragment slot="head"> <title>craftlions | Admin Overview</title> </Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+		>
+			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+				<nav class="grid grid-cols-[1fr_auto_1fr] w-full items-center">
+					<LogoWithTextVertical
+						class="h-10 col-start-2"
+						style="view-transition-name: nav-logo;"
+					/>
+					<section class="justify-self-end col-start-3">
+						<LogoutButton />
+					</section>
+				</nav>
+			</header>
+
+			<main
+				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
+			>
+				<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
+					{session.user.name}'s Profile
+				</h1>
+				<Button id="link-github" type="button"> Link GitHub Account </Button>
+			</main>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>
+
+<script>
+	import { authClient } from "../../lib/auth-client.ts";
+
+	const linkGitHubButton = document.getElementById("link-github");
+
+	linkGitHubButton?.addEventListener("click", async () => {
+		const { data, error } = await authClient.linkSocial({
+			provider: "github",
+		});
+		if (error) {
+			console.error("Error linking GitHub account:", error);
+			return;
+		}
+		console.log("GitHub account linked successfully:", data);
+	});
+</script>
