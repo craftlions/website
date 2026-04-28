@@ -3,10 +3,9 @@ export const prerender = false;
 
 import { actions, isInputError } from "astro:actions";
 import { isAPIError } from "better-auth/api";
-import LogoWithTextVertical from "../../../assets/logoWithTextVertical.svg";
 import Button from "../../../components/Button.astro";
 import Footer from "../../../components/Footer.astro";
-import LogoutButton from "../../../components/LogoutButton.astro";
+import Nav from "../../../components/Nav.astro";
 import Shell from "../../../layouts/Shell.astro";
 
 const { slug } = Astro.params;
@@ -94,15 +93,7 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
 		>
 			<header class="grid gap-6 max-w-3xl mx-auto w-full">
-				<nav class="grid grid-cols-[1fr_auto_1fr] w-full items-center">
-					<LogoWithTextVertical
-						class="h-10"
-						style="view-transition-name: nav-logo;"
-					/>
-					<section class="justify-self-end col-start-3">
-						<LogoutButton />
-					</section>
-				</nav>
+				<Nav organizationSlug={slug} />
 			</header>
 
 			<main
@@ -166,7 +157,7 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 												<a
 													href={`/dash/org/${slug}/project/${project.id}`}
 												>
-													<Button type="button" disabled>Details</Button>
+													<Button type="button">Details</Button>
 												</a>
 											</td>
 										</tr>

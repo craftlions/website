@@ -1,0 +1,239 @@
+---
+export const prerender = false;
+
+import { Octokit } from "@octokit/rest";
+import { isAPIError } from "better-auth/api";
+import Footer from "../../../../../components/Footer.astro";
+import Nav from "../../../../../components/Nav.astro";
+import Shell from "../../../../../layouts/Shell.astro";
+
+type GitHubIssue = Awaited<
+	ReturnType<Octokit["rest"]["issues"]["get"]>
+>["data"] & {
+	body_html?: string | null;
+};
+
+const { id, slug } = Astro.params;
+
+if (!id || !slug) {
+	return Astro.redirect("/dash");
+}
+
+const session = await Astro.locals.auth.api.getSession({
+	headers: Astro.request.headers,
+});
+
+if (!session) {
+	return Astro.redirect("/login");
+}
+
+if (!session.session.activeOrganizationId) {
+	try {
+		await Astro.locals.auth.api.setActiveOrganization({
+			body: {
+				organizationSlug: slug,
+			},
+			headers: Astro.request.headers,
+		});
+	} catch (error) {
+		if (isAPIError(error) && error.body?.code === "ORGANIZATION_NOT_FOUND") {
+			return Astro.redirect("/dash");
+		}
+	}
+}
+
+const organization = await Astro.locals.auth.api.getFullOrganization({
+	query: {
+		organizationSlug: slug,
+		membersLimit: 0,
+	},
+	headers: Astro.request.headers,
+});
+
+if (!organization) {
+	return Astro.redirect("/dash");
+}
+
+const project = await Astro.locals.db.query.project.findFirst({
+	columns: {
+		id: true,
+		name: true,
+		budget: true,
+		deadline: true,
+		stateOfWork: true,
+		stateOfPayment: true,
+		createdAt: true,
+		updatedAt: true,
+	},
+	where: {
+		id,
+		organizationId: organization.id,
+	},
+});
+
+if (!project) {
+	return Astro.redirect(`/dash/org/${slug}`);
+}
+
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+});
+
+function formatDateDisplay(date: Date | null | undefined): string {
+	if (!date) return "-";
+	return date.toLocaleDateString();
+}
+
+let githubIssue: GitHubIssue | null = null;
+let githubIssueError = "";
+
+try {
+	const githubAccess = await Astro.locals.auth.api.getAccessToken({
+		body: {
+			providerId: "github",
+		},
+		headers: Astro.request.headers,
+	});
+
+	if (githubAccess.accessToken) {
+		const response = await new Octokit({
+			auth: githubAccess.accessToken,
+		}).rest.issues.get({
+			owner: "frickegroup",
+			repo: "orga",
+			issue_number: 2186,
+			headers: {
+				accept: "application/vnd.github.full+json",
+			},
+		});
+
+		githubIssue = response.data as GitHubIssue;
+	} else {
+		githubIssueError = "Link a GitHub account to view the project issue.";
+	}
+} catch {
+	githubIssueError = "Unable to load the project issue from GitHub.";
+}
+---
+
+<Shell>
+	<Fragment slot="head"> <title>craftlions | {project.name}</title> </Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+		>
+			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+				<Nav organizationSlug={slug} />
+			</header>
+
+			<main
+				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
+			>
+				<a
+					href={`/dash/org/${slug}`}
+					class="justify-self-start px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
+				>
+					Back to Projects
+				</a>
+
+				<section class="grid grid-cols-[1fr_auto] items-start gap-4">
+					<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
+						{project.name}
+					</h1>
+				</section>
+
+				<section
+					aria-labelledby="project-details-heading"
+					class="grid content-start gap-3"
+				>
+					<h2
+						id="project-details-heading"
+						class="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+					>
+						Project Details
+					</h2>
+					<article
+						class="grid gap-4 border border-dashed border-neutral-200 dark:border-neutral-800 p-4"
+					>
+						<p class="text-sm text-neutral-600 dark:text-neutral-400">
+							{organization.name}
+						</p>
+						<dl
+							class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-neutral-600 dark:text-neutral-400"
+						>
+							<dt class="font-medium text-neutral-900 dark:text-neutral-100">
+								Deadline
+							</dt>
+							<dd>{formatDateDisplay(project.deadline)}</dd>
+							<dt class="font-medium text-neutral-900 dark:text-neutral-100">
+								Work
+							</dt>
+							<dd>{project.stateOfWork ?? "-"}</dd>
+							<dt class="font-medium text-neutral-900 dark:text-neutral-100">
+								Payment
+							</dt>
+							<dd>{project.stateOfPayment ?? "-"}</dd>
+							<dt class="font-medium text-neutral-900 dark:text-neutral-100">
+								Budget
+							</dt>
+							<dd>
+								{project.budget != null
+										? currencyFormatter.format(project.budget)
+										: "-"}
+							</dd>
+							<dt class="font-medium text-neutral-900 dark:text-neutral-100">
+								Created
+							</dt>
+							<dd>{formatDateDisplay(project.createdAt)}</dd>
+							<dt class="font-medium text-neutral-900 dark:text-neutral-100">
+								Updated
+							</dt>
+							<dd>{formatDateDisplay(project.updatedAt)}</dd>
+						</dl>
+					</article>
+				</section>
+
+				<section
+					aria-labelledby="project-issue-heading"
+					class="grid content-start gap-3"
+				>
+					<h2
+						id="project-issue-heading"
+						class="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+					>
+						GitHub Issue
+					</h2>
+					{githubIssue ? (
+							<article class="grid gap-4 border border-dashed border-neutral-200 dark:border-neutral-800 p-4">
+								<header class="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
+									<h3 class="font-semibold">{githubIssue.title}</h3>
+									<a
+										href={githubIssue.html_url}
+										class="justify-self-start sm:justify-self-end px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
+									>
+										Open in GitHub
+									</a>
+								</header>
+								{githubIssue.body_html ? (
+									<section
+										class="grid gap-3 text-sm text-neutral-700 dark:text-neutral-300 [&_a]:text-cyan-700 dark:[&_a]:text-cyan-400 [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-l-neutral-300 dark:[&_blockquote]:border-l-neutral-700 [&_blockquote]:pl-3 [&_code]:text-xs [&_code]:text-neutral-900 dark:[&_code]:text-neutral-100 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:text-lg [&_h2]:font-bold [&_h3]:font-semibold [&_ol]:grid [&_ol]:gap-1 [&_ol]:pl-5 [&_pre]:overflow-x-auto [&_pre]:border [&_pre]:border-dashed [&_pre]:border-neutral-200 dark:[&_pre]:border-neutral-800 [&_pre]:p-3 [&_table]:w-full [&_table]:text-left [&_ul]:grid [&_ul]:gap-1 [&_ul]:pl-5"
+										set:html={githubIssue.body_html}
+									/>
+								) : (
+									<p class="text-sm text-neutral-600 dark:text-neutral-400">
+										This issue has no body.
+									</p>
+								)}
+							</article>
+						) : (
+							<p class="border border-dashed border-neutral-200 dark:border-neutral-800 p-4 text-sm text-neutral-600 dark:text-neutral-400">
+								{githubIssueError}
+							</p>
+						)}
+				</section>
+			</main>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>

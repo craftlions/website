@@ -1,0 +1,54 @@
+---
+import LogoutButton from "./LogoutButton.astro";
+
+const session = await Astro.locals.auth.api.getSession({
+	headers: Astro.request.headers,
+});
+---
+
+<li>
+	<ul class="grid grid-flow-col auto-cols-max items-center gap-2">
+		{session ? (
+				<>
+					<li>
+						<a
+							href="/dash"
+							class="px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
+						>
+							Dashboard
+						</a>
+					</li>
+					<li>
+						<a
+							href="/settings/profile"
+							class="px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
+						>
+							Profile
+						</a>
+					</li>
+					{session.user.role === "admin" && (
+							<li>
+								<a
+									href="/admin"
+									class="px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
+								>
+									Admin
+								</a>
+							</li>
+					)}
+					<li>
+						<LogoutButton />
+					</li>
+				</>
+			) : (
+				<li>
+					<a
+						href="/login"
+						class="px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
+					>
+						Login
+					</a>
+				</li>
+			)}
+	</ul>
+</li>
