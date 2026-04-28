@@ -1,0 +1,1 @@
+ALTER TABLE "invoice" DROP CONSTRAINT "invoice_project_id_project_id_fkey", ADD CONSTRAINT "invoice_project_id_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON UPDATE CASCADE;
