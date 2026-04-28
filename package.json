@@ -28,7 +28,7 @@
     "@tailwindcss/vite": "4.2.4",
     "@types/node": "25.6.0",
     "@types/pg": "8.20.0",
-    "@typescript/native-preview": "7.0.0-dev.20260427.1",
+    "@typescript/native-preview": "7.0.0-dev.20260428.1",
     "astro": "6.1.9",
     "auth": "1.6.9",
     "better-auth": "1.6.9",
