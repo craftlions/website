@@ -15,7 +15,7 @@ export const user = pgTable("user", {
 	updatedAt: t
 		.timestamp("updated_at", { withTimezone: true })
 		.defaultNow()
-		.$onUpdate(() => /* @__PURE__ */ new Date())
+		.$onUpdate(() => new Date())
 		.notNull(),
 	lastActiveAt: t.timestamp("last_active_at", { withTimezone: true }),
 	role: t.text("role"),
@@ -36,7 +36,7 @@ export const session = pgTable(
 			.notNull(),
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
-			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.$onUpdate(() => new Date())
 			.notNull(),
 		ipAddress: t.text("ip_address"),
 		userAgent: t.text("user_agent"),
@@ -77,7 +77,7 @@ export const account = pgTable(
 			.notNull(),
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
-			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.$onUpdate(() => new Date())
 			.notNull(),
 	},
 	(table) => [t.index("account_userId_idx").on(table.userId)],
@@ -97,7 +97,7 @@ export const verification = pgTable(
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
 			.defaultNow()
-			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.$onUpdate(() => new Date())
 			.notNull(),
 	},
 	(table) => [t.index("verification_identifier_idx").on(table.identifier)],
@@ -136,7 +136,7 @@ export const member = pgTable(
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
 			.defaultNow()
-			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.$onUpdate(() => new Date())
 			.notNull(),
 	},
 	(table) => [
@@ -199,7 +199,7 @@ export const project = pgTable(
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
 			.defaultNow()
-			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.$onUpdate(() => new Date())
 			.notNull(),
 	},
 	(table) => [t.index("project_organizationId_idx").on(table.organizationId)],
@@ -207,6 +207,54 @@ export const project = pgTable(
 
 export const projectInsertSchema = createInsertSchema(project);
 export const projectUpdateSchema = createUpdateSchema(project);
+
+export const milestoneState = t.pgEnum("milestone_state", [
+	"submitted",
+	"planned",
+	"approved",
+	"in_progress",
+	"invoiced",
+	"paid",
+	"cancelled",
+]);
+
+export const milestone = pgTable(
+	"milestone",
+	{
+		id: t.uuid("id").defaultRandom(),
+		projectId: t.uuid("project_id").notNull(),
+		title: t.text("title").notNull(),
+		cost: t
+			.numeric("cost", { precision: 19, scale: 4, mode: "number" })
+			.notNull()
+			.default(0.0),
+		currency: t.char("currency", { length: 3 }).notNull().default("EUR"),
+		state: milestoneState("state").notNull().default("submitted"),
+		dueAt: t.timestamp("due_at", { withTimezone: true }),
+		createdAt: t
+			.timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: t
+			.timestamp("updated_at", { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		t.primaryKey({
+			columns: [table.id],
+		}),
+		t
+			.foreignKey({
+				foreignColumns: [project.id],
+				columns: [table.projectId],
+			})
+			.onDelete("no action")
+			.onUpdate("cascade"),
+		t.index().on(table.projectId),
+	],
+);
 
 export const organizationMetadata = pgTable(
 	"organization_metadata",
@@ -224,7 +272,7 @@ export const organizationMetadata = pgTable(
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
 			.defaultNow()
-			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.$onUpdate(() => new Date())
 			.notNull(),
 	},
 	(table) => [
