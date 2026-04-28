@@ -1,26 +1,18 @@
-Status
-Cost
-GitHub Issue Verlinkung
-Übriges Budget
+- List of Invoices Org (Filter by Projects)
+- List of Invoices Project
+- Add Milestones
+- Rename Budget to Cost
+- Add GitHub Linking to Database
+- Calculate leftover Budgets
+- Add Archived State & Filter
 
-Mail Notfications
-Live check updates
+- (Notifications e.g. Mail, Slack, Webhook)
+- (Add API & self-service)
+  - Request Projects
+  - Export CSV 
+  - API
+- Add Audit History (Org and Project level)
 
-History Timeline (z.b. warum haben sich kosten geändert)
-Invoices
-
-Benachrichtigung für Events
-Project Tabs Archived 
-
-Export (CSV)
-Request Projects
-
-GitHub Project / Milestones
-
-Milestones Kosten (Hover)
-GitHub oAuth Link
-
-Svenja / Org Account (Billing read-only)
 
 ## commands
 
