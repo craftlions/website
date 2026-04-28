@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 
-import { Octokit } from "@octokit/rest";
+// import { Octokit } from "@octokit/rest";
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
 import Footer from "../../../../../components/Footer.astro";
@@ -78,16 +78,6 @@ const project = await Astro.locals.db.query.project.findFirst({
 
 if (!project) {
 	return Astro.redirect(`/dash/org/${slug}`);
-}
-
-const currencyFormatter = new Intl.NumberFormat("de-DE", {
-	style: "currency",
-	currency: "EUR",
-});
-
-function formatDateDisplay(date: Date | null | undefined): string {
-	if (!date) return "-";
-	return date.toLocaleDateString();
 }
 
 // let githubIssue = null;

@@ -37,40 +37,59 @@ const milestoneStateToBadgeType = (
 };
 ---
 
-<milestone-table class="grid gap-3">
-	<table class="w-full text-left text-sm">
-		<thead>
-			<tr class="border-b border-neutral-200 dark:border-neutral-800">
-				<th>Title</th>
-				<th>Due Date</th>
-				<th>Cost</th>
-				<th>State</th>
-			</tr>
-		</thead>
-		<tbody>
-			{milestones.map((milestone) => (
-					<tr class="border-b border-neutral-200 dark:border-neutral-800">
-            <td class="py-2">{milestone.title}</td>
-            <td class="py-2">
-              {milestone.dueAt ? dateFormatter.format(milestone.dueAt) : "-"}
-            </td>
-            <td class="py-2">
-              {new Intl.NumberFormat("de-DE", {
-                style: "currency",
-                currency: milestone.currency,
-              }).format(milestone.cost)}
-            </td>
-            <td class="py-2">
-							<Badge type={milestoneStateToBadgeType(milestone.state)}>{milestone.state}</Badge>
-							</td>
-					</tr>
-				))}
-		</tbody>
-	</table>
-</milestone-table>
-
-<script>
-	class MilestoneTable extends HTMLElement {}
-
-	customElements.define("milestone-table", MilestoneTable);
-</script>
+<div class="grid gap-3">
+	{milestones.length > 0 ? (
+			<div class="overflow-x-auto rounded-lg border border-dashed border-neutral-200 bg-neutral-100/60 dark:border-neutral-800 dark:bg-neutral-900/60">
+				<table class="w-full min-w-2xl border-collapse text-left text-sm">
+					<thead>
+						<tr class="border-b border-neutral-200 bg-neutral-100 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">
+								Title
+							</th>
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">
+								Due Date
+							</th>
+							<th
+								scope="col"
+								class="px-4 py-3 text-right text-xs font-semibold uppercase"
+							>
+								Cost
+							</th>
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">
+								State
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{milestones.map((milestone) => (
+							<tr class="border-b border-neutral-200 transition-colors last:border-b-0 hover:bg-white dark:border-neutral-800 dark:hover:bg-neutral-950/60">
+								<td class="px-4 py-4 font-medium text-neutral-900 dark:text-neutral-100">
+									{milestone.title}
+								</td>
+								<td class="whitespace-nowrap px-4 py-4 text-neutral-700 dark:text-neutral-300">
+									{milestone.dueAt
+										? dateFormatter.format(milestone.dueAt)
+										: "Not scheduled"}
+								</td>
+								<td class="whitespace-nowrap px-4 py-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
+									{new Intl.NumberFormat("de-DE", {
+										style: "currency",
+										currency: milestone.currency,
+									}).format(milestone.cost)}
+								</td>
+								<td class="px-4 py-4">
+									<Badge type={milestoneStateToBadgeType(milestone.state)}>
+										{milestone.state.replaceAll("_", " ")}
+									</Badge>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		) : (
+			<p class="rounded-lg border border-dashed border-neutral-200 bg-neutral-100/60 p-4 text-sm text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-400">
+				No milestones have been added yet.
+			</p>
+		)}
+</div>
