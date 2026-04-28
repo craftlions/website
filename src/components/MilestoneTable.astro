@@ -1,0 +1,76 @@
+---
+import type { milestoneSelectType } from "../lib/schema";
+import Badge from "./Badge.astro";
+
+interface Milestone {
+	title: milestoneSelectType["title"];
+	dueAt: milestoneSelectType["dueAt"];
+	cost: milestoneSelectType["cost"];
+	currency: milestoneSelectType["currency"];
+	state: milestoneSelectType["state"];
+}
+
+interface Props {
+	milestones: Milestone[];
+}
+
+const { milestones } = Astro.props;
+const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
+
+const milestoneStateToBadgeType = (
+	milestoneState: milestoneSelectType["state"],
+) => {
+	switch (milestoneState) {
+		case "submitted":
+		case "planned":
+		case "approved":
+		case "in_progress":
+		case "invoiced":
+			return "info";
+		case "paid":
+			return "success";
+		case "cancelled":
+			return "error";
+		default:
+			return "info";
+	}
+};
+---
+
+<milestone-table class="grid gap-3">
+	<table class="w-full text-left text-sm">
+		<thead>
+			<tr class="border-b border-neutral-200 dark:border-neutral-800">
+				<th>Title</th>
+				<th>Due Date</th>
+				<th>Cost</th>
+				<th>State</th>
+			</tr>
+		</thead>
+		<tbody>
+			{milestones.map((milestone) => (
+					<tr class="border-b border-neutral-200 dark:border-neutral-800">
+            <td class="py-2">{milestone.title}</td>
+            <td class="py-2">
+              {milestone.dueAt ? dateFormatter.format(milestone.dueAt) : "-"}
+            </td>
+            <td class="py-2">
+              {new Intl.NumberFormat("de-DE", {
+                style: "currency",
+                currency: milestone.currency,
+              }).format(milestone.cost)}
+            </td>
+            <td class="py-2">
+							<Badge type={milestoneStateToBadgeType(milestone.state)}>{milestone.state}</Badge>
+							</td>
+					</tr>
+				))}
+		</tbody>
+	</table>
+</milestone-table>
+
+<script>
+	class MilestoneTable extends HTMLElement {}
+
+	customElements.define("milestone-table", MilestoneTable);
+</script>
