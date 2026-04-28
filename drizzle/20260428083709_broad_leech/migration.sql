@@ -1,0 +1,1 @@
+CREATE INDEX "invoice_project_id_index" ON "invoice" ("project_id");
