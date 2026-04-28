@@ -257,10 +257,13 @@ export const invoice = pgTable(
 			columns: [table.id],
 		}),
 		t.unique().on(table.stripeId),
-		t.foreignKey({
-			foreignColumns: [project.id],
-			columns: [table.projectId],
-		}),
+		t
+			.foreignKey({
+				foreignColumns: [project.id],
+				columns: [table.projectId],
+			})
+			.onDelete("no action")
+			.onUpdate("cascade"),
 		t.index().on(table.projectId),
 	],
 );
