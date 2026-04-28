@@ -1,0 +1,20 @@
+---
+interface Props {
+	type: "info" | "success" | "error";
+}
+
+const { type } = Astro.props;
+---
+
+<span
+	class="border-2 border-black px-3 py-1.5 text-sm/none font-semibold shadow-[2px_2px_0_0]"
+	class:list={[
+    {
+      "bg-green-100": type === "success",
+      "bg-red-100": type === "error",
+      "bg-blue-100": type === "info",
+    },
+  ]}
+>
+	<slot />
+</span>

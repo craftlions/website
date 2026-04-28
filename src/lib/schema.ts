@@ -256,6 +256,8 @@ export const milestone = pgTable(
 	],
 );
 
+export type milestoneSelectType = typeof milestone.$inferSelect;
+
 export const organizationMetadata = pgTable(
 	"organization_metadata",
 	{

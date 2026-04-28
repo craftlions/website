@@ -5,6 +5,7 @@ import { Octokit } from "@octokit/rest";
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
 import Footer from "../../../../../components/Footer.astro";
+import MilestoneTable from "../../../../../components/MilestoneTable.astro";
 import Nav from "../../../../../components/Nav.astro";
 import ProjectInvoices from "../../../../../components/ProjectInvoices.astro";
 import Shell from "../../../../../layouts/Shell.astro";
@@ -54,15 +55,23 @@ const project = await Astro.locals.db.query.project.findFirst({
 	columns: {
 		id: true,
 		name: true,
-		budget: true,
-		deadline: true,
-		stateOfWork: true,
-		stateOfPayment: true,
-		createdAt: true,
-		updatedAt: true,
+	},
+	with: {
+		milestones: {
+			columns: {
+				title: true,
+				dueAt: true,
+				cost: true,
+				currency: true,
+				state: true,
+			},
+			orderBy: {
+				dueAt: "asc",
+			},
+		},
 	},
 	where: {
-		id,
+		id: id,
 		organizationId: organization.id,
 	},
 });
@@ -81,36 +90,36 @@ function formatDateDisplay(date: Date | null | undefined): string {
 	return date.toLocaleDateString();
 }
 
-let githubIssue = null;
-let githubIssueError = "";
+// let githubIssue = null;
+// let githubIssueError = "";
 
-try {
-	const githubAccess = await Astro.locals.auth.api.getAccessToken({
-		body: {
-			providerId: "github",
-		},
-		headers: Astro.request.headers,
-	});
+// try {
+// 	const githubAccess = await Astro.locals.auth.api.getAccessToken({
+// 		body: {
+// 			providerId: "github",
+// 		},
+// 		headers: Astro.request.headers,
+// 	});
 
-	if (githubAccess.accessToken) {
-		const response = await new Octokit({
-			auth: githubAccess.accessToken,
-		}).rest.issues.get({
-			owner: "frickegroup",
-			repo: "orga",
-			issue_number: 2186,
-			headers: {
-				accept: "application/vnd.github.full+json",
-			},
-		});
+// 	if (githubAccess.accessToken) {
+// 		const response = await new Octokit({
+// 			auth: githubAccess.accessToken,
+// 		}).rest.issues.get({
+// 			owner: "frickegroup",
+// 			repo: "orga",
+// 			issue_number: 2186,
+// 			headers: {
+// 				accept: "application/vnd.github.full+json",
+// 			},
+// 		});
 
-		githubIssue = response.data;
-	} else {
-		githubIssueError = "Link a GitHub account to view the project issue.";
-	}
-} catch {
-	githubIssueError = "Unable to load the project issue from GitHub.";
-}
+// 		githubIssue = response.data;
+// 	} else {
+// 		githubIssueError = "Link a GitHub account to view the project issue.";
+// 	}
+// } catch {
+// 	githubIssueError = "Unable to load the project issue from GitHub.";
+// }
 ---
 
 <Shell>
@@ -143,10 +152,21 @@ try {
 
 				<section>
 					<h2
+						id="milestones"
+						class="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+					>
+						Milestones
+					</h2>
+					<MilestoneTable milestones={project.milestones} />
+				</section>
+
+				<section>
+					<h2
 						id="invoices"
 						class="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
-						>Invoices</h2
 					>
+						Invoices
+					</h2>
 					<ProjectInvoices id={project.id} />
 				</section>
 			</main>
