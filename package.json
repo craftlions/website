@@ -15,8 +15,8 @@
     "cf-check": "wrangler types --include-runtime --include-env --strict-vars --check"
   },
   "devDependencies": {
-    "@astrojs/check": "0.9.8",
-    "@astrojs/cloudflare": "13.2.1",
+    "@astrojs/check": "0.9.9",
+    "@astrojs/cloudflare": "13.2.2",
     "@astrojs/compiler-rs": "0.1.10",
     "@astrojs/sitemap": "3.7.2",
     "@better-auth/drizzle-adapter": "1.6.9",
@@ -29,7 +29,7 @@
     "@types/node": "25.6.0",
     "@types/pg": "8.20.0",
     "@typescript/native-preview": "7.0.0-dev.20260428.1",
-    "astro": "6.1.9",
+    "astro": "6.1.10",
     "auth": "1.6.9",
     "better-auth": "1.6.9",
     "browserslist": "4.28.2",
