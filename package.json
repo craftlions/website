@@ -39,7 +39,7 @@
     "pg": "8.20.0",
     "tailwindcss": "4.2.4",
     "update-browserslist-db": "1.2.3",
-    "wrangler": "4.85.0"
+    "wrangler": "4.86.0"
   },
   "devEngines": {
     "runtime": {
