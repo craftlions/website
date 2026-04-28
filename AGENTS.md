@@ -20,6 +20,7 @@ pn astro sync
 - Prefer accessing values directly where they are used instead of creating one-off aliases or derived variables. Add variables only when reused, needed for type narrowing, or when they remove real complexity.
 - Use Drizzle Relational Query Builder v2 (`db.query.*`) for reads when relations or simple table lookups are involved.
 - For schema changes, update `src/lib/schema.ts` and run `pn drizzle-kit generate`; do not manually edit existing migrations or snapshots.
+- Reuse `src/components/Button.astro` components
 
 ## Validation
 
@@ -32,7 +33,6 @@ pn run cf-check
 pn astro sync
 pn run check
 pn biome check --write
-pn run build
 ```
 
 ## PlanetScale Database

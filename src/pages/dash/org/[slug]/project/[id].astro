@@ -5,13 +5,8 @@ import { Octokit } from "@octokit/rest";
 import { isAPIError } from "better-auth/api";
 import Footer from "../../../../../components/Footer.astro";
 import Nav from "../../../../../components/Nav.astro";
+import ProjectInvoices from "../../../../../components/ProjectInvoices.astro";
 import Shell from "../../../../../layouts/Shell.astro";
-
-type GitHubIssue = Awaited<
-	ReturnType<Octokit["rest"]["issues"]["get"]>
->["data"] & {
-	body_html?: string | null;
-};
 
 const { id, slug } = Astro.params;
 
@@ -85,7 +80,7 @@ function formatDateDisplay(date: Date | null | undefined): string {
 	return date.toLocaleDateString();
 }
 
-let githubIssue: GitHubIssue | null = null;
+let githubIssue = null;
 let githubIssueError = "";
 
 try {
@@ -108,7 +103,7 @@ try {
 			},
 		});
 
-		githubIssue = response.data as GitHubIssue;
+		githubIssue = response.data;
 	} else {
 		githubIssueError = "Link a GitHub account to view the project issue.";
 	}
@@ -231,6 +226,13 @@ try {
 								{githubIssueError}
 							</p>
 						)}
+				</section>
+				<section>
+					<h2
+						class="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+						>Invoices</h2
+					>
+					<ProjectInvoices id={project.id} />
 				</section>
 			</main>
 			<Footer />
