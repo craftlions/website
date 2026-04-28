@@ -1,10 +1,9 @@
 ---
 export const prerender = true;
 
-import LogoWithTextVertical from "../assets/logoWithTextVertical.svg";
 import Button from "../components/Button.astro";
-import DashboardButton from "../components/DashboardButton.astro";
 import Footer from "../components/Footer.astro";
+import Nav from "../components/Nav.astro";
 import Shell from "../layouts/Shell.astro";
 ---
 
@@ -37,19 +36,7 @@ import Shell from "../layouts/Shell.astro";
 			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-12 p-4 text-pretty"
 		>
 			<header class="grid gap-6 justify-items-center max-w-3xl mx-auto">
-				<nav class="py-6 grid grid-cols-[1fr_auto_1fr] w-full">
-					<LogoWithTextVertical
-						class="h-28 col-start-2"
-						style="view-transition-name: nav-logo;"
-					/>
-					<section class="justify-self-end">
-						<DashboardButton server:defer>
-							<span class="px-6 py-3 font-bold" slot="fallback">
-								Loading...
-							</span></DashboardButton
-						>
-					</section>
-				</nav>
+				<Nav deferSessionLinks variant="marketing" />
 				<section class="grid gap-4">
 					<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
 						Modern IT services for ambitious companies

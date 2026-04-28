@@ -1,0 +1,49 @@
+---
+import LogoWithTextVertical from "../assets/logoWithTextVertical.svg";
+import NavSessionLinks from "./NavSessionLinks.astro";
+
+interface Props {
+	deferSessionLinks?: boolean;
+	organizationSlug?: string | undefined;
+	variant?: "app" | "marketing";
+}
+
+const {
+	deferSessionLinks = false,
+	organizationSlug,
+	variant = "app",
+} = Astro.props;
+---
+
+<nav
+	aria-label="Primary"
+	class="py-6 grid grid-cols-1 gap-4 w-full justify-items-center sm:grid-cols-[auto_1fr] sm:items-center"
+>
+	<a
+		href="/"
+		aria-label="craftlions home"
+		class="grid justify-self-center sm:justify-self-start"
+	>
+		<LogoWithTextVertical
+			class:list={[
+				"[view-transition-name:nav-logo]",
+				variant === "marketing" ? "h-28" : "h-10",
+			]}
+		/>
+	</a>
+	<ul
+		class="grid grid-flow-col auto-cols-max items-center gap-2 max-w-full overflow-x-auto justify-self-center text-sm sm:justify-self-end"
+	>
+		{deferSessionLinks ? (
+				<NavSessionLinks organizationSlug={organizationSlug} server:defer>
+					<li slot="fallback">
+						<span class="px-3 py-1 border border-dashed rounded border-neutral-200 text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
+							Loading...
+						</span>
+					</li>
+				</NavSessionLinks>
+			) : (
+				<NavSessionLinks organizationSlug={organizationSlug} />
+			)}
+	</ul>
+</nav>

@@ -23,6 +23,8 @@
     "@better-auth/infra": "0.2.5",
     "@biomejs/biome": "2.4.13",
     "@cloudflare/vite-plugin": "1.33.2",
+    "@octokit/request": "10.0.8",
+    "@octokit/rest": "22.0.1",
     "@tailwindcss/vite": "4.2.4",
     "@types/node": "25.6.0",
     "@types/pg": "8.20.0",

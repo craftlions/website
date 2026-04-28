@@ -1,44 +1,83 @@
 ---
+export const prerender = true;
+
+import Footer from "../components/Footer.astro";
+import Nav from "../components/Nav.astro";
+import Shell from "../layouts/Shell.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width">
-		<meta name="generator" content={Astro.generator}>
-		<title>Impressum</title>
-	</head>
-	<body>
-		<h1>Impressum</h1>
-		<h2>Angaben gemäß § 5 TMG:</h2>
-		<p>craftlions UG (haftungsbeschränkt)<br></p>
-		<h3>Postanschrift:</h3>
-		<p>Amandus-Voigt-Str. 8<br>23617 Stockelsdorf<br></p>
-		<h3>Kontakt:</h3>
-		<p>Telefon: <br>E-Mail: alexander@craftlions.com</p>
-		<p></p><h3>Vertreten durch:</h3>
-		<p>Geschäftsführer: Alexander Niebuhr<br></p>
-		<p></p><p><br></p>
-		<p></p><h2>Hinweise zur Website</h2>
-		<p></p><h3>Verantwortlich für journalistisch-redaktionelle Inhalte ist:</h3>
-		<p>Alexander Niebuhr, Amandus-Voigt-Str. 8, 23617 Stockelsdorf<br></p>
-		<p></p><h2>Information gemäß § 36 VSBG</h2>
-		<p>
-			Gemäß § 36 VSBG (Verbraucherstreitbeilegungsgesetz – Gesetz über die
-			alternative Streitbeilegung in Verbrauchersachen) erklärt der Betreiber
-			dieser Website:
-		</p>
-		<p>
-			Wir sind bereit, an Streitbeilegungsverfahren bei der folgenden
-			Verbraucherschlichtungsstelle teilzunehmen:
-		</p>
-		<p></p><h2>Hinweis</h2>
-		<p>
-			Die Plattform der EU zur außergerichtlichen Streitbeilegung finden Sie
-			online unter:
-			<a href="https://ec.europa.eu/consumers/odr/"
-				>https://ec.europa.eu/consumers/odr/</a
+<Shell>
+	<Fragment slot="head"> <title>craftlions | Impressum</title> </Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+		>
+			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+				<Nav deferSessionLinks />
+			</header>
+
+			<main
+				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
 			>
-		</p>
-	</body>
-</html>
+				<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
+					Impressum
+				</h1>
+				<section class="grid gap-4">
+					<article
+						class="grid gap-3 border border-dashed border-neutral-200 dark:border-neutral-800 p-4"
+					>
+						<h2 class="text-xl font-bold">Angaben gemäß § 5 TMG:</h2>
+						<p>craftlions UG (haftungsbeschränkt)</p>
+						<h3 class="font-semibold">Postanschrift:</h3>
+						<p>
+							Amandus-Voigt-Str. 8<br>
+							23617 Stockelsdorf
+						</p>
+						<h3 class="font-semibold">Kontakt:</h3>
+						<p>
+							Telefon:<br>
+							E-Mail: alexander@craftlions.com
+						</p>
+						<h3 class="font-semibold">Vertreten durch:</h3>
+						<p>Geschäftsführer: Alexander Niebuhr</p>
+					</article>
+					<article
+						class="grid gap-3 border border-dashed border-neutral-200 dark:border-neutral-800 p-4"
+					>
+						<h2 class="text-xl font-bold">Hinweise zur Website</h2>
+						<h3 class="font-semibold">
+							Verantwortlich für journalistisch-redaktionelle Inhalte ist:
+						</h3>
+						<p> Alexander Niebuhr, Amandus-Voigt-Str. 8, 23617 Stockelsdorf </p>
+					</article>
+					<article
+						class="grid gap-3 border border-dashed border-neutral-200 dark:border-neutral-800 p-4"
+					>
+						<h2 class="text-xl font-bold">Information gemäß § 36 VSBG</h2>
+						<p>
+							Gemäß § 36 VSBG (Verbraucherstreitbeilegungsgesetz – Gesetz über
+							die alternative Streitbeilegung in Verbrauchersachen) erklärt der
+							Betreiber dieser Website:
+						</p>
+						<p>
+							Wir sind bereit, an Streitbeilegungsverfahren bei der folgenden
+							Verbraucherschlichtungsstelle teilzunehmen:
+						</p>
+						<h2 class="text-xl font-bold">Hinweis</h2>
+						<p>
+							Die Plattform der EU zur außergerichtlichen Streitbeilegung finden
+							Sie online unter:
+							<a
+								href="https://ec.europa.eu/consumers/odr/"
+								class="text-cyan-700 dark:text-cyan-400 hover:underline"
+							>
+								https://ec.europa.eu/consumers/odr/
+							</a>
+						</p>
+					</article>
+				</section>
+			</main>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>

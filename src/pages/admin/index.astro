@@ -1,9 +1,8 @@
 ---
 export const prerender = false;
 
-import LogoWithTextVertical from "../../assets/logoWithTextVertical.svg";
 import Footer from "../../components/Footer.astro";
-import LogoutButton from "../../components/LogoutButton.astro";
+import Nav from "../../components/Nav.astro";
 import Shell from "../../layouts/Shell.astro";
 
 const session = await Astro.locals.auth.api.getSession({
@@ -25,17 +24,7 @@ if (session.user.role !== "admin") {
 		<body
 			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
 		>
-			<header class="grid gap-6 max-w-3xl mx-auto w-full">
-				<nav class="grid grid-cols-[1fr_auto_1fr] w-full items-center">
-					<LogoWithTextVertical
-						class="h-10"
-						style="view-transition-name: nav-logo;"
-					/>
-					<section class="justify-self-end col-start-3">
-						<LogoutButton />
-					</section>
-				</nav>
-			</header>
+			<header class="grid gap-6 max-w-3xl mx-auto w-full"> <Nav /> </header>
 
 			<main
 				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
