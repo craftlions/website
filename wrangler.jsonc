@@ -47,7 +47,11 @@
   ],
   "upload_source_maps": true,
   "secrets": {
-    "required": ["BETTER_AUTH_SECRETS", "BETTER_AUTH_API_KEY"]
+    "required": [
+      "BETTER_AUTH_SECRETS",
+      "BETTER_AUTH_API_KEY",
+      "GITHUB_CLIENT_SECRET"
+    ]
   },
   "send_email": [
     {
@@ -64,5 +68,8 @@
   ],
   "placement": {
     "region": "aws:eu-central-1"
+  },
+  "vars": {
+    "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO"
   }
 }
