@@ -1,0 +1,76 @@
+---
+export const prerender = true;
+
+import ChangelogEntry from "../components/ChangelogEntry.astro";
+import Footer from "../components/Footer.astro";
+import Nav from "../components/Nav.astro";
+import Shell from "../layouts/Shell.astro";
+
+const entries = [
+	{
+		date: "April 28, 2026",
+		datetime: "2026-04-28",
+		title: "Invoices",
+		summary:
+			"The latest website update introduces invoice visibility for customer workspaces, making billing details easier to review alongside organizations and projects.",
+		points: ["Organization and project pages can show related invoices."],
+	},
+];
+---
+
+<Shell>
+	<Fragment slot="head">
+		<title>craftlions | Changelog</title>
+		<meta
+			name="description"
+			content="Follow the latest craftlions website updates, product improvements, and platform changes."
+		>
+		<meta property="og:title" content="craftlions | Changelog">
+		<meta
+			property="og:description"
+			content="A timeline of the latest craftlions website and platform updates."
+		>
+		<meta property="og:type" content="website">
+	</Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+		>
+			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+				<Nav deferSessionLinks />
+			</header>
+
+			<main
+				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-8"
+			>
+				<section class="grid gap-4">
+					<p
+						class="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-400"
+					>
+						Website updates
+					</p>
+					<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
+						Changelog
+					</h1>
+					<p class="max-w-2xl text-neutral-700 dark:text-neutral-300">
+						A concise timeline of improvements, fixes, and visible product
+						updates across the craftlions website.
+					</p>
+				</section>
+
+				<ol class="grid gap-4" aria-label="Website update timeline">
+					{entries.map((entry) => (
+							<ChangelogEntry
+								date={entry.date}
+								datetime={entry.datetime}
+								title={entry.title}
+								summary={entry.summary}
+								points={entry.points}
+							/>
+						))}
+				</ol>
+			</main>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>
