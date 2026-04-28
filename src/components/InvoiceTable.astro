@@ -13,6 +13,7 @@ interface Props {
 }
 
 const { invoices, pageSize = 5 } = Astro.props;
+const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 ---
 
 <invoice-table class="grid gap-3" data-page-size={pageSize}>
@@ -28,9 +29,7 @@ const { invoices, pageSize = 5 } = Astro.props;
 			{invoices.map((invoice) => (
 					<tr class="border-b border-neutral-200 dark:border-neutral-800">
 						<td class="py-2">
-							{new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" }).format(
-								new Date(invoice.createdAt),
-							)}
+							{dateFormatter.format(new Date(invoice.createdAt))}
 						</td>
 						<td class="py-2">{invoice.invoiceNumber}</td>
 						<td class="py-2">
@@ -95,7 +94,7 @@ const { invoices, pageSize = 5 } = Astro.props;
 				this.querySelectorAll<HTMLTableRowElement>("tbody tr"),
 			);
 			const parsed = Number(this.dataset.pageSize);
-		const pageSize = Math.max(1, Number.isFinite(parsed) ? parsed : 5);
+			const pageSize = Math.max(1, Number.isFinite(parsed) ? parsed : 5);
 			const pageCount = Math.ceil(rows.length / pageSize);
 			const controls = this.querySelector<HTMLElement>(
 				'[data-invoice-pagination="controls"]',
