@@ -1,5 +1,3 @@
-- List of Invoices Org (Filter by Projects)
-- List of Invoices Project
 - Add Milestones
 - Rename Budget to Cost
 - Add GitHub Linking to Database

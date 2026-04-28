@@ -1,0 +1,30 @@
+---
+import InvoiceTable from "./InvoiceTable.astro";
+
+interface Props {
+	id: string;
+}
+
+const { id } = Astro.props;
+
+const projects = await Astro.locals.db.query.project.findMany({
+	with: {
+		invoices: {
+			columns: {
+				invoiceNumber: true,
+				stripePaymentPage: true,
+				createdAt: true,
+			},
+		},
+	},
+	where: {
+		organizationId: id,
+	},
+});
+
+const invoices = projects
+	.flatMap((project) => project.invoices)
+	.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+---
+
+<InvoiceTable invoices={invoices} />

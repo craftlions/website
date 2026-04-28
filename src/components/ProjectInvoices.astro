@@ -1,0 +1,31 @@
+---
+import InvoiceTable from "./InvoiceTable.astro";
+
+interface Props {
+	id: string;
+}
+
+const { id } = Astro.props;
+
+const project = await Astro.locals.db.query.project.findFirst({
+	with: {
+		invoices: {
+			columns: {
+				invoiceNumber: true,
+				stripePaymentPage: true,
+				createdAt: true,
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+		},
+	},
+	where: {
+		id: id,
+	},
+});
+
+const invoices = project ? project.invoices : [];
+---
+
+<InvoiceTable invoices={invoices} pageSize={10} />

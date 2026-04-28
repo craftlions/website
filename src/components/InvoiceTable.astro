@@ -1,0 +1,140 @@
+---
+import Button from "./Button.astro";
+
+interface Invoice {
+	invoiceNumber: string;
+	stripePaymentPage: string;
+	createdAt: Date;
+}
+
+interface Props {
+	invoices: Invoice[];
+	pageSize?: number;
+}
+
+const { invoices, pageSize = 5 } = Astro.props;
+---
+
+<invoice-table class="grid gap-3" data-page-size={pageSize}>
+	<table class="w-full text-left text-sm">
+		<thead>
+			<tr class="border-b border-neutral-200 dark:border-neutral-800">
+				<th scope="col" class="py-2">Created At</th>
+				<th scope="col" class="py-2">Invoice Number</th>
+				<th scope="col" class="py-2">Payment Link</th>
+			</tr>
+		</thead>
+		<tbody>
+			{invoices.map((invoice) => (
+					<tr class="border-b border-neutral-200 dark:border-neutral-800">
+						<td class="py-2">
+							{new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" }).format(
+								new Date(invoice.createdAt),
+							)}
+						</td>
+						<td class="py-2">{invoice.invoiceNumber}</td>
+						<td class="py-2">
+							<a
+								href={invoice.stripePaymentPage}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="text-cyan-500 hover:underline"
+							>
+								<Button type="button">Details</Button>
+							</a>
+						</td>
+					</tr>
+				))}
+		</tbody>
+	</table>
+	<nav
+		aria-label="Invoice pagination"
+		class="grid grid-cols-[auto_1fr_auto] items-center gap-3 text-sm"
+		data-invoice-pagination="controls"
+		hidden
+	>
+		<Button type="button" data-invoice-pagination="previous">Previous</Button>
+		<output
+			aria-live="polite"
+			class="text-center text-neutral-600 dark:text-neutral-400"
+			data-invoice-pagination="status"
+		></output>
+		<Button type="button" data-invoice-pagination="next">Next</Button>
+	</nav>
+</invoice-table>
+
+<script>
+	class InvoiceTable extends HTMLElement {
+		page = 1;
+
+		connectedCallback() {
+			if (this.dataset.initialized === "true") {
+				this.renderPage();
+				return;
+			}
+
+			this.dataset.initialized = "true";
+			this.querySelector(
+				'[data-invoice-pagination="previous"]',
+			)?.addEventListener("click", () => {
+				this.page -= 1;
+				this.renderPage();
+			});
+			this.querySelector('[data-invoice-pagination="next"]')?.addEventListener(
+				"click",
+				() => {
+					this.page += 1;
+					this.renderPage();
+				},
+			);
+			this.renderPage();
+		}
+
+		renderPage() {
+			const rows = Array.from(
+				this.querySelectorAll<HTMLTableRowElement>("tbody tr"),
+			);
+			const pageSize = Math.max(1, Number(this.dataset.pageSize) || 10);
+			const pageCount = Math.ceil(rows.length / pageSize);
+			const controls = this.querySelector<HTMLElement>(
+				'[data-invoice-pagination="controls"]',
+			);
+			const previousButton = this.querySelector<HTMLButtonElement>(
+				'[data-invoice-pagination="previous"]',
+			);
+			const nextButton = this.querySelector<HTMLButtonElement>(
+				'[data-invoice-pagination="next"]',
+			);
+			const status = this.querySelector<HTMLElement>(
+				'[data-invoice-pagination="status"]',
+			);
+
+			if (!controls || !previousButton || !nextButton || !status) {
+				return;
+			}
+
+			if (pageCount <= 1) {
+				for (const row of rows) {
+					row.hidden = false;
+				}
+
+				controls.hidden = true;
+				return;
+			}
+
+			this.page = Math.min(Math.max(this.page, 1), pageCount);
+			controls.hidden = false;
+
+			for (const [index, row] of rows.entries()) {
+				row.hidden =
+					index < (this.page - 1) * pageSize || index >= this.page * pageSize;
+			}
+
+			previousButton.disabled = this.page === 1;
+			nextButton.disabled = this.page === pageCount;
+			status.textContent = `Page ${this.page} of ${pageCount}`;
+		}
+	}
+
+	customElements.define("invoice-table", InvoiceTable);
+</script>
