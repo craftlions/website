@@ -7,14 +7,14 @@ const { type } = Astro.props;
 ---
 
 <span
-	class="inline-grid w-max place-items-center whitespace-nowrap rounded border px-2.5 py-1 text-xs/none font-semibold capitalize"
+	class="inline-grid w-max place-items-center whitespace-nowrap border border-dashed bg-transparent px-2.5 py-1 text-xs/none font-semibold capitalize"
 	class:list={[
 		{
-			"border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/80 dark:bg-emerald-950/50 dark:text-emerald-200":
+			"border-emerald-400 text-emerald-700 dark:border-emerald-700 dark:text-emerald-300":
 				type === "success",
-			"border-red-200 bg-red-50 text-red-800 dark:border-red-800/80 dark:bg-red-950/50 dark:text-red-200":
+			"border-red-400 text-red-700 dark:border-red-700 dark:text-red-300":
 				type === "error",
-			"border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-800/80 dark:bg-cyan-950/50 dark:text-cyan-200":
+			"border-sky-300 text-sky-700 dark:border-sky-700 dark:text-sky-300":
 				type === "info",
 		},
 	]}

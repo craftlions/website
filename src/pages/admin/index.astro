@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 
+import Button from "../../components/Button.astro";
 import Footer from "../../components/Footer.astro";
 import Nav from "../../components/Nav.astro";
 import Shell from "../../layouts/Shell.astro";
@@ -29,15 +30,14 @@ if (session.user.role !== "admin") {
 			<main
 				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
 			>
-				<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
+				<h1
+					class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+				>
 					Admin Overview
 				</h1>
-				<a
-					href="/admin/projects"
-					class="justify-self-start px-3 py-1 border transition-colors border-dashed rounded cursor-pointer border-neutral-200 hover:bg-neutral-200 hover:border-neutral-400 text-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-800 dark:hover:border-neutral-600 dark:text-neutral-100"
-				>
+				<Button href="/admin/projects" class="justify-self-start">
 					Projects
-				</a>
+				</Button>
 			</main>
 			<Footer />
 		</body>

@@ -22,6 +22,11 @@ pn astro sync
 - For schema changes, update `src/lib/schema.ts` and run `pn drizzle-kit generate`; do not manually edit existing migrations or snapshots.
 - Reuse `src/components/Button.astro` components
 
+## Visual Style
+
+- Aim for a professional minimal look that could be sketched with a pen on a piece of paper
+- Match existing design patterns of the project
+
 ## Validation
 
 Run these commands after making changes:
