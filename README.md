@@ -1,5 +1,3 @@
-- Add Milestones
-- Rename Budget to Cost
 - Add GitHub Linking to Database
 - Calculate leftover Budgets
 - Add Archived State & Filter
@@ -7,6 +5,7 @@
 - (Notifications e.g. Mail, Slack, Webhook)
 - (Add API & self-service)
   - Request Projects
+  - Add Milestones
   - Export CSV 
   - API
 - Add Audit History (Org and Project level)

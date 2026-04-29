@@ -188,7 +188,6 @@ export const project = pgTable(
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 		name: t.text("name").notNull(),
-		budget: t.integer("budget"),
 		deadline: t.timestamp("deadline", { withTimezone: true }),
 		stateOfWork: t.text("state_of_work"),
 		stateOfPayment: t.text("state_of_payment"),
