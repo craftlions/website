@@ -80,7 +80,10 @@ const metadata = await Astro.locals.db.query.organizationMetadata.findFirst({
 	where: { organizationId: organization.id },
 });
 
-const totalCost = projects.reduce((acc, project) => acc + project.cost, 0);
+const totalCost = projects.reduce(
+	(acc, project) => acc + (project.cost ?? 0),
+	0,
+);
 
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
