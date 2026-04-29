@@ -1,7 +1,8 @@
 {
   "extends": "astro/tsconfigs/strictest",
   "compilerOptions": {
-    "types": ["./worker-configuration.d.ts", "node"]
+    "types": ["./worker-configuration.d.ts", "node"],
+    "allowImportingTsExtensions": true
   },
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist", ".wrangler"]
