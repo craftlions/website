@@ -4,4 +4,6 @@ allowBuilds:
   sharp: true
   workerd: true
 minimumReleaseAge: 0
+patchedDependencies:
+  better-auth@1.6.9: patches/better-auth@1.6.9.patch
 shellEmulator: true
