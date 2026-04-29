@@ -17,35 +17,42 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 ---
 
 <invoice-table class="grid gap-3" data-page-size={pageSize}>
-	<table class="w-full text-left text-sm">
-		<thead>
-			<tr class="border-b border-neutral-200 dark:border-neutral-800">
-				<th scope="col" class="py-2">Created At</th>
-				<th scope="col" class="py-2">Invoice Number</th>
-				<th scope="col" class="py-2">Payment Link</th>
-			</tr>
-		</thead>
-		<tbody>
-			{invoices.map((invoice) => (
-					<tr class="border-b border-neutral-200 dark:border-neutral-800">
-						<td class="py-2">
-							{dateFormatter.format(new Date(invoice.createdAt))}
-						</td>
-						<td class="py-2">{invoice.invoiceNumber}</td>
-						<td class="py-2">
-							<a
-								href={invoice.stripePaymentPage}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="text-cyan-500 hover:underline"
-							>
-								<Button type="button">Details</Button>
-							</a>
-						</td>
-					</tr>
-				))}
-		</tbody>
-	</table>
+	{invoices.length > 0 ? (
+			<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
+				<table class="w-full min-w-xl text-left text-sm">
+					<thead>
+						<tr class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Created At</th>
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Invoice Number</th>
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Payment Link</th>
+						</tr>
+					</thead>
+					<tbody>
+						{invoices.map((invoice) => (
+								<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
+									<td class="px-4 py-3">
+										{dateFormatter.format(new Date(invoice.createdAt))}
+									</td>
+									<td class="px-4 py-3">{invoice.invoiceNumber}</td>
+									<td class="px-4 py-3">
+										<Button
+											href={invoice.stripePaymentPage}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											Details
+										</Button>
+									</td>
+								</tr>
+							))}
+					</tbody>
+				</table>
+			</div>
+		) : (
+			<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+				No invoices yet.
+			</p>
+		)}
 	<nav
 		aria-label="Invoice pagination"
 		class="grid grid-cols-[auto_1fr_auto] items-center gap-3 text-sm"

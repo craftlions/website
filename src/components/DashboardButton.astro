@@ -6,16 +6,4 @@ const session = await Astro.locals.auth.api.getSession({
 });
 ---
 
-{session ? (
-  <a href="/dash">
-    <Button type="button">
-      Dashboard
-    </Button>
-  </a>
-) : (
-  <a href="/login">
-    <Button type="button">
-      Login
-    </Button>
-  </a>
-)}
+{session ? <Button href="/dash">Dashboard</Button> : <Button href="/login">Login</Button>}

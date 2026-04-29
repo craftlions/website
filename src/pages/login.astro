@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 
+import Button from "../components/Button.astro";
 import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
 import Shell from "../layouts/Shell.astro";
@@ -25,7 +26,9 @@ if (session) {
 			</header>
 
 			<main class="w-full grid content-start min-h-0 max-w-lg mx-auto gap-6">
-				<h1 class="font-black text-3xl border-l-2 pl-3 border-l-cyan-500">
+				<h1
+					class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+				>
 					Sign in
 				</h1>
 				<form id="login-form" class="grid gap-6" aria-label="Sign in form">
@@ -44,7 +47,7 @@ if (session) {
 								autocomplete="email"
 								required
 								placeholder="you@example.com"
-								class="bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+								class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-600 dark:border-neutral-700 dark:placeholder:text-neutral-600 dark:focus:border-neutral-300"
 							>
 						</div>
 
@@ -62,24 +65,18 @@ if (session) {
 								autocomplete="current-password"
 								required
 								placeholder="••••••••"
-								class="bg-transparent border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm outline-none focus:border-cyan-500 transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+								class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-600 dark:border-neutral-700 dark:placeholder:text-neutral-600 dark:focus:border-neutral-300"
 							>
 							<a
 								href="/forgot-password"
-								class="text-sm text-cyan-700 dark:text-cyan-400 hover:underline justify-self-end"
+								class="justify-self-end text-sm text-sky-700 underline decoration-dashed underline-offset-4 dark:text-sky-300"
 							>
 								Forgot password?
 							</a>
 						</div>
 					</fieldset>
 
-					<button
-						type="submit"
-						id="login-submit"
-						class="bg-cyan-700 text-neutral-50 px-6 py-3 font-bold hover:bg-cyan-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						Sign in
-					</button>
+					<Button type="submit" id="login-submit"> Sign in </Button>
 				</form>
 			</main>
 

@@ -3,18 +3,17 @@ import LogoWithTextVertical from "../assets/logoWithTextVertical.svg";
 ---
 
 <footer
-	class="grid grid-cols-4 gap-4 items-center justify-items-center bg-neutral-850 px-4"
+	class="mx-auto grid w-full max-w-3xl gap-6 border-t border-dashed border-neutral-300 px-3 py-6 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400 sm:grid-cols-[auto_1fr_auto] sm:items-start"
 >
-	<section
-		><a href="/"><LogoWithTextVertical class="w-20" /></a></section
-	>
-	<p class="col-span-2">
-		Discover if craftlions works for you. (We think it does.) Explore our
-		platform with a personalized demo and see how we can revolutionize your tech
-		processes.
+	<a href="/" aria-label="craftlions home" class="grid justify-self-start">
+		<LogoWithTextVertical class="w-16 text-neutral-900 dark:text-neutral-100" />
+	</a>
+	<p>
+		Small, focused technical work for teams that value clarity, maintainability,
+		and durable software decisions.
 	</p>
-	<section>
-		<ul>
+	<nav aria-label="Footer" class="grid justify-self-start sm:justify-self-end">
+		<ul class="grid gap-1">
 			<li><a href="mailto:alexander@craftlions.com">Contact</a></li>
 			<li><a href="https://github.com/craftlions">GitHub</a></li>
 			<li>
@@ -23,8 +22,8 @@ import LogoWithTextVertical from "../assets/logoWithTextVertical.svg";
 			<li><a href="/changelog">Changelog</a></li>
 			<li><a href="/imprint">Imprint</a></li>
 		</ul>
-	</section>
-	<p class="col-span-4 py-4 text-sm text-neutral-500">
+	</nav>
+	<p class="text-xs text-neutral-500 sm:col-span-3">
 		&copy; 2026 Craftlions. All rights reserved.
 	</p>
 </footer>

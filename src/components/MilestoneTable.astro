@@ -39,10 +39,10 @@ const milestoneStateToBadgeType = (
 
 <div class="grid gap-3">
 	{milestones.length > 0 ? (
-			<div class="overflow-x-auto rounded-lg border border-dashed border-neutral-200 bg-neutral-100/60 dark:border-neutral-800 dark:bg-neutral-900/60">
+			<div class="overflow-x-auto border border-dashed border-neutral-300 bg-transparent dark:border-neutral-700">
 				<table class="w-full min-w-2xl border-collapse text-left text-sm">
 					<thead>
-						<tr class="border-b border-neutral-200 bg-neutral-100 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+						<tr class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
 							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">
 								Title
 							</th>
@@ -62,7 +62,7 @@ const milestoneStateToBadgeType = (
 					</thead>
 					<tbody>
 						{milestones.map((milestone) => (
-							<tr class="border-b border-neutral-200 transition-colors last:border-b-0 hover:bg-white dark:border-neutral-800 dark:hover:bg-neutral-950/60">
+							<tr class="border-b border-dashed border-neutral-300 transition-colors last:border-b-0 hover:bg-neutral-100/70 dark:border-neutral-700 dark:hover:bg-neutral-900/70">
 								<td class="px-4 py-4 font-medium text-neutral-900 dark:text-neutral-100">
 									{milestone.title}
 								</td>
@@ -88,7 +88,7 @@ const milestoneStateToBadgeType = (
 				</table>
 			</div>
 		) : (
-			<p class="rounded-lg border border-dashed border-neutral-200 bg-neutral-100/60 p-4 text-sm text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-400">
+			<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
 				No milestones have been added yet.
 			</p>
 		)}
