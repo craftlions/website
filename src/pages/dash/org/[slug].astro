@@ -90,6 +90,7 @@ const invoices =
 					},
 					createdAt: {
 						gte: new Date(new Date().getFullYear(), 0, 1),
+						lt: new Date(new Date().getFullYear() + 1, 0, 1),
 					},
 				},
 				orderBy: (invoice, { desc }) => [desc(invoice.createdAt)],
