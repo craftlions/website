@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 
-import { actions, isInputError } from "astro:actions";
+import { actions } from "astro:actions";
 import { isAPIError } from "better-auth/api";
 import { asc, eq, sum } from "drizzle-orm";
 import Button from "../../../components/Button.astro";
@@ -51,9 +51,6 @@ if (!organization) {
 const updateMetadataResult = Astro.getActionResult(
 	actions.mutateOrganizationMetadata,
 );
-const metadataInputErrors = isInputError(updateMetadataResult?.error)
-	? updateMetadataResult.error.fields
-	: {};
 
 if (updateMetadataResult && !updateMetadataResult.error) {
 	return Astro.redirect(`/dash/org/${slug}`, 303);
@@ -80,10 +77,28 @@ const metadata = await Astro.locals.db.query.organizationMetadata.findFirst({
 	where: { organizationId: organization.id },
 });
 
-const totalCost = projects.reduce(
-	(acc, project) => acc + (project.cost ?? 0),
+const invoices = await Astro.locals.db.query.invoice.findMany({
+	columns: {
+		total: true,
+	},
+	where: {
+		projectId: {
+			in: projects.map((p) => p.id),
+		},
+		createdAt: {
+			gte: new Date(new Date().getFullYear(), 0, 1),
+		},
+	},
+	orderBy: (invoice, { desc }) => [desc(invoice.createdAt)],
+});
+
+const totalInvoicedAmount = invoices.reduce(
+	(acc, invoice) => acc + (invoice.total ?? 0),
 	0,
 );
+const yearlyBudget = metadata?.yearlyBudget ?? 0;
+const budgetUsagePercentage =
+	yearlyBudget > 0 ? (totalInvoicedAmount / yearlyBudget) * 100 : 0;
 
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
@@ -110,6 +125,117 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 					>
 						{organization.name}'s Dashboard
 					</h1>
+				</section>
+
+				<section
+					aria-labelledby="overview-heading"
+					class="grid content-start gap-3"
+				>
+					<h2
+						id="overview-heading"
+						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>
+						Overview
+					</h2>
+					<div
+						class="grid gap-4 border border-dashed border-neutral-300 bg-transparent p-4 dark:border-neutral-700"
+					>
+						<dl class="grid gap-4 sm:grid-cols-2">
+							<div class="grid gap-1">
+								<dt
+									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>
+									Yearly budget
+								</dt>
+								<dd class="text-xl font-semibold tabular-nums">
+									{yearlyBudget > 0 ? currencyFormatter.format(yearlyBudget) : "-"}
+								</dd>
+							</div>
+							<div class="grid gap-1">
+								<dt
+									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>
+									Invoiced this year
+								</dt>
+								<dd class="text-xl font-semibold tabular-nums">
+									{currencyFormatter.format(totalInvoicedAmount)}
+								</dd>
+							</div>
+							<div class="grid gap-1">
+								<dt
+									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>
+									Used
+								</dt>
+								<dd class="text-xl font-semibold tabular-nums">
+									{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "-"}
+								</dd>
+							</div>
+							<div class="grid gap-1">
+								<dt
+									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>
+									Remaining
+								</dt>
+								<dd
+									class:list={[
+										"text-xl font-semibold tabular-nums",
+										yearlyBudget > 0 &&
+											yearlyBudget - totalInvoicedAmount < 0 &&
+											"text-red-700 dark:text-red-300",
+									]}
+								>
+									{yearlyBudget > 0
+										? currencyFormatter.format(yearlyBudget - totalInvoicedAmount)
+										: "-"}
+								</dd>
+							</div>
+						</dl>
+						<div
+							class="grid gap-2 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700"
+						>
+							<div class="grid grid-cols-[1fr_auto] items-end gap-3 text-sm">
+								<label
+									for="budget-progress"
+									class="font-medium text-neutral-800 dark:text-neutral-200"
+								>
+									Budget use
+								</label>
+								<p
+									class:list={[
+										"tabular-nums text-neutral-600 dark:text-neutral-400",
+										yearlyBudget > 0 &&
+											budgetUsagePercentage > 100 &&
+											"text-red-700 dark:text-red-300",
+									]}
+								>
+									{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "No budget"}
+								</p>
+							</div>
+							<progress
+								id="budget-progress"
+								max="100"
+								value={yearlyBudget > 0
+									? Math.min(budgetUsagePercentage, 100)
+									: 0}
+								class:list={[
+									"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
+									yearlyBudget > 0 &&
+										budgetUsagePercentage > 100 &&
+										"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
+								]}
+							>
+								{yearlyBudget > 0
+									? `${budgetUsagePercentage.toFixed(1)}% used`
+									: "No yearly budget set"}
+							</progress>
+							<p class="text-sm text-neutral-600 dark:text-neutral-400">
+								{yearlyBudget > 0
+									? "Based on invoices created this calendar year."
+									: "No yearly budget has been set."}
+							</p>
+						</div>
+					</div>
 				</section>
 
 				<section

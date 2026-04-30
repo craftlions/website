@@ -1,6 +1,6 @@
 - Add GitHub Linking to Database
-- Calculate leftover Budgets
 - Add Archived State & Filter
+- Add Audit History (Org and Project level)
 
 - (Notifications e.g. Mail, Slack, Webhook)
 - (Add API & self-service)
@@ -8,7 +8,6 @@
   - Add Milestones
   - Export CSV 
   - API
-- Add Audit History (Org and Project level)
 
 
 ## commands
