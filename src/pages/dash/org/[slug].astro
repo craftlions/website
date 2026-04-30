@@ -77,20 +77,24 @@ const metadata = await Astro.locals.db.query.organizationMetadata.findFirst({
 	where: { organizationId: organization.id },
 });
 
-const invoices = await Astro.locals.db.query.invoice.findMany({
-	columns: {
-		total: true,
-	},
-	where: {
-		projectId: {
-			in: projects.map((p) => p.id),
-		},
-		createdAt: {
-			gte: new Date(new Date().getFullYear(), 0, 1),
-		},
-	},
-	orderBy: (invoice, { desc }) => [desc(invoice.createdAt)],
-});
+const projectIds = projects.map((p) => p.id);
+const invoices =
+	projectIds.length > 0
+		? await Astro.locals.db.query.invoice.findMany({
+				columns: {
+					total: true,
+				},
+				where: {
+					projectId: {
+						in: projectIds,
+					},
+					createdAt: {
+						gte: new Date(new Date().getFullYear(), 0, 1),
+					},
+				},
+				orderBy: (invoice, { desc }) => [desc(invoice.createdAt)],
+			})
+		: [];
 
 const totalInvoicedAmount = invoices.reduce(
 	(acc, invoice) => acc + (invoice.total ?? 0),
