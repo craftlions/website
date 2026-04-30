@@ -1,14 +1,13 @@
 - Add GitHub Linking to Database
 - Add Archived State & Filter
-- Add Audit History (Org and Project level)
 
 - (Notifications e.g. Mail, Slack, Webhook)
-- (Add API & self-service)
-  - Request Projects
-  - Add Milestones
-  - Export CSV 
+- Self-service
   - API
-
+    - Projects
+    - Milestones
+    - Invoices
+  - Export CSV 
 
 ## commands
 
@@ -32,23 +31,24 @@ Generate types
 pn types
 ```
 
-Deploy to cloudflare
+sync astro
 ```shell
-pn run deploy
+pn astro sync
 ```
 
 Biome
 ```shell
 pn biome check --write
 ```
-sync astro
-```shell
-pn astro sync
-```
 
 Types
 ```shell
 pn run check
+```
+
+Deploy to cloudflare
+```shell
+pn run deploy
 ```
 
 ```shell

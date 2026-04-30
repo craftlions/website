@@ -1,0 +1,2 @@
+CREATE INDEX "event_actor_type_actor_id_recorded_at_index" ON "event" ("actor_type","actor_id","recorded_at");--> statement-breakpoint
+CREATE INDEX "event_recorded_at_index" ON "event" ("recorded_at");

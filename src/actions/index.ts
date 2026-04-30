@@ -3,12 +3,7 @@ import type { Db } from "../lib/database.ts";
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro/zod";
 import { eq } from "drizzle-orm";
-import {
-	organizationMetadata,
-	project,
-	projectInsertSchema,
-	projectUpdateSchema,
-} from "../lib/schema.ts";
+import { organizationMetadata, project } from "../lib/schema.ts";
 
 const assertAdmin = async (headers: Headers, auth: Auth) => {
 	const session = await auth.api.getSession({ headers });
@@ -77,14 +72,12 @@ export const server = {
 	// 	handler: async (input, context) => {
 	// 		await assertAdmin(context.request.headers, context.locals.auth);
 	// 		const parsedInput = projectInsertSchema.safeParse(input);
-
 	// 		if (!parsedInput.success) {
 	// 			throw new ActionError({
 	// 				code: "BAD_REQUEST",
 	// 				message: "Invalid input data.",
 	// 			});
 	// 		}
-
 	// 		const selectedOrganization =
 	// 			await context.locals.db.query.organization.findFirst({
 	// 				columns: {
@@ -94,19 +87,16 @@ export const server = {
 	// 					id: input.organizationId,
 	// 				},
 	// 			});
-
 	// 		if (!selectedOrganization) {
 	// 			throw new ActionError({
 	// 				code: "BAD_REQUEST",
 	// 				message: "Choose an existing organization.",
 	// 			});
 	// 		}
-
 	// 		const rows = await context.locals.db
 	// 			.insert(project)
 	// 			.values(parsedInput.data)
 	// 			.returning({ id: project.id });
-
 	// 		return { id: rows[0]?.id };
 	// 	},
 	// }),
@@ -130,14 +120,12 @@ export const server = {
 	// 				id: input.projectId,
 	// 			},
 	// 		});
-
 	// 		if (!selectedProject) {
 	// 			throw new ActionError({
 	// 				code: "BAD_REQUEST",
 	// 				message: "Choose an existing project.",
 	// 			});
 	// 		}
-
 	// 		const parsedInput = projectUpdateSchema.safeParse(input);
 	// 		if (!parsedInput.success) {
 	// 			throw new ActionError({
@@ -145,7 +133,6 @@ export const server = {
 	// 				message: "Invalid input data.",
 	// 			});
 	// 		}
-
 	// 		const rows = await context.locals.db
 	// 			.update(project)
 	// 			.set(parsedInput.data)
@@ -161,7 +148,6 @@ export const server = {
 	// 	}),
 	// 	handler: async ({ projectId }, context) => {
 	// 		await assertAdmin(context.request.headers, context.locals.auth);
-
 	// 		const selectedProject = await context.locals.db.query.project.findFirst({
 	// 			columns: {
 	// 				id: true,
@@ -170,16 +156,13 @@ export const server = {
 	// 				id: projectId,
 	// 			},
 	// 		});
-
 	// 		if (!selectedProject) {
 	// 			throw new ActionError({
 	// 				code: "BAD_REQUEST",
 	// 				message: "Choose an existing project.",
 	// 			});
 	// 		}
-
 	// 		await context.locals.db.delete(project).where(eq(project.id, projectId));
-
 	// 		return { id: projectId };
 	// 	},
 	// }),
@@ -196,7 +179,6 @@ export const server = {
 	// 			context.locals.auth,
 	// 			context.locals.db,
 	// 		);
-
 	// 		const rows = await context.locals.db
 	// 			.insert(organizationMetadata)
 	// 			.values({
@@ -210,7 +192,6 @@ export const server = {
 	// 				},
 	// 			})
 	// 			.returning();
-
 	// 		return { id: rows[0]?.id };
 	// 	},
 	// }),
