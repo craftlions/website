@@ -1,0 +1,2 @@
+ALTER TABLE "milestone" RENAME TO "milestone_old";--> statement-breakpoint
+CREATE VIEW "milestone" AS (select "aggregate_id" as "id", "payload"->>'project_id' as "project_id", "payload"->>'title' as "title", ("payload"->>'cost')::numeric as "cost", "payload"->>'currency' as "currency", "payload"->>'state' as "state", ("payload"->>'due_at')::timestamp with time zone as "due_at", "recorded_at" as "created_at" from "event" where "event"."aggregate_type" = 'milestone' AND "event"."event_type" = 'created');
