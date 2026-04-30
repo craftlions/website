@@ -1,0 +1,1 @@
+ALTER TABLE "invoice" ADD COLUMN "total" numeric(19,4) DEFAULT '0' NOT NULL;
