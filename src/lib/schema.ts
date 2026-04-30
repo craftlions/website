@@ -300,6 +300,10 @@ export const invoice = pgTable(
 			.timestamp("created_at", { withTimezone: true })
 			.defaultNow()
 			.notNull(),
+		total: t
+			.numeric("total", { precision: 19, scale: 4, mode: "number" })
+			.notNull()
+			.default(0.0),
 	},
 	(table) => [
 		t.primaryKey({
