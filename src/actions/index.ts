@@ -63,155 +63,155 @@ const assertOrganizationMember = async (
 };
 
 export const server = {
-	createProject: defineAction({
-		accept: "form",
-		input: z.object({
-			organizationId: z.string().trim().min(1, "Choose an organization."),
-			name: z.string().trim().min(1, "Enter a project name.").max(120),
-			deadline: z.coerce.date().optional(),
-			stateOfWork: z.string().trim().optional(),
-			stateOfPayment: z.string().trim().optional(),
-			budget: z.number().positive().optional(),
-			createdAt: z.coerce.date().optional(),
-		}),
-		handler: async (input, context) => {
-			await assertAdmin(context.request.headers, context.locals.auth);
-			const parsedInput = projectInsertSchema.safeParse(input);
+	// createProject: defineAction({
+	// 	accept: "form",
+	// 	input: z.object({
+	// 		organizationId: z.string().trim().min(1, "Choose an organization."),
+	// 		name: z.string().trim().min(1, "Enter a project name.").max(120),
+	// 		deadline: z.coerce.date().optional(),
+	// 		stateOfWork: z.string().trim().optional(),
+	// 		stateOfPayment: z.string().trim().optional(),
+	// 		budget: z.number().positive().optional(),
+	// 		createdAt: z.coerce.date().optional(),
+	// 	}),
+	// 	handler: async (input, context) => {
+	// 		await assertAdmin(context.request.headers, context.locals.auth);
+	// 		const parsedInput = projectInsertSchema.safeParse(input);
 
-			if (!parsedInput.success) {
-				throw new ActionError({
-					code: "BAD_REQUEST",
-					message: "Invalid input data.",
-				});
-			}
+	// 		if (!parsedInput.success) {
+	// 			throw new ActionError({
+	// 				code: "BAD_REQUEST",
+	// 				message: "Invalid input data.",
+	// 			});
+	// 		}
 
-			const selectedOrganization =
-				await context.locals.db.query.organization.findFirst({
-					columns: {
-						id: true,
-					},
-					where: {
-						id: input.organizationId,
-					},
-				});
+	// 		const selectedOrganization =
+	// 			await context.locals.db.query.organization.findFirst({
+	// 				columns: {
+	// 					id: true,
+	// 				},
+	// 				where: {
+	// 					id: input.organizationId,
+	// 				},
+	// 			});
 
-			if (!selectedOrganization) {
-				throw new ActionError({
-					code: "BAD_REQUEST",
-					message: "Choose an existing organization.",
-				});
-			}
+	// 		if (!selectedOrganization) {
+	// 			throw new ActionError({
+	// 				code: "BAD_REQUEST",
+	// 				message: "Choose an existing organization.",
+	// 			});
+	// 		}
 
-			const rows = await context.locals.db
-				.insert(project)
-				.values(parsedInput.data)
-				.returning({ id: project.id });
+	// 		const rows = await context.locals.db
+	// 			.insert(project)
+	// 			.values(parsedInput.data)
+	// 			.returning({ id: project.id });
 
-			return { id: rows[0]?.id };
-		},
-	}),
-	updateProject: defineAction({
-		accept: "form",
-		input: z.object({
-			projectId: z.string().trim().min(1, "Choose a project."),
-			name: z.string().trim().min(1, "Enter a project name.").max(120),
-			deadline: z.coerce.date().optional(),
-			stateOfWork: z.string().trim().optional(),
-			stateOfPayment: z.string().trim().optional(),
-			budget: z.number().positive().optional(),
-		}),
-		handler: async (input, context) => {
-			await assertAdmin(context.request.headers, context.locals.auth);
-			const selectedProject = await context.locals.db.query.project.findFirst({
-				columns: {
-					id: true,
-				},
-				where: {
-					id: input.projectId,
-				},
-			});
+	// 		return { id: rows[0]?.id };
+	// 	},
+	// }),
+	// updateProject: defineAction({
+	// 	accept: "form",
+	// 	input: z.object({
+	// 		projectId: z.string().trim().min(1, "Choose a project."),
+	// 		name: z.string().trim().min(1, "Enter a project name.").max(120),
+	// 		deadline: z.coerce.date().optional(),
+	// 		stateOfWork: z.string().trim().optional(),
+	// 		stateOfPayment: z.string().trim().optional(),
+	// 		budget: z.number().positive().optional(),
+	// 	}),
+	// 	handler: async (input, context) => {
+	// 		await assertAdmin(context.request.headers, context.locals.auth);
+	// 		const selectedProject = await context.locals.db.query.project.findFirst({
+	// 			columns: {
+	// 				id: true,
+	// 			},
+	// 			where: {
+	// 				id: input.projectId,
+	// 			},
+	// 		});
 
-			if (!selectedProject) {
-				throw new ActionError({
-					code: "BAD_REQUEST",
-					message: "Choose an existing project.",
-				});
-			}
+	// 		if (!selectedProject) {
+	// 			throw new ActionError({
+	// 				code: "BAD_REQUEST",
+	// 				message: "Choose an existing project.",
+	// 			});
+	// 		}
 
-			const parsedInput = projectUpdateSchema.safeParse(input);
-			if (!parsedInput.success) {
-				throw new ActionError({
-					code: "BAD_REQUEST",
-					message: "Invalid input data.",
-				});
-			}
+	// 		const parsedInput = projectUpdateSchema.safeParse(input);
+	// 		if (!parsedInput.success) {
+	// 			throw new ActionError({
+	// 				code: "BAD_REQUEST",
+	// 				message: "Invalid input data.",
+	// 			});
+	// 		}
 
-			const rows = await context.locals.db
-				.update(project)
-				.set(parsedInput.data)
-				.where(eq(project.id, input.projectId))
-				.returning();
-			return { id: rows[0]?.id };
-		},
-	}),
-	deleteProject: defineAction({
-		accept: "form",
-		input: z.object({
-			projectId: z.string().trim().min(1, "Choose a project to delete."),
-		}),
-		handler: async ({ projectId }, context) => {
-			await assertAdmin(context.request.headers, context.locals.auth);
+	// 		const rows = await context.locals.db
+	// 			.update(project)
+	// 			.set(parsedInput.data)
+	// 			.where(eq(project.id, input.projectId))
+	// 			.returning();
+	// 		return { id: rows[0]?.id };
+	// 	},
+	// }),
+	// deleteProject: defineAction({
+	// 	accept: "form",
+	// 	input: z.object({
+	// 		projectId: z.string().trim().min(1, "Choose a project to delete."),
+	// 	}),
+	// 	handler: async ({ projectId }, context) => {
+	// 		await assertAdmin(context.request.headers, context.locals.auth);
 
-			const selectedProject = await context.locals.db.query.project.findFirst({
-				columns: {
-					id: true,
-				},
-				where: {
-					id: projectId,
-				},
-			});
+	// 		const selectedProject = await context.locals.db.query.project.findFirst({
+	// 			columns: {
+	// 				id: true,
+	// 			},
+	// 			where: {
+	// 				id: projectId,
+	// 			},
+	// 		});
 
-			if (!selectedProject) {
-				throw new ActionError({
-					code: "BAD_REQUEST",
-					message: "Choose an existing project.",
-				});
-			}
+	// 		if (!selectedProject) {
+	// 			throw new ActionError({
+	// 				code: "BAD_REQUEST",
+	// 				message: "Choose an existing project.",
+	// 			});
+	// 		}
 
-			await context.locals.db.delete(project).where(eq(project.id, projectId));
+	// 		await context.locals.db.delete(project).where(eq(project.id, projectId));
 
-			return { id: projectId };
-		},
-	}),
-	mutateOrganizationMetadata: defineAction({
-		accept: "form",
-		input: z.object({
-			organizationId: z.string().trim().min(1, "Choose an organization."),
-			yearlyBudget: z.coerce.number().int().positive().optional(),
-		}),
-		handler: async ({ organizationId, yearlyBudget }, context) => {
-			await assertOrganizationMember(
-				context.request.headers,
-				organizationId,
-				context.locals.auth,
-				context.locals.db,
-			);
+	// 		return { id: projectId };
+	// 	},
+	// }),
+	// mutateOrganizationMetadata: defineAction({
+	// 	accept: "form",
+	// 	input: z.object({
+	// 		organizationId: z.string().trim().min(1, "Choose an organization."),
+	// 		yearlyBudget: z.coerce.number().int().positive().optional(),
+	// 	}),
+	// 	handler: async ({ organizationId, yearlyBudget }, context) => {
+	// 		await assertOrganizationMember(
+	// 			context.request.headers,
+	// 			organizationId,
+	// 			context.locals.auth,
+	// 			context.locals.db,
+	// 		);
 
-			const rows = await context.locals.db
-				.insert(organizationMetadata)
-				.values({
-					organizationId,
-					yearlyBudget: yearlyBudget ?? null,
-				})
-				.onConflictDoUpdate({
-					target: organizationMetadata.organizationId,
-					set: {
-						yearlyBudget: yearlyBudget ?? null,
-					},
-				})
-				.returning();
+	// 		const rows = await context.locals.db
+	// 			.insert(organizationMetadata)
+	// 			.values({
+	// 				organizationId,
+	// 				yearlyBudget: yearlyBudget ?? null,
+	// 			})
+	// 			.onConflictDoUpdate({
+	// 				target: organizationMetadata.organizationId,
+	// 				set: {
+	// 					yearlyBudget: yearlyBudget ?? null,
+	// 				},
+	// 			})
+	// 			.returning();
 
-			return { id: rows[0]?.id };
-		},
-	}),
+	// 		return { id: rows[0]?.id };
+	// 	},
+	// }),
 };

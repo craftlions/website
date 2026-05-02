@@ -61,6 +61,20 @@ pn drizzle-kit check
 pn drizzle-kit migrate
 ```
 
+```shell
+git fetch --all
+git switch feature
+git rebase -i origin/main
+
+git switch main
+git merge --ff-only feature
+
+git push
+
+git branch -d feature
+git push origin --delete feature
+```
+
 NOTES
 
 ```ALWAYS CLIENT
