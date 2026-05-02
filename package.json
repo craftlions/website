@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "0.9.9",
-    "@astrojs/cloudflare": "13.3.0",
+    "@astrojs/cloudflare": "14.0.0-alpha.0",
     "@astrojs/compiler-rs": "0.1.10",
     "@astrojs/sitemap": "3.7.2",
     "@better-auth/drizzle-adapter": "1.6.9",
@@ -29,7 +29,7 @@
     "@types/node": "25.6.0",
     "@types/pg": "8.20.0",
     "@typescript/native-preview": "7.0.0-dev.20260502.1",
-    "astro": "6.2.1",
+    "astro": "7.0.0-alpha.0",
     "auth": "1.6.9",
     "better-auth": "1.6.9",
     "browserslist": "4.28.2",
@@ -39,6 +39,7 @@
     "pg": "8.20.0",
     "tailwindcss": "4.2.4",
     "update-browserslist-db": "1.2.3",
+    "vite": "8.0.10",
     "wrangler": "4.87.0"
   },
   "devEngines": {
