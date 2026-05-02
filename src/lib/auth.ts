@@ -3,6 +3,7 @@ import { dash } from "@better-auth/infra";
 import { betterAuth } from "better-auth/minimal";
 import { admin, oAuthProxy, organization } from "better-auth/plugins";
 import { createDb } from "./database.ts";
+import * as schema from "./schema.ts";
 
 export function createAuth(env: Cloudflare.Env) {
 	const db = env ? createDb(env) : null;
@@ -46,6 +47,8 @@ export function createAuth(env: Cloudflare.Env) {
 		database: db
 			? drizzleAdapter(db, {
 					provider: "pg",
+					schema: schema,
+					transaction: true,
 				})
 			: undefined,
 		emailAndPassword: {
