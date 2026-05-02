@@ -3,13 +3,14 @@ export const prerender = false;
 
 import { actions } from "astro:actions";
 import { isAPIError } from "better-auth/api";
-import { and, asc, eq, gte, inArray, lt, sum } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lt, or, sum } from "drizzle-orm";
 import Button from "../../../components/Button.astro";
+import EventTimeline from "../../../components/EventTimeline.astro";
 import Footer from "../../../components/Footer.astro";
 import Nav from "../../../components/Nav.astro";
 import OrganizationInvoices from "../../../components/OrganizationInvoices.astro";
 import Shell from "../../../layouts/Shell.astro";
-import { invoice, milestone, project } from "../../../lib/schema.ts";
+import { event, invoice, member, milestone, project } from "../../../lib/schema.ts";
 
 const { slug } = Astro.params;
 
@@ -96,6 +97,49 @@ const yearlyBudget = metadata?.yearlyBudget ?? 0;
 const budgetUsagePercentage =
 	yearlyBudget > 0 ? (totalInvoicedAmount / yearlyBudget) * 100 : 0;
 
+const organizationMemberIds = await Astro.locals.db
+	.select({ userId: member.userId })
+	.from(member)
+	.where(eq(member.organizationId, organization.id))
+	.then((rows) => rows.map((row) => row.userId));
+
+const organizationTimeline = await Astro.locals.db.query.event
+	.findMany({
+		columns: {
+			id: true,
+			aggregateType: true,
+			eventType: true,
+			recordedAt: true,
+			actorType: true,
+			actorId: true,
+		},
+		where:
+			organizationMemberIds.length > 0
+				? or(
+						and(
+							eq(event.actorType, "organization"),
+							eq(event.actorId, organization.id),
+						),
+						and(
+							eq(event.actorType, "user"),
+							inArray(event.actorId, organizationMemberIds),
+						),
+					)
+				: and(eq(event.actorType, "organization"), eq(event.actorId, organization.id)),
+		orderBy: {
+			recordedAt: "desc",
+		},
+		limit: 10,
+	})
+	.then((rows) =>
+		rows.map((row) => ({
+			id: row.id,
+			label: `${row.aggregateType} · ${row.eventType}`.replaceAll("_", " "),
+			detail: `${row.actorType}: ${row.actorId}`,
+			recordedAt: row.recordedAt,
+		})),
+	);
+
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
 	currency: "EUR",
@@ -122,6 +166,11 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 						{organization.name}'s Dashboard
 					</h1>
 				</section>
+
+				<EventTimeline
+					title="Organization timeline"
+					events={organizationTimeline}
+				/>
 
 				<section
 					aria-labelledby="overview-heading"

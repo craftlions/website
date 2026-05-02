@@ -4,6 +4,7 @@ export const prerender = false;
 // import { Octokit } from "@octokit/rest";
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
+import EventTimeline from "../../../../../components/EventTimeline.astro";
 import Footer from "../../../../../components/Footer.astro";
 import MilestoneTable from "../../../../../components/MilestoneTable.astro";
 import Nav from "../../../../../components/Nav.astro";
@@ -80,6 +81,32 @@ if (!project) {
 	return Astro.redirect(`/dash/org/${slug}`);
 }
 
+const projectTimeline = await Astro.locals.db.query.event
+	.findMany({
+		columns: {
+			id: true,
+			eventType: true,
+			recordedAt: true,
+			actorType: true,
+		},
+		where: {
+			aggregateType: "project",
+			aggregateId: project.id,
+		},
+		orderBy: {
+			recordedAt: "desc",
+		},
+		limit: 10,
+	})
+	.then((rows) =>
+		rows.map((row) => ({
+			id: row.id,
+			label: row.eventType.replaceAll("_", " "),
+			detail: `Actor: ${row.actorType}`,
+			recordedAt: row.recordedAt,
+		})),
+	);
+
 // let githubIssue = null;
 // let githubIssueError = "";
 
@@ -139,6 +166,8 @@ if (!project) {
 						{project.name}
 					</h1>
 				</section>
+
+				<EventTimeline title="Project timeline" events={projectTimeline} />
 
 				<section>
 					<h2
