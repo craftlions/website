@@ -1,5 +1,5 @@
 [tools]
-"npm:pnpm" = "11.0.3"
+"npm:pnpm" = "11.0.4"
 
 [hooks]
 postinstall = "pn install"
