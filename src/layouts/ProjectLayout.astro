@@ -1,0 +1,138 @@
+---
+import Button from "../components/Button.astro";
+import Footer from "../components/Footer.astro";
+import Nav from "../components/Nav.astro";
+import Shell from "./Shell.astro";
+
+type Tab = "milestones" | "invoices" | "events";
+
+interface Props {
+	slug: string;
+	projectId: string;
+	projectName: string;
+	activeTab: Tab;
+}
+
+const { slug, projectId, projectName, activeTab } = Astro.props;
+
+const tabs: { id: Tab; label: string }[] = [
+	{ id: "milestones", label: "Milestones" },
+	{ id: "invoices", label: "Invoices" },
+	{ id: "events", label: "Event Log" },
+];
+---
+
+<Shell>
+	<Fragment slot="head"> <title>craftlions | {projectName}</title> </Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+		>
+			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+				<Nav organizationSlug={slug} />
+			</header>
+
+			<main
+				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
+			>
+				<Button href={`/dash/org/${slug}`}>Back to Dashboard</Button>
+
+				<section class="grid gap-4">
+					<p
+						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>
+						Project Overview
+					</p>
+					<h1
+						class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+					>
+						{projectName}
+					</h1>
+				</section>
+
+				<section class="grid gap-4">
+					<div
+						role="tablist"
+						aria-label="Project sections"
+						id="project-tablist"
+						class="grid grid-flow-col auto-cols-max overflow-x-auto"
+					>
+						{tabs.map((tab) => (
+							<a
+								role="tab"
+								id={`tab-${tab.id}`}
+								href={`/dash/org/${slug}/project/${projectId}/${tab.id}`}
+								aria-selected={activeTab === tab.id ? "true" : "false"}
+								aria-controls={`tabpanel-${tab.id}`}
+								tabindex={activeTab === tab.id ? 0 : -1}
+								class:list={[
+									"inline-grid w-max cursor-pointer grid-flow-col items-center justify-center gap-2 border border-dashed px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 dark:focus-visible:outline-neutral-300",
+									activeTab === tab.id
+										? "border-neutral-500 bg-neutral-100 text-neutral-900 dark:border-neutral-500 dark:bg-neutral-900 dark:text-neutral-100"
+										: "border-neutral-300 bg-transparent text-neutral-600 hover:border-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500 dark:hover:bg-neutral-900 dark:hover:text-neutral-100",
+								]}
+							>
+								{tab.label}
+							</a>
+						))}
+					</div>
+
+					<div
+						role="tabpanel"
+						id={`tabpanel-${activeTab}`}
+						aria-labelledby={`tab-${activeTab}`}
+						tabindex={0}
+						class="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 dark:focus-visible:outline-neutral-300"
+					>
+						<slot />
+					</div>
+				</section>
+			</main>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>
+
+<script>
+	const tablist = document.getElementById("project-tablist");
+	if (tablist) {
+		const tabs = Array.from(
+			tablist.querySelectorAll<HTMLAnchorElement>('[role="tab"]'),
+		);
+
+		tablist.addEventListener("keydown", (event) => {
+			const current = tabs.indexOf(document.activeElement);
+			if (current === -1) return;
+
+			let next = -1;
+
+			switch ((event as KeyboardEvent).key) {
+				case "ArrowRight":
+					next = (current + 1) % tabs.length;
+					break;
+				case "ArrowLeft":
+					next = (current - 1 + tabs.length) % tabs.length;
+					break;
+				case "Home":
+					next = 0;
+					break;
+				case "End":
+					next = tabs.length - 1;
+					break;
+				case "Enter":
+				case " ":
+					tabs[current]?.click();
+					return;
+				default:
+					return;
+			}
+
+			(event as KeyboardEvent).preventDefault();
+			const nextTab = tabs[next];
+			if (nextTab) {
+				nextTab.focus();
+				nextTab.click();
+			}
+		});
+	}
+</script>
