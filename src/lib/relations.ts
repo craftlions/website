@@ -19,7 +19,7 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.project.organizationId,
 		}),
 	},
-		session: {
+	session: {
 		user: r.one.user({
 			from: r.session.userId,
 			to: r.user.id,
@@ -60,8 +60,8 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.event.aggregateId,
 			where: {
 				aggregateType: "project",
-			}
-		})
+			},
+		}),
 	},
 	milestone: {
 		events: r.many.event({
@@ -69,7 +69,7 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.event.aggregateId,
 			where: {
 				aggregateType: "milestone",
-			}
-		})
+			},
+		}),
 	},
 }));
