@@ -1,7 +1,6 @@
 ---
 export const prerender = false;
 
-import { actions } from "astro:actions";
 import { isAPIError } from "better-auth/api";
 import { and, asc, eq, gte, inArray, lt, sum } from "drizzle-orm";
 import Button from "../../../components/Button.astro";
@@ -46,14 +45,6 @@ const organization = await Astro.locals.auth.api.getFullOrganization({
 
 if (!organization) {
 	return Astro.redirect("/dash");
-}
-
-const updateMetadataResult = Astro.getActionResult(
-	actions.mutateOrganizationMetadata,
-);
-
-if (updateMetadataResult && !updateMetadataResult.error) {
-	return Astro.redirect(`/dash/org/${slug}`, 303);
 }
 
 const projects = await Astro.locals.db
