@@ -63,7 +63,7 @@ const project = await Astro.locals.db.query.project.findFirst({
 				eventType: true,
 				payload: true,
 				recordedAt: true,
-			}
+			},
 		},
 		milestones: {
 			columns: {
@@ -80,8 +80,8 @@ const project = await Astro.locals.db.query.project.findFirst({
 						eventType: true,
 						payload: true,
 						recordedAt: true,
-					}
-				}
+					},
+				},
 			},
 			orderBy: {
 				dueAt: "asc",
@@ -98,9 +98,10 @@ if (!project) {
 	return Astro.redirect(`/dash/org/${slug}`);
 }
 
-const events = [...project.events, ...project.milestones.flatMap((m) => m.events)].sort(
-	(a, b) => b.recordedAt.getTime() - a.recordedAt.getTime(),
-);
+const events = [
+	...project.events,
+	...project.milestones.flatMap((m) => m.events),
+].sort((a, b) => b.recordedAt.getTime() - a.recordedAt.getTime());
 
 const dateTimeFormatter = new Intl.DateTimeFormat("de-DE", {
 	dateStyle: "medium",
