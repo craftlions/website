@@ -101,7 +101,9 @@ const tabs: { id: Tab; label: string }[] = [
 		);
 
 		tablist.addEventListener("keydown", (event) => {
-			const current = tabs.indexOf(document.activeElement);
+			const active = document.activeElement;
+			const current =
+				active instanceof HTMLAnchorElement ? tabs.indexOf(active) : -1;
 			if (current === -1) return;
 
 			let next = -1;
