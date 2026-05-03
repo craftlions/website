@@ -57,6 +57,14 @@ const project = await Astro.locals.db.query.project.findFirst({
 		name: true,
 	},
 	with: {
+		events: {
+			columns: {
+				aggregateType: true,
+				eventType: true,
+				payload: true,
+				recordedAt: true,
+			}
+		},
 		milestones: {
 			columns: {
 				title: true,
@@ -64,6 +72,16 @@ const project = await Astro.locals.db.query.project.findFirst({
 				cost: true,
 				currency: true,
 				state: true,
+			},
+			with: {
+				events: {
+					columns: {
+						aggregateType: true,
+						eventType: true,
+						payload: true,
+						recordedAt: true,
+					}
+				}
 			},
 			orderBy: {
 				dueAt: "asc",
@@ -79,6 +97,10 @@ const project = await Astro.locals.db.query.project.findFirst({
 if (!project) {
 	return Astro.redirect(`/dash/org/${slug}`);
 }
+
+const events = [...project.events, ...project.milestones.flatMap((m) => m.events)].sort(
+	(a, b) => b.recordedAt.getTime() - a.recordedAt.getTime(),
+);
 
 // let githubIssue = null;
 // let githubIssueError = "";
