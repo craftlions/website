@@ -236,3 +236,32 @@ const reloadOnBfCache = (e) => {
   }
 };
 window.addEventListener('pageshow', reloadOnBfCache);
+
+  <script>
+    const { signIn, signOut } = await import("./lib/auth-client")
+    document.querySelector("#login").onclick = () => signIn.social({
+      provider: "github",
+      callbackURL: "/dashboard",
+    })
+    document.querySelector("#logout").onclick = () => signOut()
+  </script>
+
+export const prerender = false; // Not needed in 'server' mode
+
+const session = await auth.api.getSession({
+  headers: Astro.request.headers,
+});
+
+import { auth } from "../../../auth"; // import your Better Auth instance
+import { defineMiddleware } from "astro:middleware";
+
+export const onRequest = defineMiddleware(async (context, next) => {
+  const isAuthed = await auth.api
+    .getSession({
+      headers: context.request.headers,
+    })
+  if (context.url.pathname === "/dashboard" && !isAuthed) {
+    return context.redirect("/");
+  }
+  return next();
+});
