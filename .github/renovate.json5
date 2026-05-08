@@ -25,6 +25,10 @@
     {
       "matchPackageNames": ["drizzle-kit", "drizzle-orm"],
       "groupName": "Drizzle"
+    },
+		{
+      "matchPackageNames": ["wrangler", "@cloudflare/**"],
+      "groupName": "Cloudflare"
     }
   ],
 }
