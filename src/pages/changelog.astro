@@ -92,7 +92,7 @@ const entries = [
 								datetime={entry.datetime}
 								title={entry.title}
 								summary={entry.summary}
-								points={entry.points}
+								points={entry.points ?? []}
 							/>
 						))}
 				</ol>
