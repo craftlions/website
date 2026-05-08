@@ -19,36 +19,43 @@ mise i
 Install all deps if not done by `mise`
 ```shell
 pn i
+aube i
 ```
 
 Update browserlist
 ```shell
 pn update-browserslist-db latest
+aube exec update-browserslist-db latest
 ```
 
 Generate types
 ```shell
-pn types
+pn run types
+aubr types
 ```
 
 sync astro
 ```shell
 pn astro sync
+aube exec astro sync
 ```
 
 Biome
 ```shell
 pn biome check --write
+aube exec biome check --write
 ```
 
 Types
 ```shell
 pn run check
+aubr check
 ```
 
 Deploy to cloudflare
 ```shell
 pn run deploy
+aubr deploy
 ```
 
 ```shell
