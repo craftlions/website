@@ -5,6 +5,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/worker.ts",
   "name": "craftlions-website",
+  "cache": {
+    "enabled": true
+  },
   "assets": {
     "binding": "ASSETS"
   },
@@ -13,7 +16,9 @@
   "routes": [
     {
       "pattern": "craftlions.com",
-      "custom_domain": true
+      "custom_domain": true,
+      "enabled": true,
+      "previews_enabled": true
     }
   ],
   "images": {
@@ -71,5 +76,30 @@
   },
   "vars": {
     "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO"
+  },
+  "previews": {
+    "vars": {
+      "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO"
+    },
+    "images": {
+      "binding": "IMAGES",
+      "remote": true
+    },
+    "version_metadata": {
+      "binding": "CF_VERSION_METADATA"
+    },
+    "kv_namespaces": [
+      {
+        "binding": "SESSION",
+        "id": "988dbc04d7e84fdca174d4b899123594"
+      }
+    ],
+    "send_email": [
+      {
+        "name": "MAIL",
+        "remote": true
+      }
+
+    ]
   }
 }
