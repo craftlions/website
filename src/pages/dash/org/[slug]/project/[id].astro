@@ -98,10 +98,21 @@ if (!project) {
 	return Astro.redirect(`/dash/org/${slug}`);
 }
 
+type ChangeRecord = Record<string, { from: unknown; to: unknown }>;
+
 const events = [
 	...project.events,
 	...project.milestones.flatMap((m) => m.events),
-].sort((a, b) => b.recordedAt.getTime() - a.recordedAt.getTime());
+]
+	.sort((a, b) => b.recordedAt.getTime() - a.recordedAt.getTime())
+	.map((ev) => {
+		const payload = ev.payload as Record<string, unknown> | null;
+		const changes = payload?.changes as ChangeRecord | undefined;
+		return {
+			...ev,
+			changeEntries: changes ? Object.entries(changes) : ([] as Array<[string, { from: unknown; to: unknown }]>),
+		};
+	});
 
 const dateTimeFormatter = new Intl.DateTimeFormat("de-DE", {
 	dateStyle: "medium",
@@ -204,58 +215,52 @@ const formatEventType = (eventType: string) =>
 					</h2>
 					{events.length > 0 ? (
 						<ol class="grid" aria-label="Project event log">
-							{events.map((event, i) => {
-								const changes = (event.payload as Record<string, unknown>)?.changes as
-									| Record<string, { from: unknown; to: unknown }>
-									| undefined;
-								const changeEntries = changes ? Object.entries(changes) : [];
-								return (
-									<li class="grid grid-cols-[1rem_1fr] gap-x-3">
-										<div class="grid grid-rows-[auto_1fr] justify-items-center" aria-hidden="true">
-											<span class="mt-2.5 h-1.5 w-1.5 shrink-0 border border-neutral-400 bg-transparent dark:border-neutral-500" />
-											{i < events.length - 1 && (
-												<span class="border-l border-dashed border-neutral-300 dark:border-neutral-700" />
-											)}
+							{events.map((ev, i) => (
+								<li class="grid grid-cols-[1rem_1fr] gap-x-3">
+									<div class="grid grid-rows-[auto_1fr] justify-items-center" aria-hidden="true">
+										<span class="mt-2.5 h-1.5 w-1.5 shrink-0 border border-neutral-400 bg-transparent dark:border-neutral-500" />
+										{i < events.length - 1 && (
+											<span class="border-l border-dashed border-neutral-300 dark:border-neutral-700" />
+										)}
+									</div>
+									<div class="grid gap-1 pb-5">
+										<div class="grid grid-cols-[1fr_auto] items-center gap-2">
+											<p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+												{formatEventType(ev.eventType)}
+											</p>
+											<span class="inline-grid w-max place-items-center whitespace-nowrap border border-dashed border-neutral-300 bg-transparent px-2 py-0.5 text-xs/none font-semibold capitalize text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+												{ev.aggregateType}
+											</span>
 										</div>
-										<div class="grid gap-1 pb-5">
-											<div class="grid grid-cols-[1fr_auto] items-center gap-2">
-												<p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-													{formatEventType(event.eventType)}
-												</p>
-												<span class="inline-grid w-max place-items-center whitespace-nowrap border border-dashed border-neutral-300 bg-transparent px-2 py-0.5 text-xs/none font-semibold capitalize text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-													{event.aggregateType}
-												</span>
-											</div>
-											<time
-												datetime={event.recordedAt.toISOString()}
-												class="text-xs text-neutral-500 dark:text-neutral-400"
-											>
-												{dateTimeFormatter.format(event.recordedAt)}
-											</time>
-											{changeEntries.length > 0 && (
-												<ul class="mt-1 grid gap-0.5">
-													{changeEntries.map(([field, change]) => (
-														<li class="grid grid-cols-[auto_1fr] gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
-															<span class="text-neutral-400 dark:text-neutral-600" aria-hidden="true">·</span>
-															<span>
-																<span class="font-medium">{field.replaceAll("_", " ")}</span>
-																{change.from != null && (
-																	<>
-																		{" "}
-																		<span class="line-through opacity-60">{String(change.from)}</span>
-																	</>
-																)}
-																{" → "}
-																<span>{String(change.to)}</span>
-															</span>
-														</li>
-													))}
-												</ul>
-											)}
-										</div>
-									</li>
-								);
-							})}
+										<time
+											datetime={ev.recordedAt.toISOString()}
+											class="text-xs text-neutral-500 dark:text-neutral-400"
+										>
+											{dateTimeFormatter.format(ev.recordedAt)}
+										</time>
+										{ev.changeEntries.length > 0 && (
+											<ul class="mt-1 grid gap-0.5">
+												{ev.changeEntries.map(([field, change]) => (
+													<li class="grid grid-cols-[auto_1fr] gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+														<span class="text-neutral-400 dark:text-neutral-600" aria-hidden="true">·</span>
+														<span>
+															<span class="font-medium">{field.replaceAll("_", " ")}</span>
+															{change.from != null && (
+																<>
+																	{" "}
+																	<span class="line-through opacity-60">{String(change.from)}</span>
+																</>
+															)}
+															{" → "}
+															<span>{String(change.to)}</span>
+														</span>
+													</li>
+												))}
+											</ul>
+										)}
+									</div>
+								</li>
+							))}
 						</ol>
 					) : (
 						<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
