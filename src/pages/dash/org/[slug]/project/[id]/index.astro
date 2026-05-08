@@ -1,0 +1,8 @@
+---
+export const prerender = false;
+
+const { id, slug } = Astro.params;
+
+return Astro.redirect(`/dash/org/${slug}/project/${id}/milestones`);
+---
+
