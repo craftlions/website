@@ -1,3 +1,4 @@
+import { apiKey } from "@better-auth/api-key";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { dash } from "@better-auth/infra";
 import { betterAuth } from "better-auth/minimal";
@@ -116,6 +117,7 @@ export function createAuth(env: Cloudflare.Env) {
 			oAuthProxy({
 				productionURL: "https://craftlions.com",
 			}),
+			apiKey(),
 		],
 		rateLimit: {
 			storage: "database",
