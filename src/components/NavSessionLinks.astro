@@ -21,6 +21,11 @@ const session = await Astro.locals.auth.api.getSession({
 							Profile
 						</Button>
 					</li>
+					<li>
+						<Button href="/settings/api">
+							API Keys
+						</Button>
+					</li>
 					{session.user.role === "admin" && (
 							<li>
 								<Button href="/admin">

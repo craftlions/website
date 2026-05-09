@@ -1,0 +1,56 @@
+---
+export const prerender = false;
+
+import Button from "../../components/Button.astro";
+import Footer from "../../components/Footer.astro";
+import Nav from "../../components/Nav.astro";
+import Shell from "../../layouts/Shell.astro";
+
+const session = await Astro.locals.auth.api.getSession({
+	headers: Astro.request.headers,
+});
+
+if (!session) {
+	return Astro.redirect("/login");
+}
+---
+
+<Shell>
+	<Fragment slot="head"> <title>craftlions | Profile</title> </Fragment>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+		>
+			<header class="grid gap-6 max-w-3xl mx-auto w-full"> <Nav /> </header>
+
+			<main
+				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
+			>
+				<h1
+					class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+				>
+					API Keys
+				</h1>
+				<Button id="create-api-key" type="button"> Create new API Key </Button>
+			</main>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>
+
+<script>
+	import { authClient } from "../../lib/auth-client.ts";
+
+	const button = document.getElementById("create-api-key");
+
+	button?.addEventListener("click", async () => {
+		const { data, error } = await authClient.apiKey.create({
+			prefix: "sk_"
+		});
+		if (error) {
+			console.error("Error creating API key:", error);
+			return;
+		}
+		console.log("API key created successfully:", data);
+	});
+</script>
