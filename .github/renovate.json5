@@ -19,7 +19,7 @@
   "postUpdateOptions": ["pnpmDedupe"],
 	"packageRules": [
     {
-      "matchPackageNames": ["better-auth", "@better-auth/**"],
+      "matchPackageNames": ["better-auth", "@better-auth/**", "auth"],
       "groupName": "Better Auth"
     },
     {
