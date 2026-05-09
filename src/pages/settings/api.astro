@@ -45,7 +45,10 @@ if (!session) {
 
 	button?.addEventListener("click", async () => {
 		const { data, error } = await authClient.apiKey.create({
-			prefix: "sk_"
+			prefix: "sk_",
+			metadata: {
+				// isAdmin: true
+			},
 		});
 		if (error) {
 			console.error("Error creating API key:", error);

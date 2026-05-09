@@ -110,7 +110,9 @@ const events = [
 		const changes = payload?.changes as ChangeRecord | undefined;
 		return {
 			...ev,
-			changeEntries: changes ? Object.entries(changes) : ([] as Array<[string, { from: unknown; to: unknown }]>),
+			changeEntries: changes
+				? Object.entries(changes)
+				: ([] as Array<[string, { from: unknown; to: unknown }]>),
 		};
 	});
 
