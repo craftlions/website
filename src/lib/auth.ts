@@ -117,7 +117,9 @@ export function createAuth(env: Cloudflare.Env) {
 			oAuthProxy({
 				productionURL: "https://craftlions.com",
 			}),
-			apiKey(),
+			apiKey({
+				enableMetadata: true,
+			}),
 		],
 		rateLimit: {
 			storage: "database",
