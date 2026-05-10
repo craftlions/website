@@ -3,12 +3,18 @@ export const prerender = false;
 
 import { isAPIError } from "better-auth/api";
 import { and, asc, eq, gte, inArray, lt, sum } from "drizzle-orm";
+import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
 import Footer from "../../../components/Footer.astro";
 import Nav from "../../../components/Nav.astro";
 import OrganizationInvoices from "../../../components/OrganizationInvoices.astro";
 import Shell from "../../../layouts/Shell.astro";
-import { invoice, milestone, project } from "../../../lib/schema.ts";
+import {
+	invoice,
+	milestone,
+	project,
+	type projectSelectType,
+} from "../../../lib/schema.ts";
 
 const { slug } = Astro.params;
 
@@ -52,8 +58,7 @@ const projects = await Astro.locals.db
 		id: project.id,
 		name: project.name,
 		deadline: project.deadline,
-		stateOfWork: project.stateOfWork,
-		stateOfPayment: project.stateOfPayment,
+		state: project.state,
 		cost: Astro.locals.db
 			.select({ value: sum(milestone.cost).mapWith(Number).as("value") })
 			.from(milestone)
@@ -91,6 +96,20 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
 	currency: "EUR",
 });
+
+const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
+	switch (projectState) {
+		case "completed":
+			return "success";
+		case "active":
+			return "info";
+		case "archived":
+		case "draft":
+			return "gray";
+		default:
+			return "info";
+	}
+};
 ---
 
 <Shell>
@@ -247,7 +266,7 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 									Status
 								</th>
 								<th scope="col" class="text-right font-semibold px-4 py-3">
-									Cost
+									Total Cost
 								</th>
 								<th scope="col" class="text-left font-semibold px-4 py-3">
 									Actions
@@ -264,7 +283,9 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 												{project.name}
 											</th>
 											<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
-												{project.stateOfWork ?? "-"}
+												<Badge type={projectStateToBadgeType(project.state)}>
+										{project.state ?? "-"}
+									</Badge>
 											</td>
 											<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400 text-right">
 												{project.cost !== null
