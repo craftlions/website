@@ -13,7 +13,7 @@ export const GET: APIRoute = async (ctx) => {
 		headers: ctx.request.headers,
 	});
 
-	if (!result.valid) return new Response(result.error?.code, { status: 401 });
+	if (!result.valid) return new Response("Invalid API key", { status: 401 });
 	if (!result.key?.metadata?.isAdmin)
 		return new Response("API key does not have required permissions", {
 			status: 403,

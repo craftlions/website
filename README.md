@@ -432,3 +432,9 @@ router.get('/dashboard', (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.json({ data: dashboardData });
 });
+
+// VALIDATE BODY WITH ZOD
+
+// SERVICE LAYER LOGIC
+
+// API RESPONSE CLASS
