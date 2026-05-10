@@ -69,17 +69,18 @@ pn drizzle-kit migrate
 ```
 
 ```shell
+git switch $1
 git fetch --all
-git switch feature
 git rebase -i origin/main
 
 git switch main
-git merge --ff-only feature
+git pull
+git merge --ff-only $1
 
 git push
 
-git branch -d feature
-git push origin --delete feature
+git branch -d $1
+git push origin --delete $1
 ```
 
 NOTES
