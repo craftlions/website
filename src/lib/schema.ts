@@ -289,6 +289,13 @@ export const event = t.pgTable(
 	],
 );
 
+const projectState = t.pgEnum("project_state", [
+	"draft",
+	"active",
+	"completed",
+	"archived",
+]);
+
 // we need to define this view with raw sql because we need the explicit column definitions for drizzle relations
 export const project = t
 	.pgView("project", {
@@ -296,8 +303,7 @@ export const project = t
 		organizationId: t.text("organization_id").notNull(),
 		name: t.text("name").notNull(),
 		deadline: t.timestamp("deadline", { withTimezone: true }),
-		stateOfWork: t.text("state_of_work"),
-		stateOfPayment: t.text("state_of_payment"),
+		state: projectState("state"),
 		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
 		updatedAt: t.timestamp("updated_at", { withTimezone: true }).notNull(),
 	})
@@ -324,8 +330,7 @@ export const project = t
 					'organization_id',
 					'name',
 					'deadline',
-					'state_of_work',
-					'state_of_payment'
+					'state'
 				)
 				and c.value ? 'to'
 				order by e.aggregate_id, c.key, e.version desc
@@ -349,8 +354,7 @@ export const project = t
 				max(l.value) filter (where l.field = 'organization_id') as "organization_id",
 				max(l.value) filter (where l.field = 'name') as "name",
 				(max(l.value) filter (where l.field = 'deadline'))::timestamp with time zone as "deadline",
-				max(l.value) filter (where l.field = 'state_of_work') as "state_of_work",
-				max(l.value) filter (where l.field = 'state_of_payment') as "state_of_payment",
+				max(l.value) filter (where l.field = 'state') as "state",
 				c.created_at as "created_at",
 				u.updated_at as "updated_at"
 			from created c
@@ -360,6 +364,86 @@ export const project = t
 				on l.aggregate_id = c.aggregate_id
 			group by c.aggregate_id, c.created_at, u.updated_at
 		`);
+
+export type projectSelectType = typeof project.$inferSelect;
+
+const milestoneState = t.pgEnum("milestone_state", [
+	"submitted",
+	"planned",
+	"approved",
+	"in_progress",
+	"invoiced",
+	"paid",
+	"cancelled",
+]);
+
+// we need to define this view with raw sql because we need the explicit column definitions for drizzle relations
+export const milestone = t
+	.pgView("milestone", {
+		id: t.uuid("id").notNull(),
+		projectId: t.uuid("project_id").notNull(),
+		title: t.text("title").notNull(),
+		cost: t
+			.numeric("cost", { precision: 19, scale: 4, mode: "number" })
+			.notNull(),
+		currency: t.char("currency", { length: 3 }).notNull(),
+		state: milestoneState("state").notNull(),
+		dueAt: t.timestamp("due_at", { withTimezone: true }),
+		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
+	})
+	.as(sql`
+			with milestone_events as (
+				select
+					${event.aggregateId} as aggregate_id,
+					${event.version} as version,
+					${event.recordedAt} as recorded_at,
+					${event.payload} as payload
+				from ${event}
+				where ${event.aggregateType} = 'milestone'
+			),
+			latest_change as (
+				select distinct on (e.aggregate_id, c.key)
+					e.aggregate_id,
+					c.key as field,
+					c.value ->> 'to' as value
+				from milestone_events e
+				cross join lateral jsonb_each(
+					coalesce(e.payload -> 'changes', '{}'::jsonb)
+				) as c(key, value)
+				where c.key in (
+					'project_id',
+					'title',
+					'cost',
+					'currency',
+					'state',
+					'due_at'
+				)
+				and c.value ? 'to'
+				order by e.aggregate_id, c.key, e.version desc
+			),
+			created as (
+				select distinct on (aggregate_id)
+					aggregate_id,
+					recorded_at as created_at
+				from milestone_events
+				order by aggregate_id, version asc
+			)
+			select
+				c.aggregate_id as "id",
+				(max(l.value) filter (where l.field = 'project_id'))::uuid as "project_id",
+				max(l.value) filter (where l.field = 'title') as "title",
+				(max(l.value) filter (where l.field = 'cost'))::numeric as "cost",
+				max(l.value) filter (where l.field = 'currency') as "currency",
+				max(l.value) filter (where l.field = 'state') as "state",
+				(max(l.value) filter (where l.field = 'due_at'))::timestamp with time zone as "due_at",
+				c.created_at as "created_at"
+			from created c
+			left join latest_change l
+				on l.aggregate_id = c.aggregate_id
+			group by c.aggregate_id, c.created_at
+		`);
+
+export type milestoneSelectType = typeof milestone.$inferSelect;
 
 // we need to define this view with raw sql because we need the explicit column definitions for drizzle relations
 export const invoice = t
@@ -423,71 +507,3 @@ export const invoice = t
 				on l.aggregate_id = c.aggregate_id
 			group by c.aggregate_id, c.created_at
 		`);
-
-// we need to define this view with raw sql because we need the explicit column definitions for drizzle relations
-export const milestone = t
-	.pgView("milestone", {
-		id: t.uuid("id").notNull(),
-		projectId: t.uuid("project_id").notNull(),
-		title: t.text("title").notNull(),
-		cost: t
-			.numeric("cost", { precision: 19, scale: 4, mode: "number" })
-			.notNull(),
-		currency: t.char("currency", { length: 3 }).notNull(),
-		state: t.text("state").notNull(),
-		dueAt: t.timestamp("due_at", { withTimezone: true }),
-		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
-	})
-	.as(sql`
-			with milestone_events as (
-				select
-					${event.aggregateId} as aggregate_id,
-					${event.version} as version,
-					${event.recordedAt} as recorded_at,
-					${event.payload} as payload
-				from ${event}
-				where ${event.aggregateType} = 'milestone'
-			),
-			latest_change as (
-				select distinct on (e.aggregate_id, c.key)
-					e.aggregate_id,
-					c.key as field,
-					c.value ->> 'to' as value
-				from milestone_events e
-				cross join lateral jsonb_each(
-					coalesce(e.payload -> 'changes', '{}'::jsonb)
-				) as c(key, value)
-				where c.key in (
-					'project_id',
-					'title',
-					'cost',
-					'currency',
-					'state',
-					'due_at'
-				)
-				and c.value ? 'to'
-				order by e.aggregate_id, c.key, e.version desc
-			),
-			created as (
-				select distinct on (aggregate_id)
-					aggregate_id,
-					recorded_at as created_at
-				from milestone_events
-				order by aggregate_id, version asc
-			)
-			select
-				c.aggregate_id as "id",
-				(max(l.value) filter (where l.field = 'project_id'))::uuid as "project_id",
-				max(l.value) filter (where l.field = 'title') as "title",
-				(max(l.value) filter (where l.field = 'cost'))::numeric as "cost",
-				max(l.value) filter (where l.field = 'currency') as "currency",
-				max(l.value) filter (where l.field = 'state') as "state",
-				(max(l.value) filter (where l.field = 'due_at'))::timestamp with time zone as "due_at",
-				c.created_at as "created_at"
-			from created c
-			left join latest_change l
-				on l.aggregate_id = c.aggregate_id
-			group by c.aggregate_id, c.created_at
-		`);
-
-export type milestoneSelectType = typeof milestone.$inferSelect;

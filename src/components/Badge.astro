@@ -1,6 +1,6 @@
 ---
 interface Props {
-	type: "info" | "success" | "error";
+	type: "info" | "success" | "error" | "gray";
 }
 
 const { type } = Astro.props;
@@ -16,6 +16,8 @@ const { type } = Astro.props;
 				type === "error",
 			"border-sky-300 text-sky-700 dark:border-sky-700 dark:text-sky-300":
 				type === "info",
+			"border-neutral-300 text-neutral-700 dark:border-neutral-700 dark:text-neutral-300":
+				type === "gray",
 		},
 	]}
 >
