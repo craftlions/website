@@ -74,6 +74,7 @@ const metadata = await Astro.locals.db.query.organizationMetadata.findFirst({
 });
 
 const projectIds = projects.map((p) => p.id);
+const now = new Date();
 const totalInvoicedAmount =
 	projectIds.length > 0
 		? await Astro.locals.db
@@ -82,8 +83,8 @@ const totalInvoicedAmount =
 				.where(
 					and(
 						inArray(invoice.projectId, projectIds),
-						gte(invoice.createdAt, new Date(new Date().getFullYear(), 0, 1)),
-						lt(invoice.createdAt, new Date(new Date().getFullYear() + 1, 0, 1)),
+						gte(invoice.createdAt, new Date(now.getFullYear(), 0, 1)),
+						lt(invoice.createdAt, new Date(now.getFullYear() + 1, 0, 1)),
 					),
 				)
 				.then((result) => Number(result[0]?.total ?? 0))
@@ -91,6 +92,21 @@ const totalInvoicedAmount =
 const yearlyBudget = metadata?.yearlyBudget ?? 0;
 const budgetUsagePercentage =
 	yearlyBudget > 0 ? (totalInvoicedAmount / yearlyBudget) * 100 : 0;
+const budgetPacePercentage = ((now.getMonth() + 1) / 12) * 100;
+const budgetPaceGridLineClass = [
+	"col-start-2",
+	"col-start-3",
+	"col-start-4",
+	"col-start-5",
+	"col-start-6",
+	"col-start-7",
+	"col-start-8",
+	"col-start-9",
+	"col-start-10",
+	"col-start-11",
+	"col-start-12",
+	"col-start-13",
+][now.getMonth()];
 
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
@@ -218,26 +234,41 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 									{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "No budget"}
 								</p>
 							</div>
-							<progress
-								id="budget-progress"
-								max="100"
-								value={yearlyBudget > 0
-									? Math.min(budgetUsagePercentage, 100)
-									: 0}
-								class:list={[
-									"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
-									yearlyBudget > 0 &&
-										budgetUsagePercentage > 100 &&
-										"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
-								]}
-							>
-								{yearlyBudget > 0
-									? `${budgetUsagePercentage.toFixed(1)}% used`
-									: "No yearly budget set"}
-							</progress>
+							<div class="relative grid">
+								<progress
+									id="budget-progress"
+									max="100"
+									value={yearlyBudget > 0
+										? Math.min(budgetUsagePercentage, 100)
+										: 0}
+									class:list={[
+										"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
+										yearlyBudget > 0 &&
+											budgetUsagePercentage > 100 &&
+											"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
+									]}
+								>
+									{yearlyBudget > 0
+										? `${budgetUsagePercentage.toFixed(1)}% used`
+										: "No yearly budget set"}
+								</progress>
+								{yearlyBudget > 0 && (
+										<span
+											aria-hidden="true"
+											class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
+										>
+											<span
+												class:list={[
+													"h-full w-0.75 justify-self-start border-x border-neutral-50 bg-neutral-950 dark:border-neutral-950 dark:bg-neutral-50",
+													budgetPaceGridLineClass,
+												]}
+											/>
+										</span>
+									)}
+							</div>
 							<p class="text-sm text-neutral-600 dark:text-neutral-400">
 								{yearlyBudget > 0
-									? "Based on invoices created this calendar year."
+									? `Based on invoices created this calendar year. The cursor marks ${budgetPacePercentage.toFixed(1)}% for an even monthly allocation.`
 									: "No yearly budget has been set."}
 							</p>
 						</div>
