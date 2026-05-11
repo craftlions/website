@@ -27,8 +27,8 @@ importers:
         specifier: 1.6.10
         version: 1.6.10(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))
       '@better-auth/infra':
-        specifier: 0.2.6
-        version: 0.2.6(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/sso@1.6.9(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-auth@1.6.10(drizzle-kit@1.0.0-rc.2-e38a2ba)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))(pg@8.20.0))(better-call@1.3.5(zod@4.4.3)))(better-auth@1.6.10(drizzle-kit@1.0.0-rc.2-e38a2ba)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))(pg@8.20.0))(zod@4.4.3)
+        specifier: 0.2.7
+        version: 0.2.7(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/sso@1.6.9(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-auth@1.6.10(drizzle-kit@1.0.0-rc.2-e38a2ba)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))(pg@8.20.0))(better-call@1.3.5(zod@4.4.3)))(better-auth@1.6.10(drizzle-kit@1.0.0-rc.2-e38a2ba)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))(pg@8.20.0))(zod@4.4.3)
       '@biomejs/biome':
         specifier: 2.4.15
         version: 2.4.15
@@ -403,8 +403,8 @@ packages:
       drizzle-orm:
         optional: true
 
-  '@better-auth/infra@0.2.6':
-    resolution: {integrity: sha512-IfNzlr2HML/SKNqQuv8RziUDGfUlg2TBoUJ041MDIrDo8/vv+Ge6D/hDfbtJ7VyRuXl+9bq6mEUEQ/+dKontsg==}
+  '@better-auth/infra@0.2.7':
+    resolution: {integrity: sha512-tdM6LuHiUi9a2VhTSn4YOl5jyIk14cb2nlkwB/BOsYH3R6FSKkeNvSO2drRV4zrUSv/4VygHTyLi0bT5rFTmhw==}
     peerDependencies:
       '@better-auth/core': '>=1.4.0'
       '@better-auth/sso': '>=1.4.0'
@@ -3970,7 +3970,7 @@ snapshots:
     optionalDependencies:
       drizzle-orm: 1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3)
 
-  '@better-auth/infra@0.2.6(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/sso@1.6.9(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-auth@1.6.10(drizzle-kit@1.0.0-rc.2-e38a2ba)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))(pg@8.20.0))(better-call@1.3.5(zod@4.4.3)))(better-auth@1.6.10(drizzle-kit@1.0.0-rc.2-e38a2ba)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))(pg@8.20.0))(zod@4.4.3)':
+  '@better-auth/infra@0.2.7(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/sso@1.6.9(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-auth@1.6.10(drizzle-kit@1.0.0-rc.2-e38a2ba)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))(pg@8.20.0))(better-call@1.3.5(zod@4.4.3)))(better-auth@1.6.10(drizzle-kit@1.0.0-rc.2-e38a2ba)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))(pg@8.20.0))(zod@4.4.3)':
     dependencies:
       '@better-auth/core': 1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0)
       '@better-auth/sso': 1.6.9(@better-auth/core@1.6.10(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-auth@1.6.10(drizzle-kit@1.0.0-rc.2-e38a2ba)(drizzle-orm@1.0.0-rc.2-e38a2ba(@types/pg@8.20.0)(pg@8.20.0)(zod@4.4.3))(pg@8.20.0))(better-call@1.3.5(zod@4.4.3))
