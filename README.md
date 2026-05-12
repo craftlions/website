@@ -19,6 +19,7 @@ mise i
 Install all deps if not done by `mise`
 ```shell
 pn i
+aube ci
 aube i
 ```
 
@@ -37,13 +38,13 @@ aubr types
 sync astro
 ```shell
 pn astro sync
-aube exec astro sync
+aubx astro sync
 ```
 
 Biome
 ```shell
 pn biome check --write
-aube exec biome check --write
+aubx biome check --write
 ```
 
 Types
