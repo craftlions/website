@@ -240,7 +240,7 @@ export const projectState = t.pgEnum("project_state", [
 export const projects = t.pgTable(
 	"projects",
 	{
-		id: t.uuid("id").default(sql`uuidv7()`),
+		id: t.uuid("id").default(sql`uuidv7()`).notNull(),
 		publicId: t.text("public_id").notNull(),
 		organizationId: t.text("organization_id").notNull(),
 		name: t.text("name").notNull(),
@@ -277,7 +277,7 @@ export const phaseState = t.pgEnum("phase_state", [
 export const phases = t.pgTable(
 	"phases",
 	{
-		id: t.uuid("id").default(sql`uuidv7()`),
+		id: t.uuid("id").default(sql`uuidv7()`).notNull(),
 		publicId: t.text("public_id").notNull(),
 		projectId: t.uuid("project_id").notNull(),
 		title: t.text("title").notNull(),
@@ -309,7 +309,7 @@ export const phases = t.pgTable(
 export const invoices = t.pgTable(
 	"invoices",
 	{
-		id: t.uuid("id").default(sql`uuidv7()`),
+		id: t.uuid("id").default(sql`uuidv7()`).notNull(),
 		publicId: t.text("public_id").notNull(),
 		projectId: t.uuid("project_id").notNull(),
 		invoiceNumber: t.text("invoice_number").notNull(),
@@ -340,7 +340,7 @@ export const invoices = t.pgTable(
 export const events = t.pgTable(
 	"events",
 	{
-		id: t.uuid("id").default(sql`uuidv7()`),
+		id: t.uuid("id").default(sql`uuidv7()`).notNull(),
 		publicId: t.text("public_id").notNull(),
 		aggregateType: aggregateType("aggregate_type").notNull(),
 		aggregateId: t.uuid("aggregate_id").notNull(),
@@ -386,232 +386,7 @@ export const organizationMetadataInsertSchema =
 export const organizationMetadataUpdateSchema =
 	createUpdateSchema(organizationMetadata);
 
-export const event = t.pgTable(
-	"event",
-	{
-		id: t.uuid("id").default(sql`uuidv7()`),
-		aggregateType: aggregateType("aggregate_type").notNull(),
-		aggregateId: t.uuid("aggregate_id").notNull(),
-		eventType: t.text("event_type").notNull(),
-		payload: t.jsonb("payload").notNull(),
-		version: t.integer("version").notNull(),
-		actorType: actorType("actor_type").notNull(),
-		actorId: t.text("actor_id").notNull(),
-		// occuredAt
-		metadata: t.jsonb("metadata"),
-		recordedAt: t
-			.timestamp("recorded_at", { withTimezone: true })
-			.defaultNow()
-			.notNull(),
-	},
-	(table) => [
-		t.primaryKey({
-			columns: [table.id],
-		}),
-		t.uniqueIndex().on(table.aggregateType, table.aggregateId, table.version),
-		t.index().on(table.actorType, table.actorId, table.recordedAt),
-		t.index().on(table.recordedAt),
-	],
-);
-
-// we need to define this view with raw sql because we need the explicit column definitions for drizzle relations
-export const project = t
-	.pgView("project", {
-		id: t.uuid("id").notNull(),
-		organizationId: t.text("organization_id").notNull(),
-		name: t.text("name").notNull(),
-		deadline: t.timestamp("deadline", { withTimezone: true }),
-		state: projectState("state"),
-		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
-		updatedAt: t.timestamp("updated_at", { withTimezone: true }).notNull(),
-	})
-	.as(sql`
-			with project_events as (
-				select
-					${event.aggregateId} as aggregate_id,
-					${event.version} as version,
-					${event.recordedAt} as recorded_at,
-					${event.payload} as payload
-				from ${event}
-				where ${event.aggregateType} = 'project'
-			),
-			latest_change as (
-				select distinct on (e.aggregate_id, c.key)
-					e.aggregate_id,
-					c.key as field,
-					c.value ->> 'to' as value
-				from project_events e
-				cross join lateral jsonb_each(
-					coalesce(e.payload -> 'changes', '{}'::jsonb)
-				) as c(key, value)
-				where c.key in (
-					'organization_id',
-					'name',
-					'deadline',
-					'state'
-				)
-				and c.value ? 'to'
-				order by e.aggregate_id, c.key, e.version desc
-			),
-			created as (
-				select distinct on (aggregate_id)
-					aggregate_id,
-					recorded_at as created_at
-				from project_events
-				order by aggregate_id, version asc
-			),
-			updated as (
-				select distinct on (aggregate_id)
-					aggregate_id,
-					recorded_at as updated_at
-				from project_events
-				order by aggregate_id, version desc
-			)
-			select
-				c.aggregate_id as "id",
-				max(l.value) filter (where l.field = 'organization_id') as "organization_id",
-				max(l.value) filter (where l.field = 'name') as "name",
-				(max(l.value) filter (where l.field = 'deadline'))::timestamp with time zone as "deadline",
-				max(l.value) filter (where l.field = 'state') as "state",
-				c.created_at as "created_at",
-				u.updated_at as "updated_at"
-			from created c
-			inner join updated u
-				on u.aggregate_id = c.aggregate_id
-			left join latest_change l
-				on l.aggregate_id = c.aggregate_id
-			group by c.aggregate_id, c.created_at, u.updated_at
-		`);
-
-export type projectSelectType = typeof project.$inferSelect;
-
-// we need to define this view with raw sql because we need the explicit column definitions for drizzle relations
-export const milestone = t
-	.pgView("milestone", {
-		id: t.uuid("id").notNull(),
-		projectId: t.uuid("project_id").notNull(),
-		title: t.text("title").notNull(),
-		cost: t
-			.numeric("cost", { precision: 19, scale: 4, mode: "number" })
-			.notNull(),
-		currency: t.char("currency", { length: 3 }).notNull(),
-		state: t.text("state").notNull(),
-		dueAt: t.timestamp("due_at", { withTimezone: true }),
-		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
-	})
-	.as(sql`
-			with milestone_events as (
-				select
-					${event.aggregateId} as aggregate_id,
-					${event.version} as version,
-					${event.recordedAt} as recorded_at,
-					${event.payload} as payload
-				from ${event}
-				where ${event.aggregateType} = 'milestone'
-			),
-			latest_change as (
-				select distinct on (e.aggregate_id, c.key)
-					e.aggregate_id,
-					c.key as field,
-					c.value ->> 'to' as value
-				from milestone_events e
-				cross join lateral jsonb_each(
-					coalesce(e.payload -> 'changes', '{}'::jsonb)
-				) as c(key, value)
-				where c.key in (
-					'project_id',
-					'title',
-					'cost',
-					'currency',
-					'state',
-					'due_at'
-				)
-				and c.value ? 'to'
-				order by e.aggregate_id, c.key, e.version desc
-			),
-			created as (
-				select distinct on (aggregate_id)
-					aggregate_id,
-					recorded_at as created_at
-				from milestone_events
-				order by aggregate_id, version asc
-			)
-			select
-				c.aggregate_id as "id",
-				(max(l.value) filter (where l.field = 'project_id'))::uuid as "project_id",
-				max(l.value) filter (where l.field = 'title') as "title",
-				(max(l.value) filter (where l.field = 'cost'))::numeric as "cost",
-				max(l.value) filter (where l.field = 'currency') as "currency",
-				max(l.value) filter (where l.field = 'state') as "state",
-				(max(l.value) filter (where l.field = 'due_at'))::timestamp with time zone as "due_at",
-				c.created_at as "created_at"
-			from created c
-			left join latest_change l
-				on l.aggregate_id = c.aggregate_id
-			group by c.aggregate_id, c.created_at
-		`);
-
-export type milestoneSelectType = typeof milestone.$inferSelect;
-
-// we need to define this view with raw sql because we need the explicit column definitions for drizzle relations
-export const invoice = t
-	.pgView("invoice", {
-		id: t.uuid("id").notNull(),
-		projectId: t.uuid("project_id").notNull(),
-		invoiceNumber: t.text("invoice_number").notNull(),
-		stripeId: t.text("stripe_id").notNull(),
-		stripePaymentPage: t.text("stripe_payment_page").notNull(),
-		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
-		total: t
-			.numeric("total", { precision: 19, scale: 4, mode: "number" })
-			.notNull(),
-	})
-	.as(sql`
-			with invoice_events as (
-				select
-					${event.aggregateId} as aggregate_id,
-					${event.version} as version,
-					${event.recordedAt} as recorded_at,
-					${event.payload} as payload
-				from ${event}
-				where ${event.aggregateType} = 'invoice'
-			),
-			latest_change as (
-				select distinct on (e.aggregate_id, c.key)
-					e.aggregate_id,
-					c.key as field,
-					c.value ->> 'to' as value
-				from invoice_events e
-				cross join lateral jsonb_each(
-					coalesce(e.payload -> 'changes', '{}'::jsonb)
-				) as c(key, value)
-				where c.key in (
-					'project_id',
-					'invoice_number',
-					'stripe_id',
-					'stripe_payment_page',
-					'total'
-				)
-				and c.value ? 'to'
-				order by e.aggregate_id, c.key, e.version desc
-			),
-			created as (
-				select distinct on (aggregate_id)
-					aggregate_id,
-					recorded_at as created_at
-				from invoice_events
-				order by aggregate_id, version asc
-			)
-			select
-				c.aggregate_id as "id",
-				(max(l.value) filter (where l.field = 'project_id'))::uuid as "project_id",
-				max(l.value) filter (where l.field = 'invoice_number') as "invoice_number",
-				max(l.value) filter (where l.field = 'stripe_id') as "stripe_id",
-				max(l.value) filter (where l.field = 'stripe_payment_page') as "stripe_payment_page",
-				c.created_at as "created_at",
-				(max(l.value) filter (where l.field = 'total'))::numeric as "total"
-			from created c
-			left join latest_change l
-				on l.aggregate_id = c.aggregate_id
-			group by c.aggregate_id, c.created_at
-		`);
+export type projectSelectType = typeof projects.$inferSelect;
+export type phaseSelectType = typeof phases.$inferSelect;
+export type invoiceSelectType = typeof invoices.$inferSelect;
+export type eventSelectType = typeof events.$inferSelect;

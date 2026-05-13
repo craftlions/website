@@ -5,14 +5,14 @@ export const prerender = false;
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
 import Footer from "../../../../../components/Footer.astro";
-import MilestoneTable from "../../../../../components/MilestoneTable.astro";
+import PhasesTable from "../../../../../components/PhasesTable.astro";
 import Nav from "../../../../../components/Nav.astro";
 import ProjectInvoices from "../../../../../components/ProjectInvoices.astro";
 import Shell from "../../../../../layouts/Shell.astro";
 
-const { id, slug } = Astro.params;
+const { publicId, slug } = Astro.params;
 
-if (!id || !slug) {
+if (!publicId || !slug) {
 	return Astro.redirect("/dash");
 }
 
@@ -51,21 +51,23 @@ if (!organization) {
 	return Astro.redirect("/dash");
 }
 
-const project = await Astro.locals.db.query.project.findFirst({
+const project = await Astro.locals.db.query.projects.findFirst({
 	columns: {
-		id: true,
 		name: true,
 	},
 	with: {
 		events: {
 			columns: {
+				id: true,
+				publicId: true,
 				aggregateType: true,
-				eventType: true,
-				payload: true,
-				recordedAt: true,
+				event: true,
+			},
+			orderBy: {
+				id: "desc",
 			},
 		},
-		milestones: {
+		phases: {
 			columns: {
 				title: true,
 				dueAt: true,
@@ -76,10 +78,13 @@ const project = await Astro.locals.db.query.project.findFirst({
 			with: {
 				events: {
 					columns: {
+						id: true,
+						publicId: true,
 						aggregateType: true,
-						eventType: true,
-						payload: true,
-						recordedAt: true,
+						event: true,
+					},
+					orderBy: {
+						id: "desc",
 					},
 				},
 			},
@@ -87,9 +92,19 @@ const project = await Astro.locals.db.query.project.findFirst({
 				dueAt: "asc",
 			},
 		},
+		invoices: {
+			columns: {
+				id: true,
+				invoiceNumber: true,
+				stripePaymentPage: true,
+			},
+			orderBy: {
+				id: "desc",
+			},
+		},
 	},
 	where: {
-		id: id,
+		publicId,
 		organizationId: organization.id,
 	},
 });
@@ -98,28 +113,10 @@ if (!project) {
 	return Astro.redirect(`/dash/org/${slug}`);
 }
 
-type ChangeRecord = Record<string, { from: unknown; to: unknown }>;
-
 const events = [
 	...project.events,
-	...project.milestones.flatMap((m) => m.events),
-]
-	.sort((a, b) => b.recordedAt.getTime() - a.recordedAt.getTime())
-	.map((ev) => {
-		const payload = ev.payload as Record<string, unknown> | null;
-		const changes = payload?.changes as ChangeRecord | undefined;
-		return {
-			...ev,
-			changeEntries: changes
-				? Object.entries(changes)
-				: ([] as Array<[string, { from: unknown; to: unknown }]>),
-		};
-	});
-
-const dateTimeFormatter = new Intl.DateTimeFormat("de-DE", {
-	dateStyle: "medium",
-	timeStyle: "short",
-});
+	...project.phases.flatMap((phase) => phase.events),
+].toSorted((a, b) => b.id.localeCompare(a.id));
 
 const formatEventType = (eventType: string) =>
 	eventType
@@ -190,12 +187,12 @@ const formatEventType = (eventType: string) =>
 
 				<section>
 					<h2
-						id="milestones"
+						id="phases"
 						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 					>
-						Milestones
+						Phases
 					</h2>
-					<MilestoneTable milestones={project.milestones} />
+					<PhasesTable phases={project.phases} />
 				</section>
 
 				<section>
@@ -205,7 +202,7 @@ const formatEventType = (eventType: string) =>
 					>
 						Invoices
 					</h2>
-					<ProjectInvoices id={project.id} />
+					<ProjectInvoices invoices={project.invoices} />
 				</section>
 
 				<section class="grid gap-4">
@@ -226,43 +223,20 @@ const formatEventType = (eventType: string) =>
 										)}
 									</div>
 									<div class="grid gap-1 pb-5">
-										<div class="grid grid-cols-[1fr_auto] items-center gap-2">
-											<p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-												{formatEventType(ev.eventType)}
+											<div class="grid grid-cols-[1fr_auto] items-center gap-2">
+												<p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+													{formatEventType(ev.event)}
+												</p>
+												<span class="inline-grid w-max place-items-center whitespace-nowrap border border-dashed border-neutral-300 bg-transparent px-2 py-0.5 text-xs/none font-semibold capitalize text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+													{ev.aggregateType}
+												</span>
+											</div>
+											<p class="text-xs text-neutral-500 dark:text-neutral-400">
+												{ev.publicId}
 											</p>
-											<span class="inline-grid w-max place-items-center whitespace-nowrap border border-dashed border-neutral-300 bg-transparent px-2 py-0.5 text-xs/none font-semibold capitalize text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-												{ev.aggregateType}
-											</span>
 										</div>
-										<time
-											datetime={ev.recordedAt.toISOString()}
-											class="text-xs text-neutral-500 dark:text-neutral-400"
-										>
-											{dateTimeFormatter.format(ev.recordedAt)}
-										</time>
-										{ev.changeEntries.length > 0 && (
-											<ul class="mt-1 grid gap-0.5">
-												{ev.changeEntries.map(([field, change]) => (
-													<li class="grid grid-cols-[auto_1fr] gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
-														<span class="text-neutral-400 dark:text-neutral-600" aria-hidden="true">·</span>
-														<span>
-															<span class="font-medium">{field.replaceAll("_", " ")}</span>
-															{change.from != null && (
-																<>
-																	{" "}
-																	<span class="line-through opacity-60">{String(change.from)}</span>
-																</>
-															)}
-															{" → "}
-															<span>{String(change.to)}</span>
-														</span>
-													</li>
-												))}
-											</ul>
-										)}
-									</div>
-								</li>
-							))}
+									</li>
+								))}
 						</ol>
 					) : (
 						<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">

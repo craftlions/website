@@ -5,7 +5,7 @@
 - Self-service
   - API
     - Projects
-    - Milestones
+    - Phases
     - Invoices
   - Export CSV 
 
