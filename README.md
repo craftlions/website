@@ -83,8 +83,8 @@ git merge --ff-only $1
 
 git push
 
-git branch -d $1
 git push origin --delete $1
+git branch -d $1
 ```
 
 NOTES
