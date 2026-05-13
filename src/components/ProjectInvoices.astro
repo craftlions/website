@@ -2,17 +2,34 @@
 import { getUuidV7Date } from "../lib/uuid.ts";
 import InvoiceTable from "./InvoiceTable.astro";
 
-interface Invoice {
-	id: string;
-	invoiceNumber: string;
-	stripePaymentPage: string;
-}
-
 interface Props {
-	invoices: Invoice[];
+	id: string;
 }
 
-const invoices = Astro.props.invoices
+const { id } = Astro.props;
+
+const project = await Astro.locals.db.query.projects.findFirst({
+	columns: {
+		id: true,
+	},
+	with: {
+		invoices: {
+			columns: {
+				id: true,
+				invoiceNumber: true,
+				stripePaymentPage: true,
+			},
+			orderBy: {
+				id: "desc",
+			},
+		},
+	},
+	where: {
+		id,
+	},
+});
+
+const invoices = (project?.invoices ?? [])
 	.map((invoice) => ({
 		invoiceNumber: invoice.invoiceNumber,
 		stripePaymentPage: invoice.stripePaymentPage,

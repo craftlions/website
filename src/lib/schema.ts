@@ -112,12 +112,12 @@ export const organization = t.pgTable(
 	{
 		id: t.text("id").primaryKey(),
 		name: t.text("name").notNull(),
-		slug: t.text("slug").notNull().unique(),
+		slug: t.text("slug").notNull(),
 		logo: t.text("logo"),
 		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
 		metadata: t.text("metadata"),
 	},
-	(table) => [t.uniqueIndex("organization_slug_uidx").on(table.slug)],
+	(table) => [t.unique("organization_slug_uidx").on(table.slug)],
 );
 
 export const member = t.pgTable(
@@ -244,7 +244,7 @@ export const projects = t.pgTable(
 		publicId: t.text("public_id").notNull(),
 		organizationId: t.text("organization_id").notNull(),
 		name: t.text("name").notNull(),
-		state: projectState("state"),
+		state: projectState("state").notNull(),
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
 			.$onUpdate(() => new Date()),

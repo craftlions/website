@@ -17,9 +17,7 @@ interface Props {
 const { phases } = Astro.props;
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 
-const phaseStateToBadgeType = (
-	phaseState: phaseSelectType["state"],
-) => {
+const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 	switch (phaseState) {
 		case "submitted":
 		case "planned":
