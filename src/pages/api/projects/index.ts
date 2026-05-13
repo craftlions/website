@@ -19,7 +19,7 @@ export const GET: APIRoute = async (ctx) => {
 			status: 403,
 		});
 
-	const projects = await ctx.locals.db.query.project.findMany();
+	const projects = await ctx.locals.db.query.projects.findMany();
 
 	return new Response(JSON.stringify(projects), {
 		headers: {

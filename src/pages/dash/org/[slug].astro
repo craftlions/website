@@ -1,20 +1,15 @@
 ---
 export const prerender = false;
 
+import type { projectSelectType } from "../../../lib/schema.ts";
 import { isAPIError } from "better-auth/api";
-import { and, asc, eq, gte, inArray, lt, sum } from "drizzle-orm";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
 import Footer from "../../../components/Footer.astro";
 import Nav from "../../../components/Nav.astro";
 import OrganizationInvoices from "../../../components/OrganizationInvoices.astro";
 import Shell from "../../../layouts/Shell.astro";
-import {
-	invoice,
-	milestone,
-	project,
-	type projectSelectType,
-} from "../../../lib/schema.ts";
+import { getUuidV7Date } from "../../../lib/uuid.ts";
 
 const { slug } = Astro.params;
 
@@ -53,43 +48,75 @@ if (!organization) {
 	return Astro.redirect("/dash");
 }
 
-const projects = await Astro.locals.db
-	.select({
-		id: project.id,
-		name: project.name,
-		deadline: project.deadline,
-		state: project.state,
-		cost: Astro.locals.db
-			.select({ value: sum(milestone.cost).mapWith(Number).as("value") })
-			.from(milestone)
-			.where(eq(milestone.projectId, project.id))
-			.as("cost"),
-	})
-	.from(project)
-	.where(eq(project.organizationId, organization.id))
-	.orderBy(asc(project.name));
-
-const metadata = await Astro.locals.db.query.organizationMetadata.findFirst({
-	where: { organizationId: organization.id },
+const organizationData = await Astro.locals.db.query.organization.findFirst({
+	columns: {
+		id: true,
+	},
+	with: {
+		data: {
+			columns: {
+				yearlyBudget: true,
+			},
+		},
+		projects: {
+			columns: {
+				publicId: true,
+				name: true,
+				state: true,
+			},
+			with: {
+				phases: {
+					columns: {
+						cost: true,
+					},
+				},
+				invoices: {
+					columns: {
+						id: true,
+						total: true,
+					},
+				},
+			},
+			orderBy: {
+				name: "asc",
+			},
+		},
+	},
+	where: {
+		id: organization.id,
+	},
 });
 
-const projectIds = projects.map((p) => p.id);
 const now = new Date();
+const startOfYear = new Date(now.getFullYear(), 0, 1);
+const startOfNextYear = new Date(now.getFullYear() + 1, 0, 1);
+const projects =
+	organizationData?.projects.map((project) => ({
+		publicId: project.publicId,
+		name: project.name,
+		state: project.state,
+		cost:
+			project.phases.length > 0
+				? project.phases.reduce((total, phase) => total + phase.cost, 0)
+				: null,
+	})) ?? [];
 const totalInvoicedAmount =
-	projectIds.length > 0
-		? await Astro.locals.db
-				.select({ total: sum(invoice.total) })
-				.from(invoice)
-				.where(
-					and(
-						inArray(invoice.projectId, projectIds),
-						gte(invoice.createdAt, new Date(now.getFullYear(), 0, 1)),
-						lt(invoice.createdAt, new Date(now.getFullYear() + 1, 0, 1)),
-					),
-				)
-				.then((result) => Number(result[0]?.total ?? 0))
-		: 0;
-const yearlyBudget = metadata?.yearlyBudget ?? 0;
+	organizationData?.projects
+		.flatMap((project) => project.invoices)
+		.reduce((total, invoice) => {
+			const createdAt = getUuidV7Date(invoice.id);
+
+			if (
+				!createdAt ||
+				createdAt < startOfYear ||
+				createdAt >= startOfNextYear
+			) {
+				return total;
+			}
+
+			return total + invoice.total;
+		}, 0) ?? 0;
+const yearlyBudget = organizationData?.data?.yearlyBudget ?? 0;
 const budgetUsagePercentage =
 	yearlyBudget > 0 ? (totalInvoicedAmount / yearlyBudget) * 100 : 0;
 const budgetPacePercentage = ((now.getMonth() + 1) / 12) * 100;
@@ -323,10 +350,10 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 													? currencyFormatter.format(project.cost)
 													: "-"}
 											</td>
-											<td class="px-4 py-3">
-												<Button
-													href={`/dash/org/${slug}/project/${project.id}`}
-												>
+												<td class="px-4 py-3">
+													<Button
+														href={`/dash/org/${slug}/project/${project.publicId}`}
+													>
 													Details
 												</Button>
 											</td>

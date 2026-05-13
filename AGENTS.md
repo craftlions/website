@@ -6,9 +6,9 @@ Run these commands before making changes:
 
 ```shell
 mise i
-pn i
-pn types
-pn astro sync
+aube ci
+aubr types
+aubr astro sync
 ```
 
 ## Hard Requirements
@@ -32,12 +32,12 @@ pn astro sync
 Run these commands after making changes:
 
 ```shell
-pn drizzle-kit check
-pn types
-pn run cf-check
-pn astro sync
-pn run check
-pn biome check --write
+aubx drizzle-kit check
+aubr types
+aubr cf-check
+aubx astro sync
+aubr check
+aubx biome check --write
 ```
 
 ## PlanetScale Database

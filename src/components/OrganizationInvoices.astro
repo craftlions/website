@@ -1,4 +1,5 @@
 ---
+import { getUuidV7Date } from "../lib/uuid.ts";
 import InvoiceTable from "./InvoiceTable.astro";
 
 interface Props {
@@ -7,24 +8,41 @@ interface Props {
 
 const { id } = Astro.props;
 
-const projects = await Astro.locals.db.query.project.findMany({
+const organization = await Astro.locals.db.query.organization.findFirst({
+	columns: {
+		id: true,
+	},
 	with: {
-		invoices: {
+		projects: {
 			columns: {
-				invoiceNumber: true,
-				stripePaymentPage: true,
-				createdAt: true,
+				id: true,
+			},
+			with: {
+				invoices: {
+					columns: {
+						id: true,
+						invoiceNumber: true,
+						stripePaymentPage: true,
+					},
+				},
 			},
 		},
 	},
 	where: {
-		organizationId: id,
+		id,
 	},
 });
 
-const invoices = projects
+const invoices = (organization?.projects ?? [])
 	.flatMap((project) => project.invoices)
-	.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+	.map((invoice) => ({
+		invoiceNumber: invoice.invoiceNumber,
+		stripePaymentPage: invoice.stripePaymentPage,
+		createdAt: getUuidV7Date(invoice.id),
+	}))
+	.toSorted(
+		(a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
+	);
 ---
 
 <InvoiceTable invoices={invoices} />

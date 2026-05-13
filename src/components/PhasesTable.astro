@@ -1,26 +1,26 @@
 ---
-import type { milestoneSelectType } from "../lib/schema";
+import type { phaseSelectType } from "../lib/schema";
 import Badge from "./Badge.astro";
 
-interface Milestone {
-	title: milestoneSelectType["title"];
-	dueAt: milestoneSelectType["dueAt"];
-	cost: milestoneSelectType["cost"];
-	currency: milestoneSelectType["currency"];
-	state: milestoneSelectType["state"];
+interface Phase {
+	title: phaseSelectType["title"];
+	dueAt: phaseSelectType["dueAt"];
+	cost: phaseSelectType["cost"];
+	currency: phaseSelectType["currency"];
+	state: phaseSelectType["state"];
 }
 
 interface Props {
-	milestones: Milestone[];
+	phases: Phase[];
 }
 
-const { milestones } = Astro.props;
+const { phases } = Astro.props;
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 
-const milestoneStateToBadgeType = (
-	milestoneState: milestoneSelectType["state"],
+const phaseStateToBadgeType = (
+	phaseState: phaseSelectType["state"],
 ) => {
-	switch (milestoneState) {
+	switch (phaseState) {
 		case "submitted":
 		case "planned":
 		case "approved":
@@ -38,7 +38,7 @@ const milestoneStateToBadgeType = (
 ---
 
 <div class="grid gap-3">
-	{milestones.length > 0 ? (
+	{phases.length > 0 ? (
 			<div class="overflow-x-auto border border-dashed border-neutral-300 bg-transparent dark:border-neutral-700">
 				<table class="w-full min-w-2xl border-collapse text-left text-sm">
 					<thead>
@@ -61,25 +61,25 @@ const milestoneStateToBadgeType = (
 						</tr>
 					</thead>
 					<tbody>
-						{milestones.map((milestone) => (
+						{phases.map((phase) => (
 							<tr class="border-b border-dashed border-neutral-300 transition-colors last:border-b-0 hover:bg-neutral-100/70 dark:border-neutral-700 dark:hover:bg-neutral-900/70">
 								<td class="px-4 py-4 font-medium text-neutral-900 dark:text-neutral-100">
-									{milestone.title}
+									{phase.title}
 								</td>
 								<td class="whitespace-nowrap px-4 py-4 text-neutral-700 dark:text-neutral-300">
-									{milestone.dueAt
-										? dateFormatter.format(milestone.dueAt)
+									{phase.dueAt
+										? dateFormatter.format(phase.dueAt)
 										: "Not scheduled"}
 								</td>
 								<td class="whitespace-nowrap px-4 py-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
 									{new Intl.NumberFormat("de-DE", {
 										style: "currency",
-										currency: milestone.currency,
-									}).format(milestone.cost)}
+										currency: phase.currency,
+									}).format(phase.cost)}
 								</td>
 								<td class="px-4 py-4">
-									<Badge type={milestoneStateToBadgeType(milestone.state)}>
-										{milestone.state.replaceAll("_", " ")}
+									<Badge type={phaseStateToBadgeType(phase.state)}>
+										{phase.state.replaceAll("_", " ")}
 									</Badge>
 								</td>
 							</tr>
@@ -89,7 +89,7 @@ const milestoneStateToBadgeType = (
 			</div>
 		) : (
 			<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
-				No milestones have been added yet.
+				No phases have been added yet.
 			</p>
 		)}
 </div>

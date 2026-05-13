@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
-import { event } from "../../../../../lib/schema";
+import { events, phases } from "../../../../../lib/schema";
 
 export const prerender = false;
 
@@ -24,7 +24,9 @@ export const POST = (async ({ request, locals, params }) => {
 		);
 	}
 
-	if (!result.key.metadata?.isAdmin) {
+	const apiKey = result.key;
+
+	if (!apiKey.referenceId || !apiKey.metadata?.isAdmin) {
 		return new Response(
 			JSON.stringify({
 				type: "about:blank",
@@ -37,7 +39,7 @@ export const POST = (async ({ request, locals, params }) => {
 	}
 
 	try {
-		const project = await locals.db.query.project.findFirst({
+		const project = await locals.db.query.projects.findFirst({
 			columns: { id: true },
 			where: {
 				id: String(params.project_id),
@@ -57,7 +59,7 @@ export const POST = (async ({ request, locals, params }) => {
 				},
 			);
 		}
-	} catch (error) {
+	} catch {
 		return new Response(
 			JSON.stringify({
 				type: "about:blank",
@@ -86,8 +88,8 @@ export const POST = (async ({ request, locals, params }) => {
 		.strictObject({
 			title: z.string(),
 			cost: z.number().nonnegative(),
-			currency: z.literal(["EUR"]),
-			state: z.literal([
+			currency: z.enum(["EUR"]),
+			state: z.enum([
 				"submitted",
 				"planned",
 				"approved",
@@ -113,31 +115,37 @@ export const POST = (async ({ request, locals, params }) => {
 	}
 
 	try {
-		const row = await locals.db
-			.insert(event)
-			.values({
-				aggregateType: "milestone",
-				aggregateId: crypto.randomUUID(),
-				eventType: "created",
-				version: 1,
-				payload: {
-					type: "milestone",
-					changes: {
-						title: { to: validation.data.title },
-						cost: { to: validation.data.cost },
-						currency: { to: validation.data.currency },
-						state: { to: validation.data.state },
-						due_at: { to: validation.data.dueAt.toISOString() },
-						project_id: { to: params.project_id },
-					},
-				},
-				actorType: "user",
-				actorId: result.key.referenceId,
-				recordedAt: new Date(),
-			})
-			.returning();
+		const row = await locals.db.transaction(async (tx) => {
+			const phaseRows = await tx
+				.insert(phases)
+				.values({
+					publicId: crypto.randomUUID(),
+					projectId: String(params.project_id),
+					title: validation.data.title,
+					cost: validation.data.cost,
+					currency: validation.data.currency,
+					state: validation.data.state,
+					dueAt: validation.data.dueAt,
+				})
+				.returning({ id: phases.id });
 
-		if (!row[0]) {
+			if (!phaseRows[0]?.id) {
+				return null;
+			}
+
+			await tx.insert(events).values({
+				publicId: crypto.randomUUID(),
+				aggregateType: "milestone",
+				aggregateId: phaseRows[0].id,
+				event: "created",
+				actorType: "user",
+				actorId: apiKey.referenceId,
+			});
+
+			return phaseRows[0];
+		});
+
+		if (!row) {
 			return new Response(
 				JSON.stringify({
 					type: "about:blank",
@@ -155,16 +163,16 @@ export const POST = (async ({ request, locals, params }) => {
 		return new Response("Created", {
 			status: 201,
 			headers: {
-				Location: `/api/projects/${params.project_id}/milestones/${row[0].aggregateId}`,
+				Location: `/api/projects/${params.project_id}/phases/${row.id}`,
 			},
 		});
-	} catch (error) {
+	} catch {
 		return new Response(
 			JSON.stringify({
 				type: "about:blank",
 				title: "Internal Server Error",
 				status: 500,
-				detail: "An error occurred while creating the milestone",
+				detail: "An error occurred while creating the phase",
 			}),
 			{ status: 500, headers: { "Content-Type": "application/problem+json" } },
 		);

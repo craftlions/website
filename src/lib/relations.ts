@@ -14,9 +14,9 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.organization.id,
 			to: r.organizationMetadata.organizationId,
 		}),
-		projects: r.many.project({
+		projects: r.many.projects({
 			from: r.organization.id,
-			to: r.project.organizationId,
+			to: r.projects.organizationId,
 		}),
 	},
 	session: {
@@ -42,33 +42,50 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.organization.id,
 		}),
 	},
-	project: {
+	projects: {
 		organization: r.one.organization({
-			from: r.project.organizationId,
+			from: r.projects.organizationId,
 			to: r.organization.id,
 		}),
-		invoices: r.many.invoice({
-			from: r.project.id,
-			to: r.invoice.projectId,
+		invoices: r.many.invoices({
+			from: r.projects.id,
+			to: r.invoices.projectId,
 		}),
-		milestones: r.many.milestone({
-			from: r.project.id,
-			to: r.milestone.projectId,
+		phases: r.many.phases({
+			from: r.projects.id,
+			to: r.phases.projectId,
 		}),
-		events: r.many.event({
-			from: r.project.id,
-			to: r.event.aggregateId,
+		events: r.many.events({
+			from: r.projects.id,
+			to: r.events.aggregateId,
 			where: {
 				aggregateType: "project",
 			},
 		}),
 	},
-	milestone: {
-		events: r.many.event({
-			from: r.milestone.id,
-			to: r.event.aggregateId,
+	phases: {
+		project: r.one.projects({
+			from: r.phases.projectId,
+			to: r.projects.id,
+		}),
+		events: r.many.events({
+			from: r.phases.id,
+			to: r.events.aggregateId,
 			where: {
 				aggregateType: "milestone",
+			},
+		}),
+	},
+	invoices: {
+		project: r.one.projects({
+			from: r.invoices.projectId,
+			to: r.projects.id,
+		}),
+		events: r.many.events({
+			from: r.invoices.id,
+			to: r.events.aggregateId,
+			where: {
+				aggregateType: "invoice",
 			},
 		}),
 	},

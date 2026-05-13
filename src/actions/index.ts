@@ -1,11 +1,8 @@
 import type { Auth } from "../lib/auth.ts";
 import type { Db } from "../lib/database.ts";
-import { ActionError, defineAction } from "astro:actions";
-import { z } from "astro/zod";
-import { eq } from "drizzle-orm";
-import { organizationMetadata, project } from "../lib/schema.ts";
+import { ActionError } from "astro:actions";
 
-const assertAdmin = async (headers: Headers, auth: Auth) => {
+export const assertAdmin = async (headers: Headers, auth: Auth) => {
 	const session = await auth.api.getSession({ headers });
 
 	if (!session) {
@@ -25,7 +22,7 @@ const assertAdmin = async (headers: Headers, auth: Auth) => {
 	return session;
 };
 
-const assertOrganizationMember = async (
+export const assertOrganizationMember = async (
 	headers: Headers,
 	organizationId: string,
 	auth: Auth,
