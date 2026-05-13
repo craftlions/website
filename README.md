@@ -64,7 +64,9 @@ pn auth info
 pn auth generate
 
 pn drizzle-kit generate
+aubx drizzle-kit generate
 pn drizzle-kit check
+aubx drizzle-kit check
 
 pn drizzle-kit migrate
 ```
