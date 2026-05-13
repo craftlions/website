@@ -69,6 +69,7 @@ pn drizzle-kit check
 aubx drizzle-kit check
 
 pn drizzle-kit migrate
+aubx drizzle-kit migrate
 ```
 
 ```shell

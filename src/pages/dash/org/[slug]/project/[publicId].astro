@@ -5,8 +5,8 @@ export const prerender = false;
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
 import Footer from "../../../../../components/Footer.astro";
-import PhasesTable from "../../../../../components/PhasesTable.astro";
 import Nav from "../../../../../components/Nav.astro";
+import PhasesTable from "../../../../../components/PhasesTable.astro";
 import ProjectInvoices from "../../../../../components/ProjectInvoices.astro";
 import Shell from "../../../../../layouts/Shell.astro";
 
@@ -53,6 +53,7 @@ if (!organization) {
 
 const project = await Astro.locals.db.query.projects.findFirst({
 	columns: {
+		id: true,
 		name: true,
 	},
 	with: {
@@ -90,16 +91,6 @@ const project = await Astro.locals.db.query.projects.findFirst({
 			},
 			orderBy: {
 				dueAt: "asc",
-			},
-		},
-		invoices: {
-			columns: {
-				id: true,
-				invoiceNumber: true,
-				stripePaymentPage: true,
-			},
-			orderBy: {
-				id: "desc",
 			},
 		},
 	},
@@ -202,7 +193,7 @@ const formatEventType = (eventType: string) =>
 					>
 						Invoices
 					</h2>
-					<ProjectInvoices invoices={project.invoices} />
+					<ProjectInvoices id={project.id} />
 				</section>
 
 				<section class="grid gap-4">

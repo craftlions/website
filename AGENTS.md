@@ -8,7 +8,7 @@ Run these commands before making changes:
 mise i
 aube ci
 aubr types
-aubr astro sync
+aubx astro sync
 ```
 
 ## Hard Requirements
