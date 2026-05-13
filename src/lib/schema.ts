@@ -222,6 +222,139 @@ export const apikey = t.pgTable(
  * APPLICATION-SPECIFIC TABLES
  */
 
+export const aggregateType = t.pgEnum("aggregate_type", [
+	"invoice",
+	"milestone",
+	"project",
+]);
+
+export const actorType = t.pgEnum("actor_type", ["user", "organization"]);
+
+export const projectState = t.pgEnum("project_state", [
+	"draft",
+	"active",
+	"completed",
+	"archived",
+]);
+
+export const projects = t.pgTable(
+	"projects",
+	{
+		id: t.uuid("id").default(sql`uuidv7()`),
+		publicId: t.text("public_id").notNull(),
+		organizationId: t.text("organization_id").notNull(),
+		name: t.text("name").notNull(),
+		state: projectState("state"),
+		updatedAt: t
+			.timestamp("updated_at", { withTimezone: true })
+			.$onUpdate(() => new Date()),
+	},
+	(table) => [
+		t.primaryKey({
+			columns: [table.id],
+		}),
+		t.uniqueIndex().on(table.publicId),
+		t
+			.foreignKey({
+				columns: [table.organizationId],
+				foreignColumns: [organization.id],
+			})
+			.onUpdate("cascade")
+			.onDelete("restrict"),
+	],
+);
+
+export const phaseState = t.pgEnum("phase_state", [
+	"submitted",
+	"planned",
+	"approved",
+	"in_progress",
+	"invoiced",
+	"paid",
+	"cancelled",
+]);
+
+export const phases = t.pgTable(
+	"phases",
+	{
+		id: t.uuid("id").default(sql`uuidv7()`),
+		publicId: t.text("public_id").notNull(),
+		projectId: t.uuid("project_id").notNull(),
+		title: t.text("title").notNull(),
+		cost: t
+			.numeric("cost", { precision: 19, scale: 4, mode: "number" })
+			.notNull(),
+		currency: t.char("currency", { length: 3 }).notNull(),
+		state: phaseState("state").notNull(),
+		dueAt: t.timestamp("due_at", { withTimezone: true }),
+		updatedAt: t
+			.timestamp("updated_at", { withTimezone: true })
+			.$onUpdate(() => new Date()),
+	},
+	(table) => [
+		t.primaryKey({
+			columns: [table.id],
+		}),
+		t.uniqueIndex().on(table.publicId),
+		t
+			.foreignKey({
+				columns: [table.projectId],
+				foreignColumns: [projects.id],
+			})
+			.onUpdate("cascade")
+			.onDelete("restrict"),
+	],
+);
+
+export const invoices = t.pgTable(
+	"invoices",
+	{
+		id: t.uuid("id").default(sql`uuidv7()`),
+		publicId: t.text("public_id").notNull(),
+		projectId: t.uuid("project_id").notNull(),
+		invoiceNumber: t.text("invoice_number").notNull(),
+		stripeId: t.text("stripe_id").notNull(),
+		stripePaymentPage: t.text("stripe_payment_page").notNull(),
+		total: t
+			.numeric("total", { precision: 19, scale: 4, mode: "number" })
+			.notNull(),
+		updatedAt: t
+			.timestamp("updated_at", { withTimezone: true })
+			.$onUpdate(() => new Date()),
+	},
+	(table) => [
+		t.primaryKey({
+			columns: [table.id],
+		}),
+		t.uniqueIndex().on(table.publicId),
+		t
+			.foreignKey({
+				columns: [table.projectId],
+				foreignColumns: [projects.id],
+			})
+			.onUpdate("cascade")
+			.onDelete("restrict"),
+	],
+);
+
+export const events = t.pgTable(
+	"events",
+	{
+		id: t.uuid("id").default(sql`uuidv7()`),
+		publicId: t.text("public_id").notNull(),
+		aggregateType: aggregateType("aggregate_type").notNull(),
+		aggregateId: t.uuid("aggregate_id").notNull(),
+		event: t.text("event_type").notNull(),
+		actorType: actorType("actor_type").notNull(),
+		actorId: t.text("actor_id").notNull(),
+	},
+	(table) => [
+		t.primaryKey({
+			columns: [table.id],
+		}),
+	],
+);
+
 export const organizationMetadata = t.pgTable(
 	"organization_metadata",
 	{
@@ -253,18 +386,10 @@ export const organizationMetadataInsertSchema =
 export const organizationMetadataUpdateSchema =
 	createUpdateSchema(organizationMetadata);
 
-export const aggregateType = t.pgEnum("aggregate_type", [
-	"invoice",
-	"milestone",
-	"project",
-]);
-
-export const actorType = t.pgEnum("actor_type", ["user", "organization"]);
-
 export const event = t.pgTable(
 	"event",
 	{
-		id: t.uuid("id").defaultRandom(),
+		id: t.uuid("id").default(sql`uuidv7()`),
 		aggregateType: aggregateType("aggregate_type").notNull(),
 		aggregateId: t.uuid("aggregate_id").notNull(),
 		eventType: t.text("event_type").notNull(),
@@ -288,13 +413,6 @@ export const event = t.pgTable(
 		t.index().on(table.recordedAt),
 	],
 );
-
-const projectState = t.pgEnum("project_state", [
-	"draft",
-	"active",
-	"completed",
-	"archived",
-]);
 
 // we need to define this view with raw sql because we need the explicit column definitions for drizzle relations
 export const project = t
@@ -367,16 +485,6 @@ export const project = t
 
 export type projectSelectType = typeof project.$inferSelect;
 
-const milestoneState = t.pgEnum("milestone_state", [
-	"submitted",
-	"planned",
-	"approved",
-	"in_progress",
-	"invoiced",
-	"paid",
-	"cancelled",
-]);
-
 // we need to define this view with raw sql because we need the explicit column definitions for drizzle relations
 export const milestone = t
 	.pgView("milestone", {
@@ -387,7 +495,7 @@ export const milestone = t
 			.numeric("cost", { precision: 19, scale: 4, mode: "number" })
 			.notNull(),
 		currency: t.char("currency", { length: 3 }).notNull(),
-		state: milestoneState("state").notNull(),
+		state: t.text("state").notNull(),
 		dueAt: t.timestamp("due_at", { withTimezone: true }),
 		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
 	})
