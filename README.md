@@ -26,7 +26,7 @@ aube i
 Update browserlist
 ```shell
 pn update-browserslist-db latest
-aube exec update-browserslist-db latest
+aubx update-browserslist-db latest
 ```
 
 Generate types
