@@ -23,10 +23,10 @@ jobs:
           experimental: true
 
       - name: Install dependencies
-        run: aube ci
+        run: pnpm ci
 
       - name: Build
-        run: aubr build
+        run: pnpm build
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
