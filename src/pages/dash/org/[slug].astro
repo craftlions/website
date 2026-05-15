@@ -187,9 +187,11 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 						Overview
 					</h2>
 					<div
-						class="grid gap-4 border border-dashed border-neutral-300 bg-transparent p-4 dark:border-neutral-700"
+						class="grid gap-4 border border-dashed border-neutral-300 bg-transparent p-4 [row-rule:1px_dashed_var(--color-neutral-300)] [row-rule-visibility-items:between] dark:border-neutral-700 dark:[row-rule-color:var(--color-neutral-700)]"
 					>
-						<dl class="grid gap-4 sm:grid-cols-2">
+						<dl
+							class="grid gap-4 [rule:1px_dashed_var(--color-neutral-300)] [rule-visibility-items:between] dark:[rule-color:var(--color-neutral-700)] sm:grid-cols-2"
+						>
 							<div class="grid gap-1">
 								<dt
 									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
@@ -240,9 +242,7 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 								</dd>
 							</div>
 						</dl>
-						<div
-							class="grid gap-2 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700"
-						>
+						<div class="grid gap-2">
 							<div class="grid grid-cols-[1fr_auto] items-end gap-3 text-sm">
 								<label
 									for="budget-progress"

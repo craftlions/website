@@ -66,7 +66,9 @@ import Shell from "../layouts/Shell.astro";
 				</section>
 			</header>
 
-			<main class="w-full grid content-start min-h-0 max-w-3xl mx-auto gap-12">
+			<main
+				class="w-full grid content-start min-h-0 max-w-3xl mx-auto gap-12 [row-rule:1px_dashed_var(--color-neutral-300)] [row-rule-visibility-items:between] dark:[row-rule-color:var(--color-neutral-700)]"
+			>
 				<section class="grid gap-6">
 					<h2 class="text-2xl font-semibold">
 						Services for steady technical progress
@@ -121,9 +123,7 @@ import Shell from "../layouts/Shell.astro";
 						</Button>
 					</section>
 				</section>
-				<section
-					class="grid gap-6 border-t border-dashed border-neutral-300 pt-6 dark:border-neutral-700"
-				>
+				<section class="grid gap-6">
 					<h2 class="text-2xl font-semibold">Why choose craftlions?</h2>
 					<p class="text-neutral-700 dark:text-neutral-300">
 						Quality is not a finish-line activity. It starts with choosing the
@@ -144,9 +144,7 @@ import Shell from "../layouts/Shell.astro";
 						>
 					</ul>
 				</section>
-				<section
-					class="grid gap-6 border-t border-dashed border-neutral-300 pt-6 dark:border-neutral-700"
-				>
+				<section class="grid gap-6">
 					<h2 class="text-2xl font-semibold">
 						Let's build something better together
 					</h2>
