@@ -21,11 +21,11 @@ jobs:
       - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
         with:
           experimental: true
-      - run: pn i
       - run: |
           echo "=== Verifying installations ==="
           mise --version
           pn --version
+          aube --version
           node --version
           gh --version
           echo "✅ All tools installed successfully"
