@@ -4,19 +4,23 @@ on:
   push:
     branches:
       - "main"
+  pull_request:
+    branches:
+      - "main"
 
 concurrency:
-  group: prod-${{ github.ref }}
+  group: deploy-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   deploy:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     name: Deploy to Production
     permissions:
       contents: read
     env:
-      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID}}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -26,3 +30,146 @@ jobs:
       - run: aube ci
       - run: aube build
       - run: aubr wrangler deploy
+
+  preview:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    name: Deploy Pull Request Preview
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      PREVIEW_MESSAGE: "Pull request #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+      PREVIEW_NAME: pr-${{ github.event.pull_request.number }}
+      PREVIEW_TAG: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+        with:
+          experimental: true
+      - run: aube ci
+      - run: aube build
+      - name: Deploy Preview
+        id: preview
+        run: |
+          set -o pipefail
+          aubr wrangler preview \
+            --name "$PREVIEW_NAME" \
+            --tag "$PREVIEW_TAG" \
+            --message "$PREVIEW_MESSAGE" \
+            --json | tee preview.json
+          node <<'NODE'
+          const { appendFileSync, readFileSync } = require("node:fs");
+
+          const findJsonEnd = (text, start) => {
+            const expected = [text[start] === "{" ? "}" : "]"];
+            let escaped = false;
+            let inString = false;
+
+            for (let index = start + 1; index < text.length; index++) {
+              if (inString) {
+                if (escaped) {
+                  escaped = false;
+                } else if (text[index] === "\\") {
+                  escaped = true;
+                } else if (text[index] === '"') {
+                  inString = false;
+                }
+
+                continue;
+              }
+
+              if (text[index] === '"') {
+                inString = true;
+              } else if (text[index] === "{") {
+                expected.push("}");
+              } else if (text[index] === "[") {
+                expected.push("]");
+              } else if (text[index] === expected.at(-1)) {
+                expected.pop();
+
+                if (expected.length === 0) {
+                  return index + 1;
+                }
+              } else if (text[index] === "}" || text[index] === "]") {
+                return undefined;
+              }
+            }
+          };
+
+          const parseWranglerJson = (text) => {
+            try {
+              return JSON.parse(text);
+            } catch {}
+
+            for (let start = 0; start < text.length; start++) {
+              if (text[start] !== "{" && text[start] !== "[") {
+                continue;
+              }
+
+              const end = findJsonEnd(text, start);
+
+              if (!end) {
+                continue;
+              }
+
+              try {
+                return JSON.parse(text.slice(start, end));
+              } catch {}
+            }
+
+            throw new Error("Could not find JSON in Wrangler preview output.");
+          };
+
+          const findUrl = (value) => {
+            if (typeof value === "string") {
+              return value;
+            }
+
+            if (Array.isArray(value)) {
+              return value.map(findUrl).find(Boolean);
+            }
+
+            if (value && typeof value === "object") {
+              if (typeof value.url === "string") {
+                return value.url;
+              }
+
+              if (typeof value.href === "string") {
+                return value.href;
+              }
+
+              return Object.values(value).map(findUrl).find(Boolean);
+            }
+          };
+
+          const output = parseWranglerJson(readFileSync("preview.json", "utf8"));
+          const previewUrl = findUrl(output.preview?.urls);
+          const deploymentUrl = findUrl(output.deployment?.urls);
+
+          appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            [
+              previewUrl ? `preview_url=${previewUrl}` : undefined,
+              deploymentUrl ? `deployment_url=${deploymentUrl}` : undefined,
+            ]
+              .filter(Boolean)
+              .join("\n") + "\n",
+          );
+
+          appendFileSync(
+            process.env.GITHUB_STEP_SUMMARY,
+            [
+              "## Pull Request Preview",
+              "",
+              previewUrl ? `Preview URL: ${previewUrl}` : "Preview URL: unavailable in Wrangler output",
+              deploymentUrl
+                ? `Deployment URL: ${deploymentUrl}`
+                : "Deployment URL: unavailable in Wrangler output",
+              "",
+            ].join("\n"),
+          );
+          NODE
