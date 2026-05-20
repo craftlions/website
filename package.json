@@ -38,7 +38,7 @@
     "drizzle-kit": "1.0.0-rc.2-e38a2ba",
     "drizzle-orm": "1.0.0-rc.2-e38a2ba",
     "lightningcss": "1.32.0",
-    "pg": "8.20.0",
+    "pg": "8.21.0",
     "tailwindcss": "4.3.0",
     "update-browserslist-db": "1.2.3",
     "vite": "8.0.13",
