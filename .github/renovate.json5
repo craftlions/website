@@ -14,9 +14,7 @@
 		":maintainLockFilesWeekly",
 		":semanticCommitsDisabled"
 	],
-	"ignorePresets": ["security:minimumReleaseAgeNpm"],
 	"osvVulnerabilityAlerts": true,
-  "postUpdateOptions": ["pnpmDedupe"],
 	"packageRules": [
     {
       "matchPackageNames": ["better-auth", "@better-auth/**", "auth"],
@@ -31,4 +29,6 @@
       "groupName": "Cloudflare"
     }
   ],
+  "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict",
 }

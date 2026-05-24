@@ -3,7 +3,7 @@ allowBuilds:
   lefthook: true
   sharp: true
   workerd: true
-minimumReleaseAge: 0 # 4320 minutes
+minimumReleaseAge: 10080
 shellEmulator: true
 paranoid: true
 jailBuilds: true
@@ -15,4 +15,3 @@ advisoryCheckOnInstall: required
 advisoryCheckEveryInstall: true
 strictDepBuilds: true
 blockExoticSubdeps: true
-# securityScanner: "@socketsecurity/bun-security-scanner"
