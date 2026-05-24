@@ -13,14 +13,15 @@
 
 Install all dev tools
 ```shell
+mise upgrade --local --bump --interactive
 mise i
 ```
 
-Install all deps if not done by `mise`
+Install all deps if not done by `mise` add `sfw` beforehand
 ```shell
 pn i
-aube ci
-aube i
+sfw aube ci
+sfw aube i
 ```
 
 Update browserlist
@@ -85,6 +86,13 @@ git push
 
 git push origin --delete $1
 git branch -d $1
+```
+
+```shell
+zizmor .
+actionlint
+aubx ci-doctor
+aubx gha-budget
 ```
 
 NOTES
