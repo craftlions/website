@@ -1,6 +1,6 @@
 [tools]
 aube = "1.15.0"
-"npm:pnpm" = "11.2.2"
+"npm:pnpm" = "11.3.0"
 
 #[hooks]
 #postinstall = "pn install"
