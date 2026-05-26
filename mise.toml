@@ -1,5 +1,5 @@
 [tools]
-aube = "1.15.0"
+aube = "1.16.0"
 node = "26.2.0"
 "npm:sfw" = "latest"
 "aqua:zizmorcore/zizmor" = "1.25.2"
