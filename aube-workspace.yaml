@@ -3,7 +3,7 @@ allowBuilds:
   lefthook: true
   sharp: true
   workerd: true
-minimumReleaseAge: 10080
+minimumReleaseAge: 4320
 shellEmulator: true
 paranoid: true
 jailBuilds: true
