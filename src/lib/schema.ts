@@ -290,6 +290,7 @@ export const phases = t.pgTable(
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
 			.$onUpdate(() => new Date()),
+		externalUrl: t.text("external_url"),
 	},
 	(table) => [
 		t.primaryKey({
