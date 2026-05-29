@@ -13,7 +13,7 @@
 
 Install all dev tools
 ```shell
-mise upgrade --local --bump --interactive
+mise upgrade --interactive --bump --local
 mise i
 ```
 

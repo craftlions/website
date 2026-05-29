@@ -1,7 +1,6 @@
 ---
 export const prerender = false;
 
-// import { Octokit } from "@octokit/rest";
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
 import Footer from "../../../../../components/Footer.astro";
@@ -57,17 +56,6 @@ const project = await Astro.locals.db.query.projects.findFirst({
 		name: true,
 	},
 	with: {
-		events: {
-			columns: {
-				id: true,
-				publicId: true,
-				aggregateType: true,
-				event: true,
-			},
-			orderBy: {
-				id: "desc",
-			},
-		},
 		phases: {
 			columns: {
 				title: true,
@@ -75,20 +63,9 @@ const project = await Astro.locals.db.query.projects.findFirst({
 				cost: true,
 				currency: true,
 				state: true,
+				externalUrl: true,
 			},
-			with: {
-				events: {
-					columns: {
-						id: true,
-						publicId: true,
-						aggregateType: true,
-						event: true,
-					},
-					orderBy: {
-						id: "desc",
-					},
-				},
-			},
+			with: {},
 			orderBy: {
 				dueAt: "asc",
 			},
@@ -103,49 +80,6 @@ const project = await Astro.locals.db.query.projects.findFirst({
 if (!project) {
 	return Astro.redirect(`/dash/org/${slug}`);
 }
-
-const events = [
-	...project.events,
-	...project.phases.flatMap((phase) => phase.events),
-].toSorted((a, b) => b.id.localeCompare(a.id));
-
-const formatEventType = (eventType: string) =>
-	eventType
-		.split(".")
-		.pop()
-		?.replaceAll("_", " ")
-		.replace(/\b\w/g, (c) => c.toUpperCase()) ?? eventType;
-
-// let githubIssue = null;
-// let githubIssueError = "";
-
-// try {
-// 	const githubAccess = await Astro.locals.auth.api.getAccessToken({
-// 		body: {
-// 			providerId: "github",
-// 		},
-// 		headers: Astro.request.headers,
-// 	});
-
-// 	if (githubAccess.accessToken) {
-// 		const response = await new Octokit({
-// 			auth: githubAccess.accessToken,
-// 		}).rest.issues.get({
-// 			owner: "frickegroup",
-// 			repo: "orga",
-// 			issue_number: 2186,
-// 			headers: {
-// 				accept: "application/vnd.github.full+json",
-// 			},
-// 		});
-
-// 		githubIssue = response.data;
-// 	} else {
-// 		githubIssueError = "Link a GitHub account to view the project issue.";
-// 	}
-// } catch {
-// 	githubIssueError = "Unable to load the project issue from GitHub.";
-// }
 ---
 
 <Shell>
@@ -194,46 +128,6 @@ const formatEventType = (eventType: string) =>
 						Invoices
 					</h2>
 					<ProjectInvoices id={project.id} />
-				</section>
-
-				<section class="grid gap-4">
-					<h2
-						id="event-log"
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>
-						Event Log
-					</h2>
-					{events.length > 0 ? (
-						<ol class="grid" aria-label="Project event log">
-							{events.map((ev, i) => (
-								<li class="grid grid-cols-[1rem_1fr] gap-x-3">
-									<div class="grid grid-rows-[auto_1fr] justify-items-center" aria-hidden="true">
-										<span class="mt-2.5 h-1.5 w-1.5 shrink-0 border border-neutral-400 bg-transparent dark:border-neutral-500" />
-										{i < events.length - 1 && (
-											<span class="border-l border-dashed border-neutral-300 dark:border-neutral-700" />
-										)}
-									</div>
-									<div class="grid gap-1 pb-5">
-											<div class="grid grid-cols-[1fr_auto] items-center gap-2">
-												<p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-													{formatEventType(ev.event)}
-												</p>
-												<span class="inline-grid w-max place-items-center whitespace-nowrap border border-dashed border-neutral-300 bg-transparent px-2 py-0.5 text-xs/none font-semibold capitalize text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-													{ev.aggregateType}
-												</span>
-											</div>
-											<p class="text-xs text-neutral-500 dark:text-neutral-400">
-												{ev.publicId}
-											</p>
-										</div>
-									</li>
-								))}
-						</ol>
-					) : (
-						<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
-							No events have been recorded yet.
-						</p>
-					)}
 				</section>
 			</main>
 			<Footer />
