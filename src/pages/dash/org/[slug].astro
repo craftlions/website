@@ -100,6 +100,9 @@ const projects =
 				? project.phases.reduce((total, phase) => total + phase.cost, 0)
 				: null,
 	})) ?? [];
+const completedProjectCount = projects.filter(
+	(project) => project.state === "completed",
+).length;
 const totalInvoicedAmount =
 	organizationData?.projects
 		.flatMap((project) => project.invoices)
@@ -304,14 +307,27 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 
 				<section
 					aria-labelledby="projects-list-heading"
-					class="grid content-start gap-3"
+					class="group grid content-start gap-3"
 				>
-					<h2
-						id="projects-list-heading"
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>
-						Projects
-					</h2>
+					<div class="grid grid-cols-[1fr_auto] items-center gap-3">
+						<h2
+							id="projects-list-heading"
+							class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+						>
+							Projects
+						</h2>
+						{completedProjectCount > 0 && (
+							<label
+								class="grid cursor-pointer grid-flow-col items-center gap-2 text-sm text-neutral-600 select-none dark:text-neutral-400"
+							>
+								<input
+									type="checkbox"
+									class="size-4 cursor-pointer appearance-none border border-dashed border-neutral-400 bg-transparent checked:bg-neutral-900 checked:bg-[length:0.75rem] checked:bg-center checked:bg-no-repeat focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')] dark:border-neutral-600 dark:checked:bg-neutral-100 dark:focus-visible:outline-neutral-300 dark:checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')]"
+								/>
+								<span>Hide completed</span>
+							</label>
+						)}
+					</div>
 					<table
 						class="w-full text-sm border border-dashed border-neutral-300 dark:border-neutral-700"
 					>
@@ -336,7 +352,12 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 						>
 							{projects.length > 0 ? (
 									projects.map((project) => (
-										<tr>
+										<tr
+											class:list={[
+												project.state === "completed" &&
+													"opacity-55 group-has-[:checked]:hidden",
+											]}
+										>
 											<th scope="row" class="px-4 py-3 text-left font-medium">
 												{project.name}
 											</th>
@@ -366,6 +387,16 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 											class="px-4 py-6 text-center text-neutral-600 dark:text-neutral-400"
 										>
 											No projects yet.
+										</td>
+									</tr>
+								)}
+							{projects.length > 0 && completedProjectCount === projects.length && (
+									<tr class="hidden group-has-[:checked]:table-row">
+										<td
+											colspan="4"
+											class="px-4 py-6 text-center text-neutral-600 dark:text-neutral-400"
+										>
+											All projects are completed and currently hidden.
 										</td>
 									</tr>
 								)}
