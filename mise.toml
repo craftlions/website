@@ -1,6 +1,6 @@
 [tools]
 aube = "v1.17.1"
-node = "26.2.0"
+node = "26.3.0"
 "npm:sfw" = "latest"
 "aqua:zizmorcore/zizmor" = "1.25.2"
 "aqua:rhysd/actionlint" = "1.7.12"
