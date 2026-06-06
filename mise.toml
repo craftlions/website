@@ -1,13 +1,10 @@
 [tools]
-aube = "v1.17.1"
-node = "26.3.0"
-"npm:sfw" = "latest"
+"github:endevco/aube" = "v1.17.1"
+"core:node" = "26.3.0"
+"npm:sfw" = "2.0.6"
 "aqua:zizmorcore/zizmor" = "1.25.2"
 "aqua:rhysd/actionlint" = "1.7.12"
 "aqua:koalaman/shellcheck" = "0.11.0"
-
-#[hooks]
-#postinstall = "pn install"
 
 [settings]
 experimental = true

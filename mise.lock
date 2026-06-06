@@ -185,6 +185,10 @@ url = "https://github.com/endevco/aube/releases/download/v1.17.1/aube-v1.17.1-x8
 url_api = "https://api.github.com/repos/endevco/aube/releases/assets/434660591"
 provenance = "github-attestations"
 
+[[tools."github:endevco/aube"]]
+version = "1.17.1"
+backend = "github:endevco/aube"
+
 [[tools."github:zizmorcore/zizmor"]]
 version = "1.25.2"
 backend = "github:zizmorcore/zizmor"
