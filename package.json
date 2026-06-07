@@ -23,7 +23,7 @@
     "@better-auth/drizzle-adapter": "1.6.13",
     "@better-auth/infra": "0.2.11",
     "@biomejs/biome": "2.4.16",
-    "@cloudflare/vite-plugin": "1.39.0",
+    "@cloudflare/vite-plugin": "1.40.0",
     "@octokit/request": "10.0.8",
     "@octokit/rest": "22.0.1",
     "@socketsecurity/bun-security-scanner": "1.1.2",
