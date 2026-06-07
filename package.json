@@ -42,7 +42,7 @@
     "tailwindcss": "4.3.0",
     "update-browserslist-db": "1.2.3",
     "vite": "8.0.14",
-    "wrangler": "4.95.0"
+    "wrangler": "4.97.0"
   },
   "overrides": {
     "lodash": "4.18.1",
