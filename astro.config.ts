@@ -15,10 +15,6 @@ export default defineConfig({
 	experimental: {
 		clientPrerender: true,
 		contentIntellisense: true,
-		queuedRendering: {
-			enabled: true,
-			contentCache: true,
-		},
 	},
 	prefetch: {
 		defaultStrategy: "hover",
