@@ -37,7 +37,7 @@ time:
   jiti@2.7.0: 2026-05-05T21:02:47.918Z
   lightningcss@1.32.0: 2026-03-09T04:23:43.754Z
   pg@8.21.0: 2026-05-18T12:00:19.852Z
-  tailwindcss@4.3.0: 2026-05-08T20:25:26.174Z
+  tailwindcss@4.3.1: 2026-06-12T17:59:19.225Z
   typescript@6.0.3: 2026-04-16T23:38:27.905Z
   update-browserslist-db@1.2.3: 2025-12-16T15:17:57.962Z
   yaml@2.9.0: 2026-05-11T10:16:24.045Z
@@ -148,8 +148,8 @@ importers:
         specifier: 8.21.0
         version: 8.21.0
       tailwindcss:
-        specifier: 4.3.0
-        version: 4.3.0
+        specifier: 4.3.1
+        version: 4.3.1
       update-browserslist-db:
         specifier: 1.2.3
         version: 1.2.3(browserslist@4.28.2)
@@ -2896,6 +2896,9 @@ packages:
 
   tailwindcss@4.3.0:
     resolution: {integrity: sha512-y6nxMGB1nMW9R6k96e5gdIFzcfL/gTJRNaqGes1YvkLnPVXzWgbqFF2yLC0T8G774n24cx3Pe8XrKoniCOAH+Q==}
+
+  tailwindcss@4.3.1:
+    resolution: {integrity: sha512-hk+TB1m+K8CYNrP6rjQaq/Y+4Zylwpa87mLYBKCunwnnQ9p+fHb7kmSfGqyEJoxF/O6CDyABWVFEafNSYKll+Q==}
 
   tapable@2.3.3:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
@@ -5793,6 +5796,8 @@ snapshots:
       sax: 1.6.0
 
   tailwindcss@4.3.0: {}
+
+  tailwindcss@4.3.1: {}
 
   tapable@2.3.3: {}
 
