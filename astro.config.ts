@@ -1,4 +1,6 @@
 import cloudflare from "@astrojs/cloudflare";
+// import { cacheCloudflare } from "@astrojs/cloudflare/cache";
+import { satteri } from "@astrojs/markdown-satteri";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
@@ -11,7 +13,10 @@ export default defineConfig({
 	adapter: cloudflare({
 		imageService: { build: "compile", runtime: "cloudflare-binding" },
 	}),
-	compressHTML: false,
+	// cache: {
+	// 	provider: cacheCloudflare(),
+	// },
+	compressHTML: "jsx",
 	experimental: {
 		clientPrerender: true,
 		contentIntellisense: true,
@@ -22,6 +27,14 @@ export default defineConfig({
 	integrations: [sitemap()],
 	devToolbar: {
 		enabled: false,
+	},
+	markdown: {
+		processor: satteri({
+			features: {
+				frontmatter: true,
+				gfm: true,
+			},
+		}),
 	},
 	vite: {
 		css: {
