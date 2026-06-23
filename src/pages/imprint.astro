@@ -19,63 +19,117 @@ import Shell from "../layouts/Shell.astro";
 			<main
 				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
 			>
-				<h1
-					class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
-				>
-					Impressum
-				</h1>
+				<div class="grid gap-4">
+					<h1
+						class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+					>
+						Impressum
+					</h1>
+					<p
+						class="max-w-[65ch] text-sm leading-6 text-neutral-700 dark:text-neutral-300"
+					>
+						Diese Seite enthält die gesetzlich vorgeschriebenen Angaben zur
+						Betreiberin der Website und die wichtigsten Kontaktinformationen.
+					</p>
+					<div
+						class="grid gap-2 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+					>
+						<p class="text-sm font-semibold">Fragen zur Website?</p>
+						<p class="text-sm leading-6 text-neutral-700 dark:text-neutral-300">
+							Schreiben Sie mir direkt an&nbsp;
+							<a
+								href="mailto:alexander@craftlions.com"
+								class="text-sky-700 underline decoration-dashed underline-offset-4 dark:text-sky-300"
+							>
+								alexander@craftlions.com
+							</a>
+						</p>
+					</div>
+				</div>
 				<section class="grid gap-4">
 					<article
-						class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+						class="grid gap-4 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
 					>
-						<h2 class="text-xl font-semibold">Angaben gemäß § 5 TMG:</h2>
-						<p>craftlions UG (haftungsbeschränkt)</p>
-						<h3 class="font-semibold">Postanschrift:</h3>
-						<p>
-							Amandus-Voigt-Str. 8<br>
-							23617 Stockelsdorf
-						</p>
-						<h3 class="font-semibold">Kontakt:</h3>
-						<p>
-							Telefon:<br>
-							E-Mail: alexander@craftlions.com
-						</p>
-						<h3 class="font-semibold">Vertreten durch:</h3>
-						<p>Geschäftsführer: Alexander Niebuhr</p>
+						<div class="grid gap-1">
+							<h2 class="text-xl font-semibold">Angaben gemäß § 5 TMG</h2>
+							<p class="text-sm text-neutral-700 dark:text-neutral-300">
+								craftlions UG (haftungsbeschränkt)
+							</p>
+						</div>
+						<dl
+							class="grid gap-3 text-sm text-neutral-700 dark:text-neutral-300"
+						>
+							<div class="grid gap-1">
+								<dt class="font-semibold text-neutral-950 dark:text-neutral-50">
+									Postanschrift
+								</dt>
+								<dd class="not-italic">
+									<address class="not-italic">
+										Amandus-Voigt-Str. 8<br>
+										23617 Stockelsdorf
+									</address>
+								</dd>
+							</div>
+							<div class="grid gap-1">
+								<dt class="font-semibold text-neutral-950 dark:text-neutral-50">
+									Kontakt
+								</dt>
+								<dd class="grid gap-1 not-italic">
+									<span>Telefon: auf Anfrage</span>
+									<a
+										href="mailto:alexander@craftlions.com"
+										class="text-sky-700 underline decoration-dashed underline-offset-4 dark:text-sky-300"
+									>
+										alexander@craftlions.com
+									</a>
+								</dd>
+							</div>
+							<div class="grid gap-1">
+								<dt class="font-semibold text-neutral-950 dark:text-neutral-50">
+									Vertreten durch
+								</dt>
+								<dd class="not-italic">Geschäftsführer: Alexander Niebuhr</dd>
+							</div>
+						</dl>
 					</article>
 					<article
 						class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
 					>
-						<h2 class="text-xl font-semibold">Hinweise zur Website</h2>
-						<h3 class="font-semibold">
-							Verantwortlich für journalistisch-redaktionelle Inhalte ist:
-						</h3>
-						<p> Alexander Niebuhr, Amandus-Voigt-Str. 8, 23617 Stockelsdorf </p>
+						<h2 class="text-xl font-semibold">
+							Verantwortlich für journalistisch-redaktionelle Inhalte
+						</h2>
+						<p class="text-sm leading-6 text-neutral-700 dark:text-neutral-300">
+							Alexander Niebuhr, Amandus-Voigt-Str. 8, 23617 Stockelsdorf
+						</p>
 					</article>
 					<article
 						class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
 					>
 						<h2 class="text-xl font-semibold">Information gemäß § 36 VSBG</h2>
-						<p>
+						<p class="text-sm leading-6 text-neutral-700 dark:text-neutral-300">
 							Gemäß § 36 VSBG (Verbraucherstreitbeilegungsgesetz – Gesetz über
 							die alternative Streitbeilegung in Verbrauchersachen) erklärt der
 							Betreiber dieser Website:
 						</p>
-						<p>
+						<p class="text-sm leading-6 text-neutral-700 dark:text-neutral-300">
 							Wir sind bereit, an Streitbeilegungsverfahren bei der folgenden
-							Verbraucherschlichtungsstelle teilzunehmen:
+							Verbraucherschlichtungsstelle teilzunehmen.
 						</p>
-						<h2 class="text-xl font-semibold">Hinweis</h2>
-						<p>
-							Die Plattform der EU zur außergerichtlichen Streitbeilegung finden
-							Sie online unter:
+						<div class="grid gap-2">
+							<h3 class="font-semibold">EU-Streitbeilegung</h3>
+							<p
+								class="text-sm leading-6 text-neutral-700 dark:text-neutral-300"
+							>
+								Die Plattform der EU zur außergerichtlichen Streitbeilegung
+								finden Sie online unter:
+							</p>
 							<a
 								href="https://ec.europa.eu/consumers/odr/"
-								class="text-sky-700 underline decoration-dashed underline-offset-4 dark:text-sky-300"
+								class="text-sm text-sky-700 underline decoration-dashed underline-offset-4 dark:text-sky-300"
 							>
 								https://ec.europa.eu/consumers/odr/
 							</a>
-						</p>
+						</div>
 					</article>
 				</section>
 			</main>
