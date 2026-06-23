@@ -6,13 +6,21 @@ import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
 import Shell from "../layouts/Shell.astro";
 
-const entries = [
+const entries: {
+	date: string;
+	datetime: string;
+	title: string;
+	kind: "New" | "Improved" | "Fixed";
+	summary: string;
+	points?: string[];
+}[] = [
 	{
 		date: "June 3, 2026",
 		datetime: "2026-06-03",
 		title: "Completed projects",
+		kind: "Improved",
 		summary:
-			"The latest website update makes completed projects easier to set aside, keeping the focus on active work without losing the full history.",
+			"Keep the project list focused on active work — completed projects can be set aside without losing their history.",
 		points: [
 			"Completed projects appear dimmed in the organization project list.",
 			"A new toggle hides completed projects from the list.",
@@ -22,23 +30,26 @@ const entries = [
 		date: "April 30, 2026",
 		datetime: "2026-04-30",
 		title: "Budgets",
+		kind: "New",
 		summary:
-			"The latest website update introduces budget tracking, allowing better visibility into costs and remaining budget.",
+			"Track costs against a set budget, with remaining budget visible at a glance.",
 	},
 	{
 		date: "April 29, 2026",
 		datetime: "2026-04-29",
 		title: "Phases",
+		kind: "New",
 		summary:
-			"The latest website update introduces phase tracking for projects, allowing better visibility into project progress and associated costs.",
+			"Follow project progress by phase, including the costs tied to each stage.",
 		points: ["Organization and project pages can show related phases."],
 	},
 	{
 		date: "April 28, 2026",
 		datetime: "2026-04-28",
 		title: "Invoices",
+		kind: "New",
 		summary:
-			"The latest website update introduces invoice visibility for customer workspaces, making billing details easier to review alongside organizations and projects.",
+			"Billing is easier to verify, with invoice history now visible in client workspaces.",
 		points: ["Organization and project pages can show related invoices."],
 	},
 ];
@@ -49,7 +60,7 @@ const entries = [
 		<title>craftlions | Changelog</title>
 		<meta
 			name="description"
-			content="Follow the latest craftlions website updates, product improvements, and platform changes."
+			content="Review the latest craftlions website updates, product improvements, and platform changes."
 		>
 		<meta property="og:title" content="craftlions | Changelog">
 		<meta
@@ -66,34 +77,30 @@ const entries = [
 				<Nav deferSessionLinks />
 			</header>
 
-			<main
-				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-8"
-			>
+			<main class="w-full grid content-start min-h-0 max-w-3xl mx-auto gap-8">
 				<section class="grid gap-4">
-					<p
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>
-						Website updates
-					</p>
 					<h1
-						class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+						class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight text-balance dark:border-neutral-600"
 					>
 						Changelog
 					</h1>
 					<p class="max-w-2xl text-neutral-700 dark:text-neutral-300">
-						A concise timeline of improvements, fixes, and visible product
-						updates across the craftlions website.
+						A timeline of improvements, fixes, and visible updates to the
+						craftlions website.
 					</p>
 				</section>
 
-				<ol class="grid gap-4" aria-label="Website update timeline">
-					{entries.map((entry) => (
+				<ol class="grid" aria-label="Website update timeline">
+					{entries.map((entry, index) => (
 							<ChangelogEntry
 								date={entry.date}
 								datetime={entry.datetime}
 								title={entry.title}
+								kind={entry.kind}
 								summary={entry.summary}
 								points={entry.points ?? []}
+								first={index === 0}
+								last={index === entries.length - 1}
 							/>
 						))}
 				</ol>
