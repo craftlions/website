@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-23T17:34:58Z",
+  "title": "Design System: craftlions website",
+  "extensions": {
+    "colorMeta": {
+      "paper-neutral": {
+        "role": "neutral",
+        "displayName": "Paper Neutral",
+        "canonical": "#fafafa",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#f5f5f5",
+          "#fafafa"
+        ]
+      },
+      "ink-neutral": {
+        "role": "neutral",
+        "displayName": "Ink Neutral",
+        "canonical": "#0a0a0a",
+        "tonalRamp": [
+          "#0a0a0a",
+          "#171717",
+          "#262626",
+          "#404040",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#fafafa"
+        ]
+      },
+      "dashed-line": {
+        "role": "neutral",
+        "displayName": "Dashed Line",
+        "canonical": "#d4d4d4",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#737373",
+          "#a3a3a3",
+          "#d4d4d4",
+          "#e5e5e5",
+          "#f5f5f5"
+        ]
+      },
+      "link-blue": {
+        "role": "secondary",
+        "displayName": "Link Blue",
+        "canonical": "#0369a1",
+        "tonalRamp": [
+          "#082f49",
+          "#0c4a6e",
+          "#075985",
+          "#0369a1",
+          "#0284c7",
+          "#38bdf8",
+          "#7dd3fc",
+          "#e0f2fe"
+        ]
+      },
+      "status-success": {
+        "role": "tertiary",
+        "displayName": "Status Green",
+        "canonical": "#047857",
+        "tonalRamp": [
+          "#022c22",
+          "#064e3b",
+          "#065f46",
+          "#047857",
+          "#059669",
+          "#34d399",
+          "#a7f3d0",
+          "#ecfdf5"
+        ]
+      },
+      "status-error": {
+        "role": "tertiary",
+        "displayName": "Status Red",
+        "canonical": "#b91c1c",
+        "tonalRamp": [
+          "#450a0a",
+          "#7f1d1d",
+          "#991b1b",
+          "#b91c1c",
+          "#dc2626",
+          "#f87171",
+          "#fca5a5",
+          "#fef2f2"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page h1 headings with a dashed left rule."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Major public-page sections."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Article titles, card headings, and compact section titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Readable prose and explanatory text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, badges, form labels, table headers, and metadata."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "state-colors",
+        "value": "transition-colors",
+        "purpose": "Default transition for hover and focus color changes."
+      },
+      {
+        "name": "view-transition-safe",
+        "value": "@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }",
+        "purpose": "Document-level navigation transitions only when the user has not requested reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button-default",
+      "description": "Compact line-drawn action used for links and form buttons.",
+      "html": "<button class=\"ds-button-default\">Details</button>",
+      "css": ".ds-button-default { display: inline-grid; grid-auto-flow: column; align-items: center; justify-content: center; gap: 8px; width: max-content; cursor: pointer; border: 1px dashed #d4d4d4; background: transparent; color: #171717; padding: 4px 12px; font: 500 14px/1.25 ui-sans-serif, system-ui, sans-serif; border-radius: 0; transition: border-color 150ms, background-color 150ms, color 150ms; } .ds-button-default:hover { border-color: #737373; background: #f5f5f5; } .ds-button-default:focus-visible { outline: 2px solid #404040; outline-offset: 2px; } .ds-button-default:disabled { cursor: not-allowed; opacity: 0.5; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Transparent dashed field for authentication and settings forms.",
+      "html": "<label class=\"ds-field\"><span>Email address</span><input class=\"ds-input\" placeholder=\"you@example.com\" /></label>",
+      "css": ".ds-field { display: grid; gap: 6px; color: #404040; font: 600 14px/1.25 ui-sans-serif, system-ui, sans-serif; } .ds-input { border: 1px dashed #d4d4d4; background: transparent; color: #0a0a0a; padding: 8px 12px; font: 400 14px/1.5 ui-sans-serif, system-ui, sans-serif; border-radius: 0; outline: none; transition: border-color 150ms; } .ds-input::placeholder { color: #737373; } .ds-input:focus { border-color: #525252; }"
+    },
+    {
+      "name": "Info Badge",
+      "kind": "chip",
+      "refersTo": "badge-info",
+      "description": "Transparent status label for informational states.",
+      "html": "<span class=\"ds-badge-info\">active</span>",
+      "css": ".ds-badge-info { display: inline-grid; place-items: center; width: max-content; white-space: nowrap; border: 1px dashed #7dd3fc; background: transparent; color: #0369a1; padding: 4px 10px; font: 600 12px/1 ui-sans-serif, system-ui, sans-serif; text-transform: capitalize; border-radius: 0; }"
+    },
+    {
+      "name": "Success Badge",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Transparent status label for completed, paid, or successful states.",
+      "html": "<span class=\"ds-badge-success\">paid</span>",
+      "css": ".ds-badge-success { display: inline-grid; place-items: center; width: max-content; white-space: nowrap; border: 1px dashed #34d399; background: transparent; color: #047857; padding: 4px 10px; font: 600 12px/1 ui-sans-serif, system-ui, sans-serif; text-transform: capitalize; border-radius: 0; }"
+    },
+    {
+      "name": "Error Badge",
+      "kind": "chip",
+      "refersTo": "badge-error",
+      "description": "Transparent status label for cancelled, failed, or budget-risk states.",
+      "html": "<span class=\"ds-badge-error\">cancelled</span>",
+      "css": ".ds-badge-error { display: inline-grid; place-items: center; width: max-content; white-space: nowrap; border: 1px dashed #f87171; background: transparent; color: #b91c1c; padding: 4px 10px; font: 600 12px/1 ui-sans-serif, system-ui, sans-serif; text-transform: capitalize; border-radius: 0; }"
+    },
+    {
+      "name": "Line Panel",
+      "kind": "card",
+      "refersTo": "line-panel",
+      "description": "Flat dashed container for metrics, empty states, and legal blocks.",
+      "html": "<section class=\"ds-line-panel\"><h2>Overview</h2><p>Project data stays grouped without adding visual weight.</p></section>",
+      "css": ".ds-line-panel { display: grid; gap: 12px; border: 1px dashed #d4d4d4; background: transparent; color: #0a0a0a; padding: 16px; border-radius: 0; box-shadow: none; font-family: ui-sans-serif, system-ui, sans-serif; } .ds-line-panel h2 { margin: 0; font-size: 14px; line-height: 1.25; font-weight: 600; color: #737373; text-transform: uppercase; } .ds-line-panel p { margin: 0; color: #404040; font-size: 14px; line-height: 1.5; }"
+    },
+    {
+      "name": "Data Table",
+      "kind": "custom",
+      "refersTo": "data-table",
+      "description": "Dashed table shell for project, phase, and invoice data.",
+      "html": "<div class=\"ds-table-wrap\"><table class=\"ds-table\"><thead><tr><th>Name</th><th>Status</th><th class=\"ds-num\">Total Cost</th></tr></thead><tbody><tr><td>Website</td><td>active</td><td class=\"ds-num\">1.200,00 EUR</td></tr></tbody></table></div>",
+      "css": ".ds-table-wrap { overflow-x: auto; border: 1px dashed #d4d4d4; background: transparent; } .ds-table { width: 100%; min-width: 560px; border-collapse: collapse; text-align: left; font: 400 14px/1.5 ui-sans-serif, system-ui, sans-serif; color: #0a0a0a; } .ds-table th { padding: 12px 16px; border-bottom: 1px dashed #d4d4d4; color: #737373; font-size: 12px; line-height: 1.25; font-weight: 600; text-transform: uppercase; } .ds-table td { padding: 12px 16px; border-bottom: 1px dashed #d4d4d4; color: #404040; } .ds-table tr:last-child td { border-bottom: 0; } .ds-table tbody tr:hover { background: #f5f5f5; } .ds-table .ds-num { text-align: right; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Primary Navigation",
+      "kind": "nav",
+      "refersTo": "primary-nav",
+      "description": "Responsive grid navigation with compact session links.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Primary\"><a class=\"ds-logo\" href=\"/\">craftlions</a><ul><li><a href=\"/dash\">Dashboard</a></li><li><a href=\"/login\">Login</a></li></ul></nav>",
+      "css": ".ds-nav { display: grid; width: 100%; grid-template-columns: auto 1fr; align-items: center; gap: 16px; padding: 16px 0; font-family: ui-sans-serif, system-ui, sans-serif; } .ds-logo { color: #0a0a0a; font-weight: 600; text-decoration: none; } .ds-nav ul { display: grid; grid-auto-flow: column; grid-auto-columns: max-content; justify-self: end; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none; overflow-x: auto; } .ds-nav a { color: #0a0a0a; font-size: 14px; text-decoration: none; } .ds-nav a:hover { text-decoration: underline; text-decoration-style: dashed; text-underline-offset: 4px; } @media (max-width: 639px) { .ds-nav { grid-template-columns: 1fr; justify-items: center; } .ds-nav ul { justify-self: center; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Technical Ledger",
+    "overview": "The craftlions interface should feel like a careful technical ledger: plain, exact, and useful under repeated client review. The system is intentionally restrained, with neutral surfaces, dashed linework, compact spacing, and direct labels carrying the experience instead of decorative treatments.\n\nThe visual language supports freelance clients who are checking project state, phases, invoices, and budget details. It should make the work easier to trust by making structure obvious: rows, sections, dividers, labels, and controls are drawn with the same light hand across the public site and authenticated portal.\n\nThis system explicitly rejects overdesigned SaaS gloss, decorative dashboards, marketing-heavy component patterns, novelty interactions, and visual noise. It is allowed to be quiet; it is not allowed to be vague.",
+    "keyCharacteristics": [
+      "Neutral light and dark surfaces with a small set of semantic state colors.",
+      "Dashed borders as the primary structural material.",
+      "Grid-based layouts, compact page widths, and table-first project data.",
+      "System sans typography with clear weights instead of display styling.",
+      "Flat components with visible focus, hover, disabled, and loading states."
+    ],
+    "rules": [
+      {
+        "name": "The Line Before Color Rule",
+        "body": "Structure is drawn with neutral dashed lines before color is introduced. Color is reserved for links, status, focus, risk, and progress.",
+        "section": "colors"
+      },
+      {
+        "name": "The State Color Rule",
+        "body": "Blue, green, and red must map to information, success, and error/risk. Do not use state colors as decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The One-Family Rule",
+        "body": "Product UI stays in one system sans family. Do not introduce display fonts for labels, buttons, tables, or data.",
+        "section": "typography"
+      },
+      {
+        "name": "The Exact Numbers Rule",
+        "body": "Amounts, percentages, and invoice data use tabular numerals when they need comparison.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Shadow Rule",
+        "body": "Shadows are forbidden for normal cards, tables, buttons, and inputs. If a future overlay truly needs elevation, keep it structural and minimal, never glossy.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Dashed Plane Rule",
+        "body": "A container is a plane drawn with a 1px dashed neutral border and transparent background. Do not pair this with soft drop shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use inline Tailwind utilities and grid layouts to match the existing project conventions.",
+      "Do use 1px dashed neutral borders for structure, panels, tables, inputs, empty states, and buttons.",
+      "Do keep product data exact, scannable, and close to its label.",
+      "Do use neutral hover fills and visible focus outlines on interactive controls.",
+      "Do preserve reduced-motion behavior; view transitions are only enabled for users without reduced-motion preference.",
+      "Do keep semantic color rare and tied to state: blue for info/link, green for success, red for error/risk."
+    ],
+    "donts": [
+      "Don't introduce overdesigned SaaS gloss.",
+      "Don't create decorative dashboards.",
+      "Don't use marketing-heavy component patterns in the client portal.",
+      "Don't add novelty interactions or decorative motion.",
+      "Don't add visual noise that makes routine client review feel more complex than it is.",
+      "Don't make the product feel like a generic startup template or a showpiece at the expense of clarity.",
+      "Don't pair dashed borders with soft shadows, glassmorphism, gradient text, rounded card stacks, or decorative illustrations."
+    ]
+  }
+}
