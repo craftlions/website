@@ -103,6 +103,9 @@ const projects =
 const completedProjectCount = projects.filter(
 	(project) => project.state === "completed",
 ).length;
+const activeProjectCount = projects.filter(
+	(project) => project.state === "active",
+).length;
 const totalInvoicedAmount =
 	organizationData?.projects
 		.flatMap((project) => project.invoices)
@@ -120,9 +123,18 @@ const totalInvoicedAmount =
 			return total + invoice.total;
 		}, 0) ?? 0;
 const yearlyBudget = organizationData?.data?.yearlyBudget ?? 0;
+const remainingBudget = yearlyBudget - totalInvoicedAmount;
 const budgetUsagePercentage =
 	yearlyBudget > 0 ? (totalInvoicedAmount / yearlyBudget) * 100 : 0;
 const budgetPacePercentage = ((now.getMonth() + 1) / 12) * 100;
+const budgetStatus =
+	yearlyBudget <= 0
+		? "Budget not set"
+		: remainingBudget < 0
+			? "Over yearly budget"
+			: budgetUsagePercentage > budgetPacePercentage
+				? "Ahead of calendar pace"
+				: "Within calendar pace";
 const budgetPaceGridLineClass = [
 	"col-start-2",
 	"col-start-3",
@@ -181,19 +193,26 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 
 				<section
 					aria-labelledby="overview-heading"
-					class="grid content-start gap-3"
+					class="grid content-start gap-4"
 				>
-					<h2
-						id="overview-heading"
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>
-						Overview
-					</h2>
+					<div class="grid gap-1">
+						<h2
+							id="overview-heading"
+							class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+						>
+							Overview
+						</h2>
+						<p class="max-w-2xl text-sm text-neutral-600 dark:text-neutral-400">
+							Budget and project state for the current calendar year.
+						</p>
+					</div>
 					<div
-						class="grid gap-4 border border-dashed border-neutral-300 bg-transparent p-4 dark:border-neutral-700"
+						class="grid border border-dashed border-neutral-300 bg-transparent dark:border-neutral-700"
 					>
-						<dl class="grid gap-4 sm:grid-cols-2">
-							<div class="grid gap-1">
+						<dl class="grid sm:grid-cols-2">
+							<div
+								class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:border-r"
+							>
 								<dt
 									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 								>
@@ -203,7 +222,9 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 									{yearlyBudget > 0 ? currencyFormatter.format(yearlyBudget) : "-"}
 								</dd>
 							</div>
-							<div class="grid gap-1">
+							<div
+								class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+							>
 								<dt
 									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 								>
@@ -213,7 +234,9 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 									{currencyFormatter.format(totalInvoicedAmount)}
 								</dd>
 							</div>
-							<div class="grid gap-1">
+							<div
+								class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:border-r"
+							>
 								<dt
 									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 								>
@@ -223,7 +246,9 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 									{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "-"}
 								</dd>
 							</div>
-							<div class="grid gap-1">
+							<div
+								class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+							>
 								<dt
 									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 								>
@@ -233,74 +258,111 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 									class:list={[
 										"text-xl font-semibold tabular-nums",
 										yearlyBudget > 0 &&
-											yearlyBudget - totalInvoicedAmount < 0 &&
+											remainingBudget < 0 &&
 											"text-red-700 dark:text-red-300",
 									]}
 								>
 									{yearlyBudget > 0
-										? currencyFormatter.format(yearlyBudget - totalInvoicedAmount)
+										? currencyFormatter.format(remainingBudget)
 										: "-"}
 								</dd>
 							</div>
 						</dl>
-						<div
-							class="grid gap-2 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700"
-						>
-							<div class="grid grid-cols-[1fr_auto] items-end gap-3 text-sm">
-								<label
-									for="budget-progress"
-									class="font-medium text-neutral-800 dark:text-neutral-200"
+						<div class="grid gap-4 p-4">
+
+							<div class="grid gap-2">
+								<div
+									class="grid grid-cols-[1fr_auto] items-end gap-3 text-sm"
 								>
-									Budget use
-								</label>
-								<p
-									class:list={[
-										"tabular-nums text-neutral-600 dark:text-neutral-400",
-										yearlyBudget > 0 &&
-											budgetUsagePercentage > 100 &&
-											"text-red-700 dark:text-red-300",
-									]}
-								>
-									{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "No budget"}
+									<label
+										for="budget-progress"
+										class="font-medium text-neutral-800 dark:text-neutral-200"
+									>
+										Budget use
+									</label>
+									<p
+										class:list={[
+							  				"tabular-nums text-neutral-600 dark:text-neutral-400",
+							  				yearlyBudget > 0 &&
+							  					budgetUsagePercentage > 100 &&
+							  					"text-red-700 dark:text-red-300",
+							  			]}
+									>
+										{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "No budget"}
+									</p>
+								</div>
+								<div class="relative grid">
+									<progress
+										id="budget-progress"
+										max="100"
+										value={yearlyBudget > 0
+							  				? Math.min(budgetUsagePercentage, 100)
+							  				: 0}
+										class:list={[
+							  				"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
+							  				yearlyBudget > 0 &&
+							  					budgetUsagePercentage > 100 &&
+							  					"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
+							  			]}
+									>
+										{yearlyBudget > 0
+							  				? `${budgetUsagePercentage.toFixed(1)}% used`
+							  				: "No yearly budget set"}
+									</progress>
+									{yearlyBudget > 0 && (
+							  				<span
+							  					aria-hidden="true"
+							  					class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
+							  				>
+							  					<span
+							  						class:list={[
+							  							"h-full w-0.75 justify-self-start border-x border-neutral-50 bg-neutral-950 dark:border-neutral-950 dark:bg-neutral-50",
+							  							budgetPaceGridLineClass,
+							  						]}
+							  					/>
+							  				</span>
+							  			)}
+								</div>
+								<p class="text-sm text-neutral-600 dark:text-neutral-400">
+									{yearlyBudget > 0
+							  			? `Based on invoices created this calendar year. The marker shows ${budgetPacePercentage.toFixed(1)}% calendar pace.`
+							  			: "Set a yearly budget to compare invoices against calendar pace."}
 								</p>
 							</div>
-							<div class="relative grid">
-								<progress
-									id="budget-progress"
-									max="100"
-									value={yearlyBudget > 0
-										? Math.min(budgetUsagePercentage, 100)
-										: 0}
-									class:list={[
-										"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
-										yearlyBudget > 0 &&
-											budgetUsagePercentage > 100 &&
-											"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
-									]}
-								>
-									{yearlyBudget > 0
-										? `${budgetUsagePercentage.toFixed(1)}% used`
-										: "No yearly budget set"}
-								</progress>
-								{yearlyBudget > 0 && (
-										<span
-											aria-hidden="true"
-											class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
-										>
-											<span
-												class:list={[
-													"h-full w-0.75 justify-self-start border-x border-neutral-50 bg-neutral-950 dark:border-neutral-950 dark:bg-neutral-50",
-													budgetPaceGridLineClass,
-												]}
-											/>
-										</span>
-									)}
-							</div>
-							<p class="text-sm text-neutral-600 dark:text-neutral-400">
-								{yearlyBudget > 0
-									? `Based on invoices created this calendar year. The cursor marks ${budgetPacePercentage.toFixed(1)}% for an even monthly allocation.`
-									: "No yearly budget has been set."}
-							</p>
+
+							<dl
+								class="grid gap-3 border-t border-dashed border-neutral-300 pt-4 text-sm dark:border-neutral-700 sm:grid-cols-3"
+							>
+								<div class="grid gap-1">
+									<dt class="text-neutral-500 dark:text-neutral-400">
+										Budget status
+									</dt>
+									<dd
+										class:list={[
+											"font-medium",
+											yearlyBudget > 0 &&
+												remainingBudget < 0 &&
+												"text-red-700 dark:text-red-300",
+										]}
+									>
+										{budgetStatus}
+									</dd>
+								</div>
+								<div class="grid gap-1">
+									<dt class="text-neutral-500 dark:text-neutral-400">
+										Active projects
+									</dt>
+									<dd class="font-medium tabular-nums">{activeProjectCount}</dd>
+								</div>
+								<div class="grid gap-1">
+									<dt class="text-neutral-500 dark:text-neutral-400">
+										Completed projects
+									</dt>
+									<dd class="font-medium tabular-nums"
+										>{completedProjectCount}</dd
+									>
+								</div>
+							</dl>
 						</div>
 					</div>
 				</section>

@@ -1,44 +1,87 @@
 ---
+import Badge from "./Badge.astro";
+
 interface Props {
 	date: string;
 	datetime: string;
 	title: string;
+	kind: "New" | "Improved" | "Fixed";
 	summary: string;
 	points?: string[];
+	first?: boolean;
+	last?: boolean;
 }
 
-const { date, datetime, title, summary, points = [] } = Astro.props;
+const {
+	date,
+	datetime,
+	title,
+	kind,
+	summary,
+	points = [],
+	first = false,
+	last = false,
+} = Astro.props;
+
+const badgeType = {
+	New: "info",
+	Improved: "gray",
+	Fixed: "success",
+} as const;
+
+const slug = `${datetime}-${title
+	.toLowerCase()
+	.replace(/[^a-z0-9]+/g, "-")
+	.replace(/^-|-$/g, "")}`;
 ---
 
 <li class="grid grid-cols-[1rem_1fr] gap-x-4">
-	<div class="grid justify-items-center" aria-hidden="true">
+	<div class="relative grid justify-items-center" aria-hidden="true">
+		{!last && (
+			<span
+				class:list={[
+					"absolute bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-neutral-300 dark:border-neutral-700",
+					first ? "top-7" : "top-0",
+				]}
+			></span>
+		)}
 		<span
-			class="mt-2 h-2 w-2 border border-neutral-500 bg-transparent dark:border-neutral-400"
-		></span>
-		<span
-			class="min-h-20 border-l border-dashed border-neutral-300 dark:border-neutral-700"
+			class="relative z-10 mt-6 h-2 w-2 border border-neutral-500 bg-neutral-50 dark:border-neutral-400 dark:bg-neutral-950"
 		></span>
 	</div>
 	<article
-		class="grid gap-4 border border-dashed border-neutral-300 bg-transparent p-4 pb-10 dark:border-neutral-700"
+		id={slug}
+		class:list={[
+			"grid gap-4 border border-dashed border-neutral-300 bg-transparent p-4 scroll-mt-6 dark:border-neutral-700",
+			!last && "mb-6",
+		]}
 	>
 		<header class="grid gap-2">
-			<time
-				datetime={datetime}
-				class="text-sm font-semibold text-neutral-500 dark:text-neutral-400"
-			>
-				{date}
-			</time>
-			<h2 class="text-2xl font-semibold">{title}</h2>
+			<div class="grid grid-cols-[1fr_auto] items-center gap-2">
+				<a
+					href={`#${slug}`}
+					class="w-max underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-500"
+				>
+					<time
+						datetime={datetime}
+						class="text-sm font-semibold text-neutral-600 dark:text-neutral-400"
+					>
+						{date}
+					</time>
+				</a>
+				<Badge type={badgeType[kind]}>{kind}</Badge>
+			</div>
+			<h2 class="text-2xl font-semibold text-balance">{title}</h2>
 		</header>
 		<p class="text-neutral-700 dark:text-neutral-300">{summary}</p>
 		{points.length > 0 && (
 				<ul class="grid gap-2 text-sm text-neutral-700 dark:text-neutral-300">
 					{points.map((point) => (
-						<li class="grid grid-cols-[auto_1fr] gap-2">
-							<span class="text-neutral-500 dark:text-neutral-400" aria-hidden="true">
-								*
-							</span>
+						<li class="grid grid-cols-[auto_1fr] items-start gap-2">
+							<span
+								class="mt-2 h-1 w-1 bg-neutral-400 dark:bg-neutral-500"
+								aria-hidden="true"
+							></span>
 							<span>{point}</span>
 						</li>
 					))}
