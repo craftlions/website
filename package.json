@@ -25,7 +25,7 @@
     "@better-auth/infra": "0.2.14",
     "@biomejs/biome": "2.5.0",
     "@cloudflare/vite-plugin": "1.42.1",
-    "@octokit/request": "10.0.8",
+    "@octokit/request": "10.0.10",
     "@octokit/rest": "22.0.1",
     "@socketsecurity/bun-security-scanner": "1.1.2",
     "@tailwindcss/vite": "4.3.1",
