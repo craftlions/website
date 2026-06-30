@@ -18,7 +18,7 @@
     "@astrojs/check": "0.9.9",
     "@astrojs/cloudflare": "14.0.0-beta.2",
     "@astrojs/compiler-rs": "0.2.2",
-    "@astrojs/markdown-satteri": "0.3.1-beta.2",
+    "@astrojs/markdown-satteri": "0.3.2",
     "@astrojs/sitemap": "3.7.3",
     "@better-auth/api-key": "1.6.20",
     "@better-auth/drizzle-adapter": "1.6.20",
