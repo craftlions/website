@@ -23,7 +23,7 @@
     "@better-auth/api-key": "1.6.20",
     "@better-auth/drizzle-adapter": "1.6.20",
     "@better-auth/infra": "0.2.14",
-    "@biomejs/biome": "2.5.0",
+    "@biomejs/biome": "2.5.1",
     "@cloudflare/vite-plugin": "1.42.1",
     "@octokit/request": "10.0.8",
     "@octokit/rest": "22.0.1",
