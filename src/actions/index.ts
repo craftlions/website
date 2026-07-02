@@ -1,6 +1,9 @@
 import type { Auth } from "../lib/auth.ts";
 import type { Db } from "../lib/database.ts";
-import { ActionError } from "astro:actions";
+import { ActionError, defineAction } from "astro:actions";
+import { z } from "astro:schema";
+import { eq } from "drizzle-orm";
+import { events, phases } from "../lib/schema.ts";
 
 export const assertAdmin = async (headers: Headers, auth: Auth) => {
 	const session = await auth.api.getSession({ headers });
@@ -54,7 +57,111 @@ export const assertOrganizationMember = async (
 	return session;
 };
 
+export const assertOrganizationOwnerOrAdmin = async (
+	headers: Headers,
+	organizationId: string,
+	auth: Auth,
+	db: Db,
+) => {
+	const session = await auth.api.getSession({ headers });
+
+	if (!session) {
+		throw new ActionError({
+			code: "UNAUTHORIZED",
+			message: "Sign in to manage organization.",
+		});
+	}
+
+	const member = await db.query.member.findFirst({
+		where: {
+			userId: session.user.id,
+			organizationId,
+		},
+	});
+
+	if (!member || (member.role !== "owner" && member.role !== "admin")) {
+		throw new ActionError({
+			code: "FORBIDDEN",
+			message: "Only organization owners or admins can perform this action.",
+		});
+	}
+
+	return session;
+};
+
+const mutatePhaseState = async (
+	phaseId: string,
+	nextState: "approved" | "cancelled",
+	eventName: "approved" | "declined",
+	context: Parameters<Parameters<typeof defineAction>[0]["handler"]>[1],
+) => {
+	const phase = await context.locals.db.query.phases.findFirst({
+		columns: {
+			id: true,
+			state: true,
+		},
+		with: {
+			project: {
+				columns: {
+					organizationId: true,
+				},
+			},
+		},
+		where: {
+			publicId: phaseId,
+		},
+	});
+
+	if (!phase?.project) {
+		throw new ActionError({ code: "NOT_FOUND", message: "Phase not found." });
+	}
+
+	const session = await assertOrganizationOwnerOrAdmin(
+		context.request.headers,
+		phase.project.organizationId,
+		context.locals.auth,
+		context.locals.db,
+	);
+
+	if (phase.state !== "planned") {
+		throw new ActionError({
+			code: "BAD_REQUEST",
+			message: "Only planned phases can be approved or declined.",
+		});
+	}
+
+	await context.locals.db.transaction(async (tx) => {
+		await tx
+			.update(phases)
+			.set({ state: nextState })
+			.where(eq(phases.id, phase.id));
+
+		await tx.insert(events).values({
+			publicId: crypto.randomUUID(),
+			aggregateType: "milestone",
+			aggregateId: phase.id,
+			event: eventName,
+			actorType: "user",
+			actorId: session.user.id,
+		});
+	});
+
+	return { success: true };
+};
+
 export const server = {
+	approvePhase: defineAction({
+		accept: "form",
+		input: z.object({ phaseId: z.string() }),
+		handler: (input, context) =>
+			mutatePhaseState(input.phaseId, "approved", "approved", context),
+	}),
+	declinePhase: defineAction({
+		accept: "form",
+		input: z.object({ phaseId: z.string() }),
+		handler: (input, context) =>
+			mutatePhaseState(input.phaseId, "cancelled", "declined", context),
+	}),
 	// createProject: defineAction({
 	// 	accept: "form",
 	// 	input: z.object({
