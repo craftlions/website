@@ -68,6 +68,7 @@ const project = await Astro.locals.db.query.projects.findFirst({
 			with: {},
 			orderBy: {
 				dueAt: "asc",
+				id: "asc",
 			},
 		},
 	},
