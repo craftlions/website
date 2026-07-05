@@ -28,7 +28,7 @@
     "@octokit/request": "10.0.8",
     "@octokit/rest": "22.0.1",
     "@socketsecurity/bun-security-scanner": "1.1.2",
-    "@tailwindcss/vite": "4.3.1",
+    "@tailwindcss/vite": "4.3.2",
     "@types/node": "25.9.3",
     "@types/pg": "8.20.0",
     "astro": "7.0.0-beta.3",
