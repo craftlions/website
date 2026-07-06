@@ -1,5 +1,5 @@
 import cloudflare from "@astrojs/cloudflare";
-// import { cacheCloudflare } from "@astrojs/cloudflare/cache";
+import { cacheCloudflare } from "@astrojs/cloudflare/cache";
 import { satteri } from "@astrojs/markdown-satteri";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
@@ -13,9 +13,9 @@ export default defineConfig({
 	adapter: cloudflare({
 		imageService: { build: "compile", runtime: "cloudflare-binding" },
 	}),
-	// cache: {
-	// 	provider: cacheCloudflare(),
-	// },
+	cache: {
+		provider: cacheCloudflare(),
+	},
 	compressHTML: "jsx",
 	experimental: {
 		clientPrerender: true,

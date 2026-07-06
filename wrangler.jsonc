@@ -5,9 +5,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/worker.ts",
   "name": "craftlions-website",
-  // "cache": {
-  //   "enabled": true
-  // },
+  "cache": {
+    "enabled": true
+  },
   "assets": {
     "binding": "ASSETS"
   },
