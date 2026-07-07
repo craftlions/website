@@ -1,10 +1,16 @@
+import type { BetterAuthClientPlugin } from "better-auth/client";
 import { apiKeyClient } from "@better-auth/api-key/client";
 import { dashClient } from "@better-auth/infra/client";
 import { createAuthClient } from "better-auth/client";
 import { adminClient, organizationClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-	plugins: [dashClient(), organizationClient(), adminClient(), apiKeyClient()],
+	plugins: [
+		dashClient() as unknown as BetterAuthClientPlugin,
+		organizationClient(),
+		adminClient(),
+		apiKeyClient(),
+	],
 	sessionOptions: {
 		refetchInterval: 0,
 		refetchOnWindowFocus: true,

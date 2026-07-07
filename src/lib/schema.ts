@@ -224,7 +224,8 @@ export const apikey = t.pgTable(
 
 export const aggregateType = t.pgEnum("aggregate_type", [
 	"invoice",
-	"milestone",
+	"organization",
+	"phase",
 	"project",
 ]);
 
@@ -254,6 +255,7 @@ export const projects = t.pgTable(
 			columns: [table.id],
 		}),
 		t.uniqueIndex().on(table.publicId),
+		t.index("projects_organization_id_idx").on(table.organizationId),
 		t
 			.foreignKey({
 				columns: [table.organizationId],
@@ -297,6 +299,7 @@ export const phases = t.pgTable(
 			columns: [table.id],
 		}),
 		t.uniqueIndex().on(table.publicId),
+		t.index("phases_project_id_idx").on(table.projectId),
 		t
 			.foreignKey({
 				columns: [table.projectId],
@@ -312,7 +315,7 @@ export const invoices = t.pgTable(
 	{
 		id: t.uuid("id").default(sql`uuidv7()`).notNull(),
 		publicId: t.text("public_id").notNull(),
-		projectId: t.uuid("project_id").notNull(),
+		phaseId: t.uuid("phase_id").notNull(),
 		invoiceNumber: t.text("invoice_number").notNull(),
 		stripeId: t.text("stripe_id").notNull(),
 		stripePaymentPage: t.text("stripe_payment_page").notNull(),
@@ -322,16 +325,20 @@ export const invoices = t.pgTable(
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
 			.$onUpdate(() => new Date()),
+		stripeStatus: t.text("stripe_status"),
+		stripePaidAt: t.timestamp("stripe_paid_at", { withTimezone: true }),
+		fetchedAt: t.timestamp("fetched_at", { withTimezone: true }),
 	},
 	(table) => [
 		t.primaryKey({
 			columns: [table.id],
 		}),
 		t.uniqueIndex().on(table.publicId),
+		t.uniqueIndex("invoices_phase_id_uidx").on(table.phaseId),
 		t
 			.foreignKey({
-				columns: [table.projectId],
-				foreignColumns: [projects.id],
+				columns: [table.phaseId],
+				foreignColumns: [phases.id],
 			})
 			.onUpdate("cascade")
 			.onDelete("restrict"),
@@ -344,7 +351,7 @@ export const events = t.pgTable(
 		id: t.uuid("id").default(sql`uuidv7()`).notNull(),
 		publicId: t.text("public_id").notNull(),
 		aggregateType: aggregateType("aggregate_type").notNull(),
-		aggregateId: t.uuid("aggregate_id").notNull(),
+		aggregateId: t.text("aggregate_id").notNull(),
 		event: t.text("event_type").notNull(),
 		actorType: actorType("actor_type").notNull(),
 		actorId: t.text("actor_id").notNull(),
@@ -353,6 +360,9 @@ export const events = t.pgTable(
 		t.primaryKey({
 			columns: [table.id],
 		}),
+		t
+			.index("events_aggregate_type_id_idx")
+			.on(table.aggregateType, table.aggregateId),
 	],
 );
 

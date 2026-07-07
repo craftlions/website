@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
-import { createPhase } from "../../../../../lib/admin-mutations.ts";
+import { transitionPhaseAsAdmin } from "../../../../../lib/admin-mutations.ts";
 import {
 	domainProblem,
 	problem,
@@ -10,7 +10,7 @@ import {
 
 export const prerender = false;
 
-export const POST: APIRoute = async (context) => {
+export const PATCH: APIRoute = async (context) => {
 	const verification = await verifyAdminApiKey(context);
 	if (verification.response) return verification.response;
 
@@ -19,10 +19,13 @@ export const POST: APIRoute = async (context) => {
 
 	const validation = z
 		.strictObject({
-			title: z.string().trim().min(1),
-			cost: z.number().nonnegative(),
-			currency: z.string().trim().length(3),
-			dueAt: z.coerce.date().optional(),
+			nextState: z.enum([
+				"planned",
+				"approved",
+				"in_progress",
+				"cancelled",
+				"paid",
+			]),
 		})
 		.safeParse(await context.request.json());
 
@@ -31,18 +34,11 @@ export const POST: APIRoute = async (context) => {
 	}
 
 	try {
-		const row = await createPhase(context.locals.db, verification.actorId, {
-			projectId: String(context.params.project_id),
-			...validation.data,
+		await transitionPhaseAsAdmin(context.locals.db, verification.actorId, {
+			phaseId: String(context.params.id),
+			nextState: validation.data.nextState,
 		});
-
-		return new Response(JSON.stringify(row), {
-			status: 201,
-			headers: {
-				"Content-Type": "application/json",
-				Location: `/api/projects/${context.params.project_id}/milestones/${row.id}`,
-			},
-		});
+		return new Response(null, { status: 204 });
 	} catch (error) {
 		return domainProblem(error);
 	}

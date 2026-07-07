@@ -18,11 +18,16 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 				id: true,
 			},
 			with: {
-				invoices: {
-					columns: {
-						id: true,
-						invoiceNumber: true,
-						stripePaymentPage: true,
+				phases: {
+					columns: {},
+					with: {
+						invoice: {
+							columns: {
+								id: true,
+								invoiceNumber: true,
+								stripePaymentPage: true,
+							},
+						},
 					},
 				},
 			},
@@ -34,7 +39,8 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 });
 
 const invoices = (organization?.projects ?? [])
-	.flatMap((project) => project.invoices)
+	.flatMap((project) => project.phases)
+	.flatMap((phase) => (phase.invoice ? [phase.invoice] : []))
 	.map((invoice) => ({
 		invoiceNumber: invoice.invoiceNumber,
 		stripePaymentPage: invoice.stripePaymentPage,

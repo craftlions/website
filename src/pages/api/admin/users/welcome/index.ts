@@ -1,8 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
-import { createPhase } from "../../../../../lib/admin-mutations.ts";
 import {
-	domainProblem,
 	problem,
 	requireJson,
 	verifyAdminApiKey,
@@ -19,10 +17,7 @@ export const POST: APIRoute = async (context) => {
 
 	const validation = z
 		.strictObject({
-			title: z.string().trim().min(1),
-			cost: z.number().nonnegative(),
-			currency: z.string().trim().length(3),
-			dueAt: z.coerce.date().optional(),
+			email: z.string().trim().email(),
 		})
 		.safeParse(await context.request.json());
 
@@ -30,20 +25,9 @@ export const POST: APIRoute = async (context) => {
 		return problem(400, "Bad Request", z.prettifyError(validation.error));
 	}
 
-	try {
-		const row = await createPhase(context.locals.db, verification.actorId, {
-			projectId: String(context.params.project_id),
-			...validation.data,
-		});
+	await context.locals.auth.api.requestPasswordReset({
+		body: { email: validation.data.email, redirectTo: "/reset-password" },
+	});
 
-		return new Response(JSON.stringify(row), {
-			status: 201,
-			headers: {
-				"Content-Type": "application/json",
-				Location: `/api/projects/${context.params.project_id}/milestones/${row.id}`,
-			},
-		});
-	} catch (error) {
-		return domainProblem(error);
-	}
+	return new Response(null, { status: 204 });
 };

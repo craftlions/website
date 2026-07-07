@@ -93,6 +93,18 @@ const project = await Astro.locals.db.query.projects.findFirst({
 if (!project) {
 	return Astro.redirect(`/dash/org/${slug}`);
 }
+
+const currentMember = await Astro.locals.db.query.member.findFirst({
+	columns: {
+		role: true,
+	},
+	where: {
+		organizationId: organization.id,
+		userId: session.user.id,
+	},
+});
+const canApprovePhases =
+	currentMember?.role === "owner" || currentMember?.role === "admin";
 ---
 
 <Shell>
@@ -130,7 +142,10 @@ if (!project) {
 					>
 						Phases
 					</h2>
-					<PhasesTable phases={project.phases} />
+					<PhasesTable
+						phases={project.phases}
+						canApprovePhases={canApprovePhases}
+					/>
 				</section>
 
 				<section>

@@ -1,12 +1,12 @@
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
-import { createPhase } from "../../../../../lib/admin-mutations.ts";
+import { createProject } from "../../../../../../lib/admin-mutations.ts";
 import {
 	domainProblem,
 	problem,
 	requireJson,
 	verifyAdminApiKey,
-} from "../../../../../lib/api-adapters.ts";
+} from "../../../../../../lib/api-adapters.ts";
 
 export const prerender = false;
 
@@ -19,10 +19,7 @@ export const POST: APIRoute = async (context) => {
 
 	const validation = z
 		.strictObject({
-			title: z.string().trim().min(1),
-			cost: z.number().nonnegative(),
-			currency: z.string().trim().length(3),
-			dueAt: z.coerce.date().optional(),
+			name: z.string().trim().min(1).max(160),
 		})
 		.safeParse(await context.request.json());
 
@@ -31,17 +28,17 @@ export const POST: APIRoute = async (context) => {
 	}
 
 	try {
-		const row = await createPhase(context.locals.db, verification.actorId, {
-			projectId: String(context.params.project_id),
-			...validation.data,
-		});
-
-		return new Response(JSON.stringify(row), {
-			status: 201,
-			headers: {
-				"Content-Type": "application/json",
-				Location: `/api/projects/${context.params.project_id}/milestones/${row.id}`,
+		const project = await createProject(
+			context.locals.db,
+			verification.actorId,
+			{
+				organizationId: String(context.params.id),
+				name: validation.data.name,
 			},
+		);
+		return new Response(JSON.stringify(project), {
+			status: 201,
+			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
 		return domainProblem(error);
