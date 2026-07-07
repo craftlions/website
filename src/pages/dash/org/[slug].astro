@@ -69,11 +69,13 @@ const organizationData = await Astro.locals.db.query.organization.findFirst({
 					columns: {
 						cost: true,
 					},
-				},
-				invoices: {
-					columns: {
-						id: true,
-						total: true,
+					with: {
+						invoice: {
+							columns: {
+								id: true,
+								total: true,
+							},
+						},
 					},
 				},
 			},
@@ -108,7 +110,8 @@ const activeProjectCount = projects.filter(
 ).length;
 const totalInvoicedAmount =
 	organizationData?.projects
-		.flatMap((project) => project.invoices)
+		.flatMap((project) => project.phases)
+		.flatMap((phase) => (phase.invoice ? [phase.invoice] : []))
 		.reduce((total, invoice) => {
 			const createdAt = getUuidV7Date(invoice.id);
 

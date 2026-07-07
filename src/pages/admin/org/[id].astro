@@ -1,0 +1,518 @@
+---
+export const prerender = false;
+
+import { actions } from "astro:actions";
+import { env } from "cloudflare:workers";
+import { and, eq, inArray } from "drizzle-orm";
+import Badge from "../../../components/Badge.astro";
+import Button from "../../../components/Button.astro";
+import Footer from "../../../components/Footer.astro";
+import Nav from "../../../components/Nav.astro";
+import Shell from "../../../layouts/Shell.astro";
+import { events } from "../../../lib/schema.ts";
+import { getUuidV7Date } from "../../../lib/uuid.ts";
+
+const { id } = Astro.params;
+
+if (!id) {
+	return Astro.redirect("/admin");
+}
+
+const actionResults = [
+	Astro.getActionResult(actions.createProject),
+	Astro.getActionResult(actions.transitionProject),
+	Astro.getActionResult(actions.createPhase),
+	Astro.getActionResult(actions.transitionPhase),
+	Astro.getActionResult(actions.recordInvoice),
+	Astro.getActionResult(actions.refreshStripeInvoice),
+	Astro.getActionResult(actions.addOrganizationMember),
+	Astro.getActionResult(actions.removeOrganizationMember),
+	Astro.getActionResult(actions.resendWelcomeMail),
+	Astro.getActionResult(actions.removeNeverLoggedInUser),
+	Astro.getActionResult(actions.updateOrganizationSettings),
+	Astro.getActionResult(actions.hardDeleteOrganization),
+];
+
+if (actionResults.some((result) => result && !result.error)) {
+	return Astro.redirect(Astro.url.pathname + Astro.url.search);
+}
+
+const actionError = actionResults.find((result) => result?.error)?.error;
+
+const organization = await Astro.locals.db.query.organization.findFirst({
+	columns: {
+		id: true,
+		name: true,
+		slug: true,
+		logo: true,
+	},
+	with: {
+		data: {
+			columns: {
+				yearlyBudget: true,
+			},
+		},
+		members: {
+			columns: {
+				id: true,
+				role: true,
+				userId: true,
+			},
+			with: {
+				user: {
+					columns: {
+						id: true,
+						email: true,
+						name: true,
+						lastActiveAt: true,
+					},
+				},
+			},
+			orderBy: {
+				createdAt: "asc",
+			},
+		},
+		projects: {
+			columns: {
+				id: true,
+				publicId: true,
+				name: true,
+				state: true,
+			},
+			with: {
+				phases: {
+					columns: {
+						id: true,
+						title: true,
+						cost: true,
+						currency: true,
+						state: true,
+						dueAt: true,
+					},
+					with: {
+						invoice: {
+							columns: {
+								id: true,
+								invoiceNumber: true,
+								stripeId: true,
+								stripePaymentPage: true,
+								total: true,
+								stripeStatus: true,
+								stripePaidAt: true,
+								fetchedAt: true,
+							},
+						},
+					},
+					orderBy: {
+						id: "asc",
+					},
+				},
+			},
+			orderBy: {
+				name: "asc",
+			},
+		},
+	},
+	where: {
+		id,
+	},
+});
+
+if (!organization) {
+	return Astro.redirect("/admin");
+}
+
+const activeTab = Astro.url.searchParams.get("tab") ?? "worklist";
+const tabs = [
+	"worklist",
+	"projects",
+	"invoices",
+	"members",
+	"settings",
+] as const;
+const now = new Date();
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+});
+const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
+const daysSince = (id: string) => {
+	const date = getUuidV7Date(id);
+	return date
+		? Math.max(0, Math.floor((now.getTime() - date.getTime()) / 86400000))
+		: 0;
+};
+const allPhases = organization.projects.flatMap((project) =>
+	project.phases.map((phase) => ({ ...phase, project })),
+);
+const phaseIds = allPhases.map((phase) => phase.id);
+const phaseEvents =
+	phaseIds.length > 0
+		? await Astro.locals.db
+				.select({
+					id: events.id,
+					aggregateId: events.aggregateId,
+				})
+				.from(events)
+				.where(
+					and(
+						eq(events.aggregateType, "phase"),
+						inArray(events.aggregateId, phaseIds),
+					),
+				)
+		: [];
+const latestPhaseEventIds = new Map<string, string>();
+
+for (const event of phaseEvents) {
+	const current = latestPhaseEventIds.get(event.aggregateId);
+	if (!current || event.id > current) {
+		latestPhaseEventIds.set(event.aggregateId, event.id);
+	}
+}
+
+const daysInPhaseState = (phaseId: string) =>
+	daysSince(latestPhaseEventIds.get(phaseId) ?? phaseId);
+const openInvoiceTotal = allPhases
+	.filter((phase) => phase.state === "invoiced")
+	.reduce((total, phase) => total + (phase.invoice?.total ?? phase.cost), 0);
+const activeProjectCount = organization.projects.filter(
+	(project) => project.state === "active",
+).length;
+const phaseCostTotal = allPhases.reduce(
+	(total, phase) => total + phase.cost,
+	0,
+);
+const budgetUsage =
+	organization.data?.yearlyBudget && organization.data.yearlyBudget > 0
+		? (phaseCostTotal / organization.data.yearlyBudget) * 100
+		: null;
+const worklist = allPhases
+	.flatMap((phase) => {
+		if (phase.state === "invoiced" && phase.dueAt && phase.dueAt < now) {
+			return [{ priority: 0, kind: "Overdue", phase }];
+		}
+		if (phase.state === "submitted") {
+			return [{ priority: 1, kind: "To plan", phase }];
+		}
+		if (phase.state === "planned") {
+			return [{ priority: 2, kind: "Awaiting client", phase }];
+		}
+		if (phase.state === "in_progress") {
+			return [{ priority: 3, kind: "In work", phase }];
+		}
+		if (phase.state === "invoiced") {
+			return [{ priority: 4, kind: "Unpaid", phase }];
+		}
+		return [];
+	})
+	.toSorted(
+		(a, b) =>
+			a.priority - b.priority ||
+			daysInPhaseState(b.phase.id) - daysInPhaseState(a.phase.id),
+	);
+const archivedProjectCount = organization.projects.filter(
+	(project) => project.state === "archived",
+).length;
+const staleInvoiceIds = allPhases
+	.filter(
+		(phase) =>
+			phase.state === "invoiced" &&
+			phase.invoice &&
+			(!phase.invoice.fetchedAt ||
+				now.getTime() - phase.invoice.fetchedAt.getTime() > 600000),
+	)
+	.map((phase) => phase.invoice?.id)
+	.filter((invoiceId): invoiceId is string => Boolean(invoiceId));
+
+if (staleInvoiceIds.length > 0) {
+	const { refreshStaleStripeInvoices } = await import("../../../lib/stripe.ts");
+	Astro.locals.cfContext?.waitUntil(
+		Promise.resolve().then(() =>
+			refreshStaleStripeInvoices(Astro.locals.db, {
+				invoiceIds: staleInvoiceIds,
+				stripeKey: env.STRIPE_SECRET_KEY,
+			}),
+		),
+	);
+}
+---
+
+<Shell>
+	<Fragment slot="head"
+		><title>craftlions | {organization.name}</title></Fragment
+	>
+	<Fragment slot="body">
+		<body
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] gap-6 bg-neutral-50 p-4 text-pretty text-neutral-950 antialiased dark:bg-neutral-950 dark:text-neutral-50"
+		>
+			<header class="grid w-full max-w-5xl gap-6 mx-auto">
+				<Nav />
+			</header>
+			<main class="grid w-full max-w-5xl content-start gap-6 mx-auto">
+				<Button href="/admin">Back to admin</Button>
+				<section
+					class="grid gap-4 border-b border-dashed border-neutral-300 pb-5 dark:border-neutral-700"
+				>
+					<div class="grid gap-1">
+						<p
+							class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+							>Client</p
+						>
+						<h1
+							class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+							>{organization.name}</h1
+						>
+					</div>
+					<dl class="grid gap-3 md:grid-cols-3">
+						<div class="grid gap-1">
+							<dt
+								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>Budget used</dt
+							>
+							<dd
+								class:list={["text-xl font-semibold tabular-nums", budgetUsage !== null && budgetUsage > 100 && "text-red-700 dark:text-red-300"]}
+								>{budgetUsage === null ? "-" : `${budgetUsage.toFixed(1)}%`}</dd
+							>
+						</div>
+						<div class="grid gap-1">
+							<dt
+								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>Open invoices</dt
+							>
+							<dd class="text-xl font-semibold tabular-nums"
+								>{currencyFormatter.format(openInvoiceTotal)}</dd
+							>
+						</div>
+						<div class="grid gap-1">
+							<dt
+								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>Active projects</dt
+							>
+							<dd class="text-xl font-semibold tabular-nums"
+								>{activeProjectCount}</dd
+							>
+						</div>
+					</dl>
+				</section>
+
+				<nav
+					class="grid grid-flow-col justify-start gap-2 overflow-x-auto"
+					aria-label="Client tabs"
+				>
+					{tabs.map((tab) => (
+						<a class:list={["border border-dashed px-3 py-1 text-sm font-medium capitalize", activeTab === tab ? "border-neutral-900 text-neutral-950 dark:border-neutral-100 dark:text-neutral-50" : "border-neutral-300 text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"]} href={`/admin/org/${organization.id}?tab=${tab}`}>{tab}</a>
+					))}
+				</nav>
+
+				{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
+
+				{activeTab === "worklist" && (
+					<section class="grid gap-3" aria-labelledby="worklist-heading">
+						<h2 id="worklist-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Worklist</h2>
+						<div class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
+							{worklist.length > 0 ? worklist.map((item) => (
+								<article class="grid gap-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[auto_1fr_auto] md:items-start">
+									<Badge type={item.priority === 0 ? "error" : "info"}>{item.kind}</Badge>
+									<div class="grid gap-1">
+										<h3 class="font-medium">{item.phase.project.name} · {item.phase.title}</h3>
+										<p class="text-sm text-neutral-600 dark:text-neutral-400">{currencyFormatter.format(item.phase.invoice?.total ?? item.phase.cost)} · {daysInPhaseState(item.phase.id)} days</p>
+									</div>
+									<div class="grid grid-flow-col justify-start gap-2">
+										{item.phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="planned" /><Button type="submit">Send</Button></form>}
+										{item.phase.state === "planned" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="approved" /><Button type="submit">Approve</Button></form>}
+										{(item.phase.state === "submitted" || item.phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="cancelled" /><Button type="submit">Cancel</Button></form>}
+										{item.phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="in_progress" /><Button type="submit">Start</Button></form>}
+										{item.phase.state === "invoiced" && item.phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={item.phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
+										{item.phase.state === "invoiced" && item.phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="paid" /><Button type="submit">Confirm paid</Button></form>}
+									</div>
+								</article>
+							)) : (
+								<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400">Nothing needs action.</p>
+							)}
+						</div>
+					</section>
+				)}
+
+				{activeTab === "projects" && (
+					<section class="grid gap-5" aria-labelledby="projects-heading">
+						<div class="grid gap-3">
+							<h2 id="projects-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Projects</h2>
+							<form method="POST" action={actions.createProject} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[1fr_auto] md:items-end">
+								<input type="hidden" name="organizationId" value={organization.id} />
+								<label class="grid gap-1 text-sm">
+									<span class="font-medium">Project name</span>
+									<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700" name="name" required />
+								</label>
+								<Button type="submit">Create project</Button>
+							</form>
+						</div>
+						<div class="grid gap-4">
+							{organization.projects.map((project) => (
+								<article class="grid gap-4 border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
+									<div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
+										<div class="grid gap-1">
+											<h3 class="text-lg font-semibold">{project.name}</h3>
+											<Badge type={project.state === "completed" ? "success" : project.state === "archived" ? "gray" : "info"}>{project.state}</Badge>
+										</div>
+										<div class="grid grid-flow-col justify-start gap-2">
+											{project.state === "draft" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><Button type="submit">Activate</Button></form>}
+											{project.state === "active" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="completed" /><Button type="submit">Complete</Button></form>}
+											{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><Button type="submit">Reopen</Button></form>}
+											{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="archived" /><Button type="submit">Archive</Button></form>}
+										</div>
+									</div>
+									<form method="POST" action={actions.createPhase} class="grid gap-3 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700 md:grid-cols-5">
+										<input type="hidden" name="projectId" value={project.id} />
+										<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="title" placeholder="Phase title" required />
+										<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="cost" type="number" min="0" step="0.01" placeholder="Cost" required />
+										<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="currency" value="EUR" maxlength="3" required />
+										<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="dueAt" type="date" />
+										<Button type="submit">Add phase</Button>
+									</form>
+									<div class="overflow-x-auto">
+										<table class="w-full min-w-3xl border-collapse text-left text-sm">
+											<thead>
+												<tr class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+													<th class="px-3 py-2" scope="col">Phase</th>
+													<th class="px-3 py-2" scope="col">Due</th>
+													<th class="px-3 py-2 text-right" scope="col">Cost</th>
+													<th class="px-3 py-2" scope="col">State</th>
+													<th class="px-3 py-2" scope="col">Actions</th>
+												</tr>
+											</thead>
+											<tbody>
+												{project.phases.map((phase) => (
+													<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
+														<td class="px-3 py-3 font-medium">{phase.title}</td>
+														<td class="px-3 py-3">{phase.dueAt ? dateFormatter.format(phase.dueAt) : "-"}</td>
+														<td class="px-3 py-3 text-right tabular-nums">{currencyFormatter.format(phase.cost)}</td>
+														<td class="px-3 py-3"><Badge type={phase.state === "paid" ? "success" : phase.state === "cancelled" ? "error" : "info"}>{phase.state.replaceAll("_", " ")}</Badge></td>
+														<td class="px-3 py-3">
+															<div class="grid grid-flow-col justify-start gap-2">
+																{phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="planned" /><Button type="submit">Send</Button></form>}
+																{phase.state === "planned" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="approved" /><Button type="submit">Approve</Button></form>}
+																{(phase.state === "submitted" || phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="cancelled" /><Button type="submit">Cancel</Button></form>}
+																{phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="in_progress" /><Button type="submit">Start</Button></form>}
+															</div>
+														</td>
+													</tr>
+												))}
+											</tbody>
+										</table>
+									</div>
+								</article>
+							))}
+						</div>
+					</section>
+				)}
+
+				{activeTab === "invoices" && (
+					<section class="grid gap-3" aria-labelledby="invoices-heading">
+						<h2 id="invoices-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Invoices</h2>
+						<div class="grid gap-4">
+							{allPhases.filter((phase) => phase.state === "in_progress").map((phase) => (
+								<form method="POST" action={actions.recordInvoice} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-5">
+									<input type="hidden" name="phaseId" value={phase.id} />
+									<p class="text-sm font-medium md:col-span-5">{phase.project.name} · {phase.title}</p>
+									<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="invoiceNumber" placeholder="Invoice number" required />
+									<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="stripeId" placeholder="Stripe id" required />
+									<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="stripePaymentPage" placeholder="Payment URL" type="url" required />
+									<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="total" type="number" min="0" step="0.01" value={phase.cost} required />
+									<Button type="submit">Record</Button>
+								</form>
+							))}
+							<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
+								<table class="w-full min-w-4xl border-collapse text-left text-sm">
+									<thead>
+										<tr class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+											<th class="px-4 py-3" scope="col">Invoice</th>
+											<th class="px-4 py-3" scope="col">Phase</th>
+											<th class="px-4 py-3" scope="col">Stripe</th>
+											<th class="px-4 py-3 text-right" scope="col">Total</th>
+											<th class="px-4 py-3" scope="col">Action</th>
+										</tr>
+									</thead>
+									<tbody>
+										{allPhases.filter((phase) => phase.invoice).map((phase) => (
+											<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
+												<td class="px-4 py-4"><a class="underline decoration-dashed underline-offset-4" href={phase.invoice?.stripePaymentPage}>{phase.invoice?.invoiceNumber}</a></td>
+												<td class="px-4 py-4">{phase.project.name} · {phase.title}</td>
+												<td class="px-4 py-4">{phase.invoice?.stripeStatus ?? "Not fetched"}{phase.invoice?.fetchedAt ? ` · ${dateFormatter.format(phase.invoice.fetchedAt)}` : ""}</td>
+												<td class="px-4 py-4 text-right tabular-nums">{currencyFormatter.format(phase.invoice?.total ?? 0)}</td>
+												<td class="px-4 py-4">
+													{phase.state === "invoiced" && phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
+													{phase.state === "invoiced" && phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="paid" /><Button type="submit">Confirm paid</Button></form>}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</section>
+				)}
+
+				{activeTab === "members" && (
+					<section class="grid gap-4" aria-labelledby="members-heading">
+						<h2 id="members-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Members</h2>
+						<form method="POST" action={actions.addOrganizationMember} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-4">
+							<input type="hidden" name="organizationId" value={organization.id} />
+							<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="email" type="email" placeholder="Email" required />
+							<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="name" placeholder="Name" required />
+							<select class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="role">
+								<option value="member" selected>Member</option>
+								<option value="owner">Owner</option>
+							</select>
+							<Button type="submit">Add user</Button>
+						</form>
+						<div class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
+							{organization.members.map((member) => (
+								<article class="grid gap-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[1fr_auto] md:items-center">
+									<div class="grid gap-1">
+										<h3 class="font-medium">{member.user.name}</h3>
+										<p class="text-sm text-neutral-600 dark:text-neutral-400">{member.user.email} · {member.role}</p>
+									</div>
+									<div class="grid grid-flow-col justify-start gap-2">
+										<form method="POST" action={actions.resendWelcomeMail}><input type="hidden" name="email" value={member.user.email} /><Button type="submit">Resend</Button></form>
+										<form method="POST" action={actions.removeOrganizationMember}><input type="hidden" name="organizationId" value={organization.id} /><input type="hidden" name="memberId" value={member.id} /><Button type="submit">Remove member</Button></form>
+										{!member.user.lastActiveAt && <form method="POST" action={actions.removeNeverLoggedInUser}><input type="hidden" name="userId" value={member.userId} /><Button type="submit">Remove user</Button></form>}
+									</div>
+								</article>
+							))}
+						</div>
+					</section>
+				)}
+
+				{activeTab === "settings" && (
+					<section class="grid gap-5" aria-labelledby="settings-heading">
+						<h2 id="settings-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Settings</h2>
+						<form method="POST" action={actions.updateOrganizationSettings} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-2">
+							<input type="hidden" name="organizationId" value={organization.id} />
+							<label class="grid gap-1 text-sm"><span class="font-medium">Name</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700" name="name" value={organization.name} required /></label>
+							<label class="grid gap-1 text-sm"><span class="font-medium">Slug</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700" name="slug" value={organization.slug} required /></label>
+							<label class="grid gap-1 text-sm"><span class="font-medium">Logo URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700" name="logo" value={organization.logo ?? ""} type="url" /></label>
+							<label class="grid gap-1 text-sm"><span class="font-medium">Yearly budget</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700" name="yearlyBudget" value={organization.data?.yearlyBudget ?? ""} type="number" min="1" /></label>
+							<div class="grid md:col-span-2"><Button type="submit">Save settings</Button></div>
+						</form>
+						<section class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
+							<h3 class="font-semibold">Offboarding</h3>
+							<p class="text-sm text-neutral-600 dark:text-neutral-400">{organization.projects.length - archivedProjectCount} projects not yet archived, {organization.members.length} members remaining.</p>
+							<div class="grid grid-flow-col justify-start gap-2">
+								<Button href={`/admin/org/${organization.id}?tab=projects`}>Projects</Button>
+								<Button href={`/admin/org/${organization.id}?tab=members`}>Members</Button>
+							</div>
+						</section>
+						{organization.projects.length === 0 && (
+							<form method="POST" action={actions.hardDeleteOrganization} class="grid gap-3 border border-dashed border-red-300 p-4 dark:border-red-700">
+								<input type="hidden" name="organizationId" value={organization.id} />
+								<label class="grid gap-1 text-sm"><span class="font-medium">Type {organization.name} to delete</span><input class="border border-dashed border-red-300 bg-transparent px-3 py-2 dark:border-red-700" name="confirmation" required /></label>
+								<Button type="submit">Delete organization</Button>
+							</form>
+						)}
+					</section>
+				)}
+			</main>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>

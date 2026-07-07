@@ -2,8 +2,24 @@ import type { Auth } from "../lib/auth.ts";
 import type { Db } from "../lib/database.ts";
 import { ActionError, defineAction } from "astro:actions";
 import { z } from "astro:schema";
-import { eq } from "drizzle-orm";
-import { events, phases } from "../lib/schema.ts";
+import { env } from "cloudflare:workers";
+import {
+	addOrganizationMember,
+	approvePhaseAsClient,
+	createPhase,
+	createProject,
+	DomainError,
+	hardDeleteOrganization,
+	onboardOrganization,
+	recordInvoice,
+	removeNeverLoggedInUser,
+	removeOrganizationMember,
+	toSlug,
+	transitionPhaseAsAdmin,
+	transitionProject,
+	updateOrganizationSettings,
+} from "../lib/admin-mutations.ts";
+import { refreshStripeInvoice } from "../lib/stripe.ts";
 
 export const assertAdmin = async (headers: Headers, auth: Auth) => {
 	const session = await auth.api.getSession({ headers });
@@ -82,221 +98,301 @@ export const assertOrganizationOwnerOrAdmin = async (
 	if (!member || (member.role !== "owner" && member.role !== "admin")) {
 		throw new ActionError({
 			code: "FORBIDDEN",
-			message: "Only organization owners or admins can perform this action.",
+			message: "Only organization owners can perform this action.",
 		});
 	}
 
 	return session;
 };
 
-const mutatePhaseState = async (
-	phaseId: string,
-	nextState: "approved" | "cancelled",
-	eventName: "approved" | "declined",
+const actionCodeForDomainError = (error: DomainError): ActionError["code"] => {
+	switch (error.code) {
+		case "Forbidden":
+			return "FORBIDDEN";
+		case "NotFound":
+			return "NOT_FOUND";
+		case "AlreadyExists":
+		case "InvalidTransition":
+		case "Validation":
+			return "BAD_REQUEST";
+		case "StripeUnavailable":
+			return "INTERNAL_SERVER_ERROR";
+	}
+};
+
+const mapDomainError = (error: unknown): never => {
+	if (error instanceof DomainError) {
+		throw new ActionError({
+			code: actionCodeForDomainError(error),
+			message: error.message,
+		});
+	}
+
+	throw error;
+};
+
+const adminHandler =
+	<TInput, TResult>(
+		handler: (
+			input: TInput,
+			context: Parameters<Parameters<typeof defineAction>[0]["handler"]>[1],
+			actorId: string,
+		) => Promise<TResult>,
+	) =>
+	async (
+		input: TInput,
+		context: Parameters<Parameters<typeof defineAction>[0]["handler"]>[1],
+	) => {
+		const session = await assertAdmin(
+			context.request.headers,
+			context.locals.auth,
+		);
+
+		try {
+			return await handler(input, context, session.user.id);
+		} catch (error) {
+			return mapDomainError(error);
+		}
+	};
+
+const clientPhaseHandler = async (
+	phasePublicId: string,
+	event: "approved" | "declined",
 	context: Parameters<Parameters<typeof defineAction>[0]["handler"]>[1],
 ) => {
-	const phase = await context.locals.db.query.phases.findFirst({
-		columns: {
-			id: true,
-			state: true,
-		},
-		with: {
-			project: {
-				columns: {
-					organizationId: true,
-				},
-			},
-		},
-		where: {
-			publicId: phaseId,
-		},
+	const session = await context.locals.auth.api.getSession({
+		headers: context.request.headers,
 	});
 
-	if (!phase?.project) {
-		throw new ActionError({ code: "NOT_FOUND", message: "Phase not found." });
-	}
-
-	const session = await assertOrganizationOwnerOrAdmin(
-		context.request.headers,
-		phase.project.organizationId,
-		context.locals.auth,
-		context.locals.db,
-	);
-
-	if (phase.state !== "planned") {
+	if (!session) {
 		throw new ActionError({
-			code: "BAD_REQUEST",
-			message: "Only planned phases can be approved or declined.",
+			code: "UNAUTHORIZED",
+			message: "Sign in to manage organization.",
 		});
 	}
 
-	await context.locals.db.transaction(async (tx) => {
-		await tx
-			.update(phases)
-			.set({ state: nextState })
-			.where(eq(phases.id, phase.id));
-
-		await tx.insert(events).values({
-			publicId: crypto.randomUUID(),
-			aggregateType: "milestone",
-			aggregateId: phase.id,
-			event: eventName,
-			actorType: "user",
-			actorId: session.user.id,
+	try {
+		await approvePhaseAsClient(context.locals.db, session.user.id, {
+			phasePublicId,
+			event,
 		});
-	});
-
-	return { success: true };
+		return { success: true };
+	} catch (error) {
+		return mapDomainError(error);
+	}
 };
+
+const optionalBudget = z.preprocess(
+	(value) => (value === "" || value === undefined ? undefined : value),
+	z.coerce.number().int().positive().optional(),
+);
 
 export const server = {
 	approvePhase: defineAction({
 		accept: "form",
 		input: z.object({ phaseId: z.string() }),
 		handler: (input, context) =>
-			mutatePhaseState(input.phaseId, "approved", "approved", context),
+			clientPhaseHandler(input.phaseId, "approved", context),
 	}),
 	declinePhase: defineAction({
 		accept: "form",
 		input: z.object({ phaseId: z.string() }),
 		handler: (input, context) =>
-			mutatePhaseState(input.phaseId, "cancelled", "declined", context),
+			clientPhaseHandler(input.phaseId, "declined", context),
 	}),
-	// createProject: defineAction({
-	// 	accept: "form",
-	// 	input: z.object({
-	// 		organizationId: z.string().trim().min(1, "Choose an organization."),
-	// 		name: z.string().trim().min(1, "Enter a project name.").max(120),
-	// 		deadline: z.coerce.date().optional(),
-	// 		stateOfWork: z.string().trim().optional(),
-	// 		stateOfPayment: z.string().trim().optional(),
-	// 		budget: z.number().positive().optional(),
-	// 		createdAt: z.coerce.date().optional(),
-	// 	}),
-	// 	handler: async (input, context) => {
-	// 		await assertAdmin(context.request.headers, context.locals.auth);
-	// 		const parsedInput = projectInsertSchema.safeParse(input);
-	// 		if (!parsedInput.success) {
-	// 			throw new ActionError({
-	// 				code: "BAD_REQUEST",
-	// 				message: "Invalid input data.",
-	// 			});
-	// 		}
-	// 		const selectedOrganization =
-	// 			await context.locals.db.query.organization.findFirst({
-	// 				columns: {
-	// 					id: true,
-	// 				},
-	// 				where: {
-	// 					id: input.organizationId,
-	// 				},
-	// 			});
-	// 		if (!selectedOrganization) {
-	// 			throw new ActionError({
-	// 				code: "BAD_REQUEST",
-	// 				message: "Choose an existing organization.",
-	// 			});
-	// 		}
-	// 		const rows = await context.locals.db
-	// 			.insert(project)
-	// 			.values(parsedInput.data)
-	// 			.returning({ id: project.id });
-	// 		return { id: rows[0]?.id };
-	// 	},
-	// }),
-	// updateProject: defineAction({
-	// 	accept: "form",
-	// 	input: z.object({
-	// 		projectId: z.string().trim().min(1, "Choose a project."),
-	// 		name: z.string().trim().min(1, "Enter a project name.").max(120),
-	// 		deadline: z.coerce.date().optional(),
-	// 		stateOfWork: z.string().trim().optional(),
-	// 		stateOfPayment: z.string().trim().optional(),
-	// 		budget: z.number().positive().optional(),
-	// 	}),
-	// 	handler: async (input, context) => {
-	// 		await assertAdmin(context.request.headers, context.locals.auth);
-	// 		const selectedProject = await context.locals.db.query.project.findFirst({
-	// 			columns: {
-	// 				id: true,
-	// 			},
-	// 			where: {
-	// 				id: input.projectId,
-	// 			},
-	// 		});
-	// 		if (!selectedProject) {
-	// 			throw new ActionError({
-	// 				code: "BAD_REQUEST",
-	// 				message: "Choose an existing project.",
-	// 			});
-	// 		}
-	// 		const parsedInput = projectUpdateSchema.safeParse(input);
-	// 		if (!parsedInput.success) {
-	// 			throw new ActionError({
-	// 				code: "BAD_REQUEST",
-	// 				message: "Invalid input data.",
-	// 			});
-	// 		}
-	// 		const rows = await context.locals.db
-	// 			.update(project)
-	// 			.set(parsedInput.data)
-	// 			.where(eq(project.id, input.projectId))
-	// 			.returning();
-	// 		return { id: rows[0]?.id };
-	// 	},
-	// }),
-	// deleteProject: defineAction({
-	// 	accept: "form",
-	// 	input: z.object({
-	// 		projectId: z.string().trim().min(1, "Choose a project to delete."),
-	// 	}),
-	// 	handler: async ({ projectId }, context) => {
-	// 		await assertAdmin(context.request.headers, context.locals.auth);
-	// 		const selectedProject = await context.locals.db.query.project.findFirst({
-	// 			columns: {
-	// 				id: true,
-	// 			},
-	// 			where: {
-	// 				id: projectId,
-	// 			},
-	// 		});
-	// 		if (!selectedProject) {
-	// 			throw new ActionError({
-	// 				code: "BAD_REQUEST",
-	// 				message: "Choose an existing project.",
-	// 			});
-	// 		}
-	// 		await context.locals.db.delete(project).where(eq(project.id, projectId));
-	// 		return { id: projectId };
-	// 	},
-	// }),
-	// mutateOrganizationMetadata: defineAction({
-	// 	accept: "form",
-	// 	input: z.object({
-	// 		organizationId: z.string().trim().min(1, "Choose an organization."),
-	// 		yearlyBudget: z.coerce.number().int().positive().optional(),
-	// 	}),
-	// 	handler: async ({ organizationId, yearlyBudget }, context) => {
-	// 		await assertOrganizationMember(
-	// 			context.request.headers,
-	// 			organizationId,
-	// 			context.locals.auth,
-	// 			context.locals.db,
-	// 		);
-	// 		const rows = await context.locals.db
-	// 			.insert(organizationMetadata)
-	// 			.values({
-	// 				organizationId,
-	// 				yearlyBudget: yearlyBudget ?? null,
-	// 			})
-	// 			.onConflictDoUpdate({
-	// 				target: organizationMetadata.organizationId,
-	// 				set: {
-	// 					yearlyBudget: yearlyBudget ?? null,
-	// 				},
-	// 			})
-	// 			.returning();
-	// 		return { id: rows[0]?.id };
-	// 	},
-	// }),
+	onboardOrganization: defineAction({
+		accept: "form",
+		input: z.object({
+			email: z.string().trim().email(),
+			name: z.string().trim().min(1).max(120),
+			organizationName: z.string().trim().min(1).max(120),
+			slug: z.string().trim().min(1).transform(toSlug),
+			yearlyBudget: optionalBudget,
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await onboardOrganization(
+				context.locals.db,
+				context.locals.auth,
+				actorId,
+				input,
+			);
+			return { success: true };
+		}),
+	}),
+	createProject: defineAction({
+		accept: "form",
+		input: z.object({
+			organizationId: z.string().trim().min(1),
+			name: z.string().trim().min(1).max(160),
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await createProject(context.locals.db, actorId, input);
+			return { success: true };
+		}),
+	}),
+	transitionProject: defineAction({
+		accept: "form",
+		input: z.object({
+			projectId: z.string().trim().min(1),
+			nextState: z.enum(["active", "completed", "archived"]),
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await transitionProject(context.locals.db, actorId, input);
+			return { success: true };
+		}),
+	}),
+	createPhase: defineAction({
+		accept: "form",
+		input: z.object({
+			projectId: z.string().trim().min(1),
+			title: z.string().trim().min(1).max(180),
+			cost: z.coerce.number().nonnegative(),
+			currency: z.string().trim().length(3),
+			dueAt: z.preprocess(
+				(value) => (value === "" ? null : value),
+				z.coerce.date().nullable().optional(),
+			),
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await createPhase(context.locals.db, actorId, input);
+			return { success: true };
+		}),
+	}),
+	transitionPhase: defineAction({
+		accept: "form",
+		input: z.object({
+			phaseId: z.string().trim().min(1),
+			nextState: z.enum([
+				"planned",
+				"approved",
+				"in_progress",
+				"cancelled",
+				"paid",
+			]),
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await transitionPhaseAsAdmin(context.locals.db, actorId, input);
+			return { success: true };
+		}),
+	}),
+	recordInvoice: defineAction({
+		accept: "form",
+		input: z.object({
+			phaseId: z.string().trim().min(1),
+			invoiceNumber: z.string().trim().min(1).max(80),
+			stripeId: z.string().trim().min(1).max(140),
+			stripePaymentPage: z.string().trim().url(),
+			total: z.coerce.number().nonnegative(),
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await recordInvoice(context.locals.db, actorId, input);
+			return { success: true };
+		}),
+	}),
+	refreshStripeInvoice: defineAction({
+		accept: "form",
+		input: z.object({ invoiceId: z.string().trim().min(1) }),
+		handler: adminHandler(async (input, context) => {
+			await refreshStripeInvoice(context.locals.db, {
+				invoiceId: input.invoiceId,
+				stripeKey: env.STRIPE_SECRET_KEY,
+			});
+			return { success: true };
+		}),
+	}),
+	addOrganizationMember: defineAction({
+		accept: "form",
+		input: z.object({
+			organizationId: z.string().trim().min(1),
+			email: z.string().trim().email(),
+			name: z.string().trim().min(1).max(120),
+			role: z.enum(["owner", "member"]).default("member"),
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await addOrganizationMember(
+				context.locals.db,
+				context.locals.auth,
+				actorId,
+				input,
+			);
+			return { success: true };
+		}),
+	}),
+	removeOrganizationMember: defineAction({
+		accept: "form",
+		input: z.object({
+			organizationId: z.string().trim().min(1),
+			memberId: z.string().trim().min(1),
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await removeOrganizationMember(
+				context.locals.db,
+				context.locals.auth,
+				actorId,
+				input,
+			);
+			return { success: true };
+		}),
+	}),
+	resendWelcomeMail: defineAction({
+		accept: "form",
+		input: z.object({ email: z.string().trim().email() }),
+		handler: adminHandler(async (input, context) => {
+			await context.locals.auth.api.requestPasswordReset({
+				body: { email: input.email, redirectTo: "/reset-password" },
+			});
+			return { success: true };
+		}),
+	}),
+	removeNeverLoggedInUser: defineAction({
+		accept: "form",
+		input: z.object({ userId: z.string().trim().min(1) }),
+		handler: adminHandler(async (input, context, actorId) => {
+			await removeNeverLoggedInUser(
+				context.locals.db,
+				context.locals.auth,
+				actorId,
+				input,
+			);
+			return { success: true };
+		}),
+	}),
+	updateOrganizationSettings: defineAction({
+		accept: "form",
+		input: z.object({
+			organizationId: z.string().trim().min(1),
+			name: z.string().trim().min(1).max(120),
+			slug: z.string().trim().min(1).transform(toSlug),
+			logo: z.preprocess(
+				(value) => (value === "" ? null : value),
+				z.string().trim().url().nullable().optional(),
+			),
+			yearlyBudget: optionalBudget,
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await updateOrganizationSettings(
+				context.locals.db,
+				context.locals.auth,
+				actorId,
+				input,
+			);
+			return { success: true };
+		}),
+	}),
+	hardDeleteOrganization: defineAction({
+		accept: "form",
+		input: z.object({
+			organizationId: z.string().trim().min(1),
+			confirmation: z.string().trim().min(1),
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await hardDeleteOrganization(
+				context.locals.db,
+				context.locals.auth,
+				actorId,
+				input,
+			);
+			return { success: true };
+		}),
+	}),
 };
