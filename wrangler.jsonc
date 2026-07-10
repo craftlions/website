@@ -68,7 +68,7 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "7f520825d909442e9778976a76271b7c",
+      "id": "e78aea8d41fe4c13af446a0bd61f77b2",
       "localConnectionString": "postgres://user:password@localhost:5432/database"
     }
   ],
