@@ -2,7 +2,7 @@
 "github:endevco/aube" = "v1.22.0"
 "core:node" = "26.3.0"
 "npm:sfw" = "2.0.6"
-"aqua:zizmorcore/zizmor" = "1.25.2"
+"aqua:zizmorcore/zizmor" = "v1.26.1"
 "aqua:rhysd/actionlint" = "1.7.12"
 "aqua:koalaman/shellcheck" = "0.11.0"
 
