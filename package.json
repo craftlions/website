@@ -17,7 +17,7 @@
   "devDependencies": {
     "@astrojs/check": "0.9.9",
     "@astrojs/cloudflare": "14.1.0",
-    "@astrojs/compiler-rs": "0.3.0",
+    "@astrojs/compiler-rs": "0.3.1",
     "@astrojs/markdown-satteri": "0.3.2",
     "@astrojs/sitemap": "3.7.3",
     "@better-auth/api-key": "1.6.20",
