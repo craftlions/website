@@ -1,6 +1,11 @@
 import { apiKey } from "@better-auth/api-key";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { dash } from "@better-auth/infra";
+import {
+	APIError,
+	createAuthMiddleware,
+	getSessionFromCtx,
+} from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
 import { admin, oAuthProxy, organization } from "better-auth/plugins";
 import { createDb } from "./database.ts";
@@ -47,6 +52,25 @@ export function createAuth(env: Cloudflare.Env) {
 					transaction: true,
 				})
 			: undefined,
+		hooks: {
+			before: createAuthMiddleware(async (context) => {
+				if (
+					!context.request ||
+					context.request.method === "GET" ||
+					context.path === "/admin/stop-impersonating"
+				) {
+					return;
+				}
+
+				const session = await getSessionFromCtx(context);
+
+				if (session?.session.impersonatedBy) {
+					throw APIError.fromStatus("FORBIDDEN", {
+						message: "Read-only while impersonating",
+					});
+				}
+			}),
+		},
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: true,

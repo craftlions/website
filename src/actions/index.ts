@@ -22,6 +22,17 @@ import {
 } from "../lib/admin-mutations.ts";
 import { importStripeInvoices, refreshStripeInvoice } from "../lib/stripe.ts";
 
+const assertNotImpersonating = (
+	session: NonNullable<Awaited<ReturnType<Auth["api"]["getSession"]>>>,
+) => {
+	if (session.session.impersonatedBy) {
+		throw new ActionError({
+			code: "FORBIDDEN",
+			message: "Read-only while impersonating",
+		});
+	}
+};
+
 export const assertAdmin = async (headers: Headers, auth: Auth) => {
 	const session = await auth.api.getSession({ headers });
 
@@ -57,6 +68,8 @@ export const assertOrganizationMember = async (
 		});
 	}
 
+	assertNotImpersonating(session);
+
 	const member = await db.query.member.findFirst({
 		where: {
 			userId: session.user.id,
@@ -88,6 +101,8 @@ export const assertOrganizationOwnerOrAdmin = async (
 			message: "Sign in to manage organization.",
 		});
 	}
+
+	assertNotImpersonating(session);
 
 	const member = await db.query.member.findFirst({
 		where: {
@@ -171,6 +186,8 @@ const clientPhaseHandler = async (
 			message: "Sign in to manage organization.",
 		});
 	}
+
+	assertNotImpersonating(session);
 
 	try {
 		await approvePhaseAsClient(context.locals.db, session.user.id, {
