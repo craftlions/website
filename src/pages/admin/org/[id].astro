@@ -35,8 +35,15 @@ const actionResults = [
 	Astro.getActionResult(actions.hardDeleteOrganization),
 ];
 
+const referer = Astro.request.headers.get("referer");
+const refererTab = referer?.startsWith(Astro.url.origin)
+	? new URL(referer).searchParams.get("tab")
+	: null;
+
 if (actionResults.some((result) => result && !result.error)) {
-	return Astro.redirect(Astro.url.pathname + Astro.url.search);
+	return Astro.redirect(
+		`${Astro.url.pathname}?${new URLSearchParams(refererTab ? { tab: refererTab, saved: "1" } : { saved: "1" })}`,
+	);
 }
 
 const actionError = actionResults.find((result) => result?.error)?.error;
@@ -125,7 +132,7 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-const activeTab = Astro.url.searchParams.get("tab") ?? "worklist";
+const activeTab = Astro.url.searchParams.get("tab") ?? refererTab ?? "worklist";
 const tabs = [
 	"worklist",
 	"projects",
@@ -334,6 +341,7 @@ if (staleInvoiceIds.length > 0) {
 				</nav>
 
 				{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
+				{!actionError && Astro.url.searchParams.has("saved") && <p role="status" class="border border-dashed border-neutral-300 p-3 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">Saved.</p>}
 
 				{activeTab === "worklist" && (
 					<section class="grid gap-3" aria-labelledby="worklist-heading">
