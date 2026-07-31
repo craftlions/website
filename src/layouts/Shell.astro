@@ -1,7 +1,15 @@
 ---
 import "../styles/global.css";
+import Button from "../components/Button.astro";
 
 const lang = Astro.currentLocale;
+
+interface Props {
+	bodyClass?: string;
+}
+
+const { bodyClass } = Astro.props;
+const session = Astro.locals.session;
 ---
 
 <html lang={lang ?? "en"}>
@@ -22,5 +30,62 @@ const lang = Astro.currentLocale;
 		<link rel="sitemap" href="/sitemap-index.xml">
 		<link rel="icon" type="image/x-icon" href="/favicon.ico">
 	</head>
-	<slot name="body" />
+	{bodyClass ? (
+		<body
+			class:list={[
+				bodyClass,
+				session?.session.impersonatedBy
+					? "grid-rows-[auto_auto_1fr_auto]"
+					: "grid-rows-[auto_1fr_auto]",
+			]}
+		>
+			{session?.session.impersonatedBy && (
+				<aside
+					aria-label="Impersonation"
+					class="sticky top-0 z-50 grid w-full max-w-5xl grid-cols-[1fr_auto] items-center gap-3 justify-self-center border border-dashed border-neutral-400 bg-neutral-100 p-3 dark:border-neutral-600 dark:bg-neutral-900"
+				>
+					<p class="text-sm font-medium">Viewing as {session.user.name}</p>
+					<stop-impersonating>
+						<Button type="button">Stop</Button>
+					</stop-impersonating>
+				</aside>
+			)}
+			<slot name="body" />
+		</body>
+	) : (
+		<slot name="body" />
+	)}
 </html>
+
+<script>
+	import { authClient } from "../lib/auth-client.ts";
+
+	class StopImpersonating extends HTMLElement {
+		connectedCallback() {
+			const button = this.querySelector("button");
+
+			if (button && button instanceof HTMLButtonElement) {
+				button.addEventListener("click", async () => {
+					button.disabled = true;
+
+					try {
+						const { error } = await authClient.admin.stopImpersonating();
+
+						if (error) {
+							throw error;
+						}
+
+						window.location.replace("/admin");
+					} catch {
+						button.disabled = false;
+						alert("Unable to stop impersonating. Please try again.");
+					}
+				});
+			}
+		}
+	}
+
+	if (!customElements.get("stop-impersonating")) {
+		customElements.define("stop-impersonating", StopImpersonating);
+	}
+</script>

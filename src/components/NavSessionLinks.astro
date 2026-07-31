@@ -2,9 +2,12 @@
 import Button from "./Button.astro";
 import LogoutButton from "./LogoutButton.astro";
 
-const session = await Astro.locals.auth.api.getSession({
-	headers: Astro.request.headers,
-});
+const session =
+	Astro.locals.session === undefined
+		? await Astro.locals.auth.api.getSession({
+				headers: Astro.request.headers,
+			})
+		: Astro.locals.session;
 ---
 
 <li>
@@ -33,9 +36,11 @@ const session = await Astro.locals.auth.api.getSession({
 								</Button>
 							</li>
 					)}
-					<li>
-						<LogoutButton />
-					</li>
+					{!session.session.impersonatedBy && (
+							<li>
+								<LogoutButton />
+							</li>
+					)}
 				</>
 			) : (
 				<li>

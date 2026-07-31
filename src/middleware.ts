@@ -8,18 +8,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	context.locals.auth = createAuth(env);
 
 	if (
+		["/admin", "/dash", "/settings"].some(
+			(path) =>
+				context.url.pathname === path ||
+				context.url.pathname.startsWith(`${path}/`),
+		)
+	) {
+		context.locals.session = await context.locals.auth.api.getSession({
+			headers: context.request.headers,
+		});
+	}
+
+	if (
 		context.url.pathname === "/admin" ||
 		context.url.pathname.startsWith("/admin/")
 	) {
-		const session = await context.locals.auth.api.getSession({
-			headers: context.request.headers,
-		});
-
-		if (!session) {
+		if (!context.locals.session) {
 			return context.redirect("/login");
 		}
 
-		if (session.user.role !== "admin") {
+		if (context.locals.session.user.role !== "admin") {
 			return context.redirect("/dash");
 		}
 	}
