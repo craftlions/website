@@ -121,17 +121,6 @@ export const refreshStripeInvoice = async (
 	});
 };
 
-export const refreshStaleStripeInvoices = async (
-	db: Db,
-	input: { invoiceIds: string[]; stripeKey: string },
-) => {
-	await Promise.allSettled(
-		input.invoiceIds.map((invoiceId) =>
-			refreshStripeInvoice(db, { invoiceId, stripeKey: input.stripeKey }),
-		),
-	);
-};
-
 export const importStripeInvoices = async (
 	db: Db,
 	actorId: string,
