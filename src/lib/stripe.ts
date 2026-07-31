@@ -1,7 +1,12 @@
 import type { Db } from "./database.ts";
 import { eq } from "drizzle-orm";
-import { DomainError, updateStoredStripeStatus } from "./admin-mutations.ts";
+import {
+	assertAdminUser,
+	DomainError,
+	updateStoredStripeStatus,
+} from "./admin-mutations.ts";
 import { invoices } from "./schema.ts";
+import { uuidV7FromDate } from "./uuid.ts";
 
 interface StripeInvoiceResponse {
 	currency?: string;
@@ -10,6 +15,14 @@ interface StripeInvoiceResponse {
 		paid_at?: number | null;
 	};
 	total?: number;
+}
+
+interface StripeInvoiceListItem extends StripeInvoiceResponse {
+	id?: string;
+	number?: string | null;
+	created?: number;
+	hosted_invoice_url?: string | null;
+	invoice_pdf?: string | null;
 }
 
 const zeroDecimalCurrencies = new Set([
@@ -115,6 +128,94 @@ export const refreshStaleStripeInvoices = async (
 			refreshStripeInvoice(db, { invoiceId, stripeKey: input.stripeKey }),
 		),
 	);
+};
+
+export const importStripeInvoices = async (
+	db: Db,
+	actorId: string,
+	input: { organizationId: string; stripeKey: string },
+) => {
+	await assertAdminUser(db, actorId);
+
+	const metadata = await db.query.organizationMetadata.findFirst({
+		columns: { stripeCustomerId: true },
+		where: { organizationId: input.organizationId },
+	});
+
+	if (!metadata?.stripeCustomerId) {
+		throw new DomainError(
+			"Validation",
+			"No Stripe customer is linked to this organization.",
+		);
+	}
+
+	const fetched: StripeInvoiceListItem[] = [];
+	let startingAfter: string | undefined;
+
+	do {
+		const url = new URL("https://api.stripe.com/v1/invoices");
+		url.searchParams.set("customer", metadata.stripeCustomerId);
+		url.searchParams.set("limit", "100");
+		if (startingAfter) url.searchParams.set("starting_after", startingAfter);
+
+		const response = await fetch(url, {
+			headers: { Authorization: `Bearer ${input.stripeKey}` },
+		});
+
+		if (!response.ok) {
+			throw new DomainError(
+				"StripeUnavailable",
+				"Stripe invoices are unavailable.",
+			);
+		}
+
+		const page = (await response.json()) as {
+			data?: StripeInvoiceListItem[];
+			has_more?: boolean;
+		};
+		fetched.push(...(page.data ?? []));
+		startingAfter = page.has_more ? page.data?.at(-1)?.id : undefined;
+	} while (startingAfter);
+
+	for (const item of fetched) {
+		if (
+			!item.id ||
+			!item.number ||
+			!item.currency ||
+			item.status === "draft" ||
+			(!item.hosted_invoice_url && !item.invoice_pdf)
+		) {
+			continue;
+		}
+
+		const stripeFields = {
+			stripeStatus: item.status ?? null,
+			stripePaidAt: item.status_transitions?.paid_at
+				? new Date(item.status_transitions.paid_at * 1000)
+				: null,
+			fetchedAt: new Date(),
+		};
+
+		await db
+			.insert(invoices)
+			.values({
+				id: item.created
+					? uuidV7FromDate(new Date(item.created * 1000))
+					: undefined,
+				publicId: crypto.randomUUID(),
+				organizationId: input.organizationId,
+				invoiceNumber: item.number,
+				stripeId: item.id,
+				stripePaymentPage: item.hosted_invoice_url ?? item.invoice_pdf ?? "",
+				currency: item.currency.toUpperCase(),
+				total: fromStripeMinorUnits(item.total ?? 0, item.currency),
+				...stripeFields,
+			})
+			.onConflictDoUpdate({
+				target: invoices.stripeId,
+				set: stripeFields,
+			});
+	}
 };
 
 export const markStripeRefreshAttempt = async (
