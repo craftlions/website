@@ -11,6 +11,7 @@ interface Phase {
 	cost: phaseSelectType["cost"];
 	currency: phaseSelectType["currency"];
 	state: phaseSelectType["state"];
+	version: phaseSelectType["version"];
 	externalUrl: phaseSelectType["externalUrl"];
 }
 
@@ -105,20 +106,22 @@ const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 							<td class="px-4 py-4">
 								{canApprovePhases && phase.state === "planned" && (
 									<div class="grid grid-flow-col justify-start gap-2">
-										<form method="POST" action={actions.approvePhase}>
+										<form method="POST" action={actions.approvePhase} data-disable-on-submit>
 											<input
 												type="hidden"
 												name="phaseId"
 												value={phase.publicId}
 											/>
+											<input type="hidden" name="expectedVersion" value={phase.version} />
 											<Button type="submit">Approve</Button>
 										</form>
-										<form method="POST" action={actions.declinePhase}>
+										<form method="POST" action={actions.declinePhase} data-disable-on-submit>
 											<input
 												type="hidden"
 												name="phaseId"
 												value={phase.publicId}
 											/>
+											<input type="hidden" name="expectedVersion" value={phase.version} />
 											<Button type="submit">Decline</Button>
 										</form>
 									</div>
@@ -135,3 +138,20 @@ const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 			</p>
 	)}
 </div>
+
+<script>
+	document.addEventListener("submit", (event) => {
+		if (
+			!(event.target instanceof HTMLFormElement) ||
+			!event.target.checkValidity()
+		) {
+			return;
+		}
+
+		for (const button of event.target.querySelectorAll<HTMLButtonElement>(
+			'button[type="submit"]',
+		)) {
+			button.disabled = true;
+		}
+	});
+</script>

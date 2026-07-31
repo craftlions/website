@@ -88,6 +88,7 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 				publicId: true,
 				name: true,
 				state: true,
+				version: true,
 			},
 			with: {
 				phases: {
@@ -97,6 +98,7 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 						cost: true,
 						currency: true,
 						state: true,
+						version: true,
 						dueAt: true,
 					},
 					with: {
@@ -354,12 +356,12 @@ if (staleInvoiceIds.length > 0) {
 										<p class="text-sm text-neutral-600 dark:text-neutral-400">{currencyFormatter.format(item.phase.invoice?.total ?? item.phase.cost)} · {daysInPhaseState(item.phase.id)} days</p>
 									</div>
 									<div class="grid grid-flow-col justify-start gap-2">
-										{item.phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="planned" /><Button type="submit">Send</Button></form>}
-										{item.phase.state === "planned" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="approved" /><Button type="submit">Approve</Button></form>}
-										{(item.phase.state === "submitted" || item.phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="cancelled" /><Button type="submit">Cancel</Button></form>}
-										{item.phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="in_progress" /><Button type="submit">Start</Button></form>}
+										{item.phase.state === "submitted" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Send</Button></form>}
+										{item.phase.state === "planned" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="approved" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Approve</Button></form>}
+										{(item.phase.state === "submitted" || item.phase.state === "planned") && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Cancel</Button></form>}
+										{item.phase.state === "approved" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Start</Button></form>}
 										{item.phase.state === "invoiced" && item.phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={item.phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
-										{item.phase.state === "invoiced" && item.phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="paid" /><Button type="submit">Confirm paid</Button></form>}
+										{item.phase.state === "invoiced" && item.phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="paid" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Confirm paid</Button></form>}
 									</div>
 								</article>
 							)) : (
@@ -391,10 +393,10 @@ if (staleInvoiceIds.length > 0) {
 											<Badge type={project.state === "completed" ? "success" : project.state === "archived" ? "gray" : "info"}>{project.state}</Badge>
 										</div>
 										<div class="grid grid-flow-col justify-start gap-2">
-											{project.state === "draft" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><Button type="submit">Activate</Button></form>}
-											{project.state === "active" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="completed" /><Button type="submit">Complete</Button></form>}
-											{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><Button type="submit">Reopen</Button></form>}
-											{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="archived" /><Button type="submit">Archive</Button></form>}
+											{project.state === "draft" && <form method="POST" action={actions.transitionProject} data-disable-on-submit><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Activate</Button></form>}
+											{project.state === "active" && <form method="POST" action={actions.transitionProject} data-disable-on-submit><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="completed" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Complete</Button></form>}
+											{project.state === "completed" && <form method="POST" action={actions.transitionProject} data-disable-on-submit><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Reopen</Button></form>}
+											{project.state === "completed" && <form method="POST" action={actions.transitionProject} data-disable-on-submit><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="archived" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Archive</Button></form>}
 										</div>
 									</div>
 									<form method="POST" action={actions.createPhase} class="grid gap-3 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700 md:grid-cols-5">
@@ -425,10 +427,10 @@ if (staleInvoiceIds.length > 0) {
 														<td class="px-3 py-3"><Badge type={phase.state === "paid" ? "success" : phase.state === "cancelled" ? "error" : "info"}>{phase.state.replaceAll("_", " ")}</Badge></td>
 														<td class="px-3 py-3">
 															<div class="grid grid-flow-col justify-start gap-2">
-																{phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="planned" /><Button type="submit">Send</Button></form>}
-																{phase.state === "planned" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="approved" /><Button type="submit">Approve</Button></form>}
-																{(phase.state === "submitted" || phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="cancelled" /><Button type="submit">Cancel</Button></form>}
-																{phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="in_progress" /><Button type="submit">Start</Button></form>}
+												{phase.state === "submitted" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Send</Button></form>}
+												{phase.state === "planned" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="approved" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Approve</Button></form>}
+												{(phase.state === "submitted" || phase.state === "planned") && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Cancel</Button></form>}
+												{phase.state === "approved" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Start</Button></form>}
 															</div>
 														</td>
 													</tr>
@@ -473,11 +475,12 @@ if (staleInvoiceIds.length > 0) {
 													<td class="px-4 py-4 text-right tabular-nums">{new Intl.NumberFormat("de-DE", { style: "currency", currency: invoice.currency }).format(invoice.total)}</td>
 													<td class="px-4 py-4">
 														{attachablePhases.some((phase) => phase.currency === invoice.currency) ? (
-															<form method="POST" action={actions.attachInvoiceToPhase} class="grid grid-cols-[1fr_auto] items-center gap-2">
+															<form method="POST" action={actions.attachInvoiceToPhase} class="grid grid-cols-[1fr_auto] items-center gap-2" data-attach-invoice data-disable-on-submit>
 																<input type="hidden" name="invoiceId" value={invoice.id} />
+																<input type="hidden" name="expectedVersion" value={suggestedPhaseId(invoice) ? attachablePhases.find((phase) => phase.id === suggestedPhaseId(invoice))?.version : ""} />
 																<select name="phaseId" required class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700">
 																	{attachablePhases.filter((phase) => phase.currency === invoice.currency).map((phase) => (
-																		<option value={phase.id} selected={phase.id === suggestedPhaseId(invoice)}>{phase.project.name} · {phase.title} · {currencyFormatter.format(phase.cost)}{phase.id === suggestedPhaseId(invoice) ? " (suggested)" : ""}</option>
+																		<option value={phase.id} data-version={phase.version} selected={phase.id === suggestedPhaseId(invoice)}>{phase.project.name} · {phase.title} · {currencyFormatter.format(phase.cost)}{phase.id === suggestedPhaseId(invoice) ? " (suggested)" : ""}</option>
 																	))}
 																</select>
 																<Button type="submit">Attach</Button>
@@ -493,8 +496,9 @@ if (staleInvoiceIds.length > 0) {
 								</div>
 							)}
 							{allPhases.filter((phase) => phase.state === "in_progress").map((phase) => (
-								<form method="POST" action={actions.recordInvoice} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-5">
+								<form method="POST" action={actions.recordInvoice} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-5" data-disable-on-submit>
 									<input type="hidden" name="phaseId" value={phase.id} />
+									<input type="hidden" name="expectedVersion" value={phase.version} />
 									<p class="text-sm font-medium md:col-span-5">{phase.project.name} · {phase.title}</p>
 									<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="invoiceNumber" placeholder="Invoice number" required />
 									<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700" name="stripeId" placeholder="Stripe id" required />
@@ -523,7 +527,7 @@ if (staleInvoiceIds.length > 0) {
 												<td class="px-4 py-4 text-right tabular-nums">{currencyFormatter.format(phase.invoice?.total ?? 0)}</td>
 												<td class="px-4 py-4">
 													{phase.state === "invoiced" && phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
-													{phase.state === "invoiced" && phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="paid" /><Button type="submit">Confirm paid</Button></form>}
+													{phase.state === "invoiced" && phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="paid" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Confirm paid</Button></form>}
 												</td>
 											</tr>
 										))}
@@ -609,6 +613,42 @@ if (staleInvoiceIds.length > 0) {
 
 <script>
 	import { authClient } from "../../../lib/auth-client.ts";
+
+	for (const form of document.querySelectorAll<HTMLFormElement>(
+		"[data-attach-invoice]",
+	)) {
+		const select = form.querySelector<HTMLSelectElement>(
+			'select[name="phaseId"]',
+		);
+		const expectedVersion = form.querySelector<HTMLInputElement>(
+			'input[name="expectedVersion"]',
+		);
+
+		const syncExpectedVersion = () => {
+			const option = select?.selectedOptions[0];
+			if (expectedVersion && option) {
+				expectedVersion.value = option.dataset.version ?? "";
+			}
+		};
+
+		syncExpectedVersion();
+		select?.addEventListener("change", syncExpectedVersion);
+	}
+
+	document.addEventListener("submit", (event) => {
+		if (
+			!(event.target instanceof HTMLFormElement) ||
+			!event.target.checkValidity()
+		) {
+			return;
+		}
+
+		for (const button of event.target.querySelectorAll<HTMLButtonElement>(
+			'button[type="submit"]',
+		)) {
+			button.disabled = true;
+		}
+	});
 
 	class ImpersonateUser extends HTMLElement {
 		connectedCallback() {

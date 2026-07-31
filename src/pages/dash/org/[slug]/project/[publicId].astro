@@ -73,6 +73,7 @@ const project = await Astro.locals.db.query.projects.findFirst({
 				cost: true,
 				currency: true,
 				state: true,
+				version: true,
 				externalUrl: true,
 			},
 			with: {},
