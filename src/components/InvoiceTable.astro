@@ -1,4 +1,5 @@
 ---
+import Badge from "./Badge.astro";
 import Button from "./Button.astro";
 
 interface Invoice {
@@ -7,6 +8,9 @@ interface Invoice {
 	createdAt: Date | null;
 	stripeStatus: string | null;
 	stripePaidAt: Date | null;
+	stripeDueAt: Date | null;
+	total: number;
+	currency: string;
 }
 
 interface Props {
@@ -15,40 +19,110 @@ interface Props {
 }
 
 const { invoices, pageSize = 5 } = Astro.props;
+const now = new Date();
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
+const formatAmount = (total: number, currency: string) =>
+	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(total);
+const rows = invoices.map((invoice) => ({
+	...invoice,
+	status:
+		invoice.stripeStatus === "open" &&
+		invoice.stripeDueAt &&
+		invoice.stripeDueAt < now
+			? "overdue"
+			: invoice.stripeStatus,
+}));
+const totalWhere = (statuses: string[]) => {
+	const sums = new Map<string, number>();
+	for (const row of rows) {
+		if (!statuses.includes(row.status ?? "")) continue;
+		sums.set(row.currency, (sums.get(row.currency) ?? 0) + row.total);
+	}
+	if (sums.size === 0) return formatAmount(0, rows[0]?.currency ?? "EUR");
+	return [...sums]
+		.map(([currency, total]) => formatAmount(total, currency))
+		.join(" + ");
+};
+const overdueCount = rows.filter((row) => row.status === "overdue").length;
+const showFilter =
+	rows.some((row) => row.status === "open" || row.status === "overdue") &&
+	rows.some((row) => row.status === "paid");
 ---
 
 <invoice-table class="grid gap-3" data-page-size={pageSize}>
-	{invoices.length > 0 ? (
+	{rows.length > 0 && (
+			<dl class="grid grid-flow-col justify-start gap-8 text-sm">
+				<div class="grid gap-1">
+					<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Outstanding</dt>
+					<dd class="tabular-nums">{totalWhere(["open", "overdue"])}</dd>
+				</div>
+				<div class="grid gap-1">
+					<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Overdue</dt>
+					<dd class:list={["tabular-nums", overdueCount > 0 && "text-red-700 dark:text-red-300"]}>{totalWhere(["overdue"])}</dd>
+				</div>
+				<div class="grid gap-1">
+					<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Paid</dt>
+					<dd class="tabular-nums">{totalWhere(["paid"])}</dd>
+				</div>
+			</dl>
+		)}
+	{showFilter && (
+			<nav aria-label="Filter invoices" class="grid grid-flow-col justify-start gap-2">
+				<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-invoice-filter="all" aria-pressed="true">All</Button>
+				<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-invoice-filter="open" aria-pressed="false">Open</Button>
+				<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-invoice-filter="paid" aria-pressed="false">Paid</Button>
+			</nav>
+		)}
+	{rows.length > 0 ? (
 			<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
-				<table class="w-full min-w-xl text-left text-sm">
+				<table class="w-full min-w-2xl text-left text-sm">
 					<thead>
-							<tr class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-								<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Created At</th>
-							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Invoice Number</th>
+						<tr class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Invoice</th>
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Created</th>
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Due</th>
+							<th scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase">Amount</th>
 							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Status</th>
 							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Payment Link</th>
 						</tr>
 					</thead>
 					<tbody>
-							{invoices.map((invoice) => (
-									<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
-										<td class="px-4 py-3">
-											{invoice.createdAt ? dateFormatter.format(invoice.createdAt) : "-"}
+							{rows.map((invoice) => (
+									<tr
+										class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700"
+										data-category={invoice.status === "paid" ? "paid" : invoice.status === "open" || invoice.status === "overdue" ? "open" : "other"}
+									>
+										<td class="whitespace-nowrap px-4 py-3 font-medium">{invoice.invoiceNumber}</td>
+										<td class="whitespace-nowrap px-4 py-3">
+											{invoice.createdAt ? dateFormatter.format(invoice.createdAt) : "—"}
 										</td>
-									<td class="px-4 py-3">{invoice.invoiceNumber}</td>
-									<td class="px-4 py-3 capitalize">{invoice.stripeStatus ?? "—"}{invoice.stripePaidAt ? ` · ${dateFormatter.format(invoice.stripePaidAt)}` : ""}</td>
-									<td class="px-4 py-3">
-										<Button
-											href={invoice.stripePaymentPage}
-											target="_blank"
-											rel="noopener noreferrer"
-										>
-											Details
-										</Button>
-									</td>
-								</tr>
-							))}
+										<td class:list={["whitespace-nowrap px-4 py-3", invoice.status === "overdue" && "text-red-700 dark:text-red-300"]}>
+											{invoice.stripeDueAt ? dateFormatter.format(invoice.stripeDueAt) : "—"}
+										</td>
+										<td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatAmount(invoice.total, invoice.currency)}</td>
+										<td class="px-4 py-3">
+											<div class="grid grid-flow-col items-center justify-start gap-2 whitespace-nowrap">
+												{invoice.status === "overdue" ? <Badge type="error">Overdue</Badge>
+													: invoice.status === "open" ? <Badge type="info">Open</Badge>
+													: invoice.status === "paid" ? <Badge type="success">Paid</Badge>
+													: invoice.status ? <Badge type="gray">{invoice.status}</Badge>
+													: <span class="text-neutral-500 dark:text-neutral-400">—</span>}
+												{invoice.status === "paid" && invoice.stripePaidAt && (
+													<span class="text-xs text-neutral-500 dark:text-neutral-400">{dateFormatter.format(invoice.stripePaidAt)}</span>
+												)}
+											</div>
+										</td>
+										<td class="px-4 py-3">
+											<Button
+												href={invoice.stripePaymentPage}
+												target="_blank"
+												rel="noopener noreferrer"
+											>
+												{invoice.status === "open" || invoice.status === "overdue" ? "Pay" : "Details"}
+											</Button>
+										</td>
+									</tr>
+								))}
 					</tbody>
 				</table>
 			</div>
@@ -76,6 +150,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 <script>
 	class InvoiceTable extends HTMLElement {
 		page = 1;
+		filter = "all";
 
 		connectedCallback() {
 			if (this.dataset.initialized === "true") {
@@ -97,6 +172,15 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 					this.renderPage();
 				},
 			);
+			for (const button of this.querySelectorAll<HTMLButtonElement>(
+				"[data-invoice-filter]",
+			)) {
+				button.addEventListener("click", () => {
+					this.filter = button.dataset.invoiceFilter ?? "all";
+					this.page = 1;
+					this.renderPage();
+				});
+			}
 			this.renderPage();
 		}
 
@@ -106,7 +190,30 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 			);
 			const parsed = Number(this.dataset.pageSize);
 			const pageSize = Math.max(1, Number.isFinite(parsed) ? parsed : 5);
-			const pageCount = Math.ceil(rows.length / pageSize);
+			const matching = rows.filter(
+				(row) => this.filter === "all" || row.dataset.category === this.filter,
+			);
+			const pageCount = Math.ceil(matching.length / pageSize);
+			this.page = Math.min(Math.max(this.page, 1), Math.max(pageCount, 1));
+
+			for (const button of this.querySelectorAll<HTMLButtonElement>(
+				"[data-invoice-filter]",
+			)) {
+				button.setAttribute(
+					"aria-pressed",
+					String((button.dataset.invoiceFilter ?? "all") === this.filter),
+				);
+			}
+
+			for (const row of rows) {
+				const index = matching.indexOf(row);
+				row.hidden =
+					index === -1 ||
+					(pageCount > 1 &&
+						(index < (this.page - 1) * pageSize ||
+							index >= this.page * pageSize));
+			}
+
 			const controls = this.querySelector<HTMLElement>(
 				'[data-invoice-pagination="controls"]',
 			);
@@ -124,21 +231,10 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 				return;
 			}
 
+			controls.hidden = pageCount <= 1;
+
 			if (pageCount <= 1) {
-				for (const row of rows) {
-					row.hidden = false;
-				}
-
-				controls.hidden = true;
 				return;
-			}
-
-			this.page = Math.min(Math.max(this.page, 1), pageCount);
-			controls.hidden = false;
-
-			for (const [index, row] of rows.entries()) {
-				row.hidden =
-					index < (this.page - 1) * pageSize || index >= this.page * pageSize;
 			}
 
 			previousButton.disabled = this.page === 1;

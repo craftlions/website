@@ -16,6 +16,9 @@ const invoices = (
 			stripePaymentPage: true,
 			stripeStatus: true,
 			stripePaidAt: true,
+			stripeDueAt: true,
+			total: true,
+			currency: true,
 		},
 		where: { organizationId: id },
 	})
@@ -26,6 +29,9 @@ const invoices = (
 		createdAt: getUuidV7Date(invoice.id),
 		stripeStatus: invoice.stripeStatus,
 		stripePaidAt: invoice.stripePaidAt,
+		stripeDueAt: invoice.stripeDueAt,
+		total: invoice.total,
+		currency: invoice.currency,
 	}))
 	.toSorted(
 		(a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
