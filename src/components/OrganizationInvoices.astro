@@ -8,43 +8,24 @@ interface Props {
 
 const { id } = Astro.props;
 
-const organization = await Astro.locals.db.query.organization.findFirst({
-	columns: {
-		id: true,
-	},
-	with: {
-		projects: {
-			columns: {
-				id: true,
-			},
-			with: {
-				phases: {
-					columns: {},
-					with: {
-						invoice: {
-							columns: {
-								id: true,
-								invoiceNumber: true,
-								stripePaymentPage: true,
-							},
-						},
-					},
-				},
-			},
+const invoices = (
+	await Astro.locals.db.query.invoices.findMany({
+		columns: {
+			id: true,
+			invoiceNumber: true,
+			stripePaymentPage: true,
+			stripeStatus: true,
+			stripePaidAt: true,
 		},
-	},
-	where: {
-		id,
-	},
-});
-
-const invoices = (organization?.projects ?? [])
-	.flatMap((project) => project.phases)
-	.flatMap((phase) => (phase.invoice ? [phase.invoice] : []))
+		where: { organizationId: id },
+	})
+)
 	.map((invoice) => ({
 		invoiceNumber: invoice.invoiceNumber,
 		stripePaymentPage: invoice.stripePaymentPage,
 		createdAt: getUuidV7Date(invoice.id),
+		stripeStatus: invoice.stripeStatus,
+		stripePaidAt: invoice.stripePaidAt,
 	}))
 	.toSorted(
 		(a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),

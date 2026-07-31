@@ -21,6 +21,8 @@ const project = await Astro.locals.db.query.projects.findFirst({
 						id: true,
 						invoiceNumber: true,
 						stripePaymentPage: true,
+						stripeStatus: true,
+						stripePaidAt: true,
 					},
 				},
 			},
@@ -37,6 +39,8 @@ const invoices = (project?.phases ?? [])
 		invoiceNumber: invoice.invoiceNumber,
 		stripePaymentPage: invoice.stripePaymentPage,
 		createdAt: getUuidV7Date(invoice.id),
+		stripeStatus: invoice.stripeStatus,
+		stripePaidAt: invoice.stripePaidAt,
 	}))
 	.toSorted(
 		(a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
