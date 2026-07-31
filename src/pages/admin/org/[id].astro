@@ -2,7 +2,6 @@
 export const prerender = false;
 
 import { actions } from "astro:actions";
-import { env } from "cloudflare:workers";
 import { and, eq, inArray } from "drizzle-orm";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
@@ -264,28 +263,6 @@ const suggestedPhaseId = (invoice: (typeof unattachedInvoices)[number]) =>
 			(a, b) =>
 				Math.abs(a.cost - invoice.total) - Math.abs(b.cost - invoice.total),
 		)[0]?.id;
-const staleInvoiceIds = allPhases
-	.filter(
-		(phase) =>
-			phase.state === "invoiced" &&
-			phase.invoice &&
-			(!phase.invoice.fetchedAt ||
-				now.getTime() - phase.invoice.fetchedAt.getTime() > 600000),
-	)
-	.map((phase) => phase.invoice?.id)
-	.filter((invoiceId): invoiceId is string => Boolean(invoiceId));
-
-if (staleInvoiceIds.length > 0) {
-	const { refreshStaleStripeInvoices } = await import("../../../lib/stripe.ts");
-	Astro.locals.cfContext?.waitUntil(
-		Promise.resolve().then(() =>
-			refreshStaleStripeInvoices(Astro.locals.db, {
-				invoiceIds: staleInvoiceIds,
-				stripeKey: env.STRIPE_SECRET_KEY,
-			}),
-		),
-	);
-}
 ---
 
 <Shell
