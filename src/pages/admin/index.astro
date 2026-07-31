@@ -185,6 +185,7 @@ const outstandingTotal = ledger.reduce(
 	(total, organization) => total + organization.openInvoices,
 	0,
 );
+const overdueCount = queue.filter((item) => item.priority === 0).length;
 ---
 
 <Shell
@@ -207,60 +208,34 @@ const outstandingTotal = ledger.reduce(
 						>Client workbench</h1
 					>
 				</div>
-				<form
-					method="POST"
-					action={actions.onboardOrganization}
-					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-2"
-				>
-					<label class="grid gap-1 text-sm">
-						<span class="font-medium">Contact email</span>
-						<input
-							class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700"
-							name="email"
-							type="email"
-							required
+				<dl class="grid grid-flow-col justify-start gap-8 text-sm">
+					<div class="grid gap-1">
+						<dt
+							class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+							>Outstanding</dt
 						>
-					</label>
-					<label class="grid gap-1 text-sm">
-						<span class="font-medium">Contact name</span>
-						<input
-							class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700"
-							name="name"
-							required
+						<dd class="tabular-nums"
+							>{currencyFormatter.format(outstandingTotal)}</dd
 						>
-					</label>
-					<label class="grid gap-1 text-sm">
-						<span class="font-medium">Organization</span>
-						<input
-							id="organization-name"
-							class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700"
-							name="organizationName"
-							required
-						>
-					</label>
-					<label class="grid gap-1 text-sm">
-						<span class="font-medium">Slug</span>
-						<input
-							id="organization-slug"
-							class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700"
-							name="slug"
-							required
-						>
-					</label>
-					<label class="grid gap-1 text-sm md:col-span-2">
-						<span class="font-medium">Yearly budget</span>
-						<input
-							class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700"
-							name="yearlyBudget"
-							type="number"
-							min="1"
-						>
-					</label>
-					{onboardResult?.error && <p class="text-sm text-red-700 dark:text-red-300 md:col-span-2">{onboardResult.error.message}</p>}
-					<div class="grid md:col-span-2">
-						<Button type="submit">Onboard client</Button>
 					</div>
-				</form>
+					<div class="grid gap-1">
+						<dt
+							class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+							>Overdue</dt
+						>
+						<dd
+							class:list={["tabular-nums", overdueCount > 0 && "text-red-700 dark:text-red-300"]}
+							>{overdueCount}</dd
+						>
+					</div>
+					<div class="grid gap-1">
+						<dt
+							class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+							>In queue</dt
+						>
+						<dd class="tabular-nums">{queue.length}</dd>
+					</div>
+				</dl>
 			</section>
 
 			<section class="grid gap-3" aria-labelledby="queue-heading">
@@ -270,23 +245,23 @@ const outstandingTotal = ledger.reduce(
 					>Needs action</h2
 				>
 				<div
-					class="grid border border-dashed border-neutral-300 dark:border-neutral-700"
+					class="grid border border-dashed border-neutral-300 dark:border-neutral-700 sm:grid-cols-[auto_1fr_max-content_max-content] sm:gap-x-6"
 				>
 					{queue.length > 0 ? queue.map((item) => (
-							<article class="grid gap-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[auto_1fr_auto_auto] md:items-center">
-								<Badge type={item.priority === 0 ? "error" : "info"}>{item.kind}</Badge>
+							<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
+								<Badge type={item.priority === 0 ? "error" : item.priority === 1 ? "info" : "gray"}>{item.kind}</Badge>
 								<div class="grid gap-1">
 									<h3 class="font-medium">{item.client}</h3>
 									<p class="text-sm text-neutral-600 dark:text-neutral-400">{item.label}</p>
 								</div>
-								<p class="text-sm tabular-nums">{currencyFormatter.format(item.amount)}</p>
-								<div class="grid grid-flow-col items-center gap-3">
-									<p class="text-sm text-neutral-600 dark:text-neutral-400">{item.days}d</p>
+								<p class="text-sm tabular-nums sm:text-right">{currencyFormatter.format(item.amount)}</p>
+								<div class="grid grid-flow-col items-center gap-3 sm:justify-self-end">
+									<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{item.days}d</p>
 									<Button href={item.link}>Open</Button>
 								</div>
 							</article>
 						)) : (
-							<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400">Nothing needs action.</p>
+							<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-4">Nothing needs action.</p>
 						)}
 				</div>
 			</section>
@@ -300,7 +275,7 @@ const outstandingTotal = ledger.reduce(
 				<div
 					class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700"
 				>
-					<table class="w-full min-w-4xl border-collapse text-left text-sm">
+					<table class="w-full min-w-2xl border-collapse text-left text-sm">
 						<thead>
 							<tr
 								class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
@@ -310,58 +285,128 @@ const outstandingTotal = ledger.reduce(
 								<th class="px-4 py-3" scope="col">Projects</th>
 								<th class="px-4 py-3" scope="col">Budget</th>
 								<th class="px-4 py-3 text-right" scope="col">Open</th>
-								<th class="px-4 py-3" scope="col">Action</th>
 							</tr>
 						</thead>
 						<tbody>
 							{ledger.length > 0 ? ledger.map((organization) => (
 									<tr class:list={["border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700", organization.openInvoices === 0 && organization.planned === 0 && organization.submitted === 0 && "opacity-60"]}>
-										<td class="px-4 py-4 font-medium">{organization.name}</td>
-										<td class="px-4 py-4">
+										<td class="px-4 py-3 font-medium"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}`}>{organization.name}</a></td>
+										<td class="px-4 py-3">
 											<div class="grid grid-flow-col justify-start gap-2">
 												{organization.overdue > 0 && <Badge type="error">Overdue</Badge>}
 												{organization.submitted > 0 && <Badge type="info">To plan</Badge>}
-												{organization.planned > 0 && <Badge type="info">Awaiting</Badge>}
+												{organization.planned > 0 && <Badge type="gray">Awaiting client</Badge>}
 												{organization.overdue === 0 && organization.submitted === 0 && organization.planned === 0 && <span class="text-neutral-500 dark:text-neutral-400">Quiet</span>}
 											</div>
 										</td>
-										<td class="px-4 py-4 tabular-nums">{organization.activeProjects}/{organization.totalProjects}</td>
-										<td class="px-4 py-4">
+										<td class="px-4 py-3 tabular-nums">{organization.activeProjects}/{organization.totalProjects}</td>
+										<td class="px-4 py-3">
 											{organization.budgetUsage === null ? (
 												<span class="text-neutral-500 dark:text-neutral-400">No budget</span>
 											) : (
 												<div class="grid gap-1">
-													<progress class:list={["h-2 w-36 appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100", organization.budgetUsage > 100 && "[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400"]} max="100" value={Math.min(organization.budgetUsage, 100)} />
+													<progress class:list={["h-2 w-24 appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100", organization.budgetUsage > 100 && "[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400"]} max="100" value={Math.min(organization.budgetUsage, 100)} />
 													<span class:list={["text-xs tabular-nums", organization.budgetUsage > 100 && "text-red-700 dark:text-red-300"]}>{organization.budgetUsage.toFixed(1)}%</span>
 												</div>
 											)}
 										</td>
-										<td class="px-4 py-4 text-right tabular-nums">{currencyFormatter.format(organization.openInvoices)}</td>
-										<td class="px-4 py-4"><Button href={`/admin/org/${organization.id}`}>Open</Button></td>
+										<td class="px-4 py-3 text-right tabular-nums">{currencyFormatter.format(organization.openInvoices)}</td>
 									</tr>
 								)) : (
 									<tr>
-										<td class="px-4 py-4 text-neutral-600 dark:text-neutral-400" colspan="6">No clients yet.</td>
+										<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="5">No clients yet.</td>
 									</tr>
 								)}
 						</tbody>
-						<tfoot>
-							<tr
-								class="border-t border-dashed border-neutral-300 font-semibold dark:border-neutral-700"
-							>
-								<td class="px-4 py-3" colspan="4">Outstanding</td>
-								<td class="px-4 py-3 text-right tabular-nums"
-									>{currencyFormatter.format(outstandingTotal)}</td
+						{ledger.length > 0 && (
+							<tfoot>
+								<tr
+									class="border-t border-dashed border-neutral-300 font-semibold dark:border-neutral-700"
 								>
-								<td class="px-4 py-3"></td>
-							</tr>
-						</tfoot>
+									<td class="px-4 py-3" colspan="4">Outstanding</td>
+									<td class="px-4 py-3 text-right tabular-nums"
+										>{currencyFormatter.format(outstandingTotal)}</td
+									>
+								</tr>
+							</tfoot>
+						)}
 					</table>
 				</div>
+			</section>
+
+			<section aria-labelledby="onboard-heading">
+				<details
+					id="onboard"
+					class="grid gap-3"
+					open={Boolean(onboardResult?.error)}
+				>
+					<summary
+						id="onboard-heading"
+						class="w-max cursor-pointer text-sm font-semibold uppercase text-neutral-500 transition-colors hover:text-neutral-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 dark:focus-visible:outline-neutral-300"
+						>Onboard client</summary
+					>
+					<form
+						method="POST"
+						action={actions.onboardOrganization}
+						class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-2"
+					>
+						<label class="grid gap-1 text-sm">
+							<span class="font-medium">Contact email</span>
+							<input
+								class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+								name="email"
+								type="email"
+								required
+							>
+						</label>
+						<label class="grid gap-1 text-sm">
+							<span class="font-medium">Contact name</span>
+							<input
+								class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+								name="name"
+								required
+							>
+						</label>
+						<label class="grid gap-1 text-sm">
+							<span class="font-medium">Organization</span>
+							<input
+								id="organization-name"
+								class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+								name="organizationName"
+								required
+							>
+						</label>
+						<label class="grid gap-1 text-sm">
+							<span class="font-medium">Slug</span>
+							<input
+								id="organization-slug"
+								class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+								name="slug"
+								required
+							>
+						</label>
+						<label class="grid gap-1 text-sm md:col-span-2">
+							<span class="font-medium">Yearly budget</span>
+							<input
+								class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+								name="yearlyBudget"
+								type="number"
+								min="1"
+							>
+						</label>
+						{onboardResult?.error && <p class="text-sm text-red-700 dark:text-red-300 md:col-span-2">{onboardResult.error.message}</p>}
+						<div class="grid md:col-span-2">
+							<Button type="submit">Onboard client</Button>
+						</div>
+					</form>
+				</details>
 			</section>
 		</main>
 		<Footer />
 		<script>
+			const onboard = document.querySelector<HTMLDetailsElement>("#onboard");
+			if (onboard?.open) onboard.scrollIntoView();
+
 			const organizationName =
 				document.querySelector<HTMLInputElement>("#organization-name");
 			const organizationSlug =
