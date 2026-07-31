@@ -111,6 +111,7 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 								total: true,
 								stripeStatus: true,
 								stripePaidAt: true,
+								stripeDueAt: true,
 								fetchedAt: true,
 							},
 						},
@@ -201,7 +202,12 @@ const budgetUsage =
 		: null;
 const worklist = allPhases
 	.flatMap((phase) => {
-		if (phase.state === "invoiced" && phase.dueAt && phase.dueAt < now) {
+		if (
+			phase.state === "invoiced" &&
+			phase.invoice?.stripeStatus === "open" &&
+			phase.invoice.stripeDueAt &&
+			phase.invoice.stripeDueAt < now
+		) {
 			return [{ priority: 0, kind: "Overdue", phase }];
 		}
 		if (phase.state === "submitted") {
@@ -541,7 +547,7 @@ if (staleInvoiceIds.length > 0) {
 										<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
 											<td class="px-4 py-3"><a class="underline decoration-dashed underline-offset-4" href={phase.invoice?.stripePaymentPage}>{phase.invoice?.invoiceNumber}</a></td>
 											<td class="px-4 py-3">{phase.project.name} · {phase.title}</td>
-											<td class="px-4 py-3">{phase.invoice?.stripeStatus ?? "Not fetched"}{phase.invoice?.stripePaidAt ? ` · paid ${dateFormatter.format(phase.invoice.stripePaidAt)}` : ""}{phase.invoice?.fetchedAt ? ` · ${dateFormatter.format(phase.invoice.fetchedAt)}` : ""}</td>
+											<td class="px-4 py-3">{phase.invoice?.stripeStatus ?? "Not fetched"}{phase.invoice?.stripeDueAt ? ` · due ${dateFormatter.format(phase.invoice.stripeDueAt)}` : ""}{phase.invoice?.stripePaidAt ? ` · paid ${dateFormatter.format(phase.invoice.stripePaidAt)}` : ""}{phase.invoice?.fetchedAt ? ` · ${dateFormatter.format(phase.invoice.fetchedAt)}` : ""}</td>
 											<td class="px-4 py-3 text-right tabular-nums">{currencyFormatter.format(phase.invoice?.total ?? 0)}</td>
 											<td class="px-4 py-3">
 												<div class="grid grid-flow-col justify-start gap-2">
