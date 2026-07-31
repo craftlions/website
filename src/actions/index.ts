@@ -368,6 +368,10 @@ export const server = {
 				z.string().trim().url().nullable().optional(),
 			),
 			yearlyBudget: optionalBudget,
+			stripeCustomerId: z.preprocess(
+				(value) => (value === "" ? null : value),
+				z.string().trim().startsWith("cus_").nullable().optional(),
+			),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await updateOrganizationSettings(
