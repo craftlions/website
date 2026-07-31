@@ -5,6 +5,8 @@ interface Invoice {
 	invoiceNumber: string;
 	stripePaymentPage: string;
 	createdAt: Date | null;
+	stripeStatus: string | null;
+	stripePaidAt: Date | null;
 }
 
 interface Props {
@@ -24,6 +26,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 							<tr class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
 								<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Created At</th>
 							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Invoice Number</th>
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Status</th>
 							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Payment Link</th>
 						</tr>
 					</thead>
@@ -34,6 +37,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 											{invoice.createdAt ? dateFormatter.format(invoice.createdAt) : "-"}
 										</td>
 									<td class="px-4 py-3">{invoice.invoiceNumber}</td>
+									<td class="px-4 py-3 capitalize">{invoice.stripeStatus ?? "—"}{invoice.stripePaidAt ? ` · ${dateFormatter.format(invoice.stripePaidAt)}` : ""}</td>
 									<td class="px-4 py-3">
 										<Button
 											href={invoice.stripePaymentPage}
