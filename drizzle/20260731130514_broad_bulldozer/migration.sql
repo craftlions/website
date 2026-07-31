@@ -1,0 +1,2 @@
+ALTER TABLE "organization_metadata" ADD COLUMN "stripe_customer_id" text;--> statement-breakpoint
+CREATE INDEX "organization_metadata_stripeCustomerId_idx" ON "organization_metadata" ("stripe_customer_id");
