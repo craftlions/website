@@ -50,6 +50,7 @@ const organizations = await Astro.locals.db.query.organization.findMany({
 								invoiceNumber: true,
 								total: true,
 								stripeStatus: true,
+								stripeDueAt: true,
 								fetchedAt: true,
 							},
 						},
@@ -84,15 +85,23 @@ const queue = organizations
 			project.phases.flatMap((phase) => {
 				const link = `/admin/org/${organization.id}`;
 
-				if (phase.state === "invoiced" && phase.dueAt && phase.dueAt < now) {
+				if (
+					phase.state === "invoiced" &&
+					phase.invoice?.stripeStatus === "open" &&
+					phase.invoice.stripeDueAt &&
+					phase.invoice.stripeDueAt < now
+				) {
 					return [
 						{
 							priority: 0,
 							kind: "Overdue",
 							client: organization.name,
-							label: `${project.name} · ${phase.invoice?.invoiceNumber ?? phase.title}`,
-							amount: phase.invoice?.total ?? phase.cost,
-							days: daysSince(phase.invoice?.id ?? phase.id),
+							label: `${project.name} · ${phase.invoice.invoiceNumber}`,
+							amount: phase.invoice.total,
+							days: Math.floor(
+								(now.getTime() - phase.invoice.stripeDueAt.getTime()) /
+									86400000,
+							),
 							link,
 						},
 					];
@@ -164,7 +173,11 @@ const ledger = organizations.map((organization) => {
 	const overdue = organization.projects
 		.flatMap((project) => project.phases)
 		.filter(
-			(phase) => phase.state === "invoiced" && phase.dueAt && phase.dueAt < now,
+			(phase) =>
+				phase.state === "invoiced" &&
+				phase.invoice?.stripeStatus === "open" &&
+				phase.invoice.stripeDueAt &&
+				phase.invoice.stripeDueAt < now,
 		).length;
 
 	return {
