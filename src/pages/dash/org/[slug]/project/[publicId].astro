@@ -16,15 +16,13 @@ if (!publicId || !slug) {
 	return Astro.redirect("/dash");
 }
 
-const session = await Astro.locals.auth.api.getSession({
-	headers: Astro.request.headers,
-});
+const session = Astro.locals.session;
 
 if (!session) {
 	return Astro.redirect("/login");
 }
 
-if (!session.session.activeOrganizationId) {
+if (!session.session.impersonatedBy && !session.session.activeOrganizationId) {
 	try {
 		await Astro.locals.auth.api.setActiveOrganization({
 			body: {
@@ -107,58 +105,56 @@ const canApprovePhases =
 	currentMember?.role === "owner" || currentMember?.role === "admin";
 ---
 
-<Shell>
+<Shell
+	bodyClass="min-h-dvh grid bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+>
 	<Fragment slot="head"> <title>craftlions | {project.name}</title> </Fragment>
 	<Fragment slot="body">
-		<body
-			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+		<header class="grid gap-6 max-w-3xl mx-auto w-full">
+			<Nav organizationSlug={slug} />
+		</header>
+
+		<main
+			class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
 		>
-			<header class="grid gap-6 max-w-3xl mx-auto w-full">
-				<Nav organizationSlug={slug} />
-			</header>
+			<Button href={`/dash/org/${slug}`}>Back to Dashboard</Button>
 
-			<main
-				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
-			>
-				<Button href={`/dash/org/${slug}`}>Back to Dashboard</Button>
+			<section class="grid gap-4">
+				<p
+					class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				>
+					Project Overview
+				</p>
+				<h1
+					class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+				>
+					{project.name}
+				</h1>
+			</section>
 
-				<section class="grid gap-4">
-					<p
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>
-						Project Overview
-					</p>
-					<h1
-						class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
-					>
-						{project.name}
-					</h1>
-				</section>
+			<section>
+				<h2
+					id="phases"
+					class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				>
+					Phases
+				</h2>
+				<PhasesTable
+					phases={project.phases}
+					canApprovePhases={canApprovePhases && !session.session.impersonatedBy}
+				/>
+			</section>
 
-				<section>
-					<h2
-						id="phases"
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>
-						Phases
-					</h2>
-					<PhasesTable
-						phases={project.phases}
-						canApprovePhases={canApprovePhases}
-					/>
-				</section>
-
-				<section>
-					<h2
-						id="invoices"
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>
-						Invoices
-					</h2>
-					<ProjectInvoices id={project.id} />
-				</section>
-			</main>
-			<Footer />
-		</body>
+			<section>
+				<h2
+					id="invoices"
+					class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				>
+					Invoices
+				</h2>
+				<ProjectInvoices id={project.id} />
+			</section>
+		</main>
+		<Footer />
 	</Fragment>
 </Shell>
