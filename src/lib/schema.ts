@@ -315,7 +315,7 @@ export const invoices = t.pgTable(
 	{
 		id: t.uuid("id").default(sql`uuidv7()`).notNull(),
 		publicId: t.text("public_id").notNull(),
-		phaseId: t.uuid("phase_id").notNull(),
+		phaseId: t.uuid("phase_id"),
 		invoiceNumber: t.text("invoice_number").notNull(),
 		stripeId: t.text("stripe_id").notNull(),
 		stripePaymentPage: t.text("stripe_payment_page").notNull(),
