@@ -7,7 +7,13 @@
     "defaultBranch": "main"
   },
   "files": {
-    "includes": ["**", "!**/worker-configuration.d.ts", "!**/drizzle"]
+    "includes": [
+      "**",
+      "!**/worker-configuration.d.ts",
+      "!**/drizzle",
+      "!**/.agents",
+      "!**/.claude"
+    ]
   },
   "formatter": {
     "enabled": true
