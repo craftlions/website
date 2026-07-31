@@ -37,12 +37,7 @@ export function createAuth(env: Cloudflare.Env) {
 		},
 		appName: "craftlions website",
 		baseURL: {
-			allowedHosts: [
-				"craftlions.com",
-				"craftlions-website.craftlions.workers.dev",
-				"*-craftlions-website.craftlions.workers.dev",
-				"localhost:*",
-			],
+			allowedHosts: ["craftlions.com", "*.craftlions.com", "localhost:*"],
 			protocol: "auto",
 		},
 		database: db
