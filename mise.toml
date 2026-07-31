@@ -1,8 +1,8 @@
 [tools]
-"github:endevco/aube" = "v1.25.2"
-"core:node" = "26.3.0"
+"github:endevco/aube" = "v1.36.0"
+"core:node" = "26.5.1"
 "npm:sfw" = "2.0.6"
-"aqua:zizmorcore/zizmor" = "1.25.2"
+"aqua:zizmorcore/zizmor" = "1.28.0"
 "aqua:rhysd/actionlint" = "1.7.12"
 "aqua:koalaman/shellcheck" = "0.11.0"
 
