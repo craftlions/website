@@ -14,6 +14,7 @@ interface StripeInvoiceResponse {
 	status_transitions?: {
 		paid_at?: number | null;
 	};
+	due_date?: number | null;
 	total?: number;
 }
 
@@ -115,6 +116,7 @@ export const refreshStripeInvoice = async (
 		paidAt: data.status_transitions?.paid_at
 			? new Date(data.status_transitions.paid_at * 1000)
 			: null,
+		dueAt: data.due_date ? new Date(data.due_date * 1000) : null,
 		fetchedAt: new Date(),
 	});
 };
@@ -193,6 +195,7 @@ export const importStripeInvoices = async (
 			stripePaidAt: item.status_transitions?.paid_at
 				? new Date(item.status_transitions.paid_at * 1000)
 				: null,
+			stripeDueAt: item.due_date ? new Date(item.due_date * 1000) : null,
 			fetchedAt: new Date(),
 		};
 

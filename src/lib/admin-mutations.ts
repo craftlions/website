@@ -778,6 +778,7 @@ export const updateStoredStripeStatus = async (
 		invoiceId: string;
 		status: string | null;
 		paidAt: Date | null;
+		dueAt: Date | null;
 		fetchedAt: Date;
 	},
 ) => {
@@ -786,6 +787,7 @@ export const updateStoredStripeStatus = async (
 		.set({
 			stripeStatus: input.status,
 			stripePaidAt: input.paidAt,
+			stripeDueAt: input.dueAt,
 			fetchedAt: input.fetchedAt,
 		})
 		.where(eq(invoices.id, input.invoiceId));

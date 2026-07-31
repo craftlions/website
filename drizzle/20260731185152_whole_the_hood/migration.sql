@@ -1,0 +1,1 @@
+ALTER TABLE "invoices" ADD COLUMN "stripe_due_at" timestamp with time zone;

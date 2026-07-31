@@ -331,6 +331,7 @@ export const invoices = t.pgTable(
 			.$onUpdate(() => new Date()),
 		stripeStatus: t.text("stripe_status"),
 		stripePaidAt: t.timestamp("stripe_paid_at", { withTimezone: true }),
+		stripeDueAt: t.timestamp("stripe_due_at", { withTimezone: true }),
 		fetchedAt: t.timestamp("fetched_at", { withTimezone: true }),
 	},
 	(table) => [
