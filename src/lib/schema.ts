@@ -246,6 +246,7 @@ export const projects = t.pgTable(
 		organizationId: t.text("organization_id").notNull(),
 		name: t.text("name").notNull(),
 		state: projectState("state").notNull(),
+		version: t.integer("version").default(0).notNull(),
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
 			.$onUpdate(() => new Date()),
@@ -288,6 +289,7 @@ export const phases = t.pgTable(
 			.notNull(),
 		currency: t.char("currency", { length: 3 }).notNull(),
 		state: phaseState("state").notNull(),
+		version: t.integer("version").default(0).notNull(),
 		dueAt: t.timestamp("due_at", { withTimezone: true }),
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
@@ -363,6 +365,7 @@ export const events = t.pgTable(
 		publicId: t.text("public_id").notNull(),
 		aggregateType: aggregateType("aggregate_type").notNull(),
 		aggregateId: t.text("aggregate_id").notNull(),
+		aggregateVersion: t.integer("aggregate_version"),
 		event: t.text("event_type").notNull(),
 		actorType: actorType("actor_type").notNull(),
 		actorId: t.text("actor_id").notNull(),
@@ -374,6 +377,9 @@ export const events = t.pgTable(
 		t
 			.index("events_aggregate_type_id_idx")
 			.on(table.aggregateType, table.aggregateId),
+		t
+			.uniqueIndex("events_aggregate_type_id_version_uidx")
+			.on(table.aggregateType, table.aggregateId, table.aggregateVersion),
 	],
 );
 

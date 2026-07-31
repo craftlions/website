@@ -20,6 +20,7 @@ export const PATCH: APIRoute = async (context) => {
 	const validation = z
 		.strictObject({
 			nextState: z.enum(["active", "completed", "archived"]),
+			expectedVersion: z.number().int().nonnegative(),
 		})
 		.safeParse(await context.request.json());
 
@@ -31,6 +32,7 @@ export const PATCH: APIRoute = async (context) => {
 		await transitionProject(context.locals.db, verification.actorId, {
 			projectId: String(context.params.id),
 			nextState: validation.data.nextState,
+			expectedVersion: validation.data.expectedVersion,
 		});
 		return new Response(null, { status: 204 });
 	} catch (error) {

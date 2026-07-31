@@ -23,6 +23,7 @@ export const POST: APIRoute = async (context) => {
 			stripeId: z.string().trim().min(1).max(140),
 			stripePaymentPage: z.string().trim().url(),
 			total: z.number().nonnegative(),
+			expectedVersion: z.number().int().nonnegative(),
 		})
 		.safeParse(await context.request.json());
 
@@ -31,7 +32,7 @@ export const POST: APIRoute = async (context) => {
 	}
 
 	try {
-		const invoice = await recordInvoice(
+		const result = await recordInvoice(
 			context.locals.db,
 			verification.actorId,
 			{
@@ -39,8 +40,8 @@ export const POST: APIRoute = async (context) => {
 				...validation.data,
 			},
 		);
-		return new Response(JSON.stringify(invoice), {
-			status: 201,
+		return new Response(JSON.stringify(result.invoice), {
+			status: result.created ? 201 : 200,
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
