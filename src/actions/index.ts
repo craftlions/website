@@ -6,6 +6,7 @@ import { env } from "cloudflare:workers";
 import {
 	addOrganizationMember,
 	approvePhaseAsClient,
+	attachInvoiceToPhase,
 	createPhase,
 	createProject,
 	DomainError,
@@ -308,6 +309,17 @@ export const server = {
 				organizationId: input.organizationId,
 				stripeKey: env.STRIPE_SECRET_KEY,
 			});
+			return { success: true };
+		}),
+	}),
+	attachInvoiceToPhase: defineAction({
+		accept: "form",
+		input: z.object({
+			invoiceId: z.string().trim().min(1),
+			phaseId: z.string().trim().min(1),
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await attachInvoiceToPhase(context.locals.db, actorId, input);
 			return { success: true };
 		}),
 	}),
