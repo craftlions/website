@@ -424,6 +424,91 @@ export const recordInvoice = async (
 	});
 };
 
+export const attachInvoiceToPhase = async (
+	db: Db,
+	actorId: string,
+	input: { invoiceId: string; phaseId: string },
+) => {
+	await assertAdminUser(db, actorId);
+
+	const invoice = await db.query.invoices.findFirst({
+		columns: { id: true, organizationId: true, phaseId: true, currency: true },
+		where: { id: input.invoiceId },
+	});
+
+	if (!invoice) {
+		throw new DomainError("NotFound", "Invoice not found.");
+	}
+
+	if (invoice.phaseId) {
+		throw new DomainError(
+			"AlreadyExists",
+			"This invoice is already attached to a phase.",
+		);
+	}
+
+	const phase = await db.query.phases.findFirst({
+		columns: { id: true, state: true, currency: true },
+		with: {
+			invoice: { columns: { id: true } },
+			project: { columns: { organizationId: true } },
+		},
+		where: { id: input.phaseId },
+	});
+
+	if (!phase?.project) {
+		throw new DomainError("NotFound", "Phase not found.");
+	}
+
+	if (phase.project.organizationId !== invoice.organizationId) {
+		throw new DomainError(
+			"Validation",
+			"Phase belongs to a different organization.",
+		);
+	}
+
+	if (phase.invoice) {
+		throw new DomainError(
+			"AlreadyExists",
+			"This phase already has an invoice.",
+		);
+	}
+
+	if (phase.state !== "in_progress" && phase.state !== "invoiced") {
+		throw new DomainError(
+			"InvalidTransition",
+			"Invoices can only be attached to in-progress or invoiced phases.",
+		);
+	}
+
+	if (phase.currency.toUpperCase() !== invoice.currency.toUpperCase()) {
+		throw new DomainError(
+			"Validation",
+			"Invoice currency does not match the phase currency.",
+		);
+	}
+
+	await db.transaction(async (tx) => {
+		await tx
+			.update(invoices)
+			.set({ phaseId: phase.id })
+			.where(eq(invoices.id, invoice.id));
+
+		if (phase.state === "in_progress") {
+			await tx
+				.update(phases)
+				.set({ state: "invoiced" })
+				.where(eq(phases.id, phase.id));
+			await insertEvent(tx, {
+				aggregateType: "phase",
+				aggregateId: phase.id,
+				event: "invoiced",
+				actorId,
+			});
+		}
+	});
+};
+
 export const updateStoredStripeStatus = async (
 	db: Db,
 	input: {
