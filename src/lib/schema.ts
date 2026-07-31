@@ -315,10 +315,12 @@ export const invoices = t.pgTable(
 	{
 		id: t.uuid("id").default(sql`uuidv7()`).notNull(),
 		publicId: t.text("public_id").notNull(),
+		organizationId: t.text("organization_id").notNull(),
 		phaseId: t.uuid("phase_id"),
 		invoiceNumber: t.text("invoice_number").notNull(),
 		stripeId: t.text("stripe_id").notNull(),
 		stripePaymentPage: t.text("stripe_payment_page").notNull(),
+		currency: t.char("currency", { length: 3 }).notNull(),
 		total: t
 			.numeric("total", { precision: 19, scale: 4, mode: "number" })
 			.notNull(),
@@ -335,10 +337,19 @@ export const invoices = t.pgTable(
 		}),
 		t.uniqueIndex().on(table.publicId),
 		t.uniqueIndex("invoices_phase_id_uidx").on(table.phaseId),
+		t.uniqueIndex("invoices_stripe_id_uidx").on(table.stripeId),
+		t.index("invoices_organization_id_idx").on(table.organizationId),
 		t
 			.foreignKey({
 				columns: [table.phaseId],
 				foreignColumns: [phases.id],
+			})
+			.onUpdate("cascade")
+			.onDelete("restrict"),
+		t
+			.foreignKey({
+				columns: [table.organizationId],
+				foreignColumns: [organization.id],
 			})
 			.onUpdate("cascade")
 			.onDelete("restrict"),

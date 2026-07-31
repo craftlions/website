@@ -362,12 +362,15 @@ export const recordInvoice = async (
 	await assertAdminUser(db, actorId);
 
 	const phase = await db.query.phases.findFirst({
-		columns: { id: true, state: true },
-		with: { invoice: { columns: { id: true } } },
+		columns: { id: true, state: true, currency: true },
+		with: {
+			invoice: { columns: { id: true } },
+			project: { columns: { organizationId: true } },
+		},
 		where: { id: input.phaseId },
 	});
 
-	if (!phase) {
+	if (!phase?.project) {
 		throw new DomainError("NotFound", "Phase not found.");
 	}
 
@@ -385,15 +388,19 @@ export const recordInvoice = async (
 		);
 	}
 
+	const organizationId = phase.project.organizationId;
+
 	return db.transaction(async (tx) => {
 		const rows = await tx
 			.insert(invoices)
 			.values({
 				publicId: publicId(),
+				organizationId,
 				phaseId: phase.id,
 				invoiceNumber: input.invoiceNumber.trim(),
 				stripeId: input.stripeId.trim(),
 				stripePaymentPage: input.stripePaymentPage.trim(),
+				currency: phase.currency,
 				total: input.total,
 			})
 			.returning({ id: invoices.id, publicId: invoices.publicId });
