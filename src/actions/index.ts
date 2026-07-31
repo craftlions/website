@@ -19,7 +19,7 @@ import {
 	transitionProject,
 	updateOrganizationSettings,
 } from "../lib/admin-mutations.ts";
-import { refreshStripeInvoice } from "../lib/stripe.ts";
+import { importStripeInvoices, refreshStripeInvoice } from "../lib/stripe.ts";
 
 export const assertAdmin = async (headers: Headers, auth: Auth) => {
 	const session = await auth.api.getSession({ headers });
@@ -295,6 +295,17 @@ export const server = {
 		handler: adminHandler(async (input, context) => {
 			await refreshStripeInvoice(context.locals.db, {
 				invoiceId: input.invoiceId,
+				stripeKey: env.STRIPE_SECRET_KEY,
+			});
+			return { success: true };
+		}),
+	}),
+	importStripeInvoices: defineAction({
+		accept: "form",
+		input: z.object({ organizationId: z.string().trim().min(1) }),
+		handler: adminHandler(async (input, context, actorId) => {
+			await importStripeInvoices(context.locals.db, actorId, {
+				organizationId: input.organizationId,
 				stripeKey: env.STRIPE_SECRET_KEY,
 			});
 			return { success: true };
