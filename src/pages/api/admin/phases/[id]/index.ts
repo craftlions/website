@@ -26,6 +26,7 @@ export const PATCH: APIRoute = async (context) => {
 				"cancelled",
 				"paid",
 			]),
+			expectedVersion: z.number().int().nonnegative(),
 		})
 		.safeParse(await context.request.json());
 
@@ -37,6 +38,7 @@ export const PATCH: APIRoute = async (context) => {
 		await transitionPhaseAsAdmin(context.locals.db, verification.actorId, {
 			phaseId: String(context.params.id),
 			nextState: validation.data.nextState,
+			expectedVersion: validation.data.expectedVersion,
 		});
 		return new Response(null, { status: 204 });
 	} catch (error) {

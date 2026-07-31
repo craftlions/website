@@ -1,7 +1,7 @@
 import type { Auth } from "./auth.ts";
 import type { Db } from "./database.ts";
 import { getOrgAdapter } from "better-auth/plugins/organization";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import {
 	events,
 	invoices,
@@ -14,6 +14,7 @@ export class DomainError extends Error {
 	constructor(
 		public code:
 			| "AlreadyExists"
+			| "Conflict"
 			| "Forbidden"
 			| "InvalidTransition"
 			| "NotFound"
@@ -58,27 +59,51 @@ const insertEvent = async (
 	input: {
 		aggregateType: "invoice" | "organization" | "phase" | "project";
 		aggregateId: string;
+		aggregateVersion?: number;
 		event: string;
 		actorId: string;
 	},
 ) => {
-	await tx.insert(events).values({
+	const values = {
 		publicId: publicId(),
 		aggregateType: input.aggregateType,
 		aggregateId: input.aggregateId,
+		aggregateVersion: input.aggregateVersion,
 		event: input.event,
-		actorType: "user",
+		actorType: "user" as const,
 		actorId: input.actorId,
-	});
+	};
+
+	if (input.aggregateVersion === undefined) {
+		await tx.insert(events).values(values);
+		return;
+	}
+
+	const rows = await tx
+		.insert(events)
+		.values(values)
+		.onConflictDoNothing()
+		.returning({ id: events.id });
+
+	if (!rows[0]) {
+		throw new DomainError(
+			"Conflict",
+			"A transition event already exists for this version.",
+		);
+	}
 };
 
 export const approvePhaseAsClient = async (
 	db: Db,
 	actorId: string,
-	input: { phasePublicId: string; event: "approved" | "declined" },
+	input: {
+		phasePublicId: string;
+		event: "approved" | "declined";
+		expectedVersion: number;
+	},
 ) => {
 	const phase = await db.query.phases.findFirst({
-		columns: { id: true, state: true },
+		columns: { id: true },
 		with: {
 			project: { columns: { organizationId: true } },
 		},
@@ -104,25 +129,16 @@ export const approvePhaseAsClient = async (
 		);
 	}
 
-	if (phase.state !== "planned") {
-		throw new DomainError(
-			"InvalidTransition",
-			"Only planned phases can be approved or declined.",
-		);
-	}
-
-	await db.transaction(async (tx) => {
-		await tx
-			.update(phases)
-			.set({ state: input.event === "approved" ? "approved" : "cancelled" })
-			.where(eq(phases.id, phase.id));
-		await insertEvent(tx, {
-			aggregateType: "phase",
-			aggregateId: phase.id,
-			event: input.event,
-			actorId,
-		});
-	});
+	return transitionPhase(
+		db,
+		actorId,
+		phase.id,
+		input.expectedVersion,
+		input.event === "approved" ? "approved" : "cancelled",
+		["planned"],
+		input.event,
+		"Only planned phases can be approved or declined.",
+	);
 };
 
 export const createProject = async (
@@ -150,7 +166,11 @@ export const createProject = async (
 				name: input.name.trim(),
 				state: "draft",
 			})
-			.returning({ id: projects.id, publicId: projects.publicId });
+			.returning({
+				id: projects.id,
+				publicId: projects.publicId,
+				version: projects.version,
+			});
 
 		if (!rows[0]) {
 			throw new DomainError("Validation", "Project could not be created.");
@@ -159,6 +179,7 @@ export const createProject = async (
 		await insertEvent(tx, {
 			aggregateType: "project",
 			aggregateId: rows[0].id,
+			aggregateVersion: rows[0].version,
 			event: "created",
 			actorId,
 		});
@@ -176,55 +197,102 @@ const nextProjectEvents = {
 export const transitionProject = async (
 	db: Db,
 	actorId: string,
-	input: { projectId: string; nextState: "active" | "completed" | "archived" },
+	input: {
+		projectId: string;
+		nextState: "active" | "completed" | "archived";
+		expectedVersion: number;
+	},
 ) => {
 	await assertAdminUser(db, actorId);
 
-	const project = await db.query.projects.findFirst({
-		columns: { id: true, state: true },
-		with: { phases: { columns: { state: true } } },
-		where: { id: input.projectId },
-	});
+	return db.transaction(async (tx) => {
+		const [project] = await tx
+			.select({
+				id: projects.id,
+				state: projects.state,
+				version: projects.version,
+			})
+			.from(projects)
+			.where(eq(projects.id, input.projectId))
+			.for("update");
 
-	if (!project) {
-		throw new DomainError("NotFound", "Project not found.");
-	}
+		if (!project) {
+			throw new DomainError("NotFound", "Project not found.");
+		}
 
-	const valid =
-		(project.state === "draft" && input.nextState === "active") ||
-		(project.state === "active" && input.nextState === "completed") ||
-		(project.state === "completed" && input.nextState === "active") ||
-		(project.state === "completed" && input.nextState === "archived");
+		if (
+			project.state === input.nextState &&
+			project.version === input.expectedVersion + 1
+		) {
+			return { idempotent: true };
+		}
 
-	if (!valid) {
-		throw new DomainError("InvalidTransition", "Invalid project transition.");
-	}
+		if (project.version !== input.expectedVersion) {
+			throw new DomainError(
+				"Conflict",
+				"This project was changed by another request. Refresh and try again.",
+			);
+		}
 
-	if (
-		project.state === "active" &&
-		input.nextState === "completed" &&
-		project.phases.some((phase) => !["paid", "cancelled"].includes(phase.state))
-	) {
-		throw new DomainError(
-			"InvalidTransition",
-			"All phases must be paid or cancelled before completing a project.",
-		);
-	}
+		const valid =
+			(project.state === "draft" && input.nextState === "active") ||
+			(project.state === "active" && input.nextState === "completed") ||
+			(project.state === "completed" && input.nextState === "active") ||
+			(project.state === "completed" && input.nextState === "archived");
 
-	await db.transaction(async (tx) => {
-		await tx
+		if (!valid) {
+			throw new DomainError("InvalidTransition", "Invalid project transition.");
+		}
+
+		if (project.state === "active" && input.nextState === "completed") {
+			const projectPhases = await tx.query.phases.findMany({
+				columns: { state: true },
+				where: { projectId: project.id },
+			});
+
+			if (
+				projectPhases.some(
+					(phase) => !["paid", "cancelled"].includes(phase.state),
+				)
+			) {
+				throw new DomainError(
+					"InvalidTransition",
+					"All phases must be paid or cancelled before completing a project.",
+				);
+			}
+		}
+
+		const rows = await tx
 			.update(projects)
-			.set({ state: input.nextState })
-			.where(eq(projects.id, project.id));
+			.set({ state: input.nextState, version: sql`${projects.version} + 1` })
+			.where(
+				and(
+					eq(projects.id, project.id),
+					eq(projects.state, project.state),
+					eq(projects.version, input.expectedVersion),
+				),
+			)
+			.returning({ id: projects.id });
+
+		if (!rows[0]) {
+			throw new DomainError(
+				"Conflict",
+				"This project was changed by another request. Refresh and try again.",
+			);
+		}
+
 		await insertEvent(tx, {
 			aggregateType: "project",
 			aggregateId: project.id,
+			aggregateVersion: input.expectedVersion + 1,
 			event:
 				project.state === "completed" && input.nextState === "active"
 					? "reopened"
 					: nextProjectEvents[input.nextState],
 			actorId,
 		});
+
+		return { idempotent: false };
 	});
 };
 
@@ -241,23 +309,24 @@ export const createPhase = async (
 ) => {
 	await assertAdminUser(db, actorId);
 
-	const project = await db.query.projects.findFirst({
-		columns: { id: true, state: true },
-		where: { id: input.projectId },
-	});
-
-	if (!project) {
-		throw new DomainError("NotFound", "Project not found.");
-	}
-
-	if (!["draft", "active"].includes(project.state)) {
-		throw new DomainError(
-			"InvalidTransition",
-			"Phases can only be created on draft or active projects.",
-		);
-	}
-
 	return db.transaction(async (tx) => {
+		const [project] = await tx
+			.select({ id: projects.id, state: projects.state })
+			.from(projects)
+			.where(eq(projects.id, input.projectId))
+			.for("update");
+
+		if (!project) {
+			throw new DomainError("NotFound", "Project not found.");
+		}
+
+		if (!["draft", "active"].includes(project.state)) {
+			throw new DomainError(
+				"InvalidTransition",
+				"Phases can only be created on draft or active projects.",
+			);
+		}
+
 		const rows = await tx
 			.insert(phases)
 			.values({
@@ -269,7 +338,11 @@ export const createPhase = async (
 				state: "submitted",
 				dueAt: input.dueAt ?? null,
 			})
-			.returning({ id: phases.id, publicId: phases.publicId });
+			.returning({
+				id: phases.id,
+				publicId: phases.publicId,
+				version: phases.version,
+			});
 
 		if (!rows[0]) {
 			throw new DomainError("Validation", "Phase could not be created.");
@@ -278,6 +351,7 @@ export const createPhase = async (
 		await insertEvent(tx, {
 			aggregateType: "phase",
 			aggregateId: rows[0].id,
+			aggregateVersion: rows[0].version,
 			event: "created",
 			actorId,
 		});
@@ -294,58 +368,115 @@ const phaseTransitions = {
 	paid: { from: "invoiced", event: "paid" },
 } as const;
 
+const transitionPhase = async (
+	db: Db,
+	actorId: string,
+	phaseId: string,
+	expectedVersion: number,
+	nextState: "planned" | "approved" | "in_progress" | "cancelled" | "paid",
+	from: readonly string[],
+	event: string,
+	invalidTransitionMessage: string,
+) =>
+	db.transaction(async (tx) => {
+		const [phase] = await tx
+			.select({
+				id: phases.id,
+				state: phases.state,
+				version: phases.version,
+			})
+			.from(phases)
+			.where(eq(phases.id, phaseId))
+			.for("update");
+
+		if (!phase) {
+			throw new DomainError("NotFound", "Phase not found.");
+		}
+
+		if (phase.state === nextState && phase.version === expectedVersion + 1) {
+			return { idempotent: true };
+		}
+
+		if (phase.version !== expectedVersion) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		if (!from.includes(phase.state)) {
+			throw new DomainError("InvalidTransition", invalidTransitionMessage);
+		}
+
+		if (nextState === "paid") {
+			const invoice = await tx.query.invoices.findFirst({
+				columns: { stripeStatus: true },
+				where: { phaseId: phase.id },
+			});
+
+			if (invoice?.stripeStatus !== "paid") {
+				throw new DomainError(
+					"InvalidTransition",
+					"Stripe must say paid before the payment can be confirmed.",
+				);
+			}
+		}
+
+		const rows = await tx
+			.update(phases)
+			.set({ state: nextState, version: sql`${phases.version} + 1` })
+			.where(
+				and(
+					eq(phases.id, phase.id),
+					eq(phases.state, phase.state),
+					eq(phases.version, expectedVersion),
+				),
+			)
+			.returning({ id: phases.id });
+
+		if (!rows[0]) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		await insertEvent(tx, {
+			aggregateType: "phase",
+			aggregateId: phase.id,
+			aggregateVersion: expectedVersion + 1,
+			event,
+			actorId,
+		});
+
+		return { idempotent: false };
+	});
+
 export const transitionPhaseAsAdmin = async (
 	db: Db,
 	actorId: string,
 	input: {
 		phaseId: string;
 		nextState: "planned" | "approved" | "in_progress" | "cancelled" | "paid";
+		expectedVersion: number;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
 
-	const phase = await db.query.phases.findFirst({
-		columns: { id: true, state: true },
-		with: {
-			invoice: {
-				columns: { stripeStatus: true },
-			},
-		},
-		where: { id: input.phaseId },
-	});
-
-	if (!phase) {
-		throw new DomainError("NotFound", "Phase not found.");
-	}
-
 	const transition = phaseTransitions[input.nextState];
-	const from = Array.isArray(transition.from)
-		? transition.from
-		: [transition.from];
+	const from: readonly string[] =
+		typeof transition.from === "string" ? [transition.from] : transition.from;
 
-	if (!from.includes(phase.state as never)) {
-		throw new DomainError("InvalidTransition", "Invalid phase transition.");
-	}
-
-	if (input.nextState === "paid" && phase.invoice?.stripeStatus !== "paid") {
-		throw new DomainError(
-			"InvalidTransition",
-			"Stripe must say paid before the payment can be confirmed.",
-		);
-	}
-
-	await db.transaction(async (tx) => {
-		await tx
-			.update(phases)
-			.set({ state: input.nextState })
-			.where(eq(phases.id, phase.id));
-		await insertEvent(tx, {
-			aggregateType: "phase",
-			aggregateId: phase.id,
-			event: transition.event,
-			actorId,
-		});
-	});
+	return transitionPhase(
+		db,
+		actorId,
+		input.phaseId,
+		input.expectedVersion,
+		input.nextState,
+		from,
+		transition.event,
+		"Invalid phase transition.",
+	);
 };
 
 export const recordInvoice = async (
@@ -357,45 +488,95 @@ export const recordInvoice = async (
 		stripeId: string;
 		stripePaymentPage: string;
 		total: number;
+		expectedVersion: number;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
 
-	const phase = await db.query.phases.findFirst({
-		columns: { id: true, state: true, currency: true },
-		with: {
-			invoice: { columns: { id: true } },
-			project: { columns: { organizationId: true } },
-		},
-		where: { id: input.phaseId },
-	});
-
-	if (!phase?.project) {
-		throw new DomainError("NotFound", "Phase not found.");
-	}
-
-	if (phase.state !== "in_progress") {
-		throw new DomainError(
-			"InvalidTransition",
-			"Invoices can only be recorded on in-progress phases.",
-		);
-	}
-
-	if (phase.invoice) {
-		throw new DomainError(
-			"AlreadyExists",
-			"This phase already has an invoice.",
-		);
-	}
-
-	const organizationId = phase.project.organizationId;
-
 	return db.transaction(async (tx) => {
+		const [phase] = await tx
+			.select({
+				id: phases.id,
+				projectId: phases.projectId,
+				state: phases.state,
+				currency: phases.currency,
+				version: phases.version,
+			})
+			.from(phases)
+			.where(eq(phases.id, input.phaseId))
+			.for("update");
+
+		if (!phase) {
+			throw new DomainError("NotFound", "Phase not found.");
+		}
+
+		const invoice = await tx.query.invoices.findFirst({
+			columns: {
+				id: true,
+				publicId: true,
+				phaseId: true,
+				invoiceNumber: true,
+				stripeId: true,
+				stripePaymentPage: true,
+				currency: true,
+				total: true,
+			},
+			where: { phaseId: phase.id },
+		});
+		const invoiceMatches =
+			invoice?.phaseId === phase.id &&
+			invoice.invoiceNumber === input.invoiceNumber.trim() &&
+			invoice.stripeId === input.stripeId.trim() &&
+			invoice.stripePaymentPage === input.stripePaymentPage.trim() &&
+			invoice.currency === phase.currency &&
+			invoice.total === input.total;
+
+		if (
+			phase.state === "invoiced" &&
+			phase.version === input.expectedVersion + 1 &&
+			invoiceMatches
+		) {
+			return {
+				invoice: { id: invoice.id, publicId: invoice.publicId },
+				created: false,
+			};
+		}
+
+		if (phase.version !== input.expectedVersion) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		if (phase.state !== "in_progress") {
+			throw new DomainError(
+				"InvalidTransition",
+				"Invoices can only be recorded on in-progress phases.",
+			);
+		}
+
+		if (invoice) {
+			throw new DomainError(
+				"AlreadyExists",
+				"This phase already has an invoice.",
+			);
+		}
+
+		const project = await tx.query.projects.findFirst({
+			columns: { organizationId: true },
+			where: { id: phase.projectId },
+		});
+
+		if (!project) {
+			throw new DomainError("NotFound", "Project not found.");
+		}
+
 		const rows = await tx
 			.insert(invoices)
 			.values({
 				publicId: publicId(),
-				organizationId,
+				organizationId: project.organizationId,
 				phaseId: phase.id,
 				invoiceNumber: input.invoiceNumber.trim(),
 				stripeId: input.stripeId.trim(),
@@ -403,109 +584,191 @@ export const recordInvoice = async (
 				currency: phase.currency,
 				total: input.total,
 			})
+			.onConflictDoNothing()
 			.returning({ id: invoices.id, publicId: invoices.publicId });
 
 		if (!rows[0]) {
-			throw new DomainError("Validation", "Invoice could not be recorded.");
+			throw new DomainError(
+				"Conflict",
+				"This invoice was recorded by another request. Refresh and try again.",
+			);
 		}
 
-		await tx
+		const transitioned = await tx
 			.update(phases)
-			.set({ state: "invoiced" })
-			.where(eq(phases.id, phase.id));
+			.set({ state: "invoiced", version: sql`${phases.version} + 1` })
+			.where(
+				and(
+					eq(phases.id, phase.id),
+					eq(phases.state, "in_progress"),
+					eq(phases.version, input.expectedVersion),
+				),
+			)
+			.returning({ id: phases.id });
+
+		if (!transitioned[0]) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
 		await insertEvent(tx, {
 			aggregateType: "phase",
 			aggregateId: phase.id,
+			aggregateVersion: input.expectedVersion + 1,
 			event: "invoiced",
 			actorId,
 		});
 
-		return rows[0];
+		return { invoice: rows[0], created: true };
 	});
 };
 
 export const attachInvoiceToPhase = async (
 	db: Db,
 	actorId: string,
-	input: { invoiceId: string; phaseId: string },
+	input: { invoiceId: string; phaseId: string; expectedVersion: number },
 ) => {
 	await assertAdminUser(db, actorId);
 
-	const invoice = await db.query.invoices.findFirst({
-		columns: { id: true, organizationId: true, phaseId: true, currency: true },
-		where: { id: input.invoiceId },
-	});
+	return db.transaction(async (tx) => {
+		const [phase] = await tx
+			.select({
+				id: phases.id,
+				projectId: phases.projectId,
+				state: phases.state,
+				currency: phases.currency,
+				version: phases.version,
+			})
+			.from(phases)
+			.where(eq(phases.id, input.phaseId))
+			.for("update");
 
-	if (!invoice) {
-		throw new DomainError("NotFound", "Invoice not found.");
-	}
+		if (!phase) {
+			throw new DomainError("NotFound", "Phase not found.");
+		}
 
-	if (invoice.phaseId) {
-		throw new DomainError(
-			"AlreadyExists",
-			"This invoice is already attached to a phase.",
-		);
-	}
+		const [invoice] = await tx
+			.select({
+				id: invoices.id,
+				organizationId: invoices.organizationId,
+				phaseId: invoices.phaseId,
+				currency: invoices.currency,
+			})
+			.from(invoices)
+			.where(eq(invoices.id, input.invoiceId))
+			.for("update");
 
-	const phase = await db.query.phases.findFirst({
-		columns: { id: true, state: true, currency: true },
-		with: {
-			invoice: { columns: { id: true } },
-			project: { columns: { organizationId: true } },
-		},
-		where: { id: input.phaseId },
-	});
+		if (!invoice) {
+			throw new DomainError("NotFound", "Invoice not found.");
+		}
 
-	if (!phase?.project) {
-		throw new DomainError("NotFound", "Phase not found.");
-	}
+		if (
+			invoice.phaseId === phase.id &&
+			phase.state === "invoiced" &&
+			(phase.version === input.expectedVersion ||
+				phase.version === input.expectedVersion + 1)
+		) {
+			return { idempotent: true };
+		}
 
-	if (phase.project.organizationId !== invoice.organizationId) {
-		throw new DomainError(
-			"Validation",
-			"Phase belongs to a different organization.",
-		);
-	}
+		if (phase.version !== input.expectedVersion) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
 
-	if (phase.invoice) {
-		throw new DomainError(
-			"AlreadyExists",
-			"This phase already has an invoice.",
-		);
-	}
+		if (invoice.phaseId) {
+			throw new DomainError(
+				"Conflict",
+				"This invoice is already attached to a phase.",
+			);
+		}
 
-	if (phase.state !== "in_progress" && phase.state !== "invoiced") {
-		throw new DomainError(
-			"InvalidTransition",
-			"Invoices can only be attached to in-progress or invoiced phases.",
-		);
-	}
+		const existingPhaseInvoice = await tx.query.invoices.findFirst({
+			columns: { id: true },
+			where: { phaseId: phase.id },
+		});
 
-	if (phase.currency.toUpperCase() !== invoice.currency.toUpperCase()) {
-		throw new DomainError(
-			"Validation",
-			"Invoice currency does not match the phase currency.",
-		);
-	}
+		if (existingPhaseInvoice) {
+			throw new DomainError("Conflict", "This phase already has an invoice.");
+		}
 
-	await db.transaction(async (tx) => {
-		await tx
+		const project = await tx.query.projects.findFirst({
+			columns: { organizationId: true },
+			where: { id: phase.projectId },
+		});
+
+		if (!project) {
+			throw new DomainError("NotFound", "Project not found.");
+		}
+
+		if (project.organizationId !== invoice.organizationId) {
+			throw new DomainError(
+				"Validation",
+				"Phase belongs to a different organization.",
+			);
+		}
+
+		if (phase.state !== "in_progress" && phase.state !== "invoiced") {
+			throw new DomainError(
+				"InvalidTransition",
+				"Invoices can only be attached to in-progress or invoiced phases.",
+			);
+		}
+
+		if (phase.currency !== invoice.currency) {
+			throw new DomainError(
+				"Validation",
+				"Invoice currency does not match the phase currency.",
+			);
+		}
+
+		const attached = await tx
 			.update(invoices)
 			.set({ phaseId: phase.id })
-			.where(eq(invoices.id, invoice.id));
+			.where(and(eq(invoices.id, invoice.id), isNull(invoices.phaseId)))
+			.returning({ id: invoices.id });
+
+		if (!attached[0]) {
+			throw new DomainError(
+				"Conflict",
+				"This invoice was attached by another request. Refresh and try again.",
+			);
+		}
 
 		if (phase.state === "in_progress") {
-			await tx
+			const transitioned = await tx
 				.update(phases)
-				.set({ state: "invoiced" })
-				.where(eq(phases.id, phase.id));
+				.set({ state: "invoiced", version: sql`${phases.version} + 1` })
+				.where(
+					and(
+						eq(phases.id, phase.id),
+						eq(phases.state, "in_progress"),
+						eq(phases.version, input.expectedVersion),
+					),
+				)
+				.returning({ id: phases.id });
+
+			if (!transitioned[0]) {
+				throw new DomainError(
+					"Conflict",
+					"This phase was changed by another request. Refresh and try again.",
+				);
+			}
+
 			await insertEvent(tx, {
 				aggregateType: "phase",
 				aggregateId: phase.id,
+				aggregateVersion: input.expectedVersion + 1,
 				event: "invoiced",
 				actorId,
 			});
 		}
+
+		return { idempotent: false };
 	});
 };
 

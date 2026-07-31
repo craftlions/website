@@ -44,6 +44,8 @@ export const domainProblem = (error: unknown) => {
 				return problem(403, "Forbidden", error.message);
 			case "NotFound":
 				return problem(404, "Not Found", error.message);
+			case "Conflict":
+				return problem(409, "Conflict", error.message);
 			case "AlreadyExists":
 			case "InvalidTransition":
 			case "Validation":

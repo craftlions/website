@@ -127,6 +127,8 @@ const actionCodeForDomainError = (error: DomainError): ActionError["code"] => {
 			return "FORBIDDEN";
 		case "NotFound":
 			return "NOT_FOUND";
+		case "Conflict":
+			return "CONFLICT";
 		case "AlreadyExists":
 		case "InvalidTransition":
 		case "Validation":
@@ -174,6 +176,7 @@ const adminHandler =
 const clientPhaseHandler = async (
 	phasePublicId: string,
 	event: "approved" | "declined",
+	expectedVersion: number,
 	context: Parameters<Parameters<typeof defineAction>[0]["handler"]>[1],
 ) => {
 	const session = await context.locals.auth.api.getSession({
@@ -193,6 +196,7 @@ const clientPhaseHandler = async (
 		await approvePhaseAsClient(context.locals.db, session.user.id, {
 			phasePublicId,
 			event,
+			expectedVersion,
 		});
 		return { success: true };
 	} catch (error) {
@@ -208,15 +212,31 @@ const optionalBudget = z.preprocess(
 export const server = {
 	approvePhase: defineAction({
 		accept: "form",
-		input: z.object({ phaseId: z.string() }),
+		input: z.object({
+			phaseId: z.string(),
+			expectedVersion: z.coerce.number().int().nonnegative(),
+		}),
 		handler: (input, context) =>
-			clientPhaseHandler(input.phaseId, "approved", context),
+			clientPhaseHandler(
+				input.phaseId,
+				"approved",
+				input.expectedVersion,
+				context,
+			),
 	}),
 	declinePhase: defineAction({
 		accept: "form",
-		input: z.object({ phaseId: z.string() }),
+		input: z.object({
+			phaseId: z.string(),
+			expectedVersion: z.coerce.number().int().nonnegative(),
+		}),
 		handler: (input, context) =>
-			clientPhaseHandler(input.phaseId, "declined", context),
+			clientPhaseHandler(
+				input.phaseId,
+				"declined",
+				input.expectedVersion,
+				context,
+			),
 	}),
 	onboardOrganization: defineAction({
 		accept: "form",
@@ -253,6 +273,7 @@ export const server = {
 		input: z.object({
 			projectId: z.string().trim().min(1),
 			nextState: z.enum(["active", "completed", "archived"]),
+			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await transitionProject(context.locals.db, actorId, input);
@@ -287,6 +308,7 @@ export const server = {
 				"cancelled",
 				"paid",
 			]),
+			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await transitionPhaseAsAdmin(context.locals.db, actorId, input);
@@ -301,6 +323,7 @@ export const server = {
 			stripeId: z.string().trim().min(1).max(140),
 			stripePaymentPage: z.string().trim().url(),
 			total: z.coerce.number().nonnegative(),
+			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await recordInvoice(context.locals.db, actorId, input);
@@ -334,6 +357,7 @@ export const server = {
 		input: z.object({
 			invoiceId: z.string().trim().min(1),
 			phaseId: z.string().trim().min(1),
+			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await attachInvoiceToPhase(context.locals.db, actorId, input);
