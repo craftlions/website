@@ -384,11 +384,15 @@ export const organizationMetadata = t.pgTable(
 			.defaultNow()
 			.$onUpdate(() => new Date())
 			.notNull(),
+		stripeCustomerId: t.text("stripe_customer_id"),
 	},
 	(table) => [
 		t
 			.uniqueIndex("organization_metadata_organizationId_uidx")
 			.on(table.organizationId),
+		t
+			.index("organization_metadata_stripeCustomerId_idx")
+			.on(table.stripeCustomerId),
 	],
 );
 

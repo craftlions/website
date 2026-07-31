@@ -50,6 +50,7 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 		data: {
 			columns: {
 				yearlyBudget: true,
+				stripeCustomerId: true,
 			},
 		},
 		members: {
@@ -492,6 +493,7 @@ if (staleInvoiceIds.length > 0) {
 							<label class="grid gap-1 text-sm"><span class="font-medium">Slug</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700" name="slug" value={organization.slug} required /></label>
 							<label class="grid gap-1 text-sm"><span class="font-medium">Logo URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700" name="logo" value={organization.logo ?? ""} type="url" /></label>
 							<label class="grid gap-1 text-sm"><span class="font-medium">Yearly budget</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700" name="yearlyBudget" value={organization.data?.yearlyBudget ?? ""} type="number" min="1" /></label>
+							<label class="grid gap-1 text-sm"><span class="font-medium">Stripe customer id</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700" name="stripeCustomerId" value={organization.data?.stripeCustomerId ?? ""} placeholder="cus_…" /></label>
 							<div class="grid md:col-span-2"><Button type="submit">Save settings</Button></div>
 						</form>
 						<section class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700">

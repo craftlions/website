@@ -719,6 +719,7 @@ export const updateOrganizationSettings = async (
 		slug: string;
 		logo?: string | null | undefined;
 		yearlyBudget?: number | null | undefined;
+		stripeCustomerId?: string | null | undefined;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
@@ -750,10 +751,14 @@ export const updateOrganizationSettings = async (
 			.values({
 				organizationId: input.organizationId,
 				yearlyBudget: input.yearlyBudget ?? null,
+				stripeCustomerId: input.stripeCustomerId?.trim() || null,
 			})
 			.onConflictDoUpdate({
 				target: organizationMetadata.organizationId,
-				set: { yearlyBudget: input.yearlyBudget ?? null },
+				set: {
+					yearlyBudget: input.yearlyBudget ?? null,
+					stripeCustomerId: input.stripeCustomerId?.trim() || null,
+				},
 			});
 		await insertEvent(tx, {
 			aggregateType: "organization",

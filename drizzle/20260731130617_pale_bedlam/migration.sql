@@ -1,0 +1,1 @@
+ALTER TABLE "invoices" ALTER COLUMN "phase_id" DROP NOT NULL;
