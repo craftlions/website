@@ -5,6 +5,7 @@ import Button from "../components/Button.astro";
 import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
 import Shell from "../layouts/Shell.astro";
+import { parseReturnTo } from "../lib/return-to.ts";
 
 const session = await Astro.locals.auth.api.getSession({
 	headers: Astro.request.headers,
@@ -13,6 +14,8 @@ const session = await Astro.locals.auth.api.getSession({
 if (session) {
 	return Astro.redirect("/");
 }
+
+const returnTo = parseReturnTo(Astro.url.searchParams.get("returnTo"));
 ---
 
 <Shell>
@@ -111,7 +114,7 @@ if (session) {
 			email,
 			password,
 			rememberMe: true,
-			callbackURL: "/dash",
+			callbackURL: returnTo,
 		});
 
 		if (error) {
