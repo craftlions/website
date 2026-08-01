@@ -63,10 +63,11 @@ const stripeInvoiceSnapshot = (
 	data: StripeInvoiceResponse,
 ): StripeInvoiceSnapshot => ({
 	status: data.status ?? null,
-	paidAt: data.status_transitions?.paid_at
-		? new Date(data.status_transitions.paid_at * 1000)
-		: null,
-	dueAt: data.due_date ? new Date(data.due_date * 1000) : null,
+	paidAt:
+		data.status_transitions?.paid_at != null
+			? new Date(data.status_transitions.paid_at * 1000)
+			: null,
+	dueAt: data.due_date != null ? new Date(data.due_date * 1000) : null,
 	fetchedAt: new Date(),
 });
 
@@ -136,7 +137,7 @@ export const persistStripeInvoiceSnapshot = async (
 		})
 		.onConflictDoUpdate({
 			target: invoices.stripeId,
-			set: { ...invoiceFields, ...stripeFields },
+			set: stripeFields,
 		});
 };
 
