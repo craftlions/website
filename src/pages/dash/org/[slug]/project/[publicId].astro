@@ -19,7 +19,9 @@ if (!publicId || !slug) {
 const session = Astro.locals.session;
 
 if (!session) {
-	return Astro.redirect("/login");
+	return Astro.redirect(
+		`/login?returnTo=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+	);
 }
 
 if (!session.session.impersonatedBy && !session.session.activeOrganizationId) {

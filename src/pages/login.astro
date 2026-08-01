@@ -7,15 +7,15 @@ import Nav from "../components/Nav.astro";
 import Shell from "../layouts/Shell.astro";
 import { parseReturnTo } from "../lib/return-to.ts";
 
+const returnTo = parseReturnTo(Astro.url.searchParams.get("returnTo"));
+
 const session = await Astro.locals.auth.api.getSession({
 	headers: Astro.request.headers,
 });
 
 if (session) {
-	return Astro.redirect("/");
+	return Astro.redirect(returnTo);
 }
-
-const returnTo = parseReturnTo(Astro.url.searchParams.get("returnTo"));
 ---
 
 <Shell>
@@ -34,7 +34,12 @@ const returnTo = parseReturnTo(Astro.url.searchParams.get("returnTo"));
 				>
 					Sign in
 				</h1>
-				<form id="login-form" class="grid gap-6" aria-label="Sign in form">
+				<form
+					id="login-form"
+					class="grid gap-6"
+					data-return-to={returnTo}
+					aria-label="Sign in form"
+				>
 					<fieldset class="grid gap-4 border-none p-0 m-0">
 						<div class="grid gap-1.5">
 							<label
@@ -88,7 +93,7 @@ const returnTo = parseReturnTo(Astro.url.searchParams.get("returnTo"));
 	</Fragment>
 </Shell>
 
-<script define:vars={{ returnTo }}>
+<script>
 	import { authClient } from "../lib/auth-client";
 
 	const form = document.getElementById("login-form") as HTMLFormElement;
@@ -114,7 +119,7 @@ const returnTo = parseReturnTo(Astro.url.searchParams.get("returnTo"));
 			email,
 			password,
 			rememberMe: true,
-			callbackURL: returnTo,
+			callbackURL: form.dataset.returnTo ?? "/dash",
 		});
 
 		if (error) {

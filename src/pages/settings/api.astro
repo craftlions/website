@@ -9,7 +9,9 @@ import Shell from "../../layouts/Shell.astro";
 const session = Astro.locals.session;
 
 if (!session) {
-	return Astro.redirect("/login");
+	return Astro.redirect(
+		`/login?returnTo=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+	);
 }
 ---
 
