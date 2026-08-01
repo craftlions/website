@@ -109,6 +109,19 @@ export const persistStripeInvoiceSnapshot = async (
 		return;
 	}
 
+	const invoiceFields = {
+		invoiceNumber: input.stripeInvoice.number,
+		stripePaymentPage:
+			input.stripeInvoice.hosted_invoice_url ??
+			input.stripeInvoice.invoice_pdf ??
+			"",
+		currency: input.stripeInvoice.currency.toUpperCase(),
+		total: fromStripeMinorUnits(
+			input.stripeInvoice.total ?? 0,
+			input.stripeInvoice.currency,
+		),
+	};
+
 	await tx
 		.insert(invoices)
 		.values({
@@ -117,22 +130,13 @@ export const persistStripeInvoiceSnapshot = async (
 				: undefined,
 			publicId: crypto.randomUUID(),
 			organizationId: input.organizationId,
-			invoiceNumber: input.stripeInvoice.number,
 			stripeId: input.stripeInvoice.id,
-			stripePaymentPage:
-				input.stripeInvoice.hosted_invoice_url ??
-				input.stripeInvoice.invoice_pdf ??
-				"",
-			currency: input.stripeInvoice.currency.toUpperCase(),
-			total: fromStripeMinorUnits(
-				input.stripeInvoice.total ?? 0,
-				input.stripeInvoice.currency,
-			),
+			...invoiceFields,
 			...stripeFields,
 		})
 		.onConflictDoUpdate({
 			target: invoices.stripeId,
-			set: stripeFields,
+			set: { ...invoiceFields, ...stripeFields },
 		});
 };
 
