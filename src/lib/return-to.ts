@@ -21,7 +21,11 @@ export function parseReturnTo(candidate: unknown): string {
 		return FALLBACK;
 	}
 
-	if (!PORTAL_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
+	const hasPortalPrefix = PORTAL_PREFIXES.some(
+		(prefix) =>
+			url.pathname === prefix || url.pathname.startsWith(`${prefix}/`),
+	);
+	if (!hasPortalPrefix) {
 		return FALLBACK;
 	}
 
