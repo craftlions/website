@@ -1,0 +1,162 @@
+---
+export const prerender = false;
+
+import { actions } from "astro:actions";
+import Badge from "../../../../components/Badge.astro";
+import Button from "../../../../components/Button.astro";
+import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
+import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
+
+const { id } = Astro.params;
+
+if (!id) {
+	return Astro.redirect("/admin");
+}
+
+const organization = await getAdminOrganizationCore(Astro.locals.db, id);
+
+if (!organization) {
+	return Astro.redirect("/admin");
+}
+
+const actionResults = [
+	Astro.getActionResult(actions.createProject),
+	Astro.getActionResult(actions.transitionProject),
+	Astro.getActionResult(actions.createPhase),
+	Astro.getActionResult(actions.transitionPhase),
+];
+const actionError = actionResults.find((result) => result?.error)?.error;
+const actionSucceeded = actionResults.some((result) => result && !result.error);
+
+const projects = await Astro.locals.db.query.projects.findMany({
+	columns: {
+		id: true,
+		name: true,
+		state: true,
+		version: true,
+	},
+	with: {
+		phases: {
+			columns: {
+				id: true,
+				title: true,
+				cost: true,
+				currency: true,
+				state: true,
+				version: true,
+				dueAt: true,
+			},
+			orderBy: {
+				id: "asc",
+			},
+		},
+	},
+	where: {
+		organizationId: id,
+	},
+	orderBy: {
+		name: "asc",
+	},
+});
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+});
+const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
+---
+
+<AdminOrgShell
+	{organization}
+	activePage="projects"
+	showSuccess={actionSucceeded}
+>
+	{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
+	<section class="grid gap-6" aria-labelledby="projects-heading">
+		<div class="grid gap-3">
+			<h2
+				id="projects-heading"
+				class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				>Projects</h2
+			>
+			<form
+				method="POST"
+				action={actions.createProject}
+				class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[1fr_auto] md:items-end"
+			>
+				<input type="hidden" name="organizationId" value={organization.id}>
+				<label class="grid gap-1 text-sm">
+					<span class="font-medium">Project name</span>
+					<input
+						class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+						name="name"
+						required
+					>
+				</label>
+				<Button type="submit">Create project</Button>
+			</form>
+		</div>
+		<div class="grid gap-4">
+			{projects.length > 0 ? projects.map((project) => (
+				<article class="grid gap-4 border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
+					<div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
+						<div class="grid grid-cols-[minmax(0,max-content)_max-content] items-center justify-start gap-2">
+							<h3 class="text-lg font-semibold">{project.name}</h3>
+							<Badge type={project.state === "completed" ? "success" : project.state === "archived" ? "gray" : "info"}>{project.state}</Badge>
+						</div>
+						<div class="grid grid-flow-col justify-start gap-2">
+							{project.state === "draft" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Activate</Button></form>}
+							{project.state === "active" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="completed" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Complete</Button></form>}
+							{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Reopen</Button></form>}
+							{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="archived" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Archive</Button></form>}
+						</div>
+					</div>
+					<form method="POST" action={actions.createPhase} class="grid gap-3 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_8rem_5rem_max-content_max-content] md:items-end">
+						<input type="hidden" name="projectId" value={project.id} />
+						<label class="grid gap-1 text-sm"><span class="font-medium">Phase title</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="title" required /></label>
+						<label class="grid gap-1 text-sm"><span class="font-medium">Cost</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="cost" type="number" min="0" step="0.01" required /></label>
+						<label class="grid gap-1 text-sm"><span class="font-medium">Currency</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="currency" value="EUR" maxlength="3" required /></label>
+						<label class="grid gap-1 text-sm"><span class="font-medium">Due</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="dueAt" type="date" /></label>
+						<Button type="submit">Add phase</Button>
+					</form>
+					<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
+						<table class="w-full min-w-3xl border-collapse text-left text-sm">
+							<thead>
+								<tr class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+									<th class="px-4 py-3" scope="col">Phase</th>
+									<th class="px-4 py-3" scope="col">Due</th>
+									<th class="px-4 py-3 text-right" scope="col">Cost</th>
+									<th class="px-4 py-3" scope="col">State</th>
+									<th class="px-4 py-3" scope="col">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{project.phases.length > 0 ? project.phases.map((phase) => (
+									<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
+										<td class="px-4 py-3 font-medium">{phase.title}</td>
+										<td class="px-4 py-3">{phase.dueAt ? dateFormatter.format(phase.dueAt) : "-"}</td>
+										<td class="px-4 py-3 text-right tabular-nums">{currencyFormatter.format(phase.cost)}</td>
+										<td class="px-4 py-3"><Badge type={phase.state === "paid" ? "success" : phase.state === "cancelled" ? "error" : "info"}>{phase.state.replaceAll("_", " ")}</Badge></td>
+										<td class="px-4 py-3">
+											<div class="grid grid-flow-col justify-start gap-2">
+												{phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Send</Button></form>}
+												{phase.state === "planned" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="approved" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Approve</Button></form>}
+												{(phase.state === "submitted" || phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Cancel</Button></form>}
+												{phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Start</Button></form>}
+											</div>
+										</td>
+									</tr>
+								)) : (
+									<tr>
+										<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="5">No phases yet.</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+				</article>
+			)) : (
+				<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">No projects yet.</p>
+			)}
+		</div>
+	</section>
+</AdminOrgShell>

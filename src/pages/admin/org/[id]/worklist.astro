@@ -1,0 +1,187 @@
+---
+export const prerender = false;
+
+import { actions } from "astro:actions";
+import { and, eq, inArray } from "drizzle-orm";
+import Badge from "../../../../components/Badge.astro";
+import Button from "../../../../components/Button.astro";
+import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
+import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
+import { events } from "../../../../lib/schema.ts";
+import { getUuidV7Date } from "../../../../lib/uuid.ts";
+
+const { id } = Astro.params;
+
+if (!id) {
+	return Astro.redirect("/admin");
+}
+
+const organization = await getAdminOrganizationCore(Astro.locals.db, id);
+
+if (!organization) {
+	return Astro.redirect("/admin");
+}
+
+const actionResults = [
+	Astro.getActionResult(actions.transitionPhase),
+	Astro.getActionResult(actions.refreshStripeInvoice),
+];
+const actionError = actionResults.find((result) => result?.error)?.error;
+const actionSucceeded = actionResults.some((result) => result && !result.error);
+
+const projects = await Astro.locals.db.query.projects.findMany({
+	columns: {
+		id: true,
+		name: true,
+	},
+	with: {
+		phases: {
+			columns: {
+				id: true,
+				title: true,
+				cost: true,
+				currency: true,
+				state: true,
+				version: true,
+			},
+			with: {
+				invoice: {
+					columns: {
+						id: true,
+						total: true,
+						stripeStatus: true,
+						stripeDueAt: true,
+					},
+				},
+			},
+			orderBy: {
+				id: "asc",
+			},
+		},
+	},
+	where: {
+		organizationId: id,
+	},
+	orderBy: {
+		name: "asc",
+	},
+});
+const allPhases = projects.flatMap((project) =>
+	project.phases.map((phase) => ({ ...phase, project })),
+);
+const phaseIds = allPhases.map((phase) => phase.id);
+const phaseEvents =
+	phaseIds.length > 0
+		? await Astro.locals.db
+				.select({
+					id: events.id,
+					aggregateId: events.aggregateId,
+				})
+				.from(events)
+				.where(
+					and(
+						eq(events.aggregateType, "phase"),
+						inArray(events.aggregateId, phaseIds),
+					),
+				)
+		: [];
+const latestPhaseEventIds = new Map<string, string>();
+
+for (const event of phaseEvents) {
+	const current = latestPhaseEventIds.get(event.aggregateId);
+
+	if (!current || event.id > current) {
+		latestPhaseEventIds.set(event.aggregateId, event.id);
+	}
+}
+
+const now = new Date();
+const daysSince = (eventId: string) => {
+	const date = getUuidV7Date(eventId);
+
+	return date
+		? Math.max(0, Math.floor((now.getTime() - date.getTime()) / 86400000))
+		: 0;
+};
+const daysInPhaseState = (phaseId: string) =>
+	daysSince(latestPhaseEventIds.get(phaseId) ?? phaseId);
+const worklist = allPhases
+	.flatMap((phase) => {
+		if (
+			phase.state === "invoiced" &&
+			phase.invoice?.stripeStatus === "open" &&
+			phase.invoice.stripeDueAt &&
+			phase.invoice.stripeDueAt < now
+		) {
+			return [{ priority: 0, kind: "Overdue", phase }];
+		}
+
+		if (phase.state === "submitted") {
+			return [{ priority: 1, kind: "To plan", phase }];
+		}
+
+		if (phase.state === "planned") {
+			return [{ priority: 2, kind: "Awaiting client", phase }];
+		}
+
+		if (phase.state === "approved") {
+			return [{ priority: 3, kind: "Ready to start", phase }];
+		}
+
+		if (phase.state === "in_progress") {
+			return [{ priority: 4, kind: "In work", phase }];
+		}
+
+		if (phase.state === "invoiced") {
+			return [{ priority: 5, kind: "Unpaid", phase }];
+		}
+
+		return [];
+	})
+	.toSorted(
+		(a, b) =>
+			a.priority - b.priority ||
+			daysInPhaseState(b.phase.id) - daysInPhaseState(a.phase.id),
+	);
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+});
+---
+
+<AdminOrgShell
+	{organization}
+	activePage="worklist"
+	showSuccess={actionSucceeded}
+>
+	{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
+	<section class="grid gap-3" aria-labelledby="worklist-heading">
+		<h2
+			id="worklist-heading"
+			class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+			>Worklist</h2
+		>
+		<div
+			class="grid border border-dashed border-neutral-300 dark:border-neutral-700 md:grid-cols-[auto_1fr_max-content_max-content] md:gap-x-6"
+		>
+			{worklist.length > 0 ? worklist.map((item) => (
+				<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-4 md:grid-cols-subgrid md:items-center">
+					<Badge type={item.priority === 0 ? "error" : "info"}>{item.kind}</Badge>
+					<h3 class="font-medium">{item.phase.project.name} · {item.phase.title}</h3>
+					<p class="text-sm tabular-nums md:text-right">{currencyFormatter.format(item.phase.invoice?.total ?? item.phase.cost)}</p>
+					<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
+						<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{daysInPhaseState(item.phase.id)}d</p>
+						{item.phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Send</Button></form>}
+						{item.phase.state === "planned" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="approved" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Approve</Button></form>}
+						{(item.phase.state === "submitted" || item.phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Cancel</Button></form>}
+						{item.phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Start</Button></form>}
+						{item.phase.state === "invoiced" && item.phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={item.phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
+						{item.phase.state === "invoiced" && item.phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="paid" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Confirm paid</Button></form>}
+					</div>
+				</article>
+			)) : (
+				<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400 md:col-span-4">Nothing needs action.</p>
+			)}
+		</div>
+	</section>
+</AdminOrgShell>
