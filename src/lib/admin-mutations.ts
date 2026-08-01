@@ -772,27 +772,6 @@ export const attachInvoiceToPhase = async (
 	});
 };
 
-export const updateStoredStripeStatus = async (
-	db: Db,
-	input: {
-		invoiceId: string;
-		status: string | null;
-		paidAt: Date | null;
-		dueAt: Date | null;
-		fetchedAt: Date;
-	},
-) => {
-	await db
-		.update(invoices)
-		.set({
-			stripeStatus: input.status,
-			stripePaidAt: input.paidAt,
-			stripeDueAt: input.dueAt,
-			fetchedAt: input.fetchedAt,
-		})
-		.where(eq(invoices.id, input.invoiceId));
-};
-
 const writeOrganizationOnboardingRemainder = async (
 	db: Db,
 	actorId: string,

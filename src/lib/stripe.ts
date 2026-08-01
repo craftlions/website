@@ -1,12 +1,17 @@
 import type { Db } from "./database.ts";
 import { eq } from "drizzle-orm";
-import {
-	assertAdminUser,
-	DomainError,
-	updateStoredStripeStatus,
-} from "./admin-mutations.ts";
+import { assertAdminUser, DomainError } from "./admin-mutations.ts";
 import { invoices } from "./schema.ts";
 import { uuidV7FromDate } from "./uuid.ts";
+
+type StripeTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+export interface StripeInvoiceSnapshot {
+	status: string | null;
+	paidAt: Date | null;
+	dueAt: Date | null;
+	fetchedAt: Date;
+}
 
 interface StripeInvoiceResponse {
 	currency?: string;
@@ -25,6 +30,12 @@ interface StripeInvoiceListItem extends StripeInvoiceResponse {
 	hosted_invoice_url?: string | null;
 	invoice_pdf?: string | null;
 }
+
+type ImportableStripeInvoice = StripeInvoiceListItem & {
+	id: string;
+	number: string;
+	currency: string;
+};
 
 const zeroDecimalCurrencies = new Set([
 	"BIF",
@@ -47,6 +58,83 @@ const zeroDecimalCurrencies = new Set([
 
 const fromStripeMinorUnits = (amount: number, currency: string) =>
 	zeroDecimalCurrencies.has(currency.toUpperCase()) ? amount : amount / 100;
+
+const stripeInvoiceSnapshot = (
+	data: StripeInvoiceResponse,
+): StripeInvoiceSnapshot => ({
+	status: data.status ?? null,
+	paidAt: data.status_transitions?.paid_at
+		? new Date(data.status_transitions.paid_at * 1000)
+		: null,
+	dueAt: data.due_date ? new Date(data.due_date * 1000) : null,
+	fetchedAt: new Date(),
+});
+
+const isImportableStripeInvoice = (
+	item: StripeInvoiceListItem,
+): item is ImportableStripeInvoice =>
+	Boolean(
+		item.id &&
+			item.number &&
+			item.currency &&
+			item.status !== "draft" &&
+			(item.hosted_invoice_url || item.invoice_pdf),
+	);
+
+export const persistStripeInvoiceSnapshot = async (
+	tx: StripeTransaction,
+	input:
+		| {
+				invoiceId: string;
+				snapshot: StripeInvoiceSnapshot;
+		  }
+		| {
+				organizationId: string;
+				stripeInvoice: ImportableStripeInvoice;
+				snapshot: StripeInvoiceSnapshot;
+		  },
+) => {
+	const stripeFields = {
+		stripeStatus: input.snapshot.status,
+		stripePaidAt: input.snapshot.paidAt,
+		stripeDueAt: input.snapshot.dueAt,
+		fetchedAt: input.snapshot.fetchedAt,
+	};
+
+	if ("invoiceId" in input) {
+		await tx
+			.update(invoices)
+			.set(stripeFields)
+			.where(eq(invoices.id, input.invoiceId));
+		return;
+	}
+
+	await tx
+		.insert(invoices)
+		.values({
+			id: input.stripeInvoice.created
+				? uuidV7FromDate(new Date(input.stripeInvoice.created * 1000))
+				: undefined,
+			publicId: crypto.randomUUID(),
+			organizationId: input.organizationId,
+			invoiceNumber: input.stripeInvoice.number,
+			stripeId: input.stripeInvoice.id,
+			stripePaymentPage:
+				input.stripeInvoice.hosted_invoice_url ??
+				input.stripeInvoice.invoice_pdf ??
+				"",
+			currency: input.stripeInvoice.currency.toUpperCase(),
+			total: fromStripeMinorUnits(
+				input.stripeInvoice.total ?? 0,
+				input.stripeInvoice.currency,
+			),
+			...stripeFields,
+		})
+		.onConflictDoUpdate({
+			target: invoices.stripeId,
+			set: stripeFields,
+		});
+};
 
 export const refreshStripeInvoice = async (
 	db: Db,
@@ -110,15 +198,12 @@ export const refreshStripeInvoice = async (
 		);
 	}
 
-	await updateStoredStripeStatus(db, {
-		invoiceId: invoice.id,
-		status: data.status ?? null,
-		paidAt: data.status_transitions?.paid_at
-			? new Date(data.status_transitions.paid_at * 1000)
-			: null,
-		dueAt: data.due_date ? new Date(data.due_date * 1000) : null,
-		fetchedAt: new Date(),
-	});
+	await db.transaction((tx) =>
+		persistStripeInvoiceSnapshot(tx, {
+			invoiceId: invoice.id,
+			snapshot: stripeInvoiceSnapshot(data),
+		}),
+	);
 };
 
 export const importStripeInvoices = async (
@@ -169,44 +254,17 @@ export const importStripeInvoices = async (
 	} while (startingAfter);
 
 	for (const item of fetched) {
-		if (
-			!item.id ||
-			!item.number ||
-			!item.currency ||
-			item.status === "draft" ||
-			(!item.hosted_invoice_url && !item.invoice_pdf)
-		) {
+		if (!isImportableStripeInvoice(item)) {
 			continue;
 		}
 
-		const stripeFields = {
-			stripeStatus: item.status ?? null,
-			stripePaidAt: item.status_transitions?.paid_at
-				? new Date(item.status_transitions.paid_at * 1000)
-				: null,
-			stripeDueAt: item.due_date ? new Date(item.due_date * 1000) : null,
-			fetchedAt: new Date(),
-		};
-
-		await db
-			.insert(invoices)
-			.values({
-				id: item.created
-					? uuidV7FromDate(new Date(item.created * 1000))
-					: undefined,
-				publicId: crypto.randomUUID(),
+		await db.transaction((tx) =>
+			persistStripeInvoiceSnapshot(tx, {
 				organizationId: input.organizationId,
-				invoiceNumber: item.number,
-				stripeId: item.id,
-				stripePaymentPage: item.hosted_invoice_url ?? item.invoice_pdf ?? "",
-				currency: item.currency.toUpperCase(),
-				total: fromStripeMinorUnits(item.total ?? 0, item.currency),
-				...stripeFields,
-			})
-			.onConflictDoUpdate({
-				target: invoices.stripeId,
-				set: stripeFields,
-			});
+				stripeInvoice: item,
+				snapshot: stripeInvoiceSnapshot(item),
+			}),
+		);
 	}
 };
 
