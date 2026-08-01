@@ -119,7 +119,9 @@ if (session) {
 			email,
 			password,
 			rememberMe: true,
-			callbackURL: form.dataset.returnTo ?? "/dash",
+			callbackURL:
+				(form.dataset.returnTo ?? "/dash") +
+				(form.dataset.returnTo?.includes("#") ? "" : location.hash),
 		});
 
 		if (error) {
