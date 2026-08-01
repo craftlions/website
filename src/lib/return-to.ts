@@ -17,20 +17,18 @@ export function parseReturnTo(candidate: unknown): string {
 		return FALLBACK;
 	}
 
-	if (url.hostname !== "placeholder.invalid" && url.hostname !== "localhost") {
+	if (url.hostname !== "placeholder.invalid") {
 		return FALLBACK;
 	}
 
-	const hasPortalPrefix = PORTAL_PREFIXES.some(
-		(prefix) =>
-			url.pathname === prefix || url.pathname.startsWith(`${prefix}/`),
-	);
-	if (!hasPortalPrefix) {
+	if (
+		!PORTAL_PREFIXES.some(
+			(prefix) =>
+				url.pathname === prefix || url.pathname.startsWith(`${prefix}/`),
+		)
+	) {
 		return FALLBACK;
 	}
 
-	const serialized = url.pathname + url.search + (url.hash ?? "");
-	const normalized = serialized.length === 0 ? FALLBACK : serialized;
-
-	return normalized;
+	return url.pathname + url.search + url.hash;
 }
