@@ -1,15 +1,24 @@
 ---
 export const prerender = false;
 
-import { actions } from "astro:actions";
-import { and, eq, inArray } from "drizzle-orm";
-import Badge from "../../../components/Badge.astro";
-import Button from "../../../components/Button.astro";
-import Footer from "../../../components/Footer.astro";
-import Nav from "../../../components/Nav.astro";
-import Shell from "../../../layouts/Shell.astro";
-import { events } from "../../../lib/schema.ts";
-import { getUuidV7Date } from "../../../lib/uuid.ts";
+import {
+	and,
+	count,
+	eq,
+	inArray,
+	type SQLWrapper,
+	sql,
+	sum,
+} from "drizzle-orm";
+import AdminOrgShell from "../../../layouts/AdminOrgShell.astro";
+import {
+	invoices,
+	member,
+	organizationMetadata,
+	organization as organizationTable,
+	phases,
+	projects,
+} from "../../../lib/schema.ts";
 
 const { id } = Astro.params;
 
@@ -17,687 +26,181 @@ if (!id) {
 	return Astro.redirect("/admin");
 }
 
-const actionResults = [
-	Astro.getActionResult(actions.createProject),
-	Astro.getActionResult(actions.transitionProject),
-	Astro.getActionResult(actions.createPhase),
-	Astro.getActionResult(actions.transitionPhase),
-	Astro.getActionResult(actions.recordInvoice),
-	Astro.getActionResult(actions.refreshStripeInvoice),
-	Astro.getActionResult(actions.importStripeInvoices),
-	Astro.getActionResult(actions.attachInvoiceToPhase),
-	Astro.getActionResult(actions.addOrganizationMember),
-	Astro.getActionResult(actions.removeOrganizationMember),
-	Astro.getActionResult(actions.resendWelcomeMail),
-	Astro.getActionResult(actions.removeNeverLoggedInUser),
-	Astro.getActionResult(actions.updateOrganizationSettings),
-	Astro.getActionResult(actions.hardDeleteOrganization),
-];
+const scalar = (query: SQLWrapper) => sql<number>`(${query})`;
 
-const referer = Astro.request.headers.get("referer");
-const refererTab = referer?.startsWith(Astro.url.origin)
-	? new URL(referer).searchParams.get("tab")
-	: null;
-
-if (actionResults.some((result) => result && !result.error)) {
-	return Astro.redirect(
-		`${Astro.url.pathname}?${new URLSearchParams(refererTab ? { tab: refererTab, saved: "1" } : { saved: "1" })}`,
-	);
-}
-
-const actionError = actionResults.find((result) => result?.error)?.error;
-
-const organization = await Astro.locals.db.query.organization.findFirst({
-	columns: {
-		id: true,
-		name: true,
-		slug: true,
-		logo: true,
-	},
-	with: {
-		data: {
-			columns: {
-				yearlyBudget: true,
-				stripeCustomerId: true,
-			},
-		},
-		members: {
-			columns: {
-				id: true,
-				role: true,
-				userId: true,
-			},
-			with: {
-				user: {
-					columns: {
-						id: true,
-						email: true,
-						name: true,
-						lastActiveAt: true,
-					},
-				},
-			},
-			orderBy: {
-				createdAt: "asc",
-			},
-		},
-		projects: {
-			columns: {
-				id: true,
-				publicId: true,
-				name: true,
-				state: true,
-				version: true,
-			},
-			with: {
-				phases: {
-					columns: {
-						id: true,
-						title: true,
-						cost: true,
-						currency: true,
-						state: true,
-						version: true,
-						dueAt: true,
-					},
-					with: {
-						invoice: {
-							columns: {
-								id: true,
-								invoiceNumber: true,
-								stripeId: true,
-								stripePaymentPage: true,
-								total: true,
-								stripeStatus: true,
-								stripePaidAt: true,
-								stripeDueAt: true,
-								fetchedAt: true,
-							},
-						},
-					},
-					orderBy: {
-						id: "asc",
-					},
-				},
-			},
-			orderBy: {
-				name: "asc",
-			},
-		},
-	},
-	where: {
-		id,
-	},
-});
+const [organization] = await Astro.locals.db
+	.select({
+		id: organizationTable.id,
+		name: organizationTable.name,
+		yearlyBudget: organizationMetadata.yearlyBudget,
+		phaseCostTotal: scalar(
+			Astro.locals.db
+				.select({
+					value: sum(phases.cost),
+				})
+				.from(phases)
+				.innerJoin(projects, eq(phases.projectId, projects.id))
+				.where(eq(projects.organizationId, organizationTable.id)),
+		),
+		openInvoiceTotal: scalar(
+			Astro.locals.db
+				.select({
+					value: sum(invoices.total),
+				})
+				.from(phases)
+				.innerJoin(projects, eq(phases.projectId, projects.id))
+				.innerJoin(invoices, eq(invoices.phaseId, phases.id))
+				.where(
+					and(
+						eq(projects.organizationId, organizationTable.id),
+						eq(phases.state, "invoiced"),
+					),
+				),
+		),
+		activeProjectCount: scalar(
+			Astro.locals.db
+				.select({
+					value: count(),
+				})
+				.from(projects)
+				.where(
+					and(
+						eq(projects.organizationId, organizationTable.id),
+						eq(projects.state, "active"),
+					),
+				),
+		),
+		worklistCount: scalar(
+			Astro.locals.db
+				.select({
+					value: count(),
+				})
+				.from(phases)
+				.innerJoin(projects, eq(phases.projectId, projects.id))
+				.where(
+					and(
+						eq(projects.organizationId, organizationTable.id),
+						inArray(phases.state, [
+							"submitted",
+							"planned",
+							"approved",
+							"in_progress",
+							"invoiced",
+						]),
+					),
+				),
+		),
+		openInvoiceCount: scalar(
+			Astro.locals.db
+				.select({
+					value: count(),
+				})
+				.from(invoices)
+				.where(
+					and(
+						eq(invoices.organizationId, organizationTable.id),
+						eq(invoices.stripeStatus, "open"),
+					),
+				),
+		),
+		memberCount: scalar(
+			Astro.locals.db
+				.select({
+					value: count(),
+				})
+				.from(member)
+				.where(eq(member.organizationId, organizationTable.id)),
+		),
+	})
+	.from(organizationTable)
+	.leftJoin(
+		organizationMetadata,
+		eq(organizationMetadata.organizationId, organizationTable.id),
+	)
+	.where(eq(organizationTable.id, id))
+	.limit(1);
 
 if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-const tabs = [
-	"worklist",
-	"projects",
-	"invoices",
-	"members",
-	"settings",
-] as const;
-const requestedTab = Astro.url.searchParams.get("tab") ?? refererTab;
-const activeTab = tabs.find((tab) => tab === requestedTab) ?? "worklist";
-const now = new Date();
+const budgetUsage =
+	organization.yearlyBudget && organization.yearlyBudget > 0
+		? (organization.phaseCostTotal / organization.yearlyBudget) * 100
+		: null;
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
 	currency: "EUR",
 });
-const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
-const daysSince = (id: string) => {
-	const date = getUuidV7Date(id);
-	return date
-		? Math.max(0, Math.floor((now.getTime() - date.getTime()) / 86400000))
-		: 0;
-};
-const allPhases = organization.projects.flatMap((project) =>
-	project.phases.map((phase) => ({ ...phase, project })),
-);
-const phaseIds = allPhases.map((phase) => phase.id);
-const phaseEvents =
-	phaseIds.length > 0
-		? await Astro.locals.db
-				.select({
-					id: events.id,
-					aggregateId: events.aggregateId,
-				})
-				.from(events)
-				.where(
-					and(
-						eq(events.aggregateType, "phase"),
-						inArray(events.aggregateId, phaseIds),
-					),
-				)
-		: [];
-const latestPhaseEventIds = new Map<string, string>();
-
-for (const event of phaseEvents) {
-	const current = latestPhaseEventIds.get(event.aggregateId);
-	if (!current || event.id > current) {
-		latestPhaseEventIds.set(event.aggregateId, event.id);
-	}
-}
-
-const daysInPhaseState = (phaseId: string) =>
-	daysSince(latestPhaseEventIds.get(phaseId) ?? phaseId);
-const openInvoiceTotal = allPhases
-	.filter((phase) => phase.state === "invoiced")
-	.reduce((total, phase) => total + (phase.invoice?.total ?? phase.cost), 0);
-const activeProjectCount = organization.projects.filter(
-	(project) => project.state === "active",
-).length;
-const phaseCostTotal = allPhases.reduce(
-	(total, phase) => total + phase.cost,
-	0,
-);
-const budgetUsage =
-	organization.data?.yearlyBudget && organization.data.yearlyBudget > 0
-		? (phaseCostTotal / organization.data.yearlyBudget) * 100
-		: null;
-const worklist = allPhases
-	.flatMap((phase) => {
-		if (
-			phase.state === "invoiced" &&
-			phase.invoice?.stripeStatus === "open" &&
-			phase.invoice.stripeDueAt &&
-			phase.invoice.stripeDueAt < now
-		) {
-			return [{ priority: 0, kind: "Overdue", phase }];
-		}
-		if (phase.state === "submitted") {
-			return [{ priority: 1, kind: "To plan", phase }];
-		}
-		if (phase.state === "planned") {
-			return [{ priority: 2, kind: "Awaiting client", phase }];
-		}
-		if (phase.state === "in_progress") {
-			return [{ priority: 3, kind: "In work", phase }];
-		}
-		if (phase.state === "invoiced") {
-			return [{ priority: 4, kind: "Unpaid", phase }];
-		}
-		return [];
-	})
-	.toSorted(
-		(a, b) =>
-			a.priority - b.priority ||
-			daysInPhaseState(b.phase.id) - daysInPhaseState(a.phase.id),
-	);
-const archivedProjectCount = organization.projects.filter(
-	(project) => project.state === "archived",
-).length;
-const unattachedInvoices = await Astro.locals.db.query.invoices.findMany({
-	columns: {
-		id: true,
-		invoiceNumber: true,
-		stripePaymentPage: true,
-		currency: true,
-		total: true,
-		stripeStatus: true,
-		stripePaidAt: true,
-		fetchedAt: true,
+const sections = [
+	{
+		label: "Worklist",
+		detail: `${organization.worklistCount} need action`,
+		href: `/admin/org/${organization.id}/worklist`,
 	},
-	where: { organizationId: id, phaseId: { isNull: true } },
-	orderBy: { id: "desc" },
-});
-const attachablePhases = allPhases.filter(
-	(phase) =>
-		!phase.invoice &&
-		(phase.state === "in_progress" || phase.state === "invoiced"),
-);
-const inProgressPhases = allPhases.filter(
-	(phase) => phase.state === "in_progress",
-);
-const invoicedPhases = allPhases
-	.filter((phase) => phase.invoice)
-	.toSorted((a, b) => (b.invoice?.id ?? "").localeCompare(a.invoice?.id ?? ""));
-const suggestedPhaseId = (invoice: (typeof unattachedInvoices)[number]) =>
-	attachablePhases
-		.filter((phase) => phase.currency === invoice.currency)
-		.toSorted(
-			(a, b) =>
-				Math.abs(a.cost - invoice.total) - Math.abs(b.cost - invoice.total),
-		)[0]?.id;
+	{
+		label: "Projects",
+		detail: `${organization.activeProjectCount} active`,
+		href: `/admin/org/${organization.id}/projects`,
+	},
+	{
+		label: "Invoices",
+		detail: `${organization.openInvoiceCount} open`,
+		href: `/admin/org/${organization.id}/invoices`,
+	},
+	{
+		label: "Members",
+		detail: `${organization.memberCount}`,
+		href: `/admin/org/${organization.id}/members`,
+	},
+	{
+		label: "Settings",
+		detail: null,
+		href: `/admin/org/${organization.id}/settings`,
+	},
+] as const;
 ---
 
-<Shell
-	bodyClass="min-h-dvh grid gap-6 bg-neutral-50 p-4 text-pretty text-neutral-950 antialiased dark:bg-neutral-950 dark:text-neutral-50"
->
-	<Fragment slot="head"
-		><title>craftlions | {organization.name}</title></Fragment
-	>
-	<Fragment slot="body">
-		<header class="grid w-full max-w-5xl gap-6 mx-auto">
-			<Nav />
-		</header>
-		<main class="grid w-full max-w-5xl content-start gap-6 mx-auto">
-			<section
-				class="grid gap-4 border-b border-dashed border-neutral-300 pb-6 dark:border-neutral-700"
-			>
-				<Button href="/admin">Back to admin</Button>
-				<div class="grid gap-1">
-					<p
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-						>Client</p
-					>
-					<h1
-						class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight wrap-break-word dark:border-neutral-600"
-						>{organization.name}</h1
-					>
-				</div>
-				<dl class="grid gap-3 md:grid-cols-3">
-					<div class="grid gap-1">
-						<dt
-							class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-							>Budget used</dt
-						>
-						<dd
-							class:list={["text-xl font-semibold tabular-nums", budgetUsage !== null && budgetUsage > 100 && "text-red-700 dark:text-red-300"]}
-							>{budgetUsage === null ? "-" : `${budgetUsage.toFixed(1)}%`}</dd
-						>
-					</div>
-					<div class="grid gap-1">
-						<dt
-							class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-							>Open invoices</dt
-						>
-						<dd class="text-xl font-semibold tabular-nums"
-							>{currencyFormatter.format(openInvoiceTotal)}</dd
-						>
-					</div>
-					<div class="grid gap-1">
-						<dt
-							class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-							>Active projects</dt
-						>
-						<dd class="text-xl font-semibold tabular-nums"
-							>{activeProjectCount}</dd
-						>
-					</div>
-				</dl>
-			</section>
-
-			<div class="grid gap-3">
-				<nav
-					class="grid grid-flow-col justify-start gap-2 overflow-x-auto"
-					aria-label="Client tabs"
+<AdminOrgShell {organization} activePage="overview">
+	<section class="grid gap-4" aria-labelledby="overview-heading">
+		<h2 id="overview-heading" class="sr-only">Overview</h2>
+		<dl class="grid gap-3 md:grid-cols-3">
+			<div class="grid gap-1">
+				<dt
+					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>Budget used</dt
 				>
-					{tabs.map((tab) => (
-						<a class:list={["border border-dashed px-3 py-1 text-sm font-medium capitalize", activeTab === tab ? "border-neutral-900 text-neutral-950 dark:border-neutral-100 dark:text-neutral-50" : "border-neutral-300 text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"]} href={`/admin/org/${organization.id}?tab=${tab}`} aria-current={activeTab === tab ? "page" : undefined}>{tab}</a>
-					))}
-				</nav>
-
-				{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
-				{!actionError && Astro.url.searchParams.has("saved") && <p role="status" class="border border-dashed border-neutral-300 p-3 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">Saved.</p>}
-
-				{activeTab === "worklist" && (
-					<section class="grid gap-3" aria-labelledby="worklist-heading">
-						<h2 id="worklist-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Worklist</h2>
-						<div class="grid border border-dashed border-neutral-300 dark:border-neutral-700 md:grid-cols-[auto_1fr_max-content_max-content] md:gap-x-6">
-							{worklist.length > 0 ? worklist.map((item) => (
-								<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-4 md:grid-cols-subgrid md:items-center">
-									<Badge type={item.priority === 0 ? "error" : "info"}>{item.kind}</Badge>
-									<h3 class="font-medium">{item.phase.project.name} · {item.phase.title}</h3>
-									<p class="text-sm tabular-nums md:text-right">{currencyFormatter.format(item.phase.invoice?.total ?? item.phase.cost)}</p>
-									<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
-										<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{daysInPhaseState(item.phase.id)}d</p>
-										{item.phase.state === "submitted" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Send</Button></form>}
-										{item.phase.state === "planned" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="approved" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Approve</Button></form>}
-										{(item.phase.state === "submitted" || item.phase.state === "planned") && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Cancel</Button></form>}
-										{item.phase.state === "approved" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Start</Button></form>}
-										{item.phase.state === "invoiced" && item.phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={item.phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
-										{item.phase.state === "invoiced" && item.phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="paid" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Confirm paid</Button></form>}
-									</div>
-								</article>
-							)) : (
-								<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400 md:col-span-4">Nothing needs action.</p>
-							)}
-						</div>
-					</section>
-				)}
-
-				{activeTab === "projects" && (
-					<section class="grid gap-6" aria-labelledby="projects-heading">
-						<div class="grid gap-3">
-							<h2 id="projects-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Projects</h2>
-							<form method="POST" action={actions.createProject} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[1fr_auto] md:items-end">
-								<input type="hidden" name="organizationId" value={organization.id} />
-								<label class="grid gap-1 text-sm">
-									<span class="font-medium">Project name</span>
-									<input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="name" required />
-								</label>
-								<Button type="submit">Create project</Button>
-							</form>
-						</div>
-						<div class="grid gap-4">
-							{organization.projects.length > 0 ? organization.projects.map((project) => (
-								<article class="grid gap-4 border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
-									<div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
-										<div class="grid grid-cols-[minmax(0,max-content)_max-content] items-center justify-start gap-2">
-											<h3 class="text-lg font-semibold">{project.name}</h3>
-											<Badge type={project.state === "completed" ? "success" : project.state === "archived" ? "gray" : "info"}>{project.state}</Badge>
-										</div>
-										<div class="grid grid-flow-col justify-start gap-2">
-											{project.state === "draft" && <form method="POST" action={actions.transitionProject} data-disable-on-submit><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Activate</Button></form>}
-											{project.state === "active" && <form method="POST" action={actions.transitionProject} data-disable-on-submit><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="completed" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Complete</Button></form>}
-											{project.state === "completed" && <form method="POST" action={actions.transitionProject} data-disable-on-submit><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Reopen</Button></form>}
-											{project.state === "completed" && <form method="POST" action={actions.transitionProject} data-disable-on-submit><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="archived" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Archive</Button></form>}
-										</div>
-									</div>
-									<form method="POST" action={actions.createPhase} class="grid gap-3 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_8rem_5rem_max-content_max-content] md:items-end">
-										<input type="hidden" name="projectId" value={project.id} />
-										<label class="grid gap-1 text-sm"><span class="font-medium">Phase title</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="title" required /></label>
-										<label class="grid gap-1 text-sm"><span class="font-medium">Cost</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="cost" type="number" min="0" step="0.01" required /></label>
-										<label class="grid gap-1 text-sm"><span class="font-medium">Currency</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="currency" value="EUR" maxlength="3" required /></label>
-										<label class="grid gap-1 text-sm"><span class="font-medium">Due</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="dueAt" type="date" /></label>
-										<Button type="submit">Add phase</Button>
-									</form>
-									<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
-										<table class="w-full min-w-3xl border-collapse text-left text-sm">
-											<thead>
-												<tr class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-													<th class="px-4 py-3" scope="col">Phase</th>
-													<th class="px-4 py-3" scope="col">Due</th>
-													<th class="px-4 py-3 text-right" scope="col">Cost</th>
-													<th class="px-4 py-3" scope="col">State</th>
-													<th class="px-4 py-3" scope="col">Actions</th>
-												</tr>
-											</thead>
-											<tbody>
-												{project.phases.length > 0 ? project.phases.map((phase) => (
-													<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
-														<td class="px-4 py-3 font-medium">{phase.title}</td>
-														<td class="px-4 py-3">{phase.dueAt ? dateFormatter.format(phase.dueAt) : "-"}</td>
-														<td class="px-4 py-3 text-right tabular-nums">{currencyFormatter.format(phase.cost)}</td>
-														<td class="px-4 py-3"><Badge type={phase.state === "paid" ? "success" : phase.state === "cancelled" ? "error" : "info"}>{phase.state.replaceAll("_", " ")}</Badge></td>
-														<td class="px-4 py-3">
-															<div class="grid grid-flow-col justify-start gap-2">
-																{phase.state === "submitted" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Send</Button></form>}
-																{phase.state === "planned" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="approved" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Approve</Button></form>}
-																{(phase.state === "submitted" || phase.state === "planned") && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Cancel</Button></form>}
-																{phase.state === "approved" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Start</Button></form>}
-															</div>
-														</td>
-													</tr>
-												)) : (
-													<tr>
-														<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="5">No phases yet.</td>
-													</tr>
-												)}
-											</tbody>
-										</table>
-									</div>
-								</article>
-							)) : (
-								<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">No projects yet.</p>
-							)}
-						</div>
-					</section>
-				)}
-
-				{activeTab === "invoices" && (
-					<section class="grid gap-6" aria-labelledby="invoices-heading">
-						<div class="grid gap-3">
-							<h2 id="invoices-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Invoices</h2>
-							{organization.data?.stripeCustomerId ? (
-								<form method="POST" action={actions.importStripeInvoices} class="grid justify-start">
-									<input type="hidden" name="organizationId" value={organization.id} />
-									<Button type="submit">Fetch from Stripe</Button>
-								</form>
-							) : (
-								<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">Link a Stripe customer in settings to fetch invoices.</p>
-							)}
-						</div>
-						{unattachedInvoices.length > 0 && (
-							<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
-								<table class="w-full min-w-4xl border-collapse text-left text-sm">
-									<thead>
-										<tr class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-											<th class="px-4 py-3" scope="col">Unattached invoice</th>
-											<th class="px-4 py-3" scope="col">Stripe</th>
-											<th class="px-4 py-3 text-right" scope="col">Total</th>
-											<th class="px-4 py-3" scope="col">Phase</th>
-										</tr>
-									</thead>
-									<tbody>
-										{unattachedInvoices.map((invoice) => (
-											<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
-												<td class="px-4 py-3"><a class="underline decoration-dashed underline-offset-4" href={invoice.stripePaymentPage}>{invoice.invoiceNumber}</a></td>
-												<td class="px-4 py-3">{invoice.stripeStatus ?? "Not fetched"}{invoice.stripePaidAt ? ` · paid ${dateFormatter.format(invoice.stripePaidAt)}` : ""}</td>
-												<td class="px-4 py-3 text-right tabular-nums">{new Intl.NumberFormat("de-DE", { style: "currency", currency: invoice.currency }).format(invoice.total)}</td>
-												<td class="px-4 py-3">
-													{attachablePhases.some((phase) => phase.currency === invoice.currency) ? (
-														<form method="POST" action={actions.attachInvoiceToPhase} class="grid grid-cols-[1fr_auto] items-center gap-2" data-attach-invoice data-disable-on-submit>
-															<input type="hidden" name="invoiceId" value={invoice.id} />
-															<input type="hidden" name="expectedVersion" value={suggestedPhaseId(invoice) ? attachablePhases.find((phase) => phase.id === suggestedPhaseId(invoice))?.version : ""} />
-															<select name="phaseId" required class="max-w-96 border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300">
-																{attachablePhases.filter((phase) => phase.currency === invoice.currency).map((phase) => (
-																	<option value={phase.id} data-version={phase.version} selected={phase.id === suggestedPhaseId(invoice)}>{phase.project.name} · {phase.title} · {currencyFormatter.format(phase.cost)}{phase.id === suggestedPhaseId(invoice) ? " (suggested)" : ""}</option>
-																))}
-															</select>
-															<Button type="submit">Attach</Button>
-														</form>
-													) : (
-														<span class="text-neutral-500 dark:text-neutral-400">No matching phase</span>
-													)}
-												</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
-							</div>
-						)}
-						{inProgressPhases.length > 0 && (
-							<div class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
-								{inProgressPhases.map((phase) => (
-									<form method="POST" action={actions.recordInvoice} class="grid gap-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)_8rem_max-content] md:items-end" data-disable-on-submit>
-										<input type="hidden" name="phaseId" value={phase.id} />
-										<input type="hidden" name="expectedVersion" value={phase.version} />
-										<p class="text-sm font-medium md:col-span-5">{phase.project.name} · {phase.title}</p>
-										<label class="grid gap-1 text-sm"><span class="font-medium">Invoice number</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="invoiceNumber" required /></label>
-										<label class="grid gap-1 text-sm"><span class="font-medium">Stripe id</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="stripeId" required /></label>
-										<label class="grid gap-1 text-sm"><span class="font-medium">Payment URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="stripePaymentPage" type="url" required /></label>
-										<label class="grid gap-1 text-sm"><span class="font-medium">Total</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="total" type="number" min="0" step="0.01" value={phase.cost} required /></label>
-										<Button type="submit">Record</Button>
-									</form>
-								))}
-							</div>
-						)}
-						<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
-							<table class="w-full min-w-4xl border-collapse text-left text-sm">
-								<thead>
-									<tr class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-										<th class="px-4 py-3" scope="col">Invoice</th>
-										<th class="px-4 py-3" scope="col">Phase</th>
-										<th class="px-4 py-3" scope="col">Stripe</th>
-										<th class="px-4 py-3 text-right" scope="col">Total</th>
-										<th class="px-4 py-3" scope="col">Action</th>
-									</tr>
-								</thead>
-								<tbody>
-									{invoicedPhases.length > 0 ? invoicedPhases.map((phase) => (
-										<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
-											<td class="px-4 py-3"><a class="underline decoration-dashed underline-offset-4" href={phase.invoice?.stripePaymentPage}>{phase.invoice?.invoiceNumber}</a></td>
-											<td class="px-4 py-3">{phase.project.name} · {phase.title}</td>
-											<td class="px-4 py-3">{phase.invoice?.stripeStatus ?? "Not fetched"}{phase.invoice?.stripeDueAt ? ` · due ${dateFormatter.format(phase.invoice.stripeDueAt)}` : ""}{phase.invoice?.stripePaidAt ? ` · paid ${dateFormatter.format(phase.invoice.stripePaidAt)}` : ""}{phase.invoice?.fetchedAt ? ` · ${dateFormatter.format(phase.invoice.fetchedAt)}` : ""}</td>
-											<td class="px-4 py-3 text-right tabular-nums">{currencyFormatter.format(phase.invoice?.total ?? 0)}</td>
-											<td class="px-4 py-3">
-												<div class="grid grid-flow-col justify-start gap-2">
-													{phase.state === "invoiced" && phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
-													{phase.state === "invoiced" && phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase} data-disable-on-submit><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="paid" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Confirm paid</Button></form>}
-												</div>
-											</td>
-										</tr>
-									)) : (
-										<tr>
-											<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="5">No invoices recorded.</td>
-										</tr>
-									)}
-								</tbody>
-							</table>
-						</div>
-					</section>
-				)}
-
-				{activeTab === "members" && (
-					<section class="grid gap-6" aria-labelledby="members-heading">
-						<div class="grid gap-3">
-							<h2 id="members-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Members</h2>
-							<form method="POST" action={actions.addOrganizationMember} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_max-content_max-content] md:items-end">
-								<input type="hidden" name="organizationId" value={organization.id} />
-								<label class="grid gap-1 text-sm"><span class="font-medium">Email</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="email" type="email" required /></label>
-								<label class="grid gap-1 text-sm"><span class="font-medium">Name</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="name" required /></label>
-								<label class="grid gap-1 text-sm"><span class="font-medium">Role</span><select class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="role">
-									<option value="member" selected>Member</option>
-									<option value="owner">Owner</option>
-								</select></label>
-								<Button type="submit">Add user</Button>
-							</form>
-						</div>
-						<div class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
-							{organization.members.length > 0 ? organization.members.map((member) => (
-								<article class="grid gap-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[1fr_auto] md:items-center">
-									<div class="grid gap-1">
-										<h3 class="font-medium">{member.user.name}</h3>
-										<p class="text-sm text-neutral-600 wrap-break-word dark:text-neutral-400">{member.user.email} · {member.role}</p>
-									</div>
-									<div class="grid justify-start gap-2 sm:grid-flow-col">
-										{member.user.lastActiveAt && (
-											<impersonate-user
-												data-user-id={member.userId}
-												data-organization-slug={organization.slug}
-											>
-												<Button type="button">Impersonate</Button>
-											</impersonate-user>
-										)}
-										<form method="POST" action={actions.resendWelcomeMail}><input type="hidden" name="email" value={member.user.email} /><Button type="submit">Resend</Button></form>
-										<form method="POST" action={actions.removeOrganizationMember}><input type="hidden" name="organizationId" value={organization.id} /><input type="hidden" name="memberId" value={member.id} /><Button type="submit">Remove member</Button></form>
-										{!member.user.lastActiveAt && <form method="POST" action={actions.removeNeverLoggedInUser}><input type="hidden" name="userId" value={member.userId} /><Button type="submit">Remove user</Button></form>}
-									</div>
-								</article>
-							)) : (
-								<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400">No members.</p>
-							)}
-						</div>
-					</section>
-				)}
-
-				{activeTab === "settings" && (
-					<section class="grid gap-6" aria-labelledby="settings-heading">
-						<div class="grid gap-3">
-							<h2 id="settings-heading" class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400">Settings</h2>
-							<form method="POST" action={actions.updateOrganizationSettings} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-2">
-								<input type="hidden" name="organizationId" value={organization.id} />
-								<label class="grid gap-1 text-sm"><span class="font-medium">Name</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="name" value={organization.name} required /></label>
-								<label class="grid gap-1 text-sm"><span class="font-medium">Slug</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="slug" value={organization.slug} required /></label>
-								<label class="grid gap-1 text-sm"><span class="font-medium">Logo URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="logo" value={organization.logo ?? ""} type="url" /></label>
-								<label class="grid gap-1 text-sm"><span class="font-medium">Yearly budget</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="yearlyBudget" value={organization.data?.yearlyBudget ?? ""} type="number" min="1" /></label>
-								<label class="grid gap-1 text-sm md:col-span-2"><span class="font-medium">Stripe customer id</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="stripeCustomerId" value={organization.data?.stripeCustomerId ?? ""} placeholder="cus_…" /></label>
-								<div class="grid md:col-span-2"><Button type="submit">Save settings</Button></div>
-							</form>
-						</div>
-						<section class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
-							<h3 class="font-semibold">Offboarding</h3>
-							<p class="text-sm text-neutral-600 dark:text-neutral-400">{organization.projects.length - archivedProjectCount} projects not yet archived, {organization.members.length} members remaining.</p>
-							<div class="grid grid-flow-col justify-start gap-2">
-								<Button href={`/admin/org/${organization.id}?tab=projects`}>Projects</Button>
-								<Button href={`/admin/org/${organization.id}?tab=members`}>Members</Button>
-							</div>
-						</section>
-						{organization.projects.length === 0 && (
-							<form method="POST" action={actions.hardDeleteOrganization} class="grid gap-3 border border-dashed border-red-300 p-4 dark:border-red-700">
-								<input type="hidden" name="organizationId" value={organization.id} />
-								<label class="grid gap-1 text-sm"><span class="font-medium">Type {organization.name} to delete</span><input class="border border-dashed border-red-300 bg-transparent px-3 py-2 dark:border-red-700" name="confirmation" required /></label>
-								<Button type="submit">Delete organization</Button>
-							</form>
-						)}
-					</section>
-				)}
+				<dd
+					class:list={["text-xl font-semibold tabular-nums", budgetUsage !== null && budgetUsage > 100 && "text-red-700 dark:text-red-300"]}
+					>{budgetUsage === null ? "-" : `${budgetUsage.toFixed(1)}%`}</dd
+				>
 			</div>
-		</main>
-		<Footer />
-	</Fragment>
-</Shell>
-
-<script>
-	import { authClient } from "../../../lib/auth-client.ts";
-
-	for (const form of document.querySelectorAll<HTMLFormElement>(
-		"[data-attach-invoice]",
-	)) {
-		const select = form.querySelector<HTMLSelectElement>(
-			'select[name="phaseId"]',
-		);
-		const expectedVersion = form.querySelector<HTMLInputElement>(
-			'input[name="expectedVersion"]',
-		);
-
-		const syncExpectedVersion = () => {
-			const option = select?.selectedOptions[0];
-			if (expectedVersion && option) {
-				expectedVersion.value = option.dataset.version ?? "";
-			}
-		};
-
-		syncExpectedVersion();
-		select?.addEventListener("change", syncExpectedVersion);
-	}
-
-	document.addEventListener("submit", (event) => {
-		if (
-			!(event.target instanceof HTMLFormElement) ||
-			!event.target.checkValidity()
-		) {
-			return;
-		}
-
-		for (const button of event.target.querySelectorAll<HTMLButtonElement>(
-			'button[type="submit"]',
-		)) {
-			button.disabled = true;
-		}
-	});
-
-	class ImpersonateUser extends HTMLElement {
-		connectedCallback() {
-			const button = this.querySelector("button");
-			const userId = this.dataset.userId;
-			const organizationSlug = this.dataset.organizationSlug;
-
-			if (
-				button &&
-				button instanceof HTMLButtonElement &&
-				userId &&
-				organizationSlug
-			) {
-				button.addEventListener("click", async () => {
-					button.disabled = true;
-
-					try {
-						const { error } = await authClient.admin.impersonateUser({
-							userId,
-						});
-
-						if (error) {
-							throw error;
-						}
-
-						window.location.replace(`/dash/org/${organizationSlug}`);
-					} catch {
-						button.disabled = false;
-						alert("Unable to impersonate this user. Please try again.");
-					}
-				});
-			}
-		}
-	}
-
-	if (!customElements.get("impersonate-user")) {
-		customElements.define("impersonate-user", ImpersonateUser);
-	}
-</script>
+			<div class="grid gap-1">
+				<dt
+					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>Open invoices</dt
+				>
+				<dd class="text-xl font-semibold tabular-nums"
+					>{currencyFormatter.format(organization.openInvoiceTotal)}</dd
+				>
+			</div>
+			<div class="grid gap-1">
+				<dt
+					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>Active projects</dt
+				>
+				<dd class="text-xl font-semibold tabular-nums"
+					>{organization.activeProjectCount}</dd
+				>
+			</div>
+		</dl>
+		<div class="grid gap-3 md:grid-cols-2">
+			{sections.map((section) => (
+				<a class="grid gap-1 border border-dashed border-neutral-300 p-4 transition-colors hover:border-neutral-500 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900 dark:focus-visible:outline-neutral-300" href={section.href}>
+					<h3 class="font-semibold">{section.label}</h3>
+					{section.detail && <p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{section.detail}</p>}
+				</a>
+			))}
+		</div>
+	</section>
+</AdminOrgShell>

@@ -1,0 +1,136 @@
+---
+import Button from "../components/Button.astro";
+import Footer from "../components/Footer.astro";
+import Nav from "../components/Nav.astro";
+import Shell from "./Shell.astro";
+
+interface Props {
+	organization: {
+		id: string;
+		name: string;
+	};
+	activePage:
+		| "overview"
+		| "worklist"
+		| "projects"
+		| "invoices"
+		| "members"
+		| "settings";
+	showSuccess?: boolean;
+}
+
+const { organization, activePage, showSuccess = false } = Astro.props;
+const pages = [
+	{
+		id: "overview",
+		label: "Overview",
+		href: `/admin/org/${organization.id}`,
+	},
+	{
+		id: "worklist",
+		label: "Worklist",
+		href: `/admin/org/${organization.id}/worklist`,
+	},
+	{
+		id: "projects",
+		label: "Projects",
+		href: `/admin/org/${organization.id}/projects`,
+	},
+	{
+		id: "invoices",
+		label: "Invoices",
+		href: `/admin/org/${organization.id}/invoices`,
+	},
+	{
+		id: "members",
+		label: "Members",
+		href: `/admin/org/${organization.id}/members`,
+	},
+	{
+		id: "settings",
+		label: "Settings",
+		href: `/admin/org/${organization.id}/settings`,
+	},
+] as const;
+---
+
+<Shell
+	bodyClass="min-h-dvh grid gap-6 bg-neutral-50 p-4 text-pretty text-neutral-950 antialiased dark:bg-neutral-950 dark:text-neutral-50"
+>
+	<Fragment slot="head">
+		<title>craftlions | {organization.name}</title>
+	</Fragment>
+	<Fragment slot="body">
+		<header class="grid w-full max-w-5xl gap-6 mx-auto">
+			<Nav />
+		</header>
+		<main class="grid w-full max-w-5xl content-start gap-6 mx-auto">
+			<header
+				class="grid gap-4 border-b border-dashed border-neutral-300 pb-6 dark:border-neutral-700"
+			>
+				<Button href="/admin">Back to admin</Button>
+				<div class="grid gap-1">
+					<p
+						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+						>Client</p
+					>
+					<h1
+						class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight wrap-break-word dark:border-neutral-600"
+						>{organization.name}</h1
+					>
+				</div>
+				<nav
+					class="grid grid-flow-col justify-start gap-2 overflow-x-auto"
+					aria-label="Client sections"
+				>
+					{pages.map((page) => (
+						<a
+							class:list={[
+								"border border-dashed px-3 py-1 text-sm font-medium",
+								activePage === page.id
+									? "border-neutral-900 text-neutral-950 dark:border-neutral-100 dark:text-neutral-50"
+									: "border-neutral-300 text-neutral-600 dark:border-neutral-700 dark:text-neutral-400",
+							]}
+							href={page.href}
+							aria-current={activePage === page.id ? "page" : undefined}
+						>{page.label}</a>
+					))}
+				</nav>
+			</header>
+			{showSuccess && (
+				<p
+					data-success-toast
+					role="status"
+					class="border border-dashed border-neutral-300 p-3 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
+				>Saved.</p>
+			)}
+			<slot />
+		</main>
+		<Footer />
+	</Fragment>
+</Shell>
+
+<script>
+	const successToast = document.querySelector<HTMLElement>(
+		"[data-success-toast]",
+	);
+
+	if (successToast) {
+		window.setTimeout(() => successToast.remove(), 5000);
+	}
+
+	document.addEventListener("submit", (event) => {
+		if (
+			!(event.target instanceof HTMLFormElement) ||
+			!event.target.checkValidity()
+		) {
+			return;
+		}
+
+		for (const button of event.target.querySelectorAll<HTMLButtonElement>(
+			'button[type="submit"]',
+		)) {
+			button.disabled = true;
+		}
+	});
+</script>

@@ -1,0 +1,269 @@
+---
+export const prerender = false;
+
+import { actions } from "astro:actions";
+import Button from "../../../../components/Button.astro";
+import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
+import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
+
+const { id } = Astro.params;
+
+if (!id) {
+	return Astro.redirect("/admin");
+}
+
+const organization = await getAdminOrganizationCore(Astro.locals.db, id);
+
+if (!organization) {
+	return Astro.redirect("/admin");
+}
+
+const actionResults = [
+	Astro.getActionResult(actions.importStripeInvoices),
+	Astro.getActionResult(actions.attachInvoiceToPhase),
+	Astro.getActionResult(actions.recordInvoice),
+	Astro.getActionResult(actions.refreshStripeInvoice),
+	Astro.getActionResult(actions.transitionPhase),
+];
+const actionError = actionResults.find((result) => result?.error)?.error;
+const actionSucceeded = actionResults.some((result) => result && !result.error);
+
+const [organizationData, projects, unattachedInvoices] = await Promise.all([
+	Astro.locals.db.query.organizationMetadata.findFirst({
+		columns: {
+			stripeCustomerId: true,
+		},
+		where: {
+			organizationId: id,
+		},
+	}),
+	Astro.locals.db.query.projects.findMany({
+		columns: {
+			id: true,
+			name: true,
+		},
+		with: {
+			phases: {
+				columns: {
+					id: true,
+					title: true,
+					cost: true,
+					currency: true,
+					state: true,
+					version: true,
+				},
+				with: {
+					invoice: {
+						columns: {
+							id: true,
+							invoiceNumber: true,
+							stripePaymentPage: true,
+							total: true,
+							stripeStatus: true,
+							stripePaidAt: true,
+							stripeDueAt: true,
+							fetchedAt: true,
+						},
+					},
+				},
+				orderBy: {
+					id: "asc",
+				},
+			},
+		},
+		where: {
+			organizationId: id,
+		},
+		orderBy: {
+			name: "asc",
+		},
+	}),
+	Astro.locals.db.query.invoices.findMany({
+		columns: {
+			id: true,
+			invoiceNumber: true,
+			stripePaymentPage: true,
+			currency: true,
+			total: true,
+			stripeStatus: true,
+			stripePaidAt: true,
+		},
+		where: {
+			organizationId: id,
+			phaseId: {
+				isNull: true,
+			},
+		},
+		orderBy: {
+			id: "desc",
+		},
+	}),
+]);
+const allPhases = projects.flatMap((project) =>
+	project.phases.map((phase) => ({ ...phase, project })),
+);
+const attachablePhases = allPhases.filter(
+	(phase) =>
+		!phase.invoice &&
+		(phase.state === "in_progress" || phase.state === "invoiced"),
+);
+const inProgressPhases = allPhases.filter(
+	(phase) => phase.state === "in_progress",
+);
+const invoicedPhases = allPhases
+	.filter((phase) => phase.invoice)
+	.toSorted((a, b) => (b.invoice?.id ?? "").localeCompare(a.invoice?.id ?? ""));
+const suggestedPhaseId = (invoice: (typeof unattachedInvoices)[number]) =>
+	attachablePhases
+		.filter((phase) => phase.currency === invoice.currency)
+		.toSorted(
+			(a, b) =>
+				Math.abs(a.cost - invoice.total) - Math.abs(b.cost - invoice.total),
+		)[0]?.id;
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+});
+const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
+---
+
+<AdminOrgShell
+	{organization}
+	activePage="invoices"
+	showSuccess={actionSucceeded}
+>
+	{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
+	<section class="grid gap-6" aria-labelledby="invoices-heading">
+		<div class="grid gap-3">
+			<h2
+				id="invoices-heading"
+				class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				>Invoices</h2
+			>
+			{organizationData?.stripeCustomerId ? (
+				<form method="POST" action={actions.importStripeInvoices} class="grid justify-start">
+					<input type="hidden" name="organizationId" value={organization.id} />
+					<Button type="submit">Fetch from Stripe</Button>
+				</form>
+			) : (
+				<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">Link a Stripe customer in settings to fetch invoices.</p>
+			)}
+		</div>
+		{unattachedInvoices.length > 0 && (
+			<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
+				<table class="w-full min-w-4xl border-collapse text-left text-sm">
+					<thead>
+						<tr class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+							<th class="px-4 py-3" scope="col">Unattached invoice</th>
+							<th class="px-4 py-3" scope="col">Stripe</th>
+							<th class="px-4 py-3 text-right" scope="col">Total</th>
+							<th class="px-4 py-3" scope="col">Phase</th>
+						</tr>
+					</thead>
+					<tbody>
+						{unattachedInvoices.map((invoice) => (
+							<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
+								<td class="px-4 py-3"><a class="underline decoration-dashed underline-offset-4" href={invoice.stripePaymentPage}>{invoice.invoiceNumber}</a></td>
+								<td class="px-4 py-3">{invoice.stripeStatus ?? "Not fetched"}{invoice.stripePaidAt ? ` · paid ${dateFormatter.format(invoice.stripePaidAt)}` : ""}</td>
+								<td class="px-4 py-3 text-right tabular-nums">{new Intl.NumberFormat("de-DE", { style: "currency", currency: invoice.currency }).format(invoice.total)}</td>
+								<td class="px-4 py-3">
+									{attachablePhases.some((phase) => phase.currency === invoice.currency) ? (
+										<form method="POST" action={actions.attachInvoiceToPhase} class="grid grid-cols-[1fr_auto] items-center gap-2" data-attach-invoice>
+											<input type="hidden" name="invoiceId" value={invoice.id} />
+											<input type="hidden" name="expectedVersion" value={suggestedPhaseId(invoice) ? attachablePhases.find((phase) => phase.id === suggestedPhaseId(invoice))?.version : ""} />
+											<select name="phaseId" required class="max-w-96 border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300">
+												{attachablePhases.filter((phase) => phase.currency === invoice.currency).map((phase) => (
+													<option value={phase.id} data-version={phase.version} selected={phase.id === suggestedPhaseId(invoice)}>{phase.project.name} · {phase.title} · {currencyFormatter.format(phase.cost)}{phase.id === suggestedPhaseId(invoice) ? " (suggested)" : ""}</option>
+												))}
+											</select>
+											<Button type="submit">Attach</Button>
+										</form>
+									) : (
+										<span class="text-neutral-500 dark:text-neutral-400">No matching phase</span>
+									)}
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		)}
+		{inProgressPhases.length > 0 && (
+			<div class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
+				{inProgressPhases.map((phase) => (
+					<form method="POST" action={actions.recordInvoice} class="grid gap-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)_8rem_max-content] md:items-end">
+						<input type="hidden" name="phaseId" value={phase.id} />
+						<input type="hidden" name="expectedVersion" value={phase.version} />
+						<p class="text-sm font-medium md:col-span-5">{phase.project.name} · {phase.title}</p>
+						<label class="grid gap-1 text-sm"><span class="font-medium">Invoice number</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="invoiceNumber" required /></label>
+						<label class="grid gap-1 text-sm"><span class="font-medium">Stripe id</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="stripeId" required /></label>
+						<label class="grid gap-1 text-sm"><span class="font-medium">Payment URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="stripePaymentPage" type="url" required /></label>
+						<label class="grid gap-1 text-sm"><span class="font-medium">Total</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="total" type="number" min="0" step="0.01" value={phase.cost} required /></label>
+						<Button type="submit">Record</Button>
+					</form>
+				))}
+			</div>
+		)}
+		<div
+			class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700"
+		>
+			<table class="w-full min-w-4xl border-collapse text-left text-sm">
+				<thead>
+					<tr
+						class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
+					>
+						<th class="px-4 py-3" scope="col">Invoice</th>
+						<th class="px-4 py-3" scope="col">Phase</th>
+						<th class="px-4 py-3" scope="col">Stripe</th>
+						<th class="px-4 py-3 text-right" scope="col">Total</th>
+						<th class="px-4 py-3" scope="col">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					{invoicedPhases.length > 0 ? invoicedPhases.map((phase) => (
+						<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
+							<td class="px-4 py-3"><a class="underline decoration-dashed underline-offset-4" href={phase.invoice?.stripePaymentPage}>{phase.invoice?.invoiceNumber}</a></td>
+							<td class="px-4 py-3">{phase.project.name} · {phase.title}</td>
+							<td class="px-4 py-3">{phase.invoice?.stripeStatus ?? "Not fetched"}{phase.invoice?.stripeDueAt ? ` · due ${dateFormatter.format(phase.invoice.stripeDueAt)}` : ""}{phase.invoice?.stripePaidAt ? ` · paid ${dateFormatter.format(phase.invoice.stripePaidAt)}` : ""}{phase.invoice?.fetchedAt ? ` · ${dateFormatter.format(phase.invoice.fetchedAt)}` : ""}</td>
+							<td class="px-4 py-3 text-right tabular-nums">{currencyFormatter.format(phase.invoice?.total ?? 0)}</td>
+							<td class="px-4 py-3">
+								<div class="grid grid-flow-col justify-start gap-2">
+									{phase.state === "invoiced" && phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
+									{phase.state === "invoiced" && phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="paid" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Confirm paid</Button></form>}
+								</div>
+							</td>
+						</tr>
+					)) : (
+						<tr>
+							<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="5">No invoices recorded.</td>
+						</tr>
+					)}
+				</tbody>
+			</table>
+		</div>
+	</section>
+</AdminOrgShell>
+
+<script>
+	for (const form of document.querySelectorAll<HTMLFormElement>(
+		"[data-attach-invoice]",
+	)) {
+		const select = form.querySelector<HTMLSelectElement>(
+			'select[name="phaseId"]',
+		);
+		const expectedVersion = form.querySelector<HTMLInputElement>(
+			'input[name="expectedVersion"]',
+		);
+
+		const syncExpectedVersion = () => {
+			const option = select?.selectedOptions[0];
+
+			if (expectedVersion && option) {
+				expectedVersion.value = option.dataset.version ?? "";
+			}
+		};
+
+		syncExpectedVersion();
+		select?.addEventListener("change", syncExpectedVersion);
+	}
+</script>
