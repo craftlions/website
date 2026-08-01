@@ -88,7 +88,7 @@ const returnTo = parseReturnTo(Astro.url.searchParams.get("returnTo"));
 	</Fragment>
 </Shell>
 
-<script>
+<script define:vars={{ returnTo }}>
 	import { authClient } from "../lib/auth-client";
 
 	const form = document.getElementById("login-form") as HTMLFormElement;
