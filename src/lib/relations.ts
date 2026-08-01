@@ -111,4 +111,26 @@ export const relations = defineRelations(schema, (r) => ({
 			},
 		}),
 	},
+	notificationIntent: {
+		organization: r.one.organization({
+			from: r.notificationIntent.organizationId,
+			to: r.organization.id,
+		}),
+		stages: r.many.notificationStageResult({
+			from: r.notificationIntent.id,
+			to: r.notificationStageResult.intentId,
+		}),
+	},
+	notificationStageResult: {
+		intent: r.one.notificationIntent({
+			from: r.notificationStageResult.intentId,
+			to: r.notificationIntent.id,
+		}),
+	},
+	invoiceOverdueEvaluation: {
+		invoice: r.one.invoices({
+			from: r.invoiceOverdueEvaluation.invoiceId,
+			to: r.invoices.id,
+		}),
+	},
 }));

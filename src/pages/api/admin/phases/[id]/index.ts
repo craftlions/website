@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
 import { transitionPhaseAsAdmin } from "../../../../../lib/admin-mutations.ts";
 import {
@@ -39,6 +40,7 @@ export const PATCH: APIRoute = async (context) => {
 			phaseId: String(context.params.id),
 			nextState: validation.data.nextState,
 			expectedVersion: validation.data.expectedVersion,
+			activationTimestamp: env.NOTIFICATION_ACTIVATION_TS,
 		});
 		return new Response(null, { status: 204 });
 	} catch (error) {

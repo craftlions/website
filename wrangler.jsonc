@@ -4,6 +4,13 @@
   "compatibility_date": "2026-04-08",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/worker.ts",
+  "workflows": [
+    {
+      "name": "phase-approval",
+      "binding": "PHASE_APPROVAL_WORKFLOW",
+      "class_name": "PhaseApprovalWorkflow"
+    }
+  ],
   "name": "craftlions-website",
   "cache": {
     "enabled": true
@@ -41,6 +48,9 @@
       "persist": true
     }
   },
+  "triggers": {
+    "crons": ["* * * * *"]
+  },
   "limits": {
     "cpu_ms": 60000
   },
@@ -76,11 +86,13 @@
     "region": "aws:eu-central-1"
   },
   "vars": {
-    "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO"
+    "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO",
+    "NOTIFICATION_ACTIVATION_TS": "2099-01-01T00:00:00Z"
   },
   "previews": {
     "vars": {
-      "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO"
+      "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO",
+      "NOTIFICATION_ACTIVATION_TS": "2026-08-01T00:00:00Z"
     },
     "images": {
       "binding": "IMAGES",

@@ -267,6 +267,11 @@ export const projects = t.pgTable(
 	],
 );
 
+export const invoiceOverdueEvaluationState = t.pgEnum(
+	"invoice_overdue_evaluation_state",
+	["pending", "eligible", "ineligible"],
+);
+
 export const phaseState = t.pgEnum("phase_state", [
 	"submitted",
 	"planned",
@@ -423,3 +428,117 @@ export type projectSelectType = typeof projects.$inferSelect;
 export type phaseSelectType = typeof phases.$inferSelect;
 export type invoiceSelectType = typeof invoices.$inferSelect;
 export type eventSelectType = typeof events.$inferSelect;
+export type notificationIntentSelectType =
+	typeof notificationIntent.$inferSelect;
+export type notificationStageResultSelectType =
+	typeof notificationStageResult.$inferSelect;
+
+/**
+ * NOTIFICATION TABLES
+ */
+
+export const notificationKind = t.pgEnum("notification_kind", [
+	"phase_approval",
+]);
+
+export const notificationIntentState = t.pgEnum("notification_intent_state", [
+	"pending",
+	"dispatching",
+	"dispatched",
+]);
+
+export const notificationIntent = t.pgTable(
+	"notification_intent",
+	{
+		id: t.uuid("id").defaultRandom().primaryKey(),
+		kind: notificationKind("kind").notNull(),
+		aggregateType: aggregateType("aggregate_type").notNull(),
+		aggregateId: t.uuid("aggregate_id").notNull(),
+		organizationId: t
+			.text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		state: notificationIntentState("state").default("pending").notNull(),
+		workflowId: t.text("workflow_id"),
+		dispatchedAt: t.timestamp("dispatched_at", { withTimezone: true }),
+		createdAt: t
+			.timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		t.index("notification_intent_kind_idx").on(table.kind),
+		t.index("notification_intent_state_idx").on(table.state),
+		t
+			.index("notification_intent_aggregate_idx")
+			.on(table.aggregateType, table.aggregateId),
+		t
+			.uniqueIndex("notification_intent_kind_aggregate_uidx")
+			.on(table.kind, table.aggregateType, table.aggregateId),
+	],
+);
+
+export const notificationStage = t.pgEnum("notification_stage", [
+	"initial_notice",
+]);
+
+export const notificationStageState = t.pgEnum("notification_stage_state", [
+	"pending",
+	"sent",
+	"skipped",
+	"errored",
+]);
+
+export const notificationStageResult = t.pgTable(
+	"notification_stage_result",
+	{
+		id: t.uuid("id").defaultRandom().primaryKey(),
+		intentId: t
+			.uuid("intent_id")
+			.notNull()
+			.references(() => notificationIntent.id, { onDelete: "cascade" }),
+		stage: notificationStage("stage").notNull(),
+		state: notificationStageState("state").default("pending").notNull(),
+		sentMessageId: t.text("sent_message_id"),
+		sentAt: t.timestamp("sent_at", { withTimezone: true }),
+		skippedReason: t.text("skipped_reason"),
+		failures: t.integer("failures").default(0).notNull(),
+		lastError: t.text("last_error"),
+		createdAt: t
+			.timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: t
+			.timestamp("updated_at", { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => new Date()),
+	},
+	(table) => [
+		t.index("notification_stage_result_intent_idx").on(table.intentId),
+		t.index("notification_stage_result_state_idx").on(table.state),
+		t
+			.uniqueIndex("notification_stage_result_intent_stage_uidx")
+			.on(table.intentId, table.stage),
+	],
+);
+
+export const invoiceOverdueEvaluation = t.pgTable(
+	"invoice_overdue_evaluation",
+	{
+		id: t.uuid("id").defaultRandom().primaryKey(),
+		invoiceId: t
+			.uuid("invoice_id")
+			.notNull()
+			.references(() => invoices.id, { onDelete: "cascade" }),
+		state: invoiceOverdueEvaluationState("state").notNull(),
+		createdAt: t
+			.timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		t
+			.uniqueIndex("invoice_overdue_evaluation_invoice_uidx")
+			.on(table.invoiceId),
+	],
+);
