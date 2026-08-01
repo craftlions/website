@@ -1,6 +1,0 @@
-{
-  "files": ["src/layouts/Shell.astro"],
-  "insertBefore": "</html>",
-  "commentSyntax": "html",
-  "cspChecked": true
-}
