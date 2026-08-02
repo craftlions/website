@@ -1,5 +1,4 @@
 ---
-import { getUuidV7Date } from "../lib/uuid.ts";
 import InvoiceTable from "./InvoiceTable.astro";
 
 interface Props {
@@ -18,7 +17,6 @@ const project = await Astro.locals.db.query.projects.findFirst({
 			with: {
 				invoice: {
 					columns: {
-						id: true,
 						invoiceNumber: true,
 						stripePaymentPage: true,
 						stripeStatus: true,
@@ -26,6 +24,7 @@ const project = await Astro.locals.db.query.projects.findFirst({
 						stripeDueAt: true,
 						total: true,
 						currency: true,
+						invoicedAt: true,
 					},
 				},
 			},
@@ -41,16 +40,14 @@ const invoices = (project?.phases ?? [])
 	.map((invoice) => ({
 		invoiceNumber: invoice.invoiceNumber,
 		stripePaymentPage: invoice.stripePaymentPage,
-		createdAt: getUuidV7Date(invoice.id),
+		invoicedAt: invoice.invoicedAt,
 		stripeStatus: invoice.stripeStatus,
 		stripePaidAt: invoice.stripePaidAt,
 		stripeDueAt: invoice.stripeDueAt,
 		total: invoice.total,
 		currency: invoice.currency,
 	}))
-	.toSorted(
-		(a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
-	);
+	.toSorted((a, b) => b.invoicedAt.getTime() - a.invoicedAt.getTime());
 ---
 
 <InvoiceTable invoices={invoices} pageSize={10} />

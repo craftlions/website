@@ -326,6 +326,10 @@ export const invoices = t.pgTable(
 		total: t
 			.numeric("total", { precision: 19, scale: 4, mode: "number" })
 			.notNull(),
+		invoicedAt: t
+			.timestamp("invoiced_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })
 			.$onUpdate(() => new Date()),

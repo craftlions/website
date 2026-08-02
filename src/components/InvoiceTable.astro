@@ -5,7 +5,7 @@ import Button from "./Button.astro";
 interface Invoice {
 	invoiceNumber: string;
 	stripePaymentPage: string;
-	createdAt: Date | null;
+	invoicedAt: Date;
 	stripeStatus: string | null;
 	stripePaidAt: Date | null;
 	stripeDueAt: Date | null;
@@ -94,7 +94,7 @@ const showFilter =
 									>
 										<td class="whitespace-nowrap px-4 py-3 font-medium">{invoice.invoiceNumber}</td>
 										<td class="whitespace-nowrap px-4 py-3">
-											{invoice.createdAt ? dateFormatter.format(invoice.createdAt) : "—"}
+											{dateFormatter.format(invoice.invoicedAt)}
 										</td>
 										<td class:list={["whitespace-nowrap px-4 py-3", invoice.status === "overdue" && "text-red-700 dark:text-red-300"]}>
 											{invoice.stripeDueAt ? dateFormatter.format(invoice.stripeDueAt) : "—"}
