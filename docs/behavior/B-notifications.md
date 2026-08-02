@@ -6,7 +6,7 @@ Living contract for customer notifications: the behavior every intervention must
 
 ### Channel and content
 
-- Outbound channel: email only per [D-004](../decisions/D-004-email-only-notification-channel.md); English plain text from `no-reply@craftlions.com`; no preferences or opt-outs.
+- Outbound channel: email only per [D-004](../decisions/D-notification-channel.md); English plain text from `no-reply@craftlions.com`; no preferences or opt-outs.
 - Email only for required customer action; informational changes never send.
 - Body: organization, project, phase or invoice identifier, amount and due date where relevant, the required action, one authenticated portal link — nothing else.
 - Email never performs the action; the portal does.
