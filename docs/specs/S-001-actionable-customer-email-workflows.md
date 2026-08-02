@@ -1,6 +1,6 @@
 # Actionable customer email workflows
 
-> Frozen — decomposed into [#249](https://github.com/craftlions/website/issues/249); revising it re-enters `/to-spec`.
+> Frozen — decomposed into [#249](https://github.com/craftlions/website/issues/249); never edited again — further change starts a new spec.
 
 ## Goal
 

@@ -11,8 +11,6 @@ Behavior established by this outcome lives in the [notifications contract](../be
 - Manual follow-up to get approvals decided and invoices paid: frequent → rare.
 - Projects blocked waiting on unnoticed approvals: recurring → exceptional.
 
-Judged by the operator after a production period, outside the tracker; the verdict is stamped here.
-
 ## Out of scope
 
 - Other channels: Slack, webhooks, SMS, browser push — deferred per [D-004](../decisions/D-004-email-only-notification-channel.md).
