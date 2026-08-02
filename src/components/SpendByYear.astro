@@ -20,20 +20,21 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 });
 const currentYear = new Date().getUTCFullYear();
 
-// Neutral paper-and-ink fills: solid tones and hatch patterns only.
-// State colors stay reserved for state (DESIGN.md); the one exception is
-// the current-year reference total, which uses the info accent so the
-// number Overview's stat points to is findable at a glance.
+// Categorical chart palette (DESIGN.md — Data Visualization): solid hues
+// that encode the project, assigned in stable order. Unassigned stays a
+// neutral gray so it reads as "not a project"; state colors keep their
+// meaning everywhere, including the chart. The current-year reference
+// total uses the info accent so the number Overview's stat points to is
+// findable at a glance.
 const segmentFills = [
-	"bg-neutral-900 dark:bg-neutral-100",
-	"bg-[repeating-linear-gradient(45deg,transparent_0_6px,#a3a3a3_6px_12px)] dark:bg-[repeating-linear-gradient(45deg,transparent_0_6px,#737373_6px_12px)]",
-	"bg-[repeating-linear-gradient(90deg,transparent_0_4px,#d4d4d4_4px_8px)] dark:bg-[repeating-linear-gradient(90deg,transparent_0_4px,#525252_4px_8px)]",
-	"bg-neutral-400 dark:bg-neutral-500",
-	"bg-[repeating-linear-gradient(135deg,transparent_0_6px,#737373_6px_12px)] dark:bg-[repeating-linear-gradient(135deg,transparent_0_6px,#a3a3a3_6px_12px)]",
-	"bg-[radial-gradient(circle,#a3a3a3_1px,transparent_1px)] bg-[length:8px_8px] dark:bg-[radial-gradient(circle,#737373_1px,transparent_1px)] dark:bg-[length:8px_8px]",
-	"bg-neutral-200 dark:bg-neutral-700",
-	"bg-[repeating-linear-gradient(45deg,transparent_0_3px,#0a0a0a_3px_6px)] dark:bg-[repeating-linear-gradient(45deg,transparent_0_3px,#fafafa_3px_6px)]",
+	"bg-indigo-600 dark:bg-indigo-300",
+	"bg-teal-600 dark:bg-teal-300",
+	"bg-amber-600 dark:bg-amber-300",
+	"bg-rose-600 dark:bg-rose-300",
+	"bg-violet-600 dark:bg-violet-300",
+	"bg-emerald-600 dark:bg-emerald-300",
 ];
+const unassignedFill = "bg-neutral-400 dark:bg-neutral-500";
 
 const projectsByKey = new Map<string, { id: string; name: string }>();
 for (const row of rows) {
@@ -53,7 +54,10 @@ const projectKeys = [...projectsByKey.values()]
 	})
 	.map((project, index) => ({
 		...project,
-		fill: segmentFills[index % segmentFills.length] ?? segmentFills[0],
+		fill:
+			project.id === "unassigned"
+				? unassignedFill
+				: (segmentFills[index % segmentFills.length] ?? segmentFills[0]),
 	}));
 
 const firstYear = Math.min(currentYear, ...rows.map((row) => row.year));
@@ -115,7 +119,7 @@ const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
 							const reversed = [...bar.segments].reverse();
 							return (
 								<div
-									class="grid"
+									class="grid gap-px"
 									style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total}fr`).join(" ")}`}
 									aria-hidden="true"
 								>
