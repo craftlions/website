@@ -7,47 +7,33 @@ interface Props {
 
 const { id } = Astro.props;
 
-const project = await Astro.locals.db.query.projects.findFirst({
-	columns: {
-		id: true,
-	},
-	with: {
-		phases: {
-			columns: {},
-			with: {
-				invoice: {
-					columns: {
-						invoiceNumber: true,
-						stripePaymentPage: true,
-						stripeStatus: true,
-						stripePaidAt: true,
-						stripeDueAt: true,
-						total: true,
-						currency: true,
-						invoicedAt: true,
-					},
-				},
-			},
+const invoices = (
+	await Astro.locals.db.query.invoices.findMany({
+		columns: {
+			invoiceNumber: true,
+			stripePaymentPage: true,
+			stripeStatus: true,
+			stripePaidAt: true,
+			stripeDueAt: true,
+			total: true,
+			currency: true,
+			invoicedAt: true,
 		},
-	},
-	where: {
-		id,
-	},
-});
-
-const invoices = (project?.phases ?? [])
-	.flatMap((phase) => (phase.invoice ? [phase.invoice] : []))
-	.map((invoice) => ({
-		invoiceNumber: invoice.invoiceNumber,
-		stripePaymentPage: invoice.stripePaymentPage,
-		invoicedAt: invoice.invoicedAt,
-		stripeStatus: invoice.stripeStatus,
-		stripePaidAt: invoice.stripePaidAt,
-		stripeDueAt: invoice.stripeDueAt,
-		total: invoice.total,
-		currency: invoice.currency,
-	}))
-	.toSorted((a, b) => b.invoicedAt.getTime() - a.invoicedAt.getTime());
+		where: {
+			phase: { projectId: id },
+		},
+		orderBy: { invoicedAt: "desc" },
+	})
+).map((invoice) => ({
+	invoiceNumber: invoice.invoiceNumber,
+	stripePaymentPage: invoice.stripePaymentPage,
+	invoicedAt: invoice.invoicedAt,
+	stripeStatus: invoice.stripeStatus,
+	stripePaidAt: invoice.stripePaidAt,
+	stripeDueAt: invoice.stripeDueAt,
+	total: invoice.total,
+	currency: invoice.currency,
+}));
 ---
 
 <InvoiceTable invoices={invoices} pageSize={10} />

@@ -9,7 +9,7 @@ export interface StripeInvoiceSnapshot {
 	status: string | null;
 	paidAt: Date | null;
 	dueAt: Date | null;
-	invoicedAt: Date | null;
+	invoicedAt: Date;
 	fetchedAt: Date;
 }
 
@@ -27,7 +27,6 @@ interface StripeInvoiceResponse {
 interface StripeInvoiceListItem extends StripeInvoiceResponse {
 	id?: string;
 	number?: string | null;
-	created?: number;
 	hosted_invoice_url?: string | null;
 	invoice_pdf?: string | null;
 }
@@ -63,16 +62,25 @@ const fromStripeMinorUnits = (amount: number, currency: string) =>
 
 const stripeInvoiceSnapshot = (
 	data: StripeInvoiceResponse,
-): StripeInvoiceSnapshot => ({
-	status: data.status ?? null,
-	paidAt:
-		data.status_transitions?.paid_at != null
-			? new Date(data.status_transitions.paid_at * 1000)
-			: null,
-	dueAt: data.due_date != null ? new Date(data.due_date * 1000) : null,
-	invoicedAt: data.created != null ? new Date(data.created * 1000) : null,
-	fetchedAt: new Date(),
-});
+): StripeInvoiceSnapshot => {
+	if (data.created == null) {
+		throw new DomainError(
+			"StripeUnavailable",
+			"Stripe invoice response is missing its creation date.",
+		);
+	}
+
+	return {
+		status: data.status ?? null,
+		paidAt:
+			data.status_transitions?.paid_at != null
+				? new Date(data.status_transitions.paid_at * 1000)
+				: null,
+		dueAt: data.due_date != null ? new Date(data.due_date * 1000) : null,
+		invoicedAt: new Date(data.created * 1000),
+		fetchedAt: new Date(),
+	};
+};
 
 const isImportableStripeInvoice = (
 	item: StripeInvoiceListItem,
@@ -104,9 +112,7 @@ export const persistStripeInvoiceSnapshot = async (
 		stripePaidAt: input.snapshot.paidAt,
 		stripeDueAt: input.snapshot.dueAt,
 		fetchedAt: input.snapshot.fetchedAt,
-		...(input.snapshot.invoicedAt
-			? { invoicedAt: input.snapshot.invoicedAt }
-			: {}),
+		invoicedAt: input.snapshot.invoicedAt,
 	};
 
 	if ("invoiceId" in input) {
@@ -136,7 +142,6 @@ export const persistStripeInvoiceSnapshot = async (
 			publicId: crypto.randomUUID(),
 			organizationId: input.organizationId,
 			stripeId: input.stripeInvoice.id,
-			invoicedAt: new Date(input.stripeInvoice.created * 1000),
 			...invoiceFields,
 			...stripeFields,
 		})
