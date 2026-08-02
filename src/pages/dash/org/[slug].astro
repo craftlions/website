@@ -3,12 +3,19 @@ export const prerender = false;
 
 import type { projectSelectType } from "../../../lib/schema.ts";
 import { isAPIError } from "better-auth/api";
+import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
 import Footer from "../../../components/Footer.astro";
 import Nav from "../../../components/Nav.astro";
 import OrganizationInvoices from "../../../components/OrganizationInvoices.astro";
+import SpendByYear from "../../../components/SpendByYear.astro";
 import Shell from "../../../layouts/Shell.astro";
+import {
+	invoices,
+	phases,
+	projects as projectsTable,
+} from "../../../lib/schema.ts";
 
 const { slug } = Astro.params;
 
@@ -68,15 +75,6 @@ const organizationData = await Astro.locals.db.query.organization.findFirst({
 					columns: {
 						cost: true,
 					},
-					with: {
-						invoice: {
-							columns: {
-								total: true,
-								invoicedAt: true,
-								stripeStatus: true,
-							},
-						},
-					},
 				},
 			},
 			orderBy: {
@@ -89,9 +87,35 @@ const organizationData = await Astro.locals.db.query.organization.findFirst({
 	},
 });
 
+// S-002 R7: the sole core-select read — year × project sums by invoicedAt
+// year, void/uncollectible excluded in SQL; everything else stays RQB v2.
+const spendRows = await Astro.locals.db
+	.select({
+		year: sql<number>`EXTRACT(YEAR FROM ${invoices.invoicedAt} AT TIME ZONE 'UTC')::int`,
+		projectId: projectsTable.id,
+		projectName: sql<string>`COALESCE(${projectsTable.name}, 'Unassigned')`,
+		total: sql<number>`SUM(${invoices.total})::float8`,
+	})
+	.from(invoices)
+	.leftJoin(phases, eq(invoices.phaseId, phases.id))
+	.leftJoin(projectsTable, eq(phases.projectId, projectsTable.id))
+	.where(
+		and(
+			eq(invoices.organizationId, organization.id),
+			or(
+				isNull(invoices.stripeStatus),
+				ne(invoices.stripeStatus, "void"),
+				ne(invoices.stripeStatus, "uncollectible"),
+			),
+		),
+	)
+	.groupBy(
+		sql`EXTRACT(YEAR FROM ${invoices.invoicedAt} AT TIME ZONE 'UTC')::int`,
+		projectsTable.id,
+		projectsTable.name,
+	);
+
 const now = new Date();
-const startOfYear = new Date(now.getFullYear(), 0, 1);
-const startOfNextYear = new Date(now.getFullYear() + 1, 0, 1);
 const projects =
 	organizationData?.projects.map((project) => ({
 		publicId: project.publicId,
@@ -108,22 +132,11 @@ const completedProjectCount = projects.filter(
 const activeProjectCount = projects.filter(
 	(project) => project.state === "active",
 ).length;
-const totalInvoicedAmount =
-	organizationData?.projects
-		.flatMap((project) => project.phases)
-		.flatMap((phase) => (phase.invoice ? [phase.invoice] : []))
-		.reduce((total, invoice) => {
-			if (
-				invoice.stripeStatus === "void" ||
-				invoice.stripeStatus === "uncollectible" ||
-				invoice.invoicedAt < startOfYear ||
-				invoice.invoicedAt >= startOfNextYear
-			) {
-				return total;
-			}
-
-			return total + invoice.total;
-		}, 0) ?? 0;
+// S-002 R8: Overview's "Invoiced this year" reads the current-year total
+// from the same group-by result that renders the Spend chart.
+const totalInvoicedAmount = spendRows
+	.filter((row) => row.year === now.getUTCFullYear())
+	.reduce((total, row) => total + row.total, 0);
 const yearlyBudget = organizationData?.data?.yearlyBudget ?? 0;
 const remainingBudget = yearlyBudget - totalInvoicedAmount;
 const budgetUsagePercentage =
@@ -374,6 +387,8 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 					</div>
 				</div>
 			</section>
+
+			<SpendByYear rows={spendRows} />
 
 			<section
 				aria-labelledby="projects-list-heading"

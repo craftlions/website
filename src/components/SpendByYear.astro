@@ -1,0 +1,232 @@
+---
+interface SpendRow {
+	year: number;
+	projectId: string | null;
+	projectName: string;
+	total: number;
+}
+
+interface Props {
+	rows: SpendRow[];
+}
+
+const { rows } = Astro.props;
+
+const UNASSIGNED = "Unassigned";
+const BAR_HEIGHT = 144;
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+});
+const currentYear = new Date().getUTCFullYear();
+
+// Neutral paper-and-ink fills: solid tones and hatch patterns only.
+// State colors stay reserved for state (DESIGN.md).
+const segmentFills = [
+	"bg-neutral-900 dark:bg-neutral-100",
+	"bg-[repeating-linear-gradient(45deg,transparent_0_6px,#a3a3a3_6px_12px)] dark:bg-[repeating-linear-gradient(45deg,transparent_0_6px,#737373_6px_12px)]",
+	"bg-[repeating-linear-gradient(90deg,transparent_0_4px,#d4d4d4_4px_8px)] dark:bg-[repeating-linear-gradient(90deg,transparent_0_4px,#525252_4px_8px)]",
+	"bg-neutral-400 dark:bg-neutral-500",
+	"bg-[repeating-linear-gradient(135deg,transparent_0_6px,#737373_6px_12px)] dark:bg-[repeating-linear-gradient(135deg,transparent_0_6px,#a3a3a3_6px_12px)]",
+	"bg-[radial-gradient(circle,#a3a3a3_1px,transparent_1px)] bg-[length:8px_8px] dark:bg-[radial-gradient(circle,#737373_1px,transparent_1px)] dark:bg-[length:8px_8px]",
+	"bg-neutral-200 dark:bg-neutral-700",
+	"bg-[repeating-linear-gradient(45deg,transparent_0_3px,#0a0a0a_3px_6px)] dark:bg-[repeating-linear-gradient(45deg,transparent_0_3px,#fafafa_3px_6px)]",
+];
+
+const projectsByKey = new Map<string, { id: string; name: string }>();
+for (const row of rows) {
+	const key = row.projectId ?? "unassigned";
+	if (!projectsByKey.has(key)) {
+		projectsByKey.set(key, {
+			id: key,
+			name: key === "unassigned" ? UNASSIGNED : row.projectName,
+		});
+	}
+}
+const projectKeys = [...projectsByKey.values()]
+	.sort((a, b) => {
+		if (a.id === "unassigned") return 1;
+		if (b.id === "unassigned") return -1;
+		return a.name.localeCompare(b.name);
+	})
+	.map((project, index) => ({
+		...project,
+		fill: segmentFills[index % segmentFills.length] ?? segmentFills[0],
+	}));
+
+const firstYear = Math.min(...rows.map((row) => row.year));
+const years: number[] = [];
+for (let year = firstYear; year <= Math.max(currentYear, firstYear); year++) {
+	years.push(year);
+}
+const bars = years.map((year) => {
+	const segments = projectKeys
+		.map((project) => ({
+			...project,
+			total: rows
+				.filter(
+					(row) =>
+						row.year === year && (row.projectId ?? "unassigned") === project.id,
+				)
+				.reduce((sum, row) => sum + row.total, 0),
+		}))
+		.filter((segment) => segment.total > 0);
+	return {
+		year,
+		total: segments.reduce((sum, segment) => sum + segment.total, 0),
+		segments,
+	};
+});
+const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
+---
+
+<section aria-labelledby="spend-heading" class="grid content-start gap-3">
+	<div class="grid gap-1">
+		<h2
+			id="spend-heading"
+			class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+		>
+			Spend
+		</h2>
+		<p class="max-w-prose text-sm text-neutral-600 dark:text-neutral-400">
+			Invoiced spend per calendar year, stacked by project.
+		</p>
+	</div>
+
+	{rows.length === 0 ? (
+		<p
+			class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
+		>
+			No invoices yet.
+		</p>
+	) : (
+		<div class="grid content-start gap-3">
+			<div
+				class="grid gap-3 border border-dashed border-neutral-300 bg-transparent p-4 dark:border-neutral-700"
+			>
+				<div class="grid gap-1 overflow-x-auto">
+					<div
+						class="grid min-w-lg items-end gap-2 border-b border-dashed border-neutral-300 dark:border-neutral-700"
+						style={`height: ${BAR_HEIGHT}px; grid-template-columns: repeat(${bars.length}, minmax(0, 1fr))`}
+					>
+						{bars.map((bar) => {
+							const reversed = [...bar.segments].reverse();
+							return (
+								<div
+									class="grid"
+									style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total}fr`).join(" ")}`}
+									aria-hidden="true"
+								>
+									{reversed.map((segment) => (
+										<div class={segment.fill} />
+									))}
+								</div>
+							);
+						})}
+					</div>
+					<div
+						class="grid min-w-lg items-start gap-2"
+						style={`grid-template-columns: repeat(${bars.length}, minmax(0, 1fr))`}
+					>
+						{bars.map((bar) => (
+							<div class="grid gap-0.5 text-center">
+								<span class="text-sm font-semibold tabular-nums">
+									{currencyFormatter.format(bar.total)}
+								</span>
+								<span
+									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>
+									{bar.year}
+								</span>
+							</div>
+						))}
+					</div>
+				</div>
+
+				<ul
+					aria-label="Spend segments by project"
+					class="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2 md:grid-cols-3"
+				>
+					{projectKeys.map((project) => (
+						<li class="grid grid-flow-col items-center justify-start gap-2">
+							<span
+								aria-hidden="true"
+								class:list={[
+									"size-3 border border-dashed border-neutral-400 dark:border-neutral-600",
+									project.fill,
+								]}
+							/>
+							<span>{project.name}</span>
+						</li>
+					))}
+				</ul>
+			</div>
+
+			<div
+				class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700"
+			>
+				<table class="w-full min-w-xl text-sm">
+					<thead>
+						<tr
+							class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
+						>
+							<th
+								scope="col"
+								class="px-4 py-3 text-left text-xs font-semibold uppercase"
+							>
+								Year
+							</th>
+							{projectKeys.map((project) => (
+								<th
+									scope="col"
+									class="px-4 py-3 text-right text-xs font-semibold uppercase"
+								>
+									{project.name}
+								</th>
+							))}
+							<th
+								scope="col"
+								class="px-4 py-3 text-right text-xs font-semibold uppercase"
+							>
+								Total
+							</th>
+						</tr>
+					</thead>
+					<tbody
+						class="divide-y divide-dashed divide-neutral-300 dark:divide-neutral-700"
+					>
+						{bars.map((bar) => (
+							<tr>
+								<th
+									scope="row"
+									class="px-4 py-3 text-left font-medium"
+								>
+									{bar.year}
+								</th>
+								{projectKeys.map((project) => {
+									const segment = bar.segments.find(
+										(candidate) => candidate.id === project.id,
+									);
+									return (
+										<td
+											class="px-4 py-3 text-right tabular-nums text-neutral-700 dark:text-neutral-300"
+										>
+											{segment
+												? currencyFormatter.format(segment.total)
+												: "—"}
+										</td>
+									);
+								})}
+								<td
+									class="px-4 py-3 text-right font-medium tabular-nums"
+								>
+									{currencyFormatter.format(bar.total)}
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	)}
+</section>
