@@ -68,11 +68,11 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
 | 4 | R2 | preview | approve/decline/cancel stops all later email; ineligible checkpoint skipped + logged; restored eligibility gets only later checkpoints; recovery never bunches |
 | 5 | R1, R3 | preview | only `open` past-due invoices without a sent event dispatch; repeats → no duplicate; N invoices → N emails; pre-enablement invoice notices once |
 | 6 | R3–R5 | preview | invoice email ≤ 5 min after fetch; correct destination per table; resolved-before-send skipped |
-| 7 | R2, R3 | preview | recipient-free → skip logged, no email; phase skips only that checkpoint; a later fetch may re-notice a still-open invoice |
+| 7 | R2, R3 | preview | recipient-free notice → skip logged, no email; a later fetch may re-notice a still-open invoice |
 | 8 | R5 | preview | signed-out link → login → exact section; malformed/external → `/dash`, no data leak |
 | 9 | R6 | preview | induced mail failure: five retries, committed transition, errored instance, no recipient data in logs; replay resends nothing; sent event row present |
-| 10 | — | static | `aubx drizzle-kit check`, `aubr types`, `aubr cf-check`, `aubx astro sync`, `aubr check`, `aubx biome check --write` all pass |
-| 11 | R7 | metric | both O-001 measures computable from event rows over a rolling 90-day window, no analytics UI |
+
+Static validation is inherited from the repository contract; the 90-day measures live in [O-001 Success](../outcomes/O-001-actionable-customer-notifications.md) and are answered by R7.
 
 ## Work sketch (draft)
 
