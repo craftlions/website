@@ -2,7 +2,6 @@ import type { Db } from "./database.ts";
 import { eq } from "drizzle-orm";
 import { assertAdminUser, DomainError } from "./admin-mutations.ts";
 import { invoices } from "./schema.ts";
-import { uuidV7FromDate } from "./uuid.ts";
 
 type StripeTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -10,6 +9,7 @@ export interface StripeInvoiceSnapshot {
 	status: string | null;
 	paidAt: Date | null;
 	dueAt: Date | null;
+	invoicedAt: Date | null;
 	fetchedAt: Date;
 }
 
@@ -19,6 +19,7 @@ interface StripeInvoiceResponse {
 	status_transitions?: {
 		paid_at?: number | null;
 	};
+	created?: number;
 	due_date?: number | null;
 	total?: number;
 }
@@ -35,6 +36,7 @@ type ImportableStripeInvoice = StripeInvoiceListItem & {
 	id: string;
 	number: string;
 	currency: string;
+	created: number;
 };
 
 const zeroDecimalCurrencies = new Set([
@@ -68,6 +70,7 @@ const stripeInvoiceSnapshot = (
 			? new Date(data.status_transitions.paid_at * 1000)
 			: null,
 	dueAt: data.due_date != null ? new Date(data.due_date * 1000) : null,
+	invoicedAt: data.created != null ? new Date(data.created * 1000) : null,
 	fetchedAt: new Date(),
 });
 
@@ -79,6 +82,7 @@ const isImportableStripeInvoice = (
 			item.number &&
 			item.currency &&
 			item.status !== "draft" &&
+			item.created != null &&
 			(item.hosted_invoice_url || item.invoice_pdf),
 	);
 
@@ -100,6 +104,9 @@ export const persistStripeInvoiceSnapshot = async (
 		stripePaidAt: input.snapshot.paidAt,
 		stripeDueAt: input.snapshot.dueAt,
 		fetchedAt: input.snapshot.fetchedAt,
+		...(input.snapshot.invoicedAt
+			? { invoicedAt: input.snapshot.invoicedAt }
+			: {}),
 	};
 
 	if ("invoiceId" in input) {
@@ -126,12 +133,10 @@ export const persistStripeInvoiceSnapshot = async (
 	await tx
 		.insert(invoices)
 		.values({
-			id: input.stripeInvoice.created
-				? uuidV7FromDate(new Date(input.stripeInvoice.created * 1000))
-				: undefined,
 			publicId: crypto.randomUUID(),
 			organizationId: input.organizationId,
 			stripeId: input.stripeInvoice.id,
+			invoicedAt: new Date(input.stripeInvoice.created * 1000),
 			...invoiceFields,
 			...stripeFields,
 		})
