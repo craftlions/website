@@ -21,7 +21,9 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 const currentYear = new Date().getUTCFullYear();
 
 // Neutral paper-and-ink fills: solid tones and hatch patterns only.
-// State colors stay reserved for state (DESIGN.md).
+// State colors stay reserved for state (DESIGN.md); the one exception is
+// the current-year reference total, which uses the info accent so the
+// number Overview's stat points to is findable at a glance.
 const segmentFills = [
 	"bg-neutral-900 dark:bg-neutral-100",
 	"bg-[repeating-linear-gradient(45deg,transparent_0_6px,#a3a3a3_6px_12px)] dark:bg-[repeating-linear-gradient(45deg,transparent_0_6px,#737373_6px_12px)]",
@@ -54,7 +56,7 @@ const projectKeys = [...projectsByKey.values()]
 		fill: segmentFills[index % segmentFills.length] ?? segmentFills[0],
 	}));
 
-const firstYear = Math.min(...rows.map((row) => row.year));
+const firstYear = Math.min(currentYear, ...rows.map((row) => row.year));
 const years: number[] = [];
 for (let year = firstYear; year <= Math.max(currentYear, firstYear); year++) {
 	years.push(year);
@@ -130,7 +132,13 @@ const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
 					>
 						{bars.map((bar) => (
 							<div class="grid gap-0.5 text-center">
-								<span class="text-sm font-semibold tabular-nums">
+								<span
+									class:list={[
+										"text-sm font-semibold tabular-nums",
+										bar.year === currentYear &&
+											"text-sky-700 dark:text-sky-300",
+									]}
+								>
 									{currencyFormatter.format(bar.total)}
 								</span>
 								<span
@@ -218,7 +226,11 @@ const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
 									);
 								})}
 								<td
-									class="px-4 py-3 text-right font-medium tabular-nums"
+									class:list={[
+										"px-4 py-3 text-right font-medium tabular-nums",
+										bar.year === currentYear &&
+											"text-sky-700 dark:text-sky-300",
+									]}
 								>
 									{currencyFormatter.format(bar.total)}
 								</td>
