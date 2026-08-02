@@ -75,11 +75,3 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
 | 9 | R6 | preview | induced mail failure: five retries, committed transition, errored instance, no recipient data in logs; replay resends nothing; sent event row present |
 
 Static validation is inherited from the repository contract; Success lives in [O-001](../outcomes/O-001-actionable-customer-notifications.md) and is judged from R7's event rows.
-
-## Work sketch (draft)
-
-1. `system` actor value + generated migration; direct dispatch on planned; initial notice + sent event.
-2. Day-2/day-5 checkpoints, threading, skip behavior.
-3. Overdue evaluation on both Stripe fetch paths; invoice notice.
-4. Safe login return destinations.
-5. Preview acceptance scenarios + validation contract.
