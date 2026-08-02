@@ -1,4 +1,4 @@
-> Frozen — decomposed into **[Epic] Spend by year**; further change starts a new spec.
+> Amended for the chart-color direction — segment fills now use the categorical chart palette per DESIGN.md (Data Visualization); the previous neutral tones/patterns constraint is superseded. Decomposed into **[Epic] Spend by year** for implementation.
 
 # S-002 — Spend by year
 
@@ -21,7 +21,7 @@
 - Totals are EUR-only (existing formatter assumption); non-EUR invoices out of scope.
 - The group-by is the sole core-select read; every other read stays RQB v2 (RQB has no aggregate support).
 - Section is server-rendered on the worker; no client JS added.
-- Chart stays in the neutral paper-and-ink vocabulary — segment fills use tones/patterns, state colors remain reserved for state (DESIGN.md); year totals and project breakdown reach assistive tech semantically, not only as drawn bars.
+- Segment fills use the categorical chart palette from DESIGN.md — the spend chart is the portal's single colored data surface; state colors remain reserved for state; year totals and project breakdown reach assistive tech semantically, not only as drawn bars.
 - Recording gains a Stripe dependency: Stripe unreachable → recording fails with the existing StripeUnavailable error, nothing written.
 - Running the import per org (history backfill execution) is operations, outside this spec.
 
