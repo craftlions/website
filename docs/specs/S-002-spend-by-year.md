@@ -1,3 +1,5 @@
+> Frozen — decomposed into **[Epic] Spend by year**; further change starts a new spec.
+
 # S-002 — Spend by year
 
 **Goal** — A per-year, per-project spend section on the org dashboard, computed by Postgres aggregation over Stripe-dated invoices, reaching [O-002](../outcomes/O-002-year-over-year-spend.md) (self-served year-over-year spend).
