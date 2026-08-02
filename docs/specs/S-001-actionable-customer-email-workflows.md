@@ -50,7 +50,7 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
    - Structured logs carry workflow ID, domain IDs, reason — never recipient addresses or bodies.
    - Cloudflare instance state, metrics, and logs are the only operational view.
 
-7. **Measurement** — sent-notice events + existing domain events answer O-001's 90-day measures; follow-up stays operator-assessed.
+7. **Measurement** — sent-notice events + existing domain events let O-001's Success be judged; follow-up stays operator-assessed.
 
 ## Constraints
 
@@ -72,7 +72,7 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
 | 8 | R5 | preview | signed-out link → login → exact section; malformed/external → `/dash`, no data leak |
 | 9 | R6 | preview | induced mail failure: five retries, committed transition, errored instance, no recipient data in logs; replay resends nothing; sent event row present |
 
-Static validation is inherited from the repository contract; the 90-day measures live in [O-001 Success](../outcomes/O-001-actionable-customer-notifications.md) and are answered by R7.
+Static validation is inherited from the repository contract; Success lives in [O-001](../outcomes/O-001-actionable-customer-notifications.md) and is judged from R7's event rows.
 
 ## Work sketch (draft)
 

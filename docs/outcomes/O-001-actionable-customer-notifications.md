@@ -17,10 +17,10 @@ Enable customers to notice and act on phase approvals and overdue invoices witho
 
 | Trigger | Emails | Timing |
 |---|---|---|
-| Phase awaits approval | initial + two reminders, own thread | ≤ 5 min; day 2; day 5 |
-| Invoice unpaid past due, revealed by an existing Stripe fetch | one notice | ≤ 5 min after the fetch |
+| Phase awaits approval | initial + two reminders, own thread | on trigger; day 2; day 5 |
+| Invoice unpaid past due, revealed by an existing Stripe fetch | one notice | on the fetch |
 
-- Reminders: within 24 h of due; never consolidated across phases; stop on approve, decline, or cancel.
+- Reminders: never consolidated across phases; stop on approve, decline, or cancel.
 - State re-checked immediately before every send, including the initial; resolved actions suppressed.
 - No phase backfill at enablement; a pre-enablement overdue invoice may notice once on its first fetch.
 
@@ -50,8 +50,8 @@ Enable customers to notice and act on phase approvals and overdue invoices witho
 
 ## Success
 
-- Phase approvals resolved without manual follow-up: unmeasured → ≥ 80 % by the day-five reminder, rolling 90 days.
-- Overdue invoices paid without manual follow-up: unmeasured → ≥ 80 % within 7 days of the notice, rolling 90 days.
+- Manual follow-up to get approvals decided and invoices paid: frequent → rare.
+- Projects blocked waiting on unnoticed approvals: recurring → exceptional.
 
 ## Out of scope
 
