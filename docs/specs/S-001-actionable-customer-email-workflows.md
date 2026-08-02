@@ -4,7 +4,7 @@
 
 ## Goal
 
-Build Cloudflare Workflow email delivery started directly by qualifying domain changes to reach [O-001](../outcomes/O-001-actionable-customer-notifications.md), honoring the [notifications contract](../behavior/notifications.md), per [D-003](../decisions/D-003-direct-workflow-dispatch.md) and [D-002](../decisions/D-002-at-least-once-email-delivery.md).
+Build Cloudflare Workflow email delivery started directly by qualifying domain changes to reach [O-001](../outcomes/O-001-actionable-customer-notifications.md), honoring the [notifications contract](../behavior/B-notifications.md), per [D-003](../decisions/D-003-direct-workflow-dispatch.md) and [D-002](../decisions/D-002-at-least-once-email-delivery.md).
 
 ## Requirements
 

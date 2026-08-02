@@ -10,6 +10,7 @@ Living contract for customer notifications: the behavior every intervention must
 - Email only for required customer action; informational changes never send.
 - Body: organization, project, phase or invoice identifier, amount and due date where relevant, the required action, one authenticated portal link — nothing else.
 - Email never performs the action; the portal does.
+- No in-app notifications: no inbox, no badges, no customer-visible delivery history.
 
 ### Triggers and cadence
 
