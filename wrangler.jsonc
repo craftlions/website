@@ -6,9 +6,9 @@
   "main": "./src/worker.ts",
   "workflows": [
     {
-      "name": "phase-approval",
-      "binding": "PHASE_APPROVAL_WORKFLOW",
-      "class_name": "PhaseApprovalWorkflow"
+      "name": "notifications",
+      "binding": "NOTIFICATION_WORKFLOW",
+      "class_name": "NotificationWorkflow"
     }
   ],
   "name": "craftlions-website",

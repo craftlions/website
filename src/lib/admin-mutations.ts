@@ -455,9 +455,9 @@ const transitionPhase = async (
 
 	if (nextState === "planned" && !result.idempotent) {
 		try {
-			await env.PHASE_APPROVAL_WORKFLOW.create({
+			await env.NOTIFICATION_WORKFLOW.create({
 				id: `phase-approval-${phaseId}`,
-				params: { phaseId },
+				params: { kind: "phase_approval", aggregateId: phaseId },
 			});
 		} catch (error) {
 			console.error(

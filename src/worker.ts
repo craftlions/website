@@ -1,6 +1,6 @@
 import handler from "@astrojs/cloudflare/entrypoints/server";
 
-export { PhaseApprovalWorkflow } from "./workers/phase-approval.ts";
+export { NotificationWorkflow } from "./workers/notification-workflow.ts";
 
 export default {
 	async fetch(request, env, ctx) {

@@ -5,24 +5,32 @@ import {
 	sendPhaseApprovalNotice,
 } from "./notification.ts";
 
-type PhaseApprovalParams = {
-	phaseId: string;
+type NotificationParams = {
+	kind: "phase_approval";
+	aggregateId: string;
 };
 
-export class PhaseApprovalWorkflow extends WorkflowEntrypoint<
+export class NotificationWorkflow extends WorkflowEntrypoint<
 	Env,
-	PhaseApprovalParams
+	NotificationParams
 > {
 	override async run(
-		event: WorkflowEvent<PhaseApprovalParams>,
+		event: WorkflowEvent<NotificationParams>,
 		step: WorkflowStep,
 	) {
+		switch (event.payload.kind) {
+			case "phase_approval":
+				return this.phaseApproval(event.payload.aggregateId, step);
+		}
+	}
+
+	async phaseApproval(phaseId: string, step: WorkflowStep) {
 		const result = await step.do(
 			"send initial phase approval notice",
 			{
 				retries: { limit: 5, delay: "10 seconds", backoff: "exponential" },
 			},
-			() => sendPhaseApprovalNotice(this.env, event.payload.phaseId),
+			() => sendPhaseApprovalNotice(this.env, phaseId),
 		);
 
 		if (result.sent) {
@@ -31,7 +39,7 @@ export class PhaseApprovalWorkflow extends WorkflowEntrypoint<
 				{
 					retries: { limit: 5, delay: "10 seconds", backoff: "exponential" },
 				},
-				() => recordPhaseApprovalNoticeEvent(this.env, event.payload.phaseId),
+				() => recordPhaseApprovalNoticeEvent(this.env, phaseId),
 			);
 		}
 
