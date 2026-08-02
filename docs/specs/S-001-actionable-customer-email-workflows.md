@@ -83,7 +83,3 @@ Static validation is inherited from the repository contract; Success lives in [O
 3. Overdue evaluation on both Stripe fetch paths; invoice notice.
 4. Safe login return destinations.
 5. Preview acceptance scenarios + validation contract.
-
-## Open questions
-
-- Preview owner/admin addresses for the manual smoke checks — blocks only those checks.
