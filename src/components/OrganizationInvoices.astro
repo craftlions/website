@@ -20,19 +20,18 @@ const invoices = (
 			invoicedAt: true,
 		},
 		where: { organizationId: id },
+		orderBy: { invoicedAt: "desc" },
 	})
-)
-	.map((invoice) => ({
-		invoiceNumber: invoice.invoiceNumber,
-		stripePaymentPage: invoice.stripePaymentPage,
-		invoicedAt: invoice.invoicedAt,
-		stripeStatus: invoice.stripeStatus,
-		stripePaidAt: invoice.stripePaidAt,
-		stripeDueAt: invoice.stripeDueAt,
-		total: invoice.total,
-		currency: invoice.currency,
-	}))
-	.toSorted((a, b) => b.invoicedAt.getTime() - a.invoicedAt.getTime());
+).map((invoice) => ({
+	invoiceNumber: invoice.invoiceNumber,
+	stripePaymentPage: invoice.stripePaymentPage,
+	invoicedAt: invoice.invoicedAt,
+	stripeStatus: invoice.stripeStatus,
+	stripePaidAt: invoice.stripePaidAt,
+	stripeDueAt: invoice.stripeDueAt,
+	total: invoice.total,
+	currency: invoice.currency,
+}));
 ---
 
 <InvoiceTable invoices={invoices} />

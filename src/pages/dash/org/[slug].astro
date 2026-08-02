@@ -73,6 +73,7 @@ const organizationData = await Astro.locals.db.query.organization.findFirst({
 							columns: {
 								total: true,
 								invoicedAt: true,
+								stripeStatus: true,
 							},
 						},
 					},
@@ -113,6 +114,8 @@ const totalInvoicedAmount =
 		.flatMap((phase) => (phase.invoice ? [phase.invoice] : []))
 		.reduce((total, invoice) => {
 			if (
+				invoice.stripeStatus === "void" ||
+				invoice.stripeStatus === "uncollectible" ||
 				invoice.invoicedAt < startOfYear ||
 				invoice.invoicedAt >= startOfNextYear
 			) {
