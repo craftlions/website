@@ -1,8 +1,10 @@
 # Actionable customer email workflows
 
+> Frozen — decomposed into [#249](https://github.com/craftlions/website/issues/249); revising it re-enters `/to-spec`.
+
 ## Goal
 
-Build Cloudflare Workflow email delivery started directly by qualifying domain changes to reach [O-001](../outcomes/O-001-actionable-customer-notifications.md), per [D-003](../decisions/D-003-direct-workflow-dispatch.md) and [D-002](../decisions/D-002-at-least-once-email-delivery.md).
+Build Cloudflare Workflow email delivery started directly by qualifying domain changes to reach [O-001](../outcomes/O-001-actionable-customer-notifications.md), honoring the [notifications contract](../behavior/notifications.md), per [D-003](../decisions/D-003-direct-workflow-dispatch.md) and [D-002](../decisions/D-002-at-least-once-email-delivery.md).
 
 ## Requirements
 
@@ -15,7 +17,7 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
 
    - Dispatch failure → one structured log line; the committed change stands (D-003).
    - Instance-ID uniqueness + the sent-event check absorb duplicate dispatch.
-   - No activation configuration; pre-enablement overdue invoices per O-001.
+   - No activation configuration; pre-enablement overdue invoices per the contract.
 
 2. **Phase workflow** — one instance owns initial + day-2 + day-5.
    - Checkpoints anchor to the transition time, same local time `Europe/Berlin`.
@@ -25,9 +27,9 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
 
 3. **Invoice workflow** — one instance, one notice, no reminders.
    - Re-reads invoice, attached phase and project, organization, recipients before send.
-   - Skips with logged reason when not `open`, not past due, or recipient-free; a skip leaves no database trace — later fetches may re-dispatch per O-001.
+   - Skips with logged reason when not `open`, not past due, or recipient-free; a skip leaves no database trace — later fetches may re-dispatch per the contract.
 
-4. **Message** — plain text per O-001; the intervention adds:
+4. **Message** — plain text per the contract; the intervention adds:
    - Phase subject names project + phase, stable across the thread; reminders reference the initial provider message ID from the checkpointed step result.
    - Invoice subject names the invoice.
    - `de-DE` dates and money, matching the portal.
@@ -63,7 +65,7 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
 | # | Proves | Verify | Check |
 |---|---|---|---|
 | 1 | R1 | preview | planned → exactly one `phase-approval-<id>`; idempotent repeat → no second instance; forced dispatch failure → transition committed + one log line |
-| 2 | R1, R4 | preview | one plain-text email ≤ 5 min; To/CC per O-001, no members/banned/unverified; required context + one portal link |
+| 2 | R1, R4 | preview | one plain-text email ≤ 5 min; To/CC per the contract, no members/banned/unverified; required context + one portal link |
 | 3 | R2, R4 | preview | day-2/day-5 at the same Berlin local time; stable subject + thread headers; one instance with checkpointed step results |
 | 4 | R2 | preview | approve/decline/cancel stops all later email; ineligible checkpoint skipped + logged; restored eligibility gets only later checkpoints; recovery never bunches |
 | 5 | R1, R3 | preview | only `open` past-due invoices without a sent event dispatch; repeats → no duplicate; N invoices → N emails; pre-enablement invoice notices once |
