@@ -40,16 +40,3 @@ export const resolveNotificationRecipients = async (
 
 	return { owners, admins };
 };
-
-export const hasEligibleRecipient = (
-	owners: NotificationRecipient[],
-	admins: NotificationRecipient[],
-): boolean => owners.length > 0 || admins.length > 0;
-
-export const getNotificationActivation = (
-	value: string | undefined,
-): Date | null => {
-	if (!value) return null;
-	const timestamp = new Date(value);
-	return Number.isNaN(timestamp.getTime()) ? null : timestamp;
-};

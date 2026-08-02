@@ -311,10 +311,7 @@ export const server = {
 			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
-			await transitionPhaseAsAdmin(context.locals.db, actorId, {
-				...input,
-				activationTimestamp: env.NOTIFICATION_ACTIVATION_TS,
-			});
+			await transitionPhaseAsAdmin(context.locals.db, actorId, input);
 			return { success: true };
 		}),
 	}),

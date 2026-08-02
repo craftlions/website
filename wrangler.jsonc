@@ -48,9 +48,6 @@
       "persist": true
     }
   },
-  "triggers": {
-    "crons": ["* * * * *"]
-  },
   "limits": {
     "cpu_ms": 60000
   },
@@ -86,13 +83,11 @@
     "region": "aws:eu-central-1"
   },
   "vars": {
-    "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO",
-    "NOTIFICATION_ACTIVATION_TS": "2099-01-01T00:00:00Z"
+    "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO"
   },
   "previews": {
     "vars": {
-      "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO",
-      "NOTIFICATION_ACTIVATION_TS": "2026-08-01T00:00:00Z"
+      "GITHUB_CLIENT_ID": "Ov23lieleOx1ivZtTJvO"
     },
     "images": {
       "binding": "IMAGES",

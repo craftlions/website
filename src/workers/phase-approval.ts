@@ -1,11 +1,12 @@
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 import { WorkflowEntrypoint } from "cloudflare:workers";
-import { sendNotification } from "./notification.ts";
+import {
+	recordPhaseApprovalNoticeEvent,
+	sendPhaseApprovalNotice,
+} from "./notification.ts";
 
 type PhaseApprovalParams = {
-	intentId: string;
-	aggregateId: string;
-	organizationId: string;
+	phaseId: string;
 };
 
 export class PhaseApprovalWorkflow extends WorkflowEntrypoint<
@@ -16,19 +17,24 @@ export class PhaseApprovalWorkflow extends WorkflowEntrypoint<
 		event: WorkflowEvent<PhaseApprovalParams>,
 		step: WorkflowStep,
 	) {
-		return step.do(
+		const result = await step.do(
 			"send initial phase approval notice",
 			{
 				retries: { limit: 5, delay: "10 seconds", backoff: "exponential" },
 			},
-			async () =>
-				sendNotification(this.env, {
-					id: event.payload.intentId,
-					kind: "phase_approval",
-					aggregateId: event.payload.aggregateId,
-					organizationId: event.payload.organizationId,
-					state: "dispatching",
-				}),
+			() => sendPhaseApprovalNotice(this.env, event.payload.phaseId),
 		);
+
+		if (result.sent) {
+			await step.do(
+				"record approval notice event",
+				{
+					retries: { limit: 5, delay: "10 seconds", backoff: "exponential" },
+				},
+				() => recordPhaseApprovalNoticeEvent(this.env, event.payload.phaseId),
+			);
+		}
+
+		return result;
 	}
 }

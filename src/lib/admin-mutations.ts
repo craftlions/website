@@ -1,17 +1,14 @@
 import type { Auth } from "./auth.ts";
 import type { Db } from "./database.ts";
+import { env } from "cloudflare:workers";
 import { getOrgAdapter } from "better-auth/plugins/organization";
-import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
-import { getNotificationActivation } from "./notification-recipients.ts";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import {
 	events,
 	invoices,
-	member,
-	notificationIntent,
 	organizationMetadata,
 	phases,
 	projects,
-	user,
 } from "./schema.ts";
 
 export class DomainError extends Error {
@@ -142,7 +139,6 @@ export const approvePhaseAsClient = async (
 		["planned"],
 		input.event,
 		"Only planned phases can be approved or declined.",
-		undefined,
 	);
 };
 
@@ -382,15 +378,13 @@ const transitionPhase = async (
 	from: readonly string[],
 	event: string,
 	invalidTransitionMessage: string,
-	activationTimestamp: string | undefined,
-) =>
-	db.transaction(async (tx) => {
+) => {
+	const result = await db.transaction(async (tx) => {
 		const [phase] = await tx
 			.select({
 				id: phases.id,
 				state: phases.state,
 				version: phases.version,
-				projectId: phases.projectId,
 			})
 			.from(phases)
 			.where(eq(phases.id, phaseId))
@@ -456,54 +450,29 @@ const transitionPhase = async (
 			actorId,
 		});
 
-		if (nextState === "planned") {
-			const activation = getNotificationActivation(activationTimestamp);
-			if (!activation) {
-				console.error(
-					JSON.stringify({
-						event: "notification_activation_invalid",
-						phaseId: phase.id,
-					}),
-				);
-				return { idempotent: false };
-			}
-
-			const project = await tx.query.projects.findFirst({
-				columns: { organizationId: true },
-				where: { id: phase.projectId },
-			});
-
-			if (project && activation <= new Date()) {
-				const eligible = await tx
-					.select({ id: user.id })
-					.from(member)
-					.innerJoin(user, eq(member.userId, user.id))
-					.where(
-						and(
-							eq(member.organizationId, project.organizationId),
-							inArray(member.role, ["owner", "admin"]),
-							eq(user.emailVerified, true),
-							or(eq(user.banned, false), isNull(user.banned)),
-						),
-					)
-					.limit(1);
-
-				if (eligible[0]) {
-					await tx
-						.insert(notificationIntent)
-						.values({
-							kind: "phase_approval",
-							aggregateType: "phase",
-							aggregateId: phase.id,
-							organizationId: project.organizationId,
-						})
-						.onConflictDoNothing();
-				}
-			}
-		}
-
 		return { idempotent: false };
 	});
+
+	if (nextState === "planned" && !result.idempotent) {
+		try {
+			await env.PHASE_APPROVAL_WORKFLOW.create({
+				id: `phase-approval-${phaseId}`,
+				params: { phaseId },
+			});
+		} catch (error) {
+			console.error(
+				JSON.stringify({
+					event: "phase_approval_dispatch_failed",
+					workflowId: `phase-approval-${phaseId}`,
+					phaseId,
+					error: error instanceof Error ? error.message : String(error),
+				}),
+			);
+		}
+	}
+
+	return result;
+};
 
 export const transitionPhaseAsAdmin = async (
 	db: Db,
@@ -512,7 +481,6 @@ export const transitionPhaseAsAdmin = async (
 		phaseId: string;
 		nextState: "planned" | "approved" | "in_progress" | "cancelled" | "paid";
 		expectedVersion: number;
-		activationTimestamp?: string;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
@@ -530,7 +498,6 @@ export const transitionPhaseAsAdmin = async (
 		from,
 		transition.event,
 		"Invalid phase transition.",
-		input.activationTimestamp,
 	);
 };
 

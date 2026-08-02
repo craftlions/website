@@ -1,23 +1,10 @@
-import type { Db } from "../lib/database.ts";
-import { eq, sql } from "drizzle-orm";
 import { createDb } from "../lib/database.ts";
 import { resolveNotificationRecipients } from "../lib/notification-recipients.ts";
-import { notificationIntent, notificationStageResult } from "../lib/schema.ts";
+import { events } from "../lib/schema.ts";
 
-export interface NotificationIntent {
-	id: string;
-	kind: "phase_approval";
-	aggregateId: string;
-	organizationId: string;
-	state: string | null;
-}
-
-export interface SendNotificationResult {
-	skipped: boolean;
-	reason?: string;
-	sent?: boolean;
-	messageId?: string;
-}
+export type SendNoticeResult =
+	| { sent: true; messageId: string }
+	| { sent: false; reason: string };
 
 const formatCost = (cost: string | number | null, currency: string): string => {
 	if (cost == null) return "—";
@@ -78,94 +65,37 @@ const buildPhaseEmail = (
 	return { to, cc, subject, text: body };
 };
 
-async function recordStageResult(
-	db: Db,
-	intentId: string,
-	state: "sent" | "skipped" | "errored",
-	options: {
-		reason?: string;
-		messageId?: string;
-		error?: string;
-	} = {},
-) {
-	const now = new Date();
-	await db
-		.insert(notificationStageResult)
-		.values({
-			intentId,
-			stage: "initial_notice",
-			state,
-			sentMessageId: options.messageId ?? null,
-			sentAt: options.messageId ? now : null,
-			skippedReason: options.reason ?? null,
-			failures: options.error ? 1 : 0,
-			lastError: options.error ?? null,
-			createdAt: now,
-			updatedAt: now,
-		})
-		.onConflictDoUpdate({
-			target: [notificationStageResult.intentId, notificationStageResult.stage],
-			set: {
-				state,
-				sentMessageId: options.messageId ?? null,
-				sentAt: options.messageId ? now : null,
-				skippedReason: options.reason ?? null,
-				failures: options.error
-					? sql`${notificationStageResult.failures} + 1`
-					: notificationStageResult.failures,
-				lastError: options.error ?? null,
-				updatedAt: now,
-			},
-		});
-}
+const skip = (phaseId: string, reason: string): SendNoticeResult => {
+	console.log(
+		JSON.stringify({
+			event: "phase_approval_notice_skipped",
+			workflowId: `phase-approval-${phaseId}`,
+			phaseId,
+			reason,
+		}),
+	);
+	return { sent: false, reason };
+};
 
-async function sendMail(
+export async function sendPhaseApprovalNotice(
 	env: Env,
-	options: {
-		from: string;
-		to: string[];
-		cc?: string[];
-		subject: string;
-		text: string;
-	},
-): Promise<string> {
-	const response = await env.MAIL.send({
-		from: options.from,
-		to: options.to,
-		...(options.cc ? { cc: options.cc } : {}),
-		subject: options.subject,
-		text: options.text,
-	});
-
-	return response.messageId;
-}
-
-export async function sendNotification(
-	env: Env,
-	intent: NotificationIntent,
-): Promise<SendNotificationResult> {
+	phaseId: string,
+): Promise<SendNoticeResult> {
 	const db = createDb(env);
 
 	const phase = await db.query.phases.findFirst({
 		columns: {
 			id: true,
-			publicId: true,
 			state: true,
 			title: true,
 			cost: true,
 			currency: true,
 			dueAt: true,
-			projectId: true,
 		},
-		where: { id: intent.aggregateId },
+		where: { id: phaseId },
 		with: {
 			project: {
-				columns: {
-					id: true,
-					publicId: true,
-					name: true,
-					organizationId: true,
-				},
+				columns: { publicId: true, name: true, organizationId: true },
 				with: {
 					organization: {
 						columns: { name: true, slug: true },
@@ -176,45 +106,23 @@ export async function sendNotification(
 	});
 
 	if (!phase?.project?.organization) {
-		await recordStageResult(db, intent.id, "skipped", {
-			reason: "phase_missing",
-		});
-		return { skipped: true, reason: "phase_missing" };
+		return skip(phaseId, "phase_missing");
 	}
 
 	if (phase.state !== "planned") {
-		await recordStageResult(db, intent.id, "skipped", {
-			reason: "phase_no_longer_planned",
-		});
-		return { skipped: true, reason: "phase_no_longer_planned" };
-	}
-
-	const existing = await db.query.notificationStageResult.findFirst({
-		columns: { id: true, state: true, sentMessageId: true },
-		where: { intentId: intent.id, stage: "initial_notice" },
-	});
-
-	if (existing?.state === "sent" && existing.sentMessageId) {
-		return {
-			skipped: true,
-			reason: "already_sent",
-			messageId: existing.sentMessageId,
-		};
+		return skip(phaseId, "phase_no_longer_planned");
 	}
 
 	const { owners, admins } = await resolveNotificationRecipients(
 		db,
-		intent.organizationId,
+		phase.project.organizationId,
 	);
 
 	if (owners.length === 0 && admins.length === 0) {
-		await recordStageResult(db, intent.id, "skipped", {
-			reason: "no_eligible_recipients",
-		});
-		return { skipped: true, reason: "no_eligible_recipients" };
+		return skip(phaseId, "no_eligible_recipients");
 	}
 
-	const emailOptions = buildPhaseEmail(
+	const message = buildPhaseEmail(
 		{
 			title: phase.title,
 			cost: phase.cost,
@@ -233,37 +141,28 @@ export async function sendNotification(
 		admins.map((a) => a.email),
 	);
 
-	const to = emailOptions.to;
-	try {
-		const messageId = await sendMail(env, {
-			from: "craftlions <no-reply@craftlions.com>",
-			to,
-			...(emailOptions.cc.length > 0 ? { cc: emailOptions.cc } : {}),
-			subject: emailOptions.subject,
-			text: emailOptions.text,
-		});
+	const { messageId } = await env.MAIL.send({
+		from: "craftlions <no-reply@craftlions.com>",
+		to: message.to,
+		...(message.cc.length > 0 ? { cc: message.cc } : {}),
+		subject: message.subject,
+		text: message.text,
+	});
 
-		await recordStageResult(db, intent.id, "sent", { messageId });
-		await db
-			.update(notificationIntent)
-			.set({ state: "dispatched", dispatchedAt: new Date() })
-			.where(eq(notificationIntent.id, intent.id));
+	return { sent: true, messageId };
+}
 
-		return { skipped: false, sent: true, messageId };
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		await recordStageResult(db, intent.id, "errored", { error: message });
-		console.error(
-			JSON.stringify({
-				event: "notification_workflow_failed",
-				intentId: intent.id,
-				workflowId: `phase-approval-${intent.id}`,
-				notificationKind: intent.kind,
-				stage: "initial_notice",
-				aggregateId: intent.aggregateId,
-				error: message,
-			}),
-		);
-		throw error;
-	}
+export async function recordPhaseApprovalNoticeEvent(
+	env: Env,
+	phaseId: string,
+) {
+	const db = createDb(env);
+	await db.insert(events).values({
+		publicId: crypto.randomUUID(),
+		aggregateType: "phase",
+		aggregateId: phaseId,
+		event: "approval_notice_sent",
+		actorType: "system",
+		actorId: "notification",
+	});
 }
