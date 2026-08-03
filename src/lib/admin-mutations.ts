@@ -469,8 +469,84 @@ export const recordInvoice = async (
 ) => {
 	await assertAdminUser(db, actorId);
 
+	const phase = await db.query.phases.findFirst({
+		columns: {
+			id: true,
+			state: true,
+			currency: true,
+			version: true,
+		},
+		where: { id: input.phaseId },
+	});
+
+	if (!phase) {
+		throw new DomainError("NotFound", "Phase not found.");
+	}
+
+	const invoice = await db.query.invoices.findFirst({
+		columns: {
+			id: true,
+			publicId: true,
+			phaseId: true,
+			invoiceNumber: true,
+			stripeId: true,
+			stripePaymentPage: true,
+			currency: true,
+			total: true,
+		},
+		where: { phaseId: phase.id },
+	});
+
+	const invoiceMatches = (
+		phaseRow: { id: string; state: string; currency: string; version: number },
+		invoiceRow: typeof invoice,
+	): invoiceRow is NonNullable<typeof invoice> =>
+		invoiceRow?.phaseId === phaseRow.id &&
+		invoiceRow.invoiceNumber === input.invoiceNumber.trim() &&
+		invoiceRow.stripeId === input.stripeId.trim() &&
+		invoiceRow.stripePaymentPage === input.stripePaymentPage.trim() &&
+		invoiceRow.currency === phaseRow.currency &&
+		invoiceRow.total === input.total;
+
+	if (
+		phase.state === "invoiced" &&
+		phase.version === input.expectedVersion + 1 &&
+		invoiceMatches(phase, invoice)
+	) {
+		return {
+			invoice: { id: invoice.id, publicId: invoice.publicId },
+			created: false,
+		};
+	}
+
+	if (phase.version !== input.expectedVersion) {
+		throw new DomainError(
+			"Conflict",
+			"This phase was changed by another request. Refresh and try again.",
+		);
+	}
+
+	if (phase.state !== "in_progress") {
+		throw new DomainError(
+			"InvalidTransition",
+			"Invoices can only be recorded on in-progress phases.",
+		);
+	}
+
+	if (invoice) {
+		throw new DomainError(
+			"AlreadyExists",
+			"This phase already has an invoice.",
+		);
+	}
+
+	const stripeInvoice = await fetchStripeInvoice({
+		stripeId: input.stripeId.trim(),
+		stripeKey: input.stripeKey,
+	});
+
 	return db.transaction(async (tx) => {
-		const [phase] = await tx
+		const [lockedPhase] = await tx
 			.select({
 				id: phases.id,
 				projectId: phases.projectId,
@@ -482,11 +558,11 @@ export const recordInvoice = async (
 			.where(eq(phases.id, input.phaseId))
 			.for("update");
 
-		if (!phase) {
+		if (!lockedPhase) {
 			throw new DomainError("NotFound", "Phase not found.");
 		}
 
-		const invoice = await tx.query.invoices.findFirst({
+		const lockedInvoice = await tx.query.invoices.findFirst({
 			columns: {
 				id: true,
 				publicId: true,
@@ -497,42 +573,35 @@ export const recordInvoice = async (
 				currency: true,
 				total: true,
 			},
-			where: { phaseId: phase.id },
+			where: { phaseId: lockedPhase.id },
 		});
-		const invoiceMatches =
-			invoice?.phaseId === phase.id &&
-			invoice.invoiceNumber === input.invoiceNumber.trim() &&
-			invoice.stripeId === input.stripeId.trim() &&
-			invoice.stripePaymentPage === input.stripePaymentPage.trim() &&
-			invoice.currency === phase.currency &&
-			invoice.total === input.total;
 
 		if (
-			phase.state === "invoiced" &&
-			phase.version === input.expectedVersion + 1 &&
-			invoiceMatches
+			lockedPhase.state === "invoiced" &&
+			lockedPhase.version === input.expectedVersion + 1 &&
+			invoiceMatches(lockedPhase, lockedInvoice)
 		) {
 			return {
-				invoice: { id: invoice.id, publicId: invoice.publicId },
+				invoice: { id: lockedInvoice.id, publicId: lockedInvoice.publicId },
 				created: false,
 			};
 		}
 
-		if (phase.version !== input.expectedVersion) {
+		if (lockedPhase.version !== input.expectedVersion) {
 			throw new DomainError(
 				"Conflict",
 				"This phase was changed by another request. Refresh and try again.",
 			);
 		}
 
-		if (phase.state !== "in_progress") {
+		if (lockedPhase.state !== "in_progress") {
 			throw new DomainError(
 				"InvalidTransition",
 				"Invoices can only be recorded on in-progress phases.",
 			);
 		}
 
-		if (invoice) {
+		if (lockedInvoice) {
 			throw new DomainError(
 				"AlreadyExists",
 				"This phase already has an invoice.",
@@ -541,28 +610,23 @@ export const recordInvoice = async (
 
 		const project = await tx.query.projects.findFirst({
 			columns: { organizationId: true },
-			where: { id: phase.projectId },
+			where: { id: lockedPhase.projectId },
 		});
 
 		if (!project) {
 			throw new DomainError("NotFound", "Project not found.");
 		}
 
-		const stripeInvoice = await fetchStripeInvoice({
-			stripeId: input.stripeId.trim(),
-			stripeKey: input.stripeKey,
-		});
-
 		const rows = await tx
 			.insert(invoices)
 			.values({
 				publicId: publicId(),
 				organizationId: project.organizationId,
-				phaseId: phase.id,
+				phaseId: lockedPhase.id,
 				invoiceNumber: input.invoiceNumber.trim(),
 				stripeId: input.stripeId.trim(),
 				stripePaymentPage: input.stripePaymentPage.trim(),
-				currency: phase.currency,
+				currency: lockedPhase.currency,
 				total: input.total,
 				invoicedAt: stripeInvoiceSnapshot(stripeInvoice).invoicedAt,
 			})
@@ -581,7 +645,7 @@ export const recordInvoice = async (
 			.set({ state: "invoiced", version: sql`${phases.version} + 1` })
 			.where(
 				and(
-					eq(phases.id, phase.id),
+					eq(phases.id, lockedPhase.id),
 					eq(phases.state, "in_progress"),
 					eq(phases.version, input.expectedVersion),
 				),
@@ -597,7 +661,7 @@ export const recordInvoice = async (
 
 		await insertEvent(tx, {
 			aggregateType: "phase",
-			aggregateId: phase.id,
+			aggregateId: lockedPhase.id,
 			aggregateVersion: input.expectedVersion + 1,
 			event: "invoiced",
 			actorId,
