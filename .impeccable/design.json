@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-06-23T17:34:58Z",
+  "generatedAt": "2026-08-03T18:02:18Z",
   "title": "Design System: craftlions website",
   "extensions": {
     "colorMeta": {
@@ -192,7 +192,15 @@
       "refersTo": "data-table",
       "description": "Dashed table shell for project, phase, and invoice data.",
       "html": "<div class=\"ds-table-wrap\"><table class=\"ds-table\"><thead><tr><th>Name</th><th>Status</th><th class=\"ds-num\">Total Cost</th></tr></thead><tbody><tr><td>Website</td><td>active</td><td class=\"ds-num\">1.200,00 EUR</td></tr></tbody></table></div>",
-      "css": ".ds-table-wrap { overflow-x: auto; border: 1px dashed #d4d4d4; background: transparent; } .ds-table { width: 100%; min-width: 560px; border-collapse: collapse; text-align: left; font: 400 14px/1.5 ui-sans-serif, system-ui, sans-serif; color: #0a0a0a; } .ds-table th { padding: 12px 16px; border-bottom: 1px dashed #d4d4d4; color: #737373; font-size: 12px; line-height: 1.25; font-weight: 600; text-transform: uppercase; } .ds-table td { padding: 12px 16px; border-bottom: 1px dashed #d4d4d4; color: #404040; } .ds-table tr:last-child td { border-bottom: 0; } .ds-table tbody tr:hover { background: #f5f5f5; } .ds-table .ds-num { text-align: right; font-variant-numeric: tabular-nums; }"
+      "css": ".ds-table-wrap { overflow-x: auto; border: 1px dashed #d4d4d4; background: transparent; } .ds-table { width: 100%; min-width: 560px; border-collapse: collapse; text-align: left; font: 400 14px/1.5 ui-sans-serif, system-ui, sans-serif; color: #0a0a0a; } .ds-table th { padding: 12px 12px; border-bottom: 1px dashed #d4d4d4; color: #737373; font-size: 12px; line-height: 1.25; font-weight: 600; text-transform: uppercase; } .ds-table td { padding: 12px 12px; border-bottom: 1px dashed #d4d4d4; color: #404040; } .ds-table tr:last-child td { border-bottom: 0; } .ds-table tbody tr:hover { background: #f5f5f5; } .ds-table .ds-num { text-align: right; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Spend-by-Year Chart",
+      "kind": "custom",
+      "refersTo": "spend-by-year-grid",
+      "description": "Hatched bar grid showing invoiced spend per year and project.",
+      "html": "<div class=\"ds-chart\"><ul class=\"ds-cols\"><li><span class=\"ds-total\">1.200,00 EUR</span><div class=\"ds-track\"><div class=\"ds-bar\" style=\"height:70%\"><i class=\"ds-seg ds-seg-a\"></i><i class=\"ds-seg ds-seg-b\"></i></div></div><span class=\"ds-year\">2026</span></li><li><span class=\"ds-total\">800,00 EUR</span><div class=\"ds-track\"><div class=\"ds-bar\" style=\"height:45%\"><i class=\"ds-seg ds-seg-a\"></i></div></div><span class=\"ds-year\">2025</span></li></ul><ul class=\"ds-legend\"><li><i class=\"ds-key ds-key-a\"></i>Website</li><li><i class=\"ds-key ds-key-b\"></i>Other project</li></ul></div>",
+      "css": ".ds-chart { display: grid; gap: 12px; font-family: ui-sans-serif, system-ui, sans-serif; } .ds-cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(8rem, 1fr); gap: 8px; margin: 0; padding: 0; list-style: none; } .ds-total { display: block; text-align: center; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: #0a0a0a; } .ds-track { height: 144px; display: grid; align-items: end; border-bottom: 1px dashed #d4d4d4; } .ds-bar { display: grid; gap: 2px; width: 100%; background: transparent; } .ds-seg { display: block; background: repeating-linear-gradient(135deg, transparent 0 3px, currentColor 3px 4px); } .ds-seg-a { color: #4f46e5; } .ds-seg-b { color: #0f766e; } .ds-year { margin-top: 4px; display: block; text-align: center; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #737373; } .ds-legend { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); font-size: 14px; color: #404040; } .ds-legend li { display: grid; grid-auto-flow: column; grid-auto-columns: max-content 1fr; gap: 6px; align-items: center; } .ds-key { width: 12px; height: 12px; border: 1px dashed currentColor; background: repeating-linear-gradient(135deg, transparent 0 3px, currentColor 3px 4px); } .ds-key-a { color: #4f46e5; } .ds-key-b { color: #0f766e; }"
     },
     {
       "name": "Primary Navigation",
@@ -209,7 +217,7 @@
     "keyCharacteristics": [
       "Neutral light and dark surfaces with a small set of semantic state colors.",
       "Dashed borders as the primary structural material.",
-      "Grid-based layouts, compact page widths, and table-first project data.",
+      "Grid-based layouts with a wide two-column dashboard; public surfaces stay compact single-column.",
       "System sans typography with clear weights instead of display styling.",
       "Flat components with visible focus, hover, disabled, and loading states."
     ],
