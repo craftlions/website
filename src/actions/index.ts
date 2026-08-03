@@ -326,7 +326,10 @@ export const server = {
 			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
-			await recordInvoice(context.locals.db, actorId, input);
+			await recordInvoice(context.locals.db, actorId, {
+				...input,
+				stripeKey: env.STRIPE_SECRET_KEY,
+			});
 			return { success: true };
 		}),
 	}),
