@@ -19,6 +19,11 @@ import {
 	transitionProject,
 	updateOrganizationSettings,
 } from "../lib/admin-mutations.ts";
+import {
+	deliveryChoiceSchema,
+	deliveryPairingIssue,
+	deliveryUrlSchema,
+} from "../lib/delivery.ts";
 import { DomainError } from "../lib/domain.ts";
 import { importStripeInvoices, refreshStripeInvoice } from "../lib/stripe.ts";
 
@@ -317,14 +322,18 @@ export const server = {
 	}),
 	recordInvoice: defineAction({
 		accept: "form",
-		input: z.object({
-			phaseId: z.string().trim().min(1),
-			invoiceNumber: z.string().trim().min(1).max(80),
-			stripeId: z.string().trim().min(1).max(140),
-			stripePaymentPage: z.string().trim().pipe(z.url()),
-			total: z.coerce.number().nonnegative(),
-			expectedVersion: z.coerce.number().int().nonnegative(),
-		}),
+		input: z
+			.object({
+				phaseId: z.string().trim().min(1),
+				invoiceNumber: z.string().trim().min(1).max(80),
+				stripeId: z.string().trim().min(1).max(140),
+				stripePaymentPage: z.string().trim().pipe(z.url()),
+				total: z.coerce.number().nonnegative(),
+				expectedVersion: z.coerce.number().int().nonnegative(),
+				deliveryChoice: deliveryChoiceSchema,
+				deliveryUrl: deliveryUrlSchema,
+			})
+			.superRefine(deliveryPairingIssue),
 		handler: adminHandler(async (input, context, actorId) => {
 			await recordInvoice(context.locals.db, actorId, {
 				...input,

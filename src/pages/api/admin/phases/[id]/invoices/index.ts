@@ -8,6 +8,11 @@ import {
 	requireJson,
 	verifyAdminApiKey,
 } from "../../../../../../lib/api-adapters.ts";
+import {
+	deliveryChoiceSchema,
+	deliveryPairingIssue,
+	deliveryUrlSchema,
+} from "../../../../../../lib/delivery.ts";
 
 export const prerender = false;
 
@@ -25,7 +30,10 @@ export const POST: APIRoute = async (context) => {
 			stripePaymentPage: z.string().trim().pipe(z.url()),
 			total: z.number().nonnegative(),
 			expectedVersion: z.number().int().nonnegative(),
+			deliveryChoice: deliveryChoiceSchema,
+			deliveryUrl: deliveryUrlSchema,
 		})
+		.superRefine(deliveryPairingIssue)
 		.safeParse(await context.request.json());
 
 	if (!validation.success) {
