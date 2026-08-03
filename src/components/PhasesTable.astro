@@ -77,7 +77,7 @@ const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 					</thead>
 					<tbody>
 						{phases.map((phase) => (
-							<tr id={`phase-${phase.publicId}`} class="border-b border-dashed border-neutral-300 transition-colors last:border-b-0 hover:bg-neutral-100/70 dark:border-neutral-700 dark:hover:bg-neutral-900/70">
+							<tr id={`phase-${phase.publicId}`} class="border-b border-dashed border-neutral-300 last:border-b-0 hover:bg-neutral-100/70 dark:border-neutral-700 dark:hover:bg-neutral-900/70">
 								<td class="px-4 py-4 font-medium text-neutral-900 dark:text-neutral-100">
 									{phase.title}
 								</td>
@@ -163,26 +163,48 @@ const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 
 <script>
 	// Exact phase evidence target: a client phase link points at the stable
-	// `phase-<publicId>` fragment on this project page. On landing, bring the exact
-	// row into view and mark it targeted with both a background tint and a
-	// non-color outline cue, persisting in light and dark mode without motion.
-	const phaseFragment = location.hash.slice(1);
+	// `phase-<publicId>` fragment on this project page. Bring the exact row into
+	// view and mark it targeted with a background tint plus a non-color outline
+	// cue, persisting in light and dark mode without motion. The tint survives
+	// hover because the neutral hover fill is swapped off the targeted row. Runs
+	// on landing and on every fragment change, clearing the previous target.
+	const highlightClasses = [
+		"outline-2",
+		"outline-dashed",
+		"outline-sky-500/70",
+		"bg-sky-100/60",
+		"hover:bg-sky-100/60",
+		"dark:outline-sky-400/70",
+		"dark:bg-sky-950/50",
+		"dark:hover:bg-sky-950/50",
+	];
+	const neutralHoverClasses = [
+		"hover:bg-neutral-100/70",
+		"dark:hover:bg-neutral-900/70",
+	];
+	let currentTarget: HTMLTableRowElement | null = null;
 
-	if (phaseFragment) {
-		const target = document.getElementById(phaseFragment);
-
-		if (target instanceof HTMLTableRowElement) {
-			target.scrollIntoView({ block: "center" });
-			target.classList.add(
-				"outline-2",
-				"outline-dashed",
-				"outline-sky-500/70",
-				"bg-sky-100/60",
-				"dark:outline-sky-400/70",
-				"dark:bg-sky-950/50",
-			);
+	const applyPhaseTarget = () => {
+		if (currentTarget instanceof HTMLTableRowElement) {
+			currentTarget.classList.remove(...highlightClasses);
+			currentTarget.classList.add(...neutralHoverClasses);
+			currentTarget = null;
 		}
-	}
+
+		const phaseFragment = location.hash.slice(1);
+		if (!phaseFragment) return;
+
+		const target = document.getElementById(phaseFragment);
+		if (target instanceof HTMLTableRowElement) {
+			target.classList.remove(...neutralHoverClasses);
+			target.classList.add(...highlightClasses);
+			target.scrollIntoView({ block: "center" });
+			currentTarget = target;
+		}
+	};
+
+	applyPhaseTarget();
+	window.addEventListener("hashchange", applyPhaseTarget);
 </script>
 
 <script>
