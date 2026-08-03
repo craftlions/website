@@ -13,69 +13,90 @@ interface Props {
 const { rows } = Astro.props;
 
 const UNASSIGNED = "Unassigned";
+const UNTITLED_PROJECT = "Untitled project";
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
 	currency: "EUR",
 });
+const projectNameCollator = new Intl.Collator("de-DE", {
+	numeric: true,
+	sensitivity: "base",
+});
 const currentYear = new Date().getUTCFullYear();
 
-// Categorical chart palette (DESIGN.md — Data Visualization): solid hues
-// that encode the project, assigned in stable order. Unassigned stays a
-// neutral gray so it reads as "not a project"; state colors keep their
-// meaning everywhere, including the chart. The current-year reference
-// total uses the info accent so the number Overview's stat points to is
-// findable at a glance.
-const segmentFills = [
-	"bg-indigo-600 dark:bg-indigo-300",
-	"bg-teal-600 dark:bg-teal-300",
-	"bg-amber-600 dark:bg-amber-300",
-	"bg-rose-600 dark:bg-rose-300",
-	"bg-violet-600 dark:bg-violet-300",
-	"bg-emerald-600 dark:bg-emerald-300",
+// Stable, muted ink colors; unassigned spend stays neutral.
+const segmentMarks = [
+	"text-indigo-600/60 dark:text-indigo-300/60",
+	"text-teal-700/60 dark:text-teal-300/60",
+	"text-amber-700/60 dark:text-amber-300/60",
+	"text-rose-700/55 dark:text-rose-300/60",
+	"text-violet-700/55 dark:text-violet-300/60",
+	"text-emerald-700/60 dark:text-emerald-300/60",
 ];
-const unassignedFill = "bg-neutral-400 dark:bg-neutral-500";
 
+const validRows = rows.filter(
+	(row) =>
+		Number.isSafeInteger(row.year) &&
+		row.year >= 1 &&
+		row.year <= 9999 &&
+		Number.isFinite(row.total),
+);
 const projectsByKey = new Map<string, { id: string; name: string }>();
-for (const row of rows) {
+const totalsByYear = new Map<number, Map<string, number>>();
+for (const row of validRows) {
 	const key = row.projectId ?? "unassigned";
 	if (!projectsByKey.has(key)) {
 		projectsByKey.set(key, {
 			id: key,
-			name: key === "unassigned" ? UNASSIGNED : row.projectName,
+			name:
+				key === "unassigned"
+					? UNASSIGNED
+					: row.projectName.trim() || UNTITLED_PROJECT,
 		});
+	}
+
+	if (!totalsByYear.has(row.year)) {
+		totalsByYear.set(row.year, new Map());
+	}
+	const totalsForYear = totalsByYear.get(row.year);
+	if (totalsForYear) {
+		totalsForYear.set(key, (totalsForYear.get(key) ?? 0) + row.total);
 	}
 }
 const projectKeys = [...projectsByKey.values()]
 	.sort((a, b) => {
 		if (a.id === "unassigned") return 1;
 		if (b.id === "unassigned") return -1;
-		return a.name.localeCompare(b.name);
+		return (
+			projectNameCollator.compare(a.name, b.name) || a.id.localeCompare(b.id)
+		);
 	})
 	.map((project, index) => ({
 		...project,
-		fill:
+		mark:
 			project.id === "unassigned"
-				? unassignedFill
-				: (segmentFills[index % segmentFills.length] ?? segmentFills[0]),
+				? "text-neutral-500/55 dark:text-neutral-400/55"
+				: (segmentMarks[index % segmentMarks.length] ?? segmentMarks[0]),
 	}));
 
-const firstYear = Math.min(currentYear, ...rows.map((row) => row.year));
-const years: number[] = [];
-for (let year = firstYear; year <= Math.max(currentYear, firstYear); year++) {
-	years.push(year);
-}
+const dataYears = [...totalsByYear.keys()].sort((a, b) => a - b);
+const firstYear = Math.min(currentYear, dataYears[0] ?? currentYear);
+const lastYear = Math.max(currentYear, dataYears.at(-1) ?? currentYear);
+const years =
+	lastYear - firstYear <= 50
+		? Array.from(
+				{ length: lastYear - firstYear + 1 },
+				(_, index) => firstYear + index,
+			)
+		: [...new Set([...dataYears, currentYear])].sort((a, b) => a - b);
+const hasCondensedYears = lastYear - firstYear > 50;
 const bars = years.map((year) => {
-	const segments = projectKeys
-		.map((project) => ({
-			...project,
-			total: rows
-				.filter(
-					(row) =>
-						row.year === year && (row.projectId ?? "unassigned") === project.id,
-				)
-				.reduce((sum, row) => sum + row.total, 0),
-		}))
-		.filter((segment) => segment.total > 0);
+	const totalsForYear = totalsByYear.get(year);
+	const segments = projectKeys.flatMap((project) =>
+		totalsForYear?.has(project.id)
+			? [{ ...project, total: totalsForYear.get(project.id) ?? 0 }]
+			: [],
+	);
 	return {
 		year,
 		total: segments.reduce((sum, segment) => sum + segment.total, 0),
@@ -83,39 +104,63 @@ const bars = years.map((year) => {
 	};
 });
 const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
+const hasNegativeSpend = bars.some((bar) =>
+	bar.segments.some((segment) => segment.total < 0),
+);
 ---
 
 <section aria-labelledby="spend-heading" class="grid content-start gap-3">
-	<div class="grid gap-1">
-		<h2
-			id="spend-heading"
-			class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-		>
-			Spend
-		</h2>
-		<p class="max-w-prose text-sm text-neutral-600 dark:text-neutral-400">
-			Invoiced spend per calendar year, broken down by project.
-		</p>
-	</div>
+	<h2
+		id="spend-heading"
+		class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+	>
+		Spend by year
+	</h2>
 
 	{rows.length === 0 ? (
 		<p
-			class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
+			class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
 		>
 			No invoices yet.
 		</p>
+	) : validRows.length === 0 ? (
+		<p
+			class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300"
+		>
+			Invoice spend could not be summarized. Please reload the page and try
+			again.
+		</p>
 	) : (
 		<>
-			<div
-				class="grid gap-3 border border-dashed border-neutral-300 bg-transparent p-4 dark:border-neutral-700"
-			>
+			{validRows.length < rows.length && (
+				<p
+					class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300"
+				>
+					Some invoice amounts could not be included. Please reload the page; if
+					the problem persists, contact craftlions.
+				</p>
+			)}
+
+			{hasNegativeSpend ? (
+				<p
+					class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
+				>
+					The chart cannot represent negative invoice adjustments. Open exact
+					amounts below for the complete breakdown.
+				</p>
+			) : (
+				<div
+					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+				>
 				<div class="grid gap-1 overflow-x-auto">
 					<div
-						class="grid min-w-lg gap-2"
-						style={`grid-template-columns: repeat(${bars.length}, minmax(min-content, 1fr))`}
+						class="grid w-full min-w-max gap-2"
+						style={`grid-template-columns: repeat(${bars.length}, minmax(8rem, 1fr))`}
 					>
 						{bars.map((bar) => {
-							const reversed = [...bar.segments].reverse();
+							const reversed = bar.segments
+								.filter((segment) => segment.total > 0)
+								.reverse();
 							return (
 								<div class="grid min-w-0">
 									<div
@@ -123,21 +168,26 @@ const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
 									>
 										<div
 											class="grid gap-px"
-											style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total}fr`).join(" ")}`}
+											style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total / bar.total}fr`).join(" ")}`}
 											aria-hidden="true"
 										>
 											{reversed.map((segment) => (
-												<div class={segment.fill} />
+												<div
+													class:list={[
+														"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)]",
+														segment.mark,
+													]}
+												/>
 											))}
 										</div>
 									</div>
 									<div class="grid gap-0.5 pt-1 text-center">
 										<span
-											class:list={[
-												"text-sm font-semibold tabular-nums",
-												bar.year === currentYear &&
-													"text-sky-700 dark:text-sky-300",
-											]}
+										class:list={[
+											"whitespace-nowrap text-sm font-medium tabular-nums",
+											bar.year === currentYear &&
+												"underline decoration-dashed decoration-neutral-400 underline-offset-4 dark:decoration-neutral-600",
+										]}
 										>
 											{currencyFormatter.format(bar.total)}
 										</span>
@@ -145,6 +195,9 @@ const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
 											class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 										>
 											{bar.year}
+											{bar.year === currentYear && (
+												<span class="sr-only"> (current year)</span>
+											)}
 										</span>
 									</div>
 								</div>
@@ -158,25 +211,46 @@ const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
 					class="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2 md:grid-cols-3"
 				>
 					{projectKeys.map((project) => (
-						<li class="grid grid-flow-col items-center justify-start gap-2">
+						<li
+							class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2"
+						>
 							<span
 								aria-hidden="true"
 								class:list={[
-									"size-3 border border-dashed border-neutral-400 dark:border-neutral-600",
-									project.fill,
+									"size-3 border border-dashed border-current bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)]",
+									project.mark,
 								]}
 							/>
-							<span>{project.name}</span>
+							<span class="min-w-0 wrap-break-word" dir="auto"
+								>{project.name}</span
+							>
 						</li>
 					))}
 				</ul>
-			</div>
+				{hasCondensedYears && (
+					<p class="text-xs text-neutral-500 dark:text-neutral-400">
+						Long gaps between invoice years are condensed.
+					</p>
+				)}
+				</div>
+			)}
 
-			<div
-				class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700"
+			<details
+				class="border border-dashed border-neutral-300 dark:border-neutral-700"
 			>
-				<table class="w-full min-w-xl text-sm">
-					<thead>
+				<summary
+					class="cursor-pointer px-4 py-3 text-sm font-medium text-neutral-700 marker:text-neutral-500 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 dark:text-neutral-300 dark:marker:text-neutral-400 dark:hover:bg-neutral-900 dark:focus-visible:outline-neutral-300"
+				>
+					Exact amounts
+				</summary>
+				<div
+					class="overflow-x-auto border-t border-dashed border-neutral-300 dark:border-neutral-700"
+				>
+					<table class="w-full min-w-xl text-sm">
+						<caption class="sr-only">
+							Exact invoiced spend by year and project
+						</caption>
+						<thead>
 						<tr
 							class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
 						>
@@ -189,7 +263,8 @@ const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
 							{projectKeys.map((project) => (
 								<th
 									scope="col"
-									class="px-4 py-3 text-right text-xs font-semibold uppercase"
+									class="max-w-64 px-4 py-3 text-right text-xs font-semibold uppercase wrap-break-word"
+									dir="auto"
 								>
 									{project.name}
 								</th>
@@ -201,8 +276,8 @@ const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
 								Total
 							</th>
 						</tr>
-					</thead>
-					<tbody
+						</thead>
+						<tbody
 						class="divide-y divide-dashed divide-neutral-300 dark:divide-neutral-700"
 					>
 						{bars.map((bar) => (
@@ -212,35 +287,37 @@ const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
 									class="px-4 py-3 text-left font-medium"
 								>
 									{bar.year}
+									{bar.year === currentYear && (
+										<span class="sr-only"> (current year)</span>
+									)}
 								</th>
 								{projectKeys.map((project) => {
-									const segment = bar.segments.find(
-										(candidate) => candidate.id === project.id,
-									);
+									const total = totalsByYear.get(bar.year)?.get(project.id);
 									return (
 										<td
-											class="px-4 py-3 text-right tabular-nums text-neutral-700 dark:text-neutral-300"
+											class="whitespace-nowrap px-4 py-3 text-right tabular-nums text-neutral-700 dark:text-neutral-300"
 										>
-											{segment
-												? currencyFormatter.format(segment.total)
+											{total !== undefined
+												? currencyFormatter.format(total)
 												: "—"}
 										</td>
 									);
 								})}
 								<td
 									class:list={[
-										"px-4 py-3 text-right font-medium tabular-nums",
+										"whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums",
 										bar.year === currentYear &&
-											"text-sky-700 dark:text-sky-300",
+											"underline decoration-dashed decoration-neutral-400 underline-offset-4 dark:decoration-neutral-600",
 									]}
 								>
 									{currencyFormatter.format(bar.total)}
 								</td>
 							</tr>
 						))}
-					</tbody>
-				</table>
-			</div>
+						</tbody>
+					</table>
+				</div>
+			</details>
 		</>
 	)}
 </section>
