@@ -1,3 +1,5 @@
+> Frozen by epic: **Linked invoice work context**
+
 # S-003 — Linked invoice work context
 
 ## Goal
