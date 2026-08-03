@@ -312,6 +312,14 @@ export const phases = t.pgTable(
 		}),
 		t.uniqueIndex().on(table.publicId),
 		t.index("phases_project_id_idx").on(table.projectId),
+		t.check(
+			"phases_delivery_state_consistency",
+			sql`(
+				(${table.deliveryState} = 'url' AND ${table.deliveryUrl} IS NOT NULL)
+				OR (${table.deliveryState} = 'none' AND ${table.deliveryUrl} IS NULL)
+				OR (${table.deliveryState} = 'not_recorded' AND ${table.deliveryUrl} IS NULL)
+			)`,
+		),
 		t
 			.foreignKey({
 				columns: [table.projectId],
