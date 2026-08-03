@@ -248,22 +248,25 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 	for (const form of document.querySelectorAll<HTMLFormElement>(
 		"[data-attach-invoice]",
 	)) {
-		const select = form.querySelector<HTMLSelectElement>(
-			'select[name="phaseId"]',
-		);
-		const expectedVersion = form.querySelector<HTMLInputElement>(
-			'input[name="expectedVersion"]',
-		);
+		const select = form.querySelector('select[name="phaseId"]');
+		const expectedVersion = form.querySelector('input[name="expectedVersion"]');
+
+		if (
+			!(select instanceof HTMLSelectElement) ||
+			!(expectedVersion instanceof HTMLInputElement)
+		) {
+			continue;
+		}
 
 		const syncExpectedVersion = () => {
-			const option = select?.selectedOptions[0];
+			const option = select.selectedOptions[0];
 
-			if (expectedVersion && option) {
+			if (option) {
 				expectedVersion.value = option.dataset.version ?? "";
 			}
 		};
 
 		syncExpectedVersion();
-		select?.addEventListener("change", syncExpectedVersion);
+		select.addEventListener("change", syncExpectedVersion);
 	}
 </script>
