@@ -2,6 +2,7 @@ import type { Auth } from "./auth.ts";
 import type { Db } from "./database.ts";
 import { getOrgAdapter } from "better-auth/plugins/organization";
 import { and, eq, isNull, sql } from "drizzle-orm";
+import { resolveDelivery } from "./delivery.ts";
 import { assertAdminUser, DomainError } from "./domain.ts";
 import {
 	events,
@@ -465,9 +466,13 @@ export const recordInvoice = async (
 		total: number;
 		expectedVersion: number;
 		stripeKey: string;
+		deliveryChoice?: "url" | "none" | undefined;
+		deliveryUrl?: string | null | undefined;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
+
+	const delivery = resolveDelivery(input.deliveryChoice, input.deliveryUrl);
 
 	const phase = await db.query.phases.findFirst({
 		columns: {
@@ -475,6 +480,8 @@ export const recordInvoice = async (
 			state: true,
 			currency: true,
 			version: true,
+			deliveryState: true,
+			deliveryUrl: true,
 		},
 		where: { id: input.phaseId },
 	});
@@ -508,10 +515,18 @@ export const recordInvoice = async (
 		invoiceRow.currency === phaseRow.currency &&
 		invoiceRow.total === input.total;
 
+	const deliveryMatches = (phaseRow: {
+		deliveryState: "url" | "none" | "not_recorded";
+		deliveryUrl: string | null;
+	}) =>
+		phaseRow.deliveryState === delivery.deliveryState &&
+		phaseRow.deliveryUrl === delivery.deliveryUrl;
+
 	if (
 		phase.state === "invoiced" &&
 		phase.version === input.expectedVersion + 1 &&
-		invoiceMatches(phase, invoice)
+		invoiceMatches(phase, invoice) &&
+		deliveryMatches(phase)
 	) {
 		return {
 			invoice: { id: invoice.id, publicId: invoice.publicId },
@@ -553,6 +568,8 @@ export const recordInvoice = async (
 				state: phases.state,
 				currency: phases.currency,
 				version: phases.version,
+				deliveryState: phases.deliveryState,
+				deliveryUrl: phases.deliveryUrl,
 			})
 			.from(phases)
 			.where(eq(phases.id, input.phaseId))
@@ -579,7 +596,8 @@ export const recordInvoice = async (
 		if (
 			lockedPhase.state === "invoiced" &&
 			lockedPhase.version === input.expectedVersion + 1 &&
-			invoiceMatches(lockedPhase, lockedInvoice)
+			invoiceMatches(lockedPhase, lockedInvoice) &&
+			deliveryMatches(lockedPhase)
 		) {
 			return {
 				invoice: { id: lockedInvoice.id, publicId: lockedInvoice.publicId },
@@ -642,7 +660,12 @@ export const recordInvoice = async (
 
 		const transitioned = await tx
 			.update(phases)
-			.set({ state: "invoiced", version: sql`${phases.version} + 1` })
+			.set({
+				state: "invoiced",
+				version: sql`${phases.version} + 1`,
+				deliveryState: delivery.deliveryState,
+				deliveryUrl: delivery.deliveryUrl,
+			})
 			.where(
 				and(
 					eq(phases.id, lockedPhase.id),
