@@ -9,7 +9,6 @@ import {
 	attachInvoiceToPhase,
 	createPhase,
 	createProject,
-	DomainError,
 	hardDeleteOrganization,
 	onboardOrganization,
 	recordInvoice,
@@ -20,6 +19,7 @@ import {
 	transitionProject,
 	updateOrganizationSettings,
 } from "../lib/admin-mutations.ts";
+import { DomainError } from "../lib/domain.ts";
 import { importStripeInvoices, refreshStripeInvoice } from "../lib/stripe.ts";
 
 const assertNotImpersonating = (

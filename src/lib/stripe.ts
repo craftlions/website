@@ -1,6 +1,6 @@
 import type { Db } from "./database.ts";
 import { eq } from "drizzle-orm";
-import { assertAdminUser, DomainError } from "./admin-mutations.ts";
+import { assertAdminUser, DomainError } from "./domain.ts";
 import { invoices } from "./schema.ts";
 
 type StripeTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
