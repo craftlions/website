@@ -3,9 +3,10 @@ import InvoiceTable from "./InvoiceTable.astro";
 
 interface Props {
 	id: string;
+	slug: string;
 }
 
-const { id } = Astro.props;
+const { id, slug } = Astro.props;
 
 const invoices = (
 	await Astro.locals.db.query.invoices.findMany({
@@ -19,21 +20,59 @@ const invoices = (
 			currency: true,
 			invoicedAt: true,
 		},
+		// S-003 R2: an attached invoice derives its project, phase, and Delivery
+		// from its one phase — nothing is copied onto the invoice row.
+		with: {
+			phase: {
+				columns: {
+					publicId: true,
+					title: true,
+					deliveryState: true,
+					deliveryUrl: true,
+				},
+				with: {
+					project: {
+						columns: {
+							publicId: true,
+							name: true,
+						},
+					},
+				},
+			},
+		},
 		where: {
 			phase: { projectId: id },
 		},
 		orderBy: { invoicedAt: "desc" },
 	})
-).map((invoice) => ({
-	invoiceNumber: invoice.invoiceNumber,
-	stripePaymentPage: invoice.stripePaymentPage,
-	invoicedAt: invoice.invoicedAt,
-	stripeStatus: invoice.stripeStatus,
-	stripePaidAt: invoice.stripePaidAt,
-	stripeDueAt: invoice.stripeDueAt,
-	total: invoice.total,
-	currency: invoice.currency,
-}));
+).map((invoice) => {
+	const phase = invoice.phase;
+
+	return {
+		invoiceNumber: invoice.invoiceNumber,
+		stripePaymentPage: invoice.stripePaymentPage,
+		invoicedAt: invoice.invoicedAt,
+		stripeStatus: invoice.stripeStatus,
+		stripePaidAt: invoice.stripePaidAt,
+		stripeDueAt: invoice.stripeDueAt,
+		total: invoice.total,
+		currency: invoice.currency,
+		work: phase?.project
+			? {
+					projectPublicId: phase.project.publicId,
+					projectName: phase.project.name,
+					phasePublicId: phase.publicId,
+					phaseTitle: phase.title,
+				}
+			: null,
+		deliveryState: (phase ? phase.deliveryState : "unavailable") as
+			| "url"
+			| "none"
+			| "not_recorded"
+			| "unavailable",
+		deliveryUrl: phase?.deliveryUrl ?? null,
+	};
+});
 ---
 
-<InvoiceTable invoices={invoices} pageSize={10} />
+<InvoiceTable invoices={invoices} slug={slug} pageSize={10} />
