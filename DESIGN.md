@@ -18,10 +18,10 @@ colors:
   status-info: "#0369a1"
   status-success: "#047857"
   status-error: "#b91c1c"
-  chart-categorical: ["#4f46e5", "#0d9488", "#d97706", "#e11d48", "#7c3aed", "#059669"]
+  chart-categorical: ["#4f46e5", "#0f766e", "#b45309", "#be123c", "#6d28d9", "#047857"]
   chart-categorical-dark: ["#a5b4fc", "#5eead4", "#fcd34d", "#fda4af", "#c4b5fd", "#6ee7b7"]
-  chart-unassigned: "#a3a3a3"
-  chart-unassigned-dark: "#737373"
+  chart-unassigned: "#737373"
+  chart-unassigned-dark: "#a3a3a3"
 typography:
   display:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
@@ -107,9 +107,11 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 
 - Neutral light and dark surfaces with a small set of semantic state colors.
 - Dashed borders as the primary structural material.
-- Grid-based layouts, compact page widths, and table-first project data.
+- Grid-based layouts with a wide two-column dashboard; public surfaces stay compact single-column.
 - System sans typography with clear weights instead of display styling.
 - Flat components with visible focus, hover, disabled, and loading states.
+
+**Layout:** Public pages and the settings area stay compact and single-column at a `max-w-3xl` container with a `pl-3` left gutter. The authenticated dashboard widens to `max-w-6xl`; the organization overview is a two-column grid at `sm` and up — a narrow leading column (`1fr`) holds Overview and the Spend-by-Year chart, while a wider column (`3fr`) holds Projects and Invoices. Below `sm` the two columns stack into one. The page heading spans the full width above the split.
 
 ## 2. Colors
 
@@ -143,16 +145,17 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 
 **The Line Before Color Rule.** Structure is drawn with neutral dashed lines before color is introduced. Color is reserved for links, status, focus, risk, progress, and categorical data in charts.
 
-**The State Color Rule.** Blue, green, and red must map to information, success, and error/risk. Do not use state colors as decoration. The one exception is categorical fills inside charts, which use the chart palette and encode data, not state (see Data Visualization).
+**The State Color Rule.** Blue, green, and red must map to information, success, and error/risk. Do not use state colors as decoration. The one exception is the spend chart's categorical hatch marks, which use the chart palette and encode data, not state (see Data Visualization).
 
 ### Data Visualization
 
-The spend chart is the portal's single colored data surface. It stays a chart, not a dashboard carnival: one categorical palette, assigned in stable order, with meaning carried by hue plus the legend and the breakdown table.
+The spend chart is the portal's single colored data surface. It stays a chart, not a dashboard carnival: one categorical palette, assigned in stable order, with meaning carried by pattern plus the legend and the exact-amounts table.
 
-- **Categorical series** (`chart-categorical`, dark `chart-categorical-dark`): project segments cycle through the palette in stable order; repeat when a year holds more projects than the palette.
-- **Unassigned** (`chart-unassigned`): phase-less spend stays a neutral gray so it reads as "not a project".
+- **Categorical series** (`chart-categorical`, dark `chart-categorical-dark`): project segments render as **diagonal hatching** (a 135° repeating linear gradient) in muted ink colors at reduced opacity (55–60%), cycled in stable order; repeat when a year holds more projects than the palette. The hatch pattern, not a solid fill, separates one project from another.
+- **Unassigned** (`chart-unassigned`): phase-less spend stays a neutral gray so it reads as "not a project" and is drawn open (no fill).
 - **State colors keep their meaning everywhere, including the chart**: never use status hues for segments or fills.
-- **Color is never the only code**: bars carry their exact year total as text, the legend maps fills to project names, and the breakdown table holds the numbers.
+- **Color is never the only code**: bars carry their exact year total as text, each bar labels its year, the legend maps a hatch swatch to its project name, and the exact-amounts table holds the numbers.
+- **Negative adjustments**: the chart cannot draw them. When any bar holds negative spend, a note appears and directs the reader to the exact amounts for the complete breakdown.
 
 ## 3. Typography
 
@@ -225,7 +228,7 @@ Inputs follow the same line vocabulary as buttons.
 
 ### Navigation
 
-Navigation is a responsive grid with the logo on the left and compact session links on the right at larger widths. On small screens it stacks into a centered single-column grid. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like.
+Navigation is a responsive grid with the logo on the left and compact session links on the right at larger widths. On small screens it stacks into a centered single-column grid. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like. It sits in the shared `max-w-6xl` (dashboard) or `max-w-3xl` (public/settings) header, matching the page column it leads.
 
 ### Tables
 
@@ -254,7 +257,7 @@ Progress is used for budget state and remains literal.
 - **Do** keep product data exact, scannable, and close to its label.
 - **Do** use neutral hover fills and visible focus outlines on interactive controls.
 - **Do** preserve reduced-motion behavior; view transitions are only enabled for users without reduced-motion preference.
-- **Do** keep semantic color rare and tied to state: blue for info/link, green for success, red for error/risk; only charts add categorical fills for data (see Data Visualization).
+- **Do** keep semantic color rare and tied to state: blue for info/link, green for success, red for error/risk; only the spend chart adds muted ink hatch marks for data (see Data Visualization).
 
 ### Don't:
 
