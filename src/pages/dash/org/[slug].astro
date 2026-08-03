@@ -19,6 +19,10 @@ import {
 
 const { slug } = Astro.params;
 
+if (!slug) {
+	return Astro.redirect("/dash");
+}
+
 const session = Astro.locals.session;
 
 if (!session) {
@@ -528,7 +532,7 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 				>
 					Invoices
 				</h2>
-				<OrganizationInvoices id={organization.id} />
+				<OrganizationInvoices id={organization.id} slug={slug} />
 			</section>
 		</main>
 		<Footer />

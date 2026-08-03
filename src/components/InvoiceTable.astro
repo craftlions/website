@@ -11,14 +11,24 @@ interface Invoice {
 	stripeDueAt: Date | null;
 	total: number;
 	currency: string;
+	// S-003 R2/R3: work is derived from the invoice's one phase, never copied.
+	work: {
+		projectPublicId: string;
+		projectName: string;
+		phasePublicId: string;
+		phaseTitle: string;
+	} | null;
+	deliveryState: "url" | "none" | "not_recorded" | "unavailable";
+	deliveryUrl: string | null;
 }
 
 interface Props {
 	invoices: Invoice[];
+	slug: string;
 	pageSize?: number;
 }
 
-const { invoices, pageSize = 5 } = Astro.props;
+const { invoices, slug, pageSize = 5 } = Astro.props;
 const now = new Date();
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 const formatAmount = (total: number, currency: string) =>
@@ -83,6 +93,8 @@ const showFilter =
 							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Due</th>
 							<th scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase">Amount</th>
 							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Status</th>
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Work</th>
+							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Delivery</th>
 							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Payment Link</th>
 						</tr>
 					</thead>
@@ -111,6 +123,45 @@ const showFilter =
 													<span class="text-xs text-neutral-500 dark:text-neutral-400">{dateFormatter.format(invoice.stripePaidAt)}</span>
 												)}
 											</div>
+										</td>
+										<td class="px-4 py-3">
+											{invoice.work ? (
+												<div class="grid gap-1">
+													<a
+															href={`/dash/org/${slug}/project/${invoice.work.projectPublicId}`}
+															class="underline decoration-dashed underline-offset-4"
+														>
+															{invoice.work.projectName}
+														</a>
+													<a
+															href={`/dash/org/${slug}/project/${invoice.work.projectPublicId}#phase-${invoice.work.phasePublicId}`}
+															class="underline decoration-dashed underline-offset-4"
+														>
+															{invoice.work.phaseTitle}
+														</a>
+												</div>
+											) : (
+												<span class="text-neutral-500 dark:text-neutral-400">Unassigned</span>
+											)}
+										</td>
+										<td class="px-4 py-3">
+											{invoice.deliveryState === "url" && invoice.deliveryUrl ? (
+												<a
+													href={invoice.deliveryUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													aria-label={`Open Delivery for ${invoice.work?.phaseTitle ?? "the invoice"}`}
+													class="underline decoration-dashed underline-offset-4"
+												>
+													Open
+												</a>
+											) : invoice.deliveryState === "none" ? (
+												<span class="text-neutral-600 dark:text-neutral-400">No delivery</span>
+											) : invoice.deliveryState === "not_recorded" ? (
+												<span class="text-neutral-500 dark:text-neutral-400">Not recorded</span>
+											) : (
+												<span class="text-neutral-500 dark:text-neutral-400">Unavailable</span>
+											)}
 										</td>
 										<td class="px-4 py-3">
 											<Button
