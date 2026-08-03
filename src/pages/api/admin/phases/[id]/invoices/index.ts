@@ -22,7 +22,7 @@ export const POST: APIRoute = async (context) => {
 		.strictObject({
 			invoiceNumber: z.string().trim().min(1).max(80),
 			stripeId: z.string().trim().min(1).max(140),
-			stripePaymentPage: z.string().trim().url(),
+			stripePaymentPage: z.string().trim().pipe(z.url()),
 			total: z.number().nonnegative(),
 			expectedVersion: z.number().int().nonnegative(),
 		})
