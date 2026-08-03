@@ -525,13 +525,19 @@ export const recordInvoice = async (
 	if (
 		phase.state === "invoiced" &&
 		phase.version === input.expectedVersion + 1 &&
-		invoiceMatches(phase, invoice) &&
-		deliveryMatches(phase)
+		invoiceMatches(phase, invoice)
 	) {
-		return {
-			invoice: { id: invoice.id, publicId: invoice.publicId },
-			created: false,
-		};
+		if (deliveryMatches(phase)) {
+			return {
+				invoice: { id: invoice.id, publicId: invoice.publicId },
+				created: false,
+			};
+		}
+
+		throw new DomainError(
+			"AlreadyExists",
+			"This invoice is already recorded with a different Delivery choice. Review the recorded invoice and update Delivery from there instead.",
+		);
 	}
 
 	if (phase.version !== input.expectedVersion) {
@@ -596,13 +602,22 @@ export const recordInvoice = async (
 		if (
 			lockedPhase.state === "invoiced" &&
 			lockedPhase.version === input.expectedVersion + 1 &&
-			invoiceMatches(lockedPhase, lockedInvoice) &&
-			deliveryMatches(lockedPhase)
+			invoiceMatches(lockedPhase, lockedInvoice)
 		) {
-			return {
-				invoice: { id: lockedInvoice.id, publicId: lockedInvoice.publicId },
-				created: false,
-			};
+			if (deliveryMatches(lockedPhase)) {
+				return {
+					invoice: {
+						id: lockedInvoice.id,
+						publicId: lockedInvoice.publicId,
+					},
+					created: false,
+				};
+			}
+
+			throw new DomainError(
+				"AlreadyExists",
+				"This invoice is already recorded with a different Delivery choice. Review the recorded invoice and update Delivery from there instead.",
+			);
 		}
 
 		if (lockedPhase.version !== input.expectedVersion) {
