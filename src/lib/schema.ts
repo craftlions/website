@@ -277,6 +277,12 @@ export const phaseState = t.pgEnum("phase_state", [
 	"cancelled",
 ]);
 
+export const phaseDeliveryState = t.pgEnum("phase_delivery_state", [
+	"url",
+	"none",
+	"not_recorded",
+]);
+
 export const phases = t.pgTable(
 	"phases",
 	{
@@ -295,6 +301,10 @@ export const phases = t.pgTable(
 			.timestamp("updated_at", { withTimezone: true })
 			.$onUpdate(() => new Date()),
 		externalUrl: t.text("external_url"),
+		deliveryState: phaseDeliveryState("delivery_state")
+			.default("not_recorded")
+			.notNull(),
+		deliveryUrl: t.text("delivery_url"),
 	},
 	(table) => [
 		t.primaryKey({
