@@ -22,7 +22,7 @@ export const POST: APIRoute = async (context) => {
 
 	const validation = z
 		.strictObject({
-			email: z.string().trim().email(),
+			email: z.string().trim().pipe(z.email()),
 			name: z.string().trim().min(1),
 			role: z.enum(["owner", "member"]).default("member"),
 		})

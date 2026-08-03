@@ -21,7 +21,7 @@ export const PATCH: APIRoute = async (context) => {
 		.strictObject({
 			name: z.string().trim().min(1),
 			slug: z.string().trim().min(1),
-			logo: z.string().trim().url().nullable().optional(),
+			logo: z.string().trim().pipe(z.url()).nullable().optional(),
 			yearlyBudget: z.number().int().positive().nullable().optional(),
 		})
 		.safeParse(await context.request.json());
