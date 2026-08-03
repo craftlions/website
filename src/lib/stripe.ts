@@ -98,14 +98,23 @@ export const fetchStripeInvoice = async (input: {
 	stripeId: string;
 	stripeKey: string;
 }): Promise<StripeInvoiceResponse> => {
-	const response = await fetch(
-		`https://api.stripe.com/v1/invoices/${encodeURIComponent(input.stripeId)}`,
-		{
-			headers: {
-				Authorization: `Bearer ${input.stripeKey}`,
+	let response: Response;
+	try {
+		response = await fetch(
+			`https://api.stripe.com/v1/invoices/${encodeURIComponent(input.stripeId)}`,
+			{
+				headers: {
+					Authorization: `Bearer ${input.stripeKey}`,
+				},
 			},
-		},
-	);
+		);
+	} catch {
+		throw new DomainError("StripeUnavailable", "Stripe is unreachable.");
+	}
+
+	if (response.status === 404) {
+		throw new DomainError("Validation", "Stripe invoice not found.");
+	}
 
 	if (!response.ok) {
 		throw new DomainError("StripeUnavailable", "Stripe status is unavailable.");
