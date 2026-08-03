@@ -2,6 +2,7 @@ import type { Auth } from "./auth.ts";
 import type { Db } from "./database.ts";
 import { getOrgAdapter } from "better-auth/plugins/organization";
 import { and, eq, isNull, sql } from "drizzle-orm";
+import { assertAdminUser, DomainError } from "./domain.ts";
 import {
 	events,
 	invoices,
@@ -11,39 +12,12 @@ import {
 } from "./schema.ts";
 import { fetchStripeInvoice, stripeInvoiceSnapshot } from "./stripe.ts";
 
-export class DomainError extends Error {
-	constructor(
-		public code:
-			| "AlreadyExists"
-			| "Conflict"
-			| "Forbidden"
-			| "InvalidTransition"
-			| "NotFound"
-			| "StripeUnavailable"
-			| "Validation",
-		message: string,
-	) {
-		super(message);
-	}
-}
-
 export const toSlug = (value: string) =>
 	value
 		.trim()
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/^-|-$/g, "");
-
-export const assertAdminUser = async (db: Db, actorId: string) => {
-	const actor = await db.query.user.findFirst({
-		columns: { id: true, role: true },
-		where: { id: actorId },
-	});
-
-	if (actor?.role !== "admin") {
-		throw new DomainError("Forbidden", "Only admins can perform this action.");
-	}
-};
 
 const publicId = () => crypto.randomUUID();
 

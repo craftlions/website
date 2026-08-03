@@ -1,5 +1,5 @@
 import type { APIContext } from "astro";
-import { DomainError } from "./admin-mutations.ts";
+import { DomainError } from "./domain.ts";
 
 export const problem = (status: number, title: string, detail: string) =>
 	new Response(
