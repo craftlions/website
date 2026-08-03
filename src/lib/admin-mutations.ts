@@ -9,6 +9,7 @@ import {
 	phases,
 	projects,
 } from "./schema.ts";
+import { fetchStripeInvoice, stripeInvoiceSnapshot } from "./stripe.ts";
 
 export class DomainError extends Error {
 	constructor(
@@ -489,6 +490,7 @@ export const recordInvoice = async (
 		stripePaymentPage: string;
 		total: number;
 		expectedVersion: number;
+		stripeKey: string;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
@@ -572,6 +574,11 @@ export const recordInvoice = async (
 			throw new DomainError("NotFound", "Project not found.");
 		}
 
+		const stripeInvoice = await fetchStripeInvoice({
+			stripeId: input.stripeId.trim(),
+			stripeKey: input.stripeKey,
+		});
+
 		const rows = await tx
 			.insert(invoices)
 			.values({
@@ -583,6 +590,7 @@ export const recordInvoice = async (
 				stripePaymentPage: input.stripePaymentPage.trim(),
 				currency: phase.currency,
 				total: input.total,
+				invoicedAt: stripeInvoiceSnapshot(stripeInvoice).invoicedAt,
 			})
 			.onConflictDoNothing()
 			.returning({ id: invoices.id, publicId: invoices.publicId });
