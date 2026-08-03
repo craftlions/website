@@ -77,6 +77,8 @@ const project = await Astro.locals.db.query.projects.findFirst({
 				state: true,
 				version: true,
 				externalUrl: true,
+				deliveryState: true,
+				deliveryUrl: true,
 			},
 			with: {},
 			orderBy: {
