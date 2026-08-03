@@ -15,15 +15,28 @@ import { DomainError } from "./domain.ts";
 export const deliveryChoiceSchema = z.enum(["url", "none"]);
 
 export const deliveryUrlSchema = z.preprocess(
-	(value) => (value === "" || value === undefined ? undefined : value),
+	(value) => {
+		if (value === null || value === undefined || value === "") {
+			return undefined;
+		}
+
+		const trimmed = typeof value === "string" ? value.trim() : value;
+		return trimmed === "" ? undefined : trimmed;
+	},
 	z
 		.string()
-		.trim()
-		.pipe(z.url())
-		.refine(
-			(value) => value.startsWith("https://"),
-			"The Delivery link must be an HTTPS URL.",
-		)
+		.max(2048, "The Delivery link must be at most 2048 characters.")
+		.refine((value) => {
+			let parsed: URL;
+
+			try {
+				parsed = new URL(value);
+			} catch {
+				return false;
+			}
+
+			return parsed.protocol === "https:";
+		}, "The Delivery link must be an HTTPS URL.")
 		.optional(),
 );
 
