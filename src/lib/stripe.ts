@@ -60,7 +60,7 @@ const zeroDecimalCurrencies = new Set([
 const fromStripeMinorUnits = (amount: number, currency: string) =>
 	zeroDecimalCurrencies.has(currency.toUpperCase()) ? amount : amount / 100;
 
-const stripeInvoiceSnapshot = (
+export const stripeInvoiceSnapshot = (
 	data: StripeInvoiceResponse,
 ): StripeInvoiceSnapshot => {
 	if (data.created == null) {
@@ -93,6 +93,26 @@ const isImportableStripeInvoice = (
 			item.created != null &&
 			(item.hosted_invoice_url || item.invoice_pdf),
 	);
+
+export const fetchStripeInvoice = async (input: {
+	stripeId: string;
+	stripeKey: string;
+}): Promise<StripeInvoiceResponse> => {
+	const response = await fetch(
+		`https://api.stripe.com/v1/invoices/${encodeURIComponent(input.stripeId)}`,
+		{
+			headers: {
+				Authorization: `Bearer ${input.stripeKey}`,
+			},
+		},
+	);
+
+	if (!response.ok) {
+		throw new DomainError("StripeUnavailable", "Stripe status is unavailable.");
+	}
+
+	return (await response.json()) as StripeInvoiceResponse;
+};
 
 export const persistStripeInvoiceSnapshot = async (
 	tx: StripeTransaction,
@@ -176,20 +196,10 @@ export const refreshStripeInvoice = async (
 		);
 	}
 
-	const response = await fetch(
-		`https://api.stripe.com/v1/invoices/${encodeURIComponent(invoice.stripeId)}`,
-		{
-			headers: {
-				Authorization: `Bearer ${input.stripeKey}`,
-			},
-		},
-	);
-
-	if (!response.ok) {
-		throw new DomainError("StripeUnavailable", "Stripe status is unavailable.");
-	}
-
-	const data = (await response.json()) as StripeInvoiceResponse;
+	const data = await fetchStripeInvoice({
+		stripeId: invoice.stripeId,
+		stripeKey: input.stripeKey,
+	});
 
 	if (
 		data.currency &&
