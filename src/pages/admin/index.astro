@@ -11,10 +11,6 @@ import { getUuidV7Date } from "../../lib/uuid.ts";
 
 const onboardResult = Astro.getActionResult(actions.onboardOrganization);
 
-if (onboardResult && !onboardResult.error) {
-	return Astro.redirect("/admin");
-}
-
 const organizations = await Astro.locals.db.query.organization.findMany({
 	columns: {
 		id: true,
