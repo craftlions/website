@@ -1,3 +1,5 @@
+> Frozen by /to-issues
+
 # S-004 — Shared budget consumption
 
 **Goal** — A shared single-organization budget-consumption module and consistent display rules across existing product surfaces, reaching [O-004](../outcomes/O-004-shared-budget-consumption.md) (one trusted figure across the product).
