@@ -22,6 +22,7 @@ const actionResults = [
 	Astro.getActionResult(actions.importStripeInvoices),
 	Astro.getActionResult(actions.attachInvoiceToPhase),
 	Astro.getActionResult(actions.recordInvoice),
+	Astro.getActionResult(actions.updatePhaseDelivery),
 	Astro.getActionResult(actions.refreshStripeInvoice),
 	Astro.getActionResult(actions.transitionPhase),
 ];
@@ -51,6 +52,8 @@ const [organizationData, projects, unattachedInvoices] = await Promise.all([
 					currency: true,
 					state: true,
 					version: true,
+					deliveryState: true,
+					deliveryUrl: true,
 				},
 				with: {
 					invoice: {
@@ -168,15 +171,21 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 								<td class="px-4 py-3 text-right tabular-nums">{new Intl.NumberFormat("de-DE", { style: "currency", currency: invoice.currency }).format(invoice.total)}</td>
 								<td class="px-4 py-3">
 									{attachablePhases.some((phase) => phase.currency === invoice.currency) ? (
-										<form method="POST" action={actions.attachInvoiceToPhase} class="grid grid-cols-[1fr_auto] items-center gap-2" data-attach-invoice>
+										<form method="POST" action={actions.attachInvoiceToPhase} class="grid gap-2" data-attach-invoice>
 											<input type="hidden" name="invoiceId" value={invoice.id} />
 											<input type="hidden" name="expectedVersion" value={suggestedPhaseId(invoice) ? attachablePhases.find((phase) => phase.id === suggestedPhaseId(invoice))?.version : ""} />
-											<select name="phaseId" required class="max-w-96 border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300">
-												{attachablePhases.filter((phase) => phase.currency === invoice.currency).map((phase) => (
-													<option value={phase.id} data-version={phase.version} selected={phase.id === suggestedPhaseId(invoice)}>{phase.project.name} · {phase.title} · {currencyFormatter.format(phase.cost)}{phase.id === suggestedPhaseId(invoice) ? " (suggested)" : ""}</option>
-												))}
-											</select>
-											<Button type="submit">Attach</Button>
+											<div class="grid grid-cols-[1fr_auto] items-center gap-2">
+												<select name="phaseId" required class="max-w-96 border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300">
+													{attachablePhases.filter((phase) => phase.currency === invoice.currency).map((phase) => (
+														<option value={phase.id} data-version={phase.version} selected={phase.id === suggestedPhaseId(invoice)}>{phase.project.name} · {phase.title} · {currencyFormatter.format(phase.cost)}{phase.id === suggestedPhaseId(invoice) ? " (suggested)" : ""}</option>
+													))}
+												</select>
+												<Button type="submit">Attach</Button>
+											</div>
+											<div class="grid grid-cols-[1fr_auto] items-center gap-2">
+												<select name="deliveryChoice" data-delivery-choice required class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"><option value="url" selected>Delivery link</option><option value="none">No delivery PR/MR</option></select>
+												<label data-delivery-url-field class="grid gap-1 text-sm"><span class="font-medium">Delivery URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="deliveryUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://github.com/…" /></label>
+											</div>
 										</form>
 									) : (
 										<span class="text-neutral-500 dark:text-neutral-400">No matching phase</span>
@@ -218,6 +227,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 						<th class="px-4 py-3" scope="col">Phase</th>
 						<th class="px-4 py-3" scope="col">Stripe</th>
 						<th class="px-4 py-3 text-right" scope="col">Total</th>
+						<th class="px-4 py-3" scope="col">Delivery</th>
 						<th class="px-4 py-3" scope="col">Action</th>
 					</tr>
 				</thead>
@@ -229,6 +239,18 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 							<td class="px-4 py-3">{phase.invoice?.stripeStatus ?? "Not fetched"}{phase.invoice?.stripeDueAt ? ` · due ${dateFormatter.format(phase.invoice.stripeDueAt)}` : ""}{phase.invoice?.stripePaidAt ? ` · paid ${dateFormatter.format(phase.invoice.stripePaidAt)}` : ""}{phase.invoice?.fetchedAt ? ` · ${dateFormatter.format(phase.invoice.fetchedAt)}` : ""}</td>
 							<td class="px-4 py-3 text-right tabular-nums">{currencyFormatter.format(phase.invoice?.total ?? 0)}</td>
 							<td class="px-4 py-3">
+								<div class="grid gap-2">
+									<span class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{phase.deliveryState === "url" ? phase.deliveryUrl : phase.deliveryState === "none" ? "No delivery" : "Not recorded"}</span>
+									<form method="POST" action={actions.updatePhaseDelivery} class="grid gap-2">
+										<input type="hidden" name="phaseId" value={phase.id} />
+										<input type="hidden" name="expectedVersion" value={phase.version} />
+										<select name="deliveryChoice" data-delivery-choice required class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"><option value="url" selected={phase.deliveryState === "url" || phase.deliveryState === "not_recorded"}>Delivery link</option><option value="none" selected={phase.deliveryState === "none"}>No delivery PR/MR</option></select>
+										<label data-delivery-url-field class="grid gap-1 text-sm"><span class="font-medium">Delivery URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="deliveryUrl" type="url" inputmode="url" autocomplete="off" value={phase.deliveryUrl ?? ""} placeholder="https://github.com/…" /></label>
+										<Button type="submit">Update Delivery</Button>
+									</form>
+								</div>
+							</td>
+							<td class="px-4 py-3">
 								<div class="grid grid-flow-col justify-start gap-2">
 									{phase.state === "invoiced" && phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
 									{phase.state === "invoiced" && phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="paid" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Confirm paid</Button></form>}
@@ -237,7 +259,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 						</tr>
 					)) : (
 						<tr>
-							<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="5">No invoices recorded.</td>
+							<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="6">No invoices recorded.</td>
 						</tr>
 					)}
 				</tbody>
