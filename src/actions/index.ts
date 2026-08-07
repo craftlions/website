@@ -18,6 +18,7 @@ import {
 	transitionPhaseAsAdmin,
 	transitionProject,
 	updateOrganizationSettings,
+	updatePhaseDelivery,
 } from "../lib/admin-mutations.ts";
 import {
 	deliveryChoiceSchema,
@@ -367,13 +368,32 @@ export const server = {
 	}),
 	attachInvoiceToPhase: defineAction({
 		accept: "form",
-		input: z.object({
-			invoiceId: z.string().trim().min(1),
-			phaseId: z.string().trim().min(1),
-			expectedVersion: z.coerce.number().int().nonnegative(),
-		}),
+		input: z
+			.object({
+				invoiceId: z.string().trim().min(1),
+				phaseId: z.string().trim().min(1),
+				expectedVersion: z.coerce.number().int().nonnegative(),
+				deliveryChoice: deliveryChoiceSchema,
+				deliveryUrl: deliveryUrlSchema,
+			})
+			.superRefine(deliveryPairingIssue),
 		handler: adminHandler(async (input, context, actorId) => {
 			await attachInvoiceToPhase(context.locals.db, actorId, input);
+			return { success: true };
+		}),
+	}),
+	updatePhaseDelivery: defineAction({
+		accept: "form",
+		input: z
+			.object({
+				phaseId: z.string().trim().min(1),
+				expectedVersion: z.coerce.number().int().nonnegative(),
+				deliveryChoice: deliveryChoiceSchema,
+				deliveryUrl: deliveryUrlSchema,
+			})
+			.superRefine(deliveryPairingIssue),
+		handler: adminHandler(async (input, context, actorId) => {
+			await updatePhaseDelivery(context.locals.db, actorId, input);
 			return { success: true };
 		}),
 	}),

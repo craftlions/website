@@ -712,9 +712,17 @@ export const recordInvoice = async (
 export const attachInvoiceToPhase = async (
 	db: Db,
 	actorId: string,
-	input: { invoiceId: string; phaseId: string; expectedVersion: number },
+	input: {
+		invoiceId: string;
+		phaseId: string;
+		expectedVersion: number;
+		deliveryChoice?: "url" | "none" | undefined;
+		deliveryUrl?: string | null | undefined;
+	},
 ) => {
 	await assertAdminUser(db, actorId);
+
+	const delivery = resolveDelivery(input.deliveryChoice, input.deliveryUrl);
 
 	return db.transaction(async (tx) => {
 		const [phase] = await tx
@@ -724,6 +732,8 @@ export const attachInvoiceToPhase = async (
 				state: phases.state,
 				currency: phases.currency,
 				version: phases.version,
+				deliveryState: phases.deliveryState,
+				deliveryUrl: phases.deliveryUrl,
 			})
 			.from(phases)
 			.where(eq(phases.id, input.phaseId))
@@ -748,13 +758,27 @@ export const attachInvoiceToPhase = async (
 			throw new DomainError("NotFound", "Invoice not found.");
 		}
 
+		const deliveryMatches = (phaseRow: {
+			deliveryState: "url" | "none" | "not_recorded";
+			deliveryUrl: string | null;
+		}) =>
+			phaseRow.deliveryState === delivery.deliveryState &&
+			phaseRow.deliveryUrl === delivery.deliveryUrl;
+
 		if (
 			invoice.phaseId === phase.id &&
 			phase.state === "invoiced" &&
 			(phase.version === input.expectedVersion ||
 				phase.version === input.expectedVersion + 1)
 		) {
-			return { idempotent: true };
+			if (deliveryMatches(phase)) {
+				return { idempotent: true };
+			}
+
+			throw new DomainError(
+				"AlreadyExists",
+				"This invoice is already attached with a different Delivery choice. Update Delivery from the invoice row instead.",
+			);
 		}
 
 		if (phase.version !== input.expectedVersion) {
@@ -826,7 +850,12 @@ export const attachInvoiceToPhase = async (
 		if (phase.state === "in_progress") {
 			const transitioned = await tx
 				.update(phases)
-				.set({ state: "invoiced", version: sql`${phases.version} + 1` })
+				.set({
+					state: "invoiced",
+					version: sql`${phases.version} + 1`,
+					deliveryState: delivery.deliveryState,
+					deliveryUrl: delivery.deliveryUrl,
+				})
 				.where(
 					and(
 						eq(phases.id, phase.id),
@@ -850,7 +879,116 @@ export const attachInvoiceToPhase = async (
 				event: "invoiced",
 				actorId,
 			});
+		} else {
+			// Attaching to an already-invoiced phase only sets its Delivery state;
+			// the invoice relationship already holds and the lifecycle state is unchanged.
+			const updated = await tx
+				.update(phases)
+				.set({
+					version: sql`${phases.version} + 1`,
+					deliveryState: delivery.deliveryState,
+					deliveryUrl: delivery.deliveryUrl,
+				})
+				.where(
+					and(
+						eq(phases.id, phase.id),
+						eq(phases.state, "invoiced"),
+						eq(phases.version, input.expectedVersion),
+					),
+				)
+				.returning({ id: phases.id });
+
+			if (!updated[0]) {
+				throw new DomainError(
+					"Conflict",
+					"This phase was changed by another request. Refresh and try again.",
+				);
+			}
+
+			await insertEvent(tx, {
+				aggregateType: "phase",
+				aggregateId: phase.id,
+				aggregateVersion: input.expectedVersion + 1,
+				event: "delivery_updated",
+				actorId,
+			});
 		}
+
+		return { idempotent: false };
+	});
+};
+
+export const updatePhaseDelivery = async (
+	db: Db,
+	actorId: string,
+	input: {
+		phaseId: string;
+		expectedVersion: number;
+		deliveryChoice?: "url" | "none" | undefined;
+		deliveryUrl?: string | null | undefined;
+	},
+) => {
+	await assertAdminUser(db, actorId);
+
+	const delivery = resolveDelivery(input.deliveryChoice, input.deliveryUrl);
+
+	return db.transaction(async (tx) => {
+		const [phase] = await tx
+			.select({
+				id: phases.id,
+				version: phases.version,
+				deliveryState: phases.deliveryState,
+				deliveryUrl: phases.deliveryUrl,
+			})
+			.from(phases)
+			.where(eq(phases.id, input.phaseId))
+			.for("update");
+
+		if (!phase) {
+			throw new DomainError("NotFound", "Phase not found.");
+		}
+
+		// Same Delivery already stored: nothing to change, stay idempotent on retry.
+		if (
+			phase.deliveryState === delivery.deliveryState &&
+			phase.deliveryUrl === delivery.deliveryUrl
+		) {
+			return { idempotent: true };
+		}
+
+		if (phase.version !== input.expectedVersion) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		const updated = await tx
+			.update(phases)
+			.set({
+				version: sql`${phases.version} + 1`,
+				deliveryState: delivery.deliveryState,
+				deliveryUrl: delivery.deliveryUrl,
+			})
+			.where(
+				and(eq(phases.id, phase.id), eq(phases.version, input.expectedVersion)),
+			)
+			.returning({ id: phases.id });
+
+		if (!updated[0]) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		await insertEvent(tx, {
+			aggregateType: "phase",
+			aggregateId: phase.id,
+			aggregateVersion: input.expectedVersion + 1,
+			event: "delivery_updated",
+			actorId,
+		});
 
 		return { idempotent: false };
 	});
