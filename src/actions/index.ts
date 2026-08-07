@@ -345,10 +345,11 @@ export const server = {
 	refreshStripeInvoice: defineAction({
 		accept: "form",
 		input: z.object({ invoiceId: z.string().trim().min(1) }),
-		handler: adminHandler(async (input, context) => {
+		handler: adminHandler(async (input, context, actorId) => {
 			await refreshStripeInvoice(context.locals.db, {
 				invoiceId: input.invoiceId,
 				stripeKey: env.STRIPE_SECRET_KEY,
+				actorId,
 			});
 			return { success: true };
 		}),

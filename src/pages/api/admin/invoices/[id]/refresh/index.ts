@@ -16,6 +16,7 @@ export const POST: APIRoute = async (context) => {
 		await refreshStripeInvoice(context.locals.db, {
 			invoiceId: String(context.params.id),
 			stripeKey: env.STRIPE_SECRET_KEY,
+			actorId: verification.actorId,
 		});
 		return new Response(null, { status: 204 });
 	} catch (error) {
