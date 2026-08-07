@@ -1,13 +1,8 @@
 ---
-interface SpendRow {
-	year: number;
-	projectId: string | null;
-	projectName: string;
-	total: number;
-}
+import type { SpendByYearRow } from "../lib/budget-consumption.ts";
 
 interface Props {
-	rows: SpendRow[];
+	rows: SpendByYearRow[];
 }
 
 const { rows } = Astro.props;

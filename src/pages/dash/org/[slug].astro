@@ -3,7 +3,6 @@ export const prerender = false;
 
 import type { projectSelectType } from "../../../lib/schema.ts";
 import { isAPIError } from "better-auth/api";
-import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
 import Footer from "../../../components/Footer.astro";
@@ -12,10 +11,9 @@ import OrganizationInvoices from "../../../components/OrganizationInvoices.astro
 import SpendByYear from "../../../components/SpendByYear.astro";
 import Shell from "../../../layouts/Shell.astro";
 import {
-	invoices,
-	phases,
-	projects as projectsTable,
-} from "../../../lib/schema.ts";
+	deriveBudgetConsumption,
+	getSpendByYear,
+} from "../../../lib/budget-consumption.ts";
 
 const { slug } = Astro.params;
 
@@ -91,33 +89,9 @@ const [organizationData, spendRows] = await Promise.all([
 			id: organization.id,
 		},
 	}),
-	// S-002 R7: the sole core-select read — year × project sums by invoicedAt
-	// year, void/uncollectible excluded in SQL; everything else stays RQB v2.
-	Astro.locals.db
-		.select({
-			year: sql<number>`EXTRACT(YEAR FROM ${invoices.invoicedAt} AT TIME ZONE 'UTC')::int`,
-			projectId: projectsTable.id,
-			projectName: sql<string>`COALESCE(${projectsTable.name}, 'Unassigned')`,
-			total: sql<number>`SUM(${invoices.total})::float8`,
-		})
-		.from(invoices)
-		.leftJoin(phases, eq(invoices.phaseId, phases.id))
-		.leftJoin(projectsTable, eq(phases.projectId, projectsTable.id))
-		.where(
-			and(
-				eq(invoices.organizationId, organization.id),
-				or(
-					isNull(invoices.stripeStatus),
-					ne(invoices.stripeStatus, "void"),
-					ne(invoices.stripeStatus, "uncollectible"),
-				),
-			),
-		)
-		.groupBy(
-			sql`EXTRACT(YEAR FROM ${invoices.invoicedAt} AT TIME ZONE 'UTC')::int`,
-			projectsTable.id,
-			projectsTable.name,
-		),
+	// S-004 R2/R3: one shared-module read returns the full spend history for
+	// this organization; the Spend chart and all budget figures derive from it.
+	getSpendByYear(Astro.locals.db, organization.id),
 ]);
 
 const now = new Date();
@@ -134,15 +108,11 @@ const projects =
 const completedProjectCount = projects.filter(
 	(project) => project.state === "completed",
 ).length;
-// S-002 R8: Overview's "Invoiced this year" reads the current-year total
-// from the same group-by result that renders the Spend chart.
-const totalInvoicedAmount = spendRows
-	.filter((row) => row.year === now.getUTCFullYear())
-	.reduce((total, row) => total + row.total, 0);
 const yearlyBudget = organizationData?.data?.yearlyBudget ?? 0;
-const remainingBudget = yearlyBudget - totalInvoicedAmount;
-const budgetUsagePercentage =
-	yearlyBudget > 0 ? (totalInvoicedAmount / yearlyBudget) * 100 : 0;
+// S-004 R3 + R5: current-year total, remaining budget, and usage percentage
+// derive from the module's full-history rows (D-budget-consumption-definition).
+const { currentYearTotal, remainingBudget, usagePercentage } =
+	deriveBudgetConsumption(spendRows, yearlyBudget);
 const budgetPacePercentage = ((now.getMonth() + 1) / 12) * 100;
 const budgetPaceGridLineClass = [
 	"col-start-2",
@@ -241,7 +211,7 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 								>Invoiced this year</dt
 							>
 							<dd class="text-xl font-semibold tabular-nums">
-								{currencyFormatter.format(totalInvoicedAmount)}
+								{currencyFormatter.format(currentYearTotal)}
 							</dd>
 						</div>
 						<div
@@ -249,10 +219,19 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 						>
 							<dt
 								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-								>Used</dt
+								>Budget used</dt
 							>
-							<dd class="text-xl font-semibold tabular-nums">
-								{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "—"}
+							<dd
+								class:list={[
+									"text-xl font-semibold tabular-nums",
+									yearlyBudget > 0 &&
+										usagePercentage > 100 &&
+										"text-red-700 dark:text-red-300",
+								]}
+							>
+								{yearlyBudget > 0
+									? `${usagePercentage.toFixed(1)}%`
+									: "No budget"}
 							</dd>
 						</div>
 						<div
@@ -283,7 +262,7 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 									for="budget-progress"
 									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 								>
-									Budget use
+									Budget used
 								</label>
 								<span class="group relative grid place-items-center">
 									<button
@@ -308,32 +287,27 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 								class:list={[
 									"tabular-nums text-neutral-700 dark:text-neutral-300",
 									yearlyBudget > 0 &&
-										budgetUsagePercentage > 100 &&
+										usagePercentage > 100 &&
 										"text-red-700 dark:text-red-300",
 								]}
 							>
-								{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "No budget"}
+								{yearlyBudget > 0 ? `${usagePercentage.toFixed(1)}%` : "No budget"}
 							</p>
 						</div>
-						<div class="relative grid">
-							<progress
-								id="budget-progress"
-								max="100"
-								value={yearlyBudget > 0
-									? Math.min(budgetUsagePercentage, 100)
-									: 0}
-								class:list={[
-									"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
-									yearlyBudget > 0 &&
-										budgetUsagePercentage > 100 &&
-										"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
-								]}
-							>
-								{yearlyBudget > 0
-									? `${budgetUsagePercentage.toFixed(1)}% used`
-									: "No yearly budget set"}
-							</progress>
-							{yearlyBudget > 0 && (
+						{yearlyBudget > 0 && (
+							<div class="relative grid">
+								<progress
+									id="budget-progress"
+									max="100"
+									value={Math.min(usagePercentage, 100)}
+									class:list={[
+										"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
+										usagePercentage > 100 &&
+											"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
+									]}
+								>
+									{`${usagePercentage.toFixed(1)}% used`}
+								</progress>
 								<span
 									aria-hidden="true"
 									class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
@@ -345,8 +319,8 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 										]}
 									/>
 								</span>
-							)}
-						</div>
+							</div>
+						)}
 					</div>
 				</section>
 
