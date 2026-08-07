@@ -229,7 +229,11 @@ export const aggregateType = t.pgEnum("aggregate_type", [
 	"project",
 ]);
 
-export const actorType = t.pgEnum("actor_type", ["user", "organization"]);
+export const actorType = t.pgEnum("actor_type", [
+	"user",
+	"organization",
+	"system",
+]);
 
 export const projectState = t.pgEnum("project_state", [
 	"draft",
