@@ -12,6 +12,10 @@ import {
 } from "drizzle-orm";
 import AdminOrgShell from "../../../layouts/AdminOrgShell.astro";
 import {
+	deriveBudgetConsumption,
+	getSpendByYear,
+} from "../../../lib/budget-consumption.ts";
+import {
 	invoices,
 	member,
 	organizationMetadata,
@@ -33,15 +37,6 @@ const [organization] = await Astro.locals.db
 		id: organizationTable.id,
 		name: organizationTable.name,
 		yearlyBudget: organizationMetadata.yearlyBudget,
-		phaseCostTotal: scalar(
-			Astro.locals.db
-				.select({
-					value: sum(phases.cost),
-				})
-				.from(phases)
-				.innerJoin(projects, eq(phases.projectId, projects.id))
-				.where(eq(projects.organizationId, organizationTable.id)),
-		),
 		openInvoiceTotal: scalar(
 			Astro.locals.db
 				.select({
@@ -124,10 +119,17 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-const budgetUsage =
-	organization.yearlyBudget && organization.yearlyBudget > 0
-		? (organization.phaseCostTotal / organization.yearlyBudget) * 100
-		: null;
+// S-004 R4: one full-history module read per organization; deriveBudget
+// selects the current-year rows. Any read failure aborts this page — no
+// fallback or alternate calculation (R8).
+const yearlyBudget = organization.yearlyBudget ?? 0;
+const { usagePercentage } = deriveBudgetConsumption(
+	await getSpendByYear(Astro.locals.db, id),
+	yearlyBudget,
+);
+// R7: "Budget used" shows a one-decimal uncapped percentage only when there
+// is a positive yearly budget; otherwise "No budget" with no percentage.
+const hasBudget = yearlyBudget > 0;
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
 	currency: "EUR",
@@ -171,8 +173,8 @@ const sections = [
 					>Budget used</dt
 				>
 				<dd
-					class:list={["text-xl font-semibold tabular-nums", budgetUsage !== null && budgetUsage > 100 && "text-red-700 dark:text-red-300"]}
-					>{budgetUsage === null ? "-" : `${budgetUsage.toFixed(1)}%`}</dd
+					class:list={["text-xl font-semibold tabular-nums", hasBudget && usagePercentage > 100 && "text-red-700 dark:text-red-300"]}
+					>{hasBudget ? `${usagePercentage.toFixed(1)}%` : "No budget"}</dd
 				>
 			</div>
 			<div class="grid gap-1">
