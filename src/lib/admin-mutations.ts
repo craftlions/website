@@ -948,6 +948,20 @@ export const updatePhaseDelivery = async (
 			throw new DomainError("NotFound", "Phase not found.");
 		}
 
+		// Delivery can only be corrected from an attached-invoice admin row (S-003 AC7),
+		// so reject phases that carry no invoice even when the incoming Delivery matches.
+		const attachedInvoice = await tx.query.invoices.findFirst({
+			columns: { id: true },
+			where: { phaseId: phase.id },
+		});
+
+		if (!attachedInvoice) {
+			throw new DomainError(
+				"InvalidTransition",
+				"Delivery can only be updated for phases with an attached invoice.",
+			);
+		}
+
 		// Same Delivery already stored: nothing to change, stay idempotent on retry.
 		if (
 			phase.deliveryState === delivery.deliveryState &&

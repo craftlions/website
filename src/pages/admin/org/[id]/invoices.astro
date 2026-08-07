@@ -183,7 +183,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 												<Button type="submit">Attach</Button>
 											</div>
 											<div class="grid grid-cols-[1fr_auto] items-center gap-2">
-												<select name="deliveryChoice" data-delivery-choice required class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"><option value="url" selected>Delivery link</option><option value="none">No delivery PR/MR</option></select>
+												<select name="deliveryChoice" aria-label="Delivery" data-delivery-choice required class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"><option value="url" selected>Delivery link</option><option value="none">No delivery PR/MR</option></select>
 												<label data-delivery-url-field class="grid gap-1 text-sm"><span class="font-medium">Delivery URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="deliveryUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://github.com/…" /></label>
 											</div>
 										</form>
@@ -244,7 +244,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 									<form method="POST" action={actions.updatePhaseDelivery} class="grid gap-2">
 										<input type="hidden" name="phaseId" value={phase.id} />
 										<input type="hidden" name="expectedVersion" value={phase.version} />
-										<select name="deliveryChoice" data-delivery-choice required class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"><option value="url" selected={phase.deliveryState === "url" || phase.deliveryState === "not_recorded"}>Delivery link</option><option value="none" selected={phase.deliveryState === "none"}>No delivery PR/MR</option></select>
+										<select name="deliveryChoice" aria-label="Delivery" data-delivery-choice required class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"><option value="url" selected={phase.deliveryState === "url" || phase.deliveryState === "not_recorded"}>Delivery link</option><option value="none" selected={phase.deliveryState === "none"}>No delivery PR/MR</option></select>
 										<label data-delivery-url-field class="grid gap-1 text-sm"><span class="font-medium">Delivery URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="deliveryUrl" type="url" inputmode="url" autocomplete="off" value={phase.deliveryUrl ?? ""} placeholder="https://github.com/…" /></label>
 										<Button type="submit">Update Delivery</Button>
 									</form>
@@ -299,10 +299,9 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 			continue;
 		}
 
-		const form = select.closest("form");
-		const field = form?.querySelector<HTMLLabelElement>(
-			"[data-delivery-url-field]",
-		);
+		const field = select
+			.closest("form")
+			?.querySelector<HTMLLabelElement>("[data-delivery-url-field]");
 		const input = field?.querySelector<HTMLInputElement>(
 			'input[name="deliveryUrl"]',
 		);
