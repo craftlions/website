@@ -6,6 +6,7 @@ import {
 	count,
 	eq,
 	inArray,
+	or,
 	type SQLWrapper,
 	sql,
 	sum,
@@ -48,7 +49,7 @@ const [organization] = await Astro.locals.db
 				.where(
 					and(
 						eq(projects.organizationId, organizationTable.id),
-						eq(phases.state, "invoiced"),
+						eq(invoices.stripeStatus, "open"),
 					),
 				),
 		),
@@ -72,16 +73,22 @@ const [organization] = await Astro.locals.db
 				})
 				.from(phases)
 				.innerJoin(projects, eq(phases.projectId, projects.id))
+				.leftJoin(invoices, eq(invoices.phaseId, phases.id))
 				.where(
 					and(
 						eq(projects.organizationId, organizationTable.id),
-						inArray(phases.state, [
-							"submitted",
-							"planned",
-							"approved",
-							"in_progress",
-							"invoiced",
-						]),
+						// Same membership as the worklist page: lifecycle states plus any
+						// outstanding invoice (billing derives from stripeStatus).
+						or(
+							inArray(phases.state, [
+								"submitted",
+								"planned",
+								"approved",
+								"in_progress",
+								"delivered",
+							]),
+							eq(invoices.stripeStatus, "open"),
+						),
 					),
 				),
 		),

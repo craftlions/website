@@ -229,12 +229,12 @@ export const transitionProject = async (
 
 			if (
 				projectPhases.some(
-					(phase) => !["paid", "cancelled"].includes(phase.state),
+					(phase) => !["accepted", "cancelled"].includes(phase.state),
 				)
 			) {
 				throw new DomainError(
 					"InvalidTransition",
-					"All phases must be paid or cancelled before completing a project.",
+					"All phases must be accepted or cancelled before completing a project.",
 				);
 			}
 		}
@@ -342,7 +342,6 @@ const phaseTransitions = {
 	approved: { from: "planned", event: "approved_on_behalf" },
 	in_progress: { from: "approved", event: "started" },
 	cancelled: { from: ["submitted", "planned"], event: "cancelled" },
-	paid: { from: "invoiced", event: "paid" },
 } as const;
 
 const transitionPhase = async (
@@ -350,7 +349,7 @@ const transitionPhase = async (
 	actorId: string,
 	phaseId: string,
 	expectedVersion: number,
-	nextState: "planned" | "approved" | "in_progress" | "cancelled" | "paid",
+	nextState: "planned" | "approved" | "in_progress" | "cancelled",
 	from: readonly string[],
 	event: string,
 	invalidTransitionMessage: string,
@@ -383,20 +382,6 @@ const transitionPhase = async (
 
 		if (!from.includes(phase.state)) {
 			throw new DomainError("InvalidTransition", invalidTransitionMessage);
-		}
-
-		if (nextState === "paid") {
-			const invoice = await tx.query.invoices.findFirst({
-				columns: { stripeStatus: true },
-				where: { phaseId: phase.id },
-			});
-
-			if (invoice?.stripeStatus !== "paid") {
-				throw new DomainError(
-					"InvalidTransition",
-					"Stripe must say paid before the payment can be confirmed.",
-				);
-			}
 		}
 
 		const rows = await tx
@@ -455,7 +440,7 @@ export const transitionPhaseAsAdmin = async (
 	actorId: string,
 	input: {
 		phaseId: string;
-		nextState: "planned" | "approved" | "in_progress" | "cancelled" | "paid";
+		nextState: "planned" | "approved" | "in_progress" | "cancelled";
 		expectedVersion: number;
 	},
 ) => {
@@ -477,6 +462,103 @@ export const transitionPhaseAsAdmin = async (
 	);
 };
 
+/**
+ * Delivery recording is its own mutation (S-005 R7): it requires no invoice
+ * and transitions `in_progress → delivered`. The `deliveryState`/
+ * `deliveryUrl` columns stay the delivery record, consistent with the schema
+ * CHECK constraint; a same-delivery retry after success is idempotent.
+ */
+export const recordDelivery = async (
+	db: Db,
+	actorId: string,
+	input: {
+		phaseId: string;
+		expectedVersion: number;
+		deliveryChoice?: "url" | "none" | undefined;
+		deliveryUrl?: string | null | undefined;
+	},
+) => {
+	await assertAdminUser(db, actorId);
+
+	const delivery = resolveDelivery(input.deliveryChoice, input.deliveryUrl);
+
+	return db.transaction(async (tx) => {
+		const [phase] = await tx
+			.select({
+				id: phases.id,
+				state: phases.state,
+				version: phases.version,
+				deliveryState: phases.deliveryState,
+				deliveryUrl: phases.deliveryUrl,
+			})
+			.from(phases)
+			.where(eq(phases.id, input.phaseId))
+			.for("update");
+
+		if (!phase) {
+			throw new DomainError("NotFound", "Phase not found.");
+		}
+
+		// Delivery already recorded with the same choice: idempotent retry.
+		if (
+			phase.state === "delivered" &&
+			phase.version === input.expectedVersion + 1 &&
+			phase.deliveryState === delivery.deliveryState &&
+			phase.deliveryUrl === delivery.deliveryUrl
+		) {
+			return { idempotent: true };
+		}
+
+		if (phase.version !== input.expectedVersion) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		if (phase.state !== "in_progress") {
+			throw new DomainError(
+				"InvalidTransition",
+				"Delivery can only be recorded on in-progress phases.",
+			);
+		}
+
+		const rows = await tx
+			.update(phases)
+			.set({
+				state: "delivered",
+				version: sql`${phases.version} + 1`,
+				deliveryState: delivery.deliveryState,
+				deliveryUrl: delivery.deliveryUrl,
+			})
+			.where(
+				and(
+					eq(phases.id, phase.id),
+					eq(phases.state, "in_progress"),
+					eq(phases.version, input.expectedVersion),
+				),
+			)
+			.returning({ id: phases.id });
+
+		if (!rows[0]) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		await insertEvent(tx, {
+			aggregateType: "phase",
+			aggregateId: phase.id,
+			aggregateVersion: input.expectedVersion + 1,
+			event: "delivered",
+			actorId,
+		});
+
+		return { idempotent: false };
+	});
+};
+
 export const recordInvoice = async (
 	db: Db,
 	actorId: string,
@@ -488,13 +570,9 @@ export const recordInvoice = async (
 		total: number;
 		expectedVersion: number;
 		stripeKey: string;
-		deliveryChoice?: "url" | "none" | undefined;
-		deliveryUrl?: string | null | undefined;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
-
-	const delivery = resolveDelivery(input.deliveryChoice, input.deliveryUrl);
 
 	const phase = await db.query.phases.findFirst({
 		columns: {
@@ -502,8 +580,6 @@ export const recordInvoice = async (
 			state: true,
 			currency: true,
 			version: true,
-			deliveryState: true,
-			deliveryUrl: true,
 		},
 		where: { id: input.phaseId },
 	});
@@ -527,7 +603,7 @@ export const recordInvoice = async (
 	});
 
 	const invoiceMatches = (
-		phaseRow: { id: string; state: string; currency: string; version: number },
+		phaseRow: { id: string; currency: string },
 		invoiceRow: typeof invoice,
 	): invoiceRow is NonNullable<typeof invoice> =>
 		invoiceRow?.phaseId === phaseRow.id &&
@@ -537,29 +613,14 @@ export const recordInvoice = async (
 		invoiceRow.currency === phaseRow.currency &&
 		invoiceRow.total === input.total;
 
-	const deliveryMatches = (phaseRow: {
-		deliveryState: "url" | "none" | "not_recorded";
-		deliveryUrl: string | null;
-	}) =>
-		phaseRow.deliveryState === delivery.deliveryState &&
-		phaseRow.deliveryUrl === delivery.deliveryUrl;
-
-	if (
-		phase.state === "invoiced" &&
-		phase.version === input.expectedVersion + 1 &&
-		invoiceMatches(phase, invoice)
-	) {
-		if (deliveryMatches(phase)) {
-			return {
-				invoice: { id: invoice.id, publicId: invoice.publicId },
-				created: false,
-			};
-		}
-
-		throw new DomainError(
-			"AlreadyExists",
-			"This invoice is already recorded with a different Delivery choice. Review the recorded invoice and update Delivery from there instead.",
-		);
+	// Invoice recording no longer moves the lifecycle (S-005 R5/R7): the phase
+	// stays in its work state and only the invoice row is written. A retry that
+	// already recorded the same invoice is idempotent.
+	if (invoice && invoiceMatches(phase, invoice)) {
+		return {
+			invoice: { id: invoice.id, publicId: invoice.publicId },
+			created: false,
+		};
 	}
 
 	if (phase.version !== input.expectedVersion) {
@@ -569,10 +630,12 @@ export const recordInvoice = async (
 		);
 	}
 
-	if (phase.state !== "in_progress") {
+	if (
+		!["approved", "in_progress", "delivered", "accepted"].includes(phase.state)
+	) {
 		throw new DomainError(
 			"InvalidTransition",
-			"Invoices can only be recorded on in-progress phases.",
+			"Invoices can only be recorded on phases from approval onward.",
 		);
 	}
 
@@ -596,8 +659,6 @@ export const recordInvoice = async (
 				state: phases.state,
 				currency: phases.currency,
 				version: phases.version,
-				deliveryState: phases.deliveryState,
-				deliveryUrl: phases.deliveryUrl,
 			})
 			.from(phases)
 			.where(eq(phases.id, input.phaseId))
@@ -621,25 +682,14 @@ export const recordInvoice = async (
 			where: { phaseId: lockedPhase.id },
 		});
 
-		if (
-			lockedPhase.state === "invoiced" &&
-			lockedPhase.version === input.expectedVersion + 1 &&
-			invoiceMatches(lockedPhase, lockedInvoice)
-		) {
-			if (deliveryMatches(lockedPhase)) {
-				return {
-					invoice: {
-						id: lockedInvoice.id,
-						publicId: lockedInvoice.publicId,
-					},
-					created: false,
-				};
-			}
-
-			throw new DomainError(
-				"AlreadyExists",
-				"This invoice is already recorded with a different Delivery choice. Review the recorded invoice and update Delivery from there instead.",
-			);
+		if (lockedInvoice && invoiceMatches(lockedPhase, lockedInvoice)) {
+			return {
+				invoice: {
+					id: lockedInvoice.id,
+					publicId: lockedInvoice.publicId,
+				},
+				created: false,
+			};
 		}
 
 		if (lockedPhase.version !== input.expectedVersion) {
@@ -649,10 +699,14 @@ export const recordInvoice = async (
 			);
 		}
 
-		if (lockedPhase.state !== "in_progress") {
+		if (
+			!["approved", "in_progress", "delivered", "accepted"].includes(
+				lockedPhase.state,
+			)
+		) {
 			throw new DomainError(
 				"InvalidTransition",
-				"Invoices can only be recorded on in-progress phases.",
+				"Invoices can only be recorded on phases from approval onward.",
 			);
 		}
 
@@ -695,38 +749,6 @@ export const recordInvoice = async (
 			);
 		}
 
-		const transitioned = await tx
-			.update(phases)
-			.set({
-				state: "invoiced",
-				version: sql`${phases.version} + 1`,
-				deliveryState: delivery.deliveryState,
-				deliveryUrl: delivery.deliveryUrl,
-			})
-			.where(
-				and(
-					eq(phases.id, lockedPhase.id),
-					eq(phases.state, "in_progress"),
-					eq(phases.version, input.expectedVersion),
-				),
-			)
-			.returning({ id: phases.id });
-
-		if (!transitioned[0]) {
-			throw new DomainError(
-				"Conflict",
-				"This phase was changed by another request. Refresh and try again.",
-			);
-		}
-
-		await insertEvent(tx, {
-			aggregateType: "phase",
-			aggregateId: lockedPhase.id,
-			aggregateVersion: input.expectedVersion + 1,
-			event: "invoiced",
-			actorId,
-		});
-
 		return { invoice: rows[0], created: true };
 	});
 };
@@ -738,13 +760,9 @@ export const attachInvoiceToPhase = async (
 		invoiceId: string;
 		phaseId: string;
 		expectedVersion: number;
-		deliveryChoice?: "url" | "none" | undefined;
-		deliveryUrl?: string | null | undefined;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
-
-	const delivery = resolveDelivery(input.deliveryChoice, input.deliveryUrl);
 
 	return db.transaction(async (tx) => {
 		const [phase] = await tx
@@ -754,8 +772,6 @@ export const attachInvoiceToPhase = async (
 				state: phases.state,
 				currency: phases.currency,
 				version: phases.version,
-				deliveryState: phases.deliveryState,
-				deliveryUrl: phases.deliveryUrl,
 			})
 			.from(phases)
 			.where(eq(phases.id, input.phaseId))
@@ -780,27 +796,10 @@ export const attachInvoiceToPhase = async (
 			throw new DomainError("NotFound", "Invoice not found.");
 		}
 
-		const deliveryMatches = (phaseRow: {
-			deliveryState: "url" | "none" | "not_recorded";
-			deliveryUrl: string | null;
-		}) =>
-			phaseRow.deliveryState === delivery.deliveryState &&
-			phaseRow.deliveryUrl === delivery.deliveryUrl;
-
-		if (
-			invoice.phaseId === phase.id &&
-			phase.state === "invoiced" &&
-			(phase.version === input.expectedVersion ||
-				phase.version === input.expectedVersion + 1)
-		) {
-			if (deliveryMatches(phase)) {
-				return { idempotent: true };
-			}
-
-			throw new DomainError(
-				"AlreadyExists",
-				"This invoice is already attached with a different Delivery choice. Update Delivery from the invoice row instead.",
-			);
+		// Already attached to this phase: idempotent retry. Attachment no longer
+		// moves the lifecycle (S-005 R5/R7), so no Delivery or state is written.
+		if (invoice.phaseId === phase.id) {
+			return { idempotent: true };
 		}
 
 		if (phase.version !== input.expectedVersion) {
@@ -842,10 +841,14 @@ export const attachInvoiceToPhase = async (
 			);
 		}
 
-		if (phase.state !== "in_progress" && phase.state !== "invoiced") {
+		if (
+			!["approved", "in_progress", "delivered", "accepted"].includes(
+				phase.state,
+			)
+		) {
 			throw new DomainError(
 				"InvalidTransition",
-				"Invoices can only be attached to in-progress or invoiced phases.",
+				"Invoices can only be attached to phases from approval onward.",
 			);
 		}
 
@@ -867,73 +870,6 @@ export const attachInvoiceToPhase = async (
 				"Conflict",
 				"This invoice was attached by another request. Refresh and try again.",
 			);
-		}
-
-		if (phase.state === "in_progress") {
-			const transitioned = await tx
-				.update(phases)
-				.set({
-					state: "invoiced",
-					version: sql`${phases.version} + 1`,
-					deliveryState: delivery.deliveryState,
-					deliveryUrl: delivery.deliveryUrl,
-				})
-				.where(
-					and(
-						eq(phases.id, phase.id),
-						eq(phases.state, "in_progress"),
-						eq(phases.version, input.expectedVersion),
-					),
-				)
-				.returning({ id: phases.id });
-
-			if (!transitioned[0]) {
-				throw new DomainError(
-					"Conflict",
-					"This phase was changed by another request. Refresh and try again.",
-				);
-			}
-
-			await insertEvent(tx, {
-				aggregateType: "phase",
-				aggregateId: phase.id,
-				aggregateVersion: input.expectedVersion + 1,
-				event: "invoiced",
-				actorId,
-			});
-		} else {
-			// Attaching to an already-invoiced phase only sets its Delivery state;
-			// the invoice relationship already holds and the lifecycle state is unchanged.
-			const updated = await tx
-				.update(phases)
-				.set({
-					version: sql`${phases.version} + 1`,
-					deliveryState: delivery.deliveryState,
-					deliveryUrl: delivery.deliveryUrl,
-				})
-				.where(
-					and(
-						eq(phases.id, phase.id),
-						eq(phases.state, "invoiced"),
-						eq(phases.version, input.expectedVersion),
-					),
-				)
-				.returning({ id: phases.id });
-
-			if (!updated[0]) {
-				throw new DomainError(
-					"Conflict",
-					"This phase was changed by another request. Refresh and try again.",
-				);
-			}
-
-			await insertEvent(tx, {
-				aggregateType: "phase",
-				aggregateId: phase.id,
-				aggregateVersion: input.expectedVersion + 1,
-				event: "delivery_updated",
-				actorId,
-			});
 		}
 
 		return { idempotent: false };
@@ -958,6 +894,7 @@ export const updatePhaseDelivery = async (
 		const [phase] = await tx
 			.select({
 				id: phases.id,
+				state: phases.state,
 				version: phases.version,
 				deliveryState: phases.deliveryState,
 				deliveryUrl: phases.deliveryUrl,
@@ -970,17 +907,14 @@ export const updatePhaseDelivery = async (
 			throw new DomainError("NotFound", "Phase not found.");
 		}
 
-		// Delivery can only be corrected from an attached-invoice admin row (S-003 AC7),
-		// so reject phases that carry no invoice even when the incoming Delivery matches.
-		const attachedInvoice = await tx.query.invoices.findFirst({
-			columns: { id: true },
-			where: { phaseId: phase.id },
-		});
-
-		if (!attachedInvoice) {
+		// Delivery correction (S-003 AC7) only applies once delivery is recorded;
+		// recording is its own mutation (`recordDelivery`), and this correction
+		// never changes the lifecycle state. Legacy `accepted` rows carry a
+		// delivery record from the old invoice-coupled capture and stay correctable.
+		if (phase.state !== "delivered" && phase.state !== "accepted") {
 			throw new DomainError(
 				"InvalidTransition",
-				"Delivery can only be updated for phases with an attached invoice.",
+				"Delivery can only be updated for delivered or accepted phases.",
 			);
 		}
 
