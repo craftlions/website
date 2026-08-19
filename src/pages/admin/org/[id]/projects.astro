@@ -24,6 +24,7 @@ const actionResults = [
 	Astro.getActionResult(actions.transitionProject),
 	Astro.getActionResult(actions.createPhase),
 	Astro.getActionResult(actions.transitionPhase),
+	Astro.getActionResult(actions.recordDelivery),
 ];
 const actionError = actionResults.find((result) => result?.error)?.error;
 const actionSucceeded = actionResults.some((result) => result && !result.error);
