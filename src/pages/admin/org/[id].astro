@@ -4,6 +4,7 @@ export const prerender = false;
 import {
 	and,
 	count,
+	countDistinct,
 	eq,
 	inArray,
 	or,
@@ -69,7 +70,9 @@ const [organization] = await Astro.locals.db
 		worklistCount: scalar(
 			Astro.locals.db
 				.select({
-					value: count(),
+					// A phase remains one work item even when several component invoices
+					// make the invoice join one-to-many.
+					value: countDistinct(phases.id),
 				})
 				.from(phases)
 				.innerJoin(projects, eq(phases.projectId, projects.id))

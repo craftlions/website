@@ -427,12 +427,16 @@ export const server = {
 		accept: "form",
 		input: z.object({
 			invoiceId: z.string().trim().min(1),
-			phaseId: z.string().trim().min(1),
-			component: z.enum(["upfront", "delivery", "acceptance"]),
-			expectedVersion: z.coerce.number().int().nonnegative(),
+			target: z.string().regex(/^[^:]+:(upfront|delivery|acceptance):\d+$/),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
-			await attachInvoiceToPhase(context.locals.db, actorId, input);
+			const [phaseId, component, expectedVersion] = input.target.split(":");
+			await attachInvoiceToPhase(context.locals.db, actorId, {
+				invoiceId: input.invoiceId,
+				phaseId: phaseId ?? "",
+				component: component as "upfront" | "delivery" | "acceptance",
+				expectedVersion: Number(expectedVersion),
+			});
 			return { success: true };
 		}),
 	}),

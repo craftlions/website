@@ -45,7 +45,7 @@ const projects = await Astro.locals.db.query.projects.findMany({
 				version: true,
 			},
 			with: {
-				invoice: {
+				invoices: {
 					columns: {
 						id: true,
 						total: true,
@@ -105,14 +105,29 @@ const daysSince = (eventId: string) => {
 };
 const daysInPhaseState = (phaseId: string) =>
 	daysSince(latestPhaseEventIds.get(phaseId) ?? phaseId);
+type WorklistPhase = (typeof allPhases)[number];
+type WorklistInvoice = WorklistPhase["invoices"][number];
+type WorklistItem = {
+	priority: number;
+	kind: string;
+	phase: WorklistPhase;
+	invoice?: WorklistInvoice;
+};
 const worklist = allPhases
-	.flatMap((phase) => {
-		if (
-			phase.invoice?.stripeStatus === "open" &&
-			phase.invoice.stripeDueAt &&
-			phase.invoice.stripeDueAt < now
-		) {
-			return [{ priority: 0, kind: "Overdue", phase }];
+	.flatMap((phase): WorklistItem[] => {
+		const overdueInvoices = phase.invoices.filter(
+			(invoice) =>
+				invoice.stripeStatus === "open" &&
+				invoice.stripeDueAt &&
+				invoice.stripeDueAt < now,
+		);
+		if (overdueInvoices.length > 0) {
+			return overdueInvoices.map((invoice) => ({
+				priority: 0,
+				kind: "Overdue",
+				phase,
+				invoice,
+			}));
 		}
 
 		if (phase.state === "submitted") {
@@ -131,18 +146,14 @@ const worklist = allPhases
 			return [{ priority: 4, kind: "In work", phase }];
 		}
 
-		// Billing derives from the invoice's Stripe status (D-phase-billing-truth):
-		// only an outstanding invoice reads "Unpaid". A delivered phase surfaces as
-		// "Awaiting acceptance" first — the acceptance action is #285.
+		// Billing derives from each invoice's Stripe status (D-phase-billing-truth).
 		if (phase.state === "delivered") {
 			return [{ priority: 5, kind: "Awaiting acceptance", phase }];
 		}
 
-		if (phase.invoice?.stripeStatus === "open") {
-			return [{ priority: 6, kind: "Unpaid", phase }];
-		}
-
-		return [];
+		return phase.invoices
+			.filter((invoice) => invoice.stripeStatus === "open")
+			.map((invoice) => ({ priority: 6, kind: "Unpaid", phase, invoice }));
 	})
 	.toSorted(
 		(a, b) =>
@@ -174,7 +185,7 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 				<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-4 md:grid-cols-subgrid md:items-center">
 					<Badge type={item.priority === 0 ? "error" : "info"}>{item.kind}</Badge>
 					<h3 class="font-medium">{item.phase.project.name} · {item.phase.title}</h3>
-					<p class="text-sm tabular-nums md:text-right">{currencyFormatter.format(item.phase.invoice?.total ?? item.phase.cost)}</p>
+					<p class="text-sm tabular-nums md:text-right">{currencyFormatter.format(item.invoice?.total ?? item.phase.cost)}</p>
 					<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
 						<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{daysInPhaseState(item.phase.id)}d</p>
 						{item.phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Send</Button></form>}
@@ -182,7 +193,7 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 						{(item.phase.state === "submitted" || item.phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Cancel</Button></form>}
 						{item.phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Start</Button></form>}
 						{item.phase.state === "delivered" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="accepted" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Record acceptance</Button></form>}
-						{item.phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={item.phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
+						{(item.invoice ? [item.invoice] : item.phase.invoices).map((invoice) => <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={invoice.id} /><Button type="submit">Refresh now</Button></form>)}
 					</div>
 				</article>
 			)) : (
