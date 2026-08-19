@@ -257,8 +257,10 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 			}
 
 			total.textContent = `${percentTotal.toFixed(2)}% · ${formatAmount(safeCost)}`;
+			// Displayed percentages are rounded to four decimals, so allow the
+			// accumulated rounding drift from the three component values.
 			const valid =
-				Math.abs(percentTotal - 100) < 0.0001 && activeIndexes.length > 0;
+				Math.abs(percentTotal - 100) < 0.0002 && activeIndexes.length > 0;
 			error.hidden = valid;
 			error.textContent = valid ? "" : "Percentages must total 100%.";
 			submit.disabled = !valid;
