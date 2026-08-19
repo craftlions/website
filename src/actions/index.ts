@@ -4,6 +4,7 @@ import { ActionError, defineAction } from "astro:actions";
 import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
 import {
+	acceptPhaseAsClient,
 	addOrganizationMember,
 	approvePhaseAsClient,
 	attachInvoiceToPhase,
@@ -183,7 +184,7 @@ const adminHandler =
 
 const clientPhaseHandler = async (
 	phasePublicId: string,
-	event: "approved" | "declined",
+	event: "approved" | "declined" | "accepted",
 	expectedVersion: number,
 	context: Parameters<Parameters<typeof defineAction>[0]["handler"]>[1],
 ) => {
@@ -201,11 +202,18 @@ const clientPhaseHandler = async (
 	assertNotImpersonating(session);
 
 	try {
-		await approvePhaseAsClient(context.locals.db, session.user.id, {
-			phasePublicId,
-			event,
-			expectedVersion,
-		});
+		if (event === "accepted") {
+			await acceptPhaseAsClient(context.locals.db, session.user.id, {
+				phasePublicId,
+				expectedVersion,
+			});
+		} else {
+			await approvePhaseAsClient(context.locals.db, session.user.id, {
+				phasePublicId,
+				event,
+				expectedVersion,
+			});
+		}
 		return { success: true };
 	} catch (error) {
 		return mapDomainError(error);
@@ -247,6 +255,20 @@ export const server = {
 			clientPhaseHandler(
 				input.phaseId,
 				"declined",
+				input.expectedVersion,
+				context,
+			),
+	}),
+	acceptPhase: defineAction({
+		accept: "form",
+		input: z.object({
+			phaseId: z.string(),
+			expectedVersion: z.coerce.number().int().nonnegative(),
+		}),
+		handler: (input, context) =>
+			clientPhaseHandler(
+				input.phaseId,
+				"accepted",
 				input.expectedVersion,
 				context,
 			),
@@ -331,7 +353,13 @@ export const server = {
 		accept: "form",
 		input: z.object({
 			phaseId: z.string().trim().min(1),
-			nextState: z.enum(["planned", "approved", "in_progress", "cancelled"]),
+			nextState: z.enum([
+				"planned",
+				"approved",
+				"in_progress",
+				"accepted",
+				"cancelled",
+			]),
 			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
