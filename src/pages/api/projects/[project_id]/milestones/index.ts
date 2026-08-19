@@ -21,6 +21,9 @@ export const POST: APIRoute = async (context) => {
 		.strictObject({
 			title: z.string().trim().min(1),
 			cost: z.number().nonnegative(),
+			upfrontAmount: z.number().nonnegative().nullable().optional(),
+			deliveryAmount: z.number().nonnegative().nullable().optional(),
+			acceptanceAmount: z.number().nonnegative().nullable().optional(),
 			currency: z.string().trim().length(3),
 			dueAt: z.coerce.date().optional(),
 		})

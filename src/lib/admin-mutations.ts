@@ -22,6 +22,88 @@ export const toSlug = (value: string) =>
 
 const publicId = () => crypto.randomUUID();
 
+type PhaseAmountInput = {
+	upfrontAmount?: number | null | undefined;
+	deliveryAmount?: number | null | undefined;
+	acceptanceAmount?: number | null | undefined;
+};
+
+const phaseAmountUnits = (amount: number) => {
+	if (!Number.isFinite(amount) || amount < 0) {
+		throw new DomainError(
+			"Validation",
+			"Phase amounts must be non-negative numbers.",
+		);
+	}
+
+	return Math.round(amount * 10_000);
+};
+
+const resolvePhaseAmounts = (
+	cost: number,
+	input: PhaseAmountInput,
+	defaultToAcceptance = false,
+) => {
+	const costUnits = phaseAmountUnits(cost);
+	const hasAmountInput =
+		input.upfrontAmount !== undefined ||
+		input.deliveryAmount !== undefined ||
+		input.acceptanceAmount !== undefined;
+
+	// Keep callers of the existing API compatible: omitted component amounts
+	// retain the legacy all-at-acceptance billing shape.
+	if (!hasAmountInput && defaultToAcceptance) {
+		return {
+			upfrontAmount: null,
+			deliveryAmount: null,
+			acceptanceAmount: costUnits / 10_000,
+		};
+	}
+
+	const amounts = {
+		upfrontAmount: input.upfrontAmount ?? null,
+		deliveryAmount: input.deliveryAmount ?? null,
+		acceptanceAmount: input.acceptanceAmount ?? null,
+	};
+	const presentAmounts = Object.values(amounts).filter(
+		(amount): amount is number => amount !== null,
+	);
+
+	if (presentAmounts.length === 0) {
+		throw new DomainError(
+			"Validation",
+			"At least one phase cost component is required.",
+		);
+	}
+
+	const amountUnits = presentAmounts.reduce(
+		(total, amount) => total + phaseAmountUnits(amount),
+		0,
+	);
+
+	if (amountUnits !== costUnits) {
+		throw new DomainError(
+			"Validation",
+			"Phase cost components must sum to the phase cost.",
+		);
+	}
+
+	return {
+		upfrontAmount:
+			amounts.upfrontAmount === null
+				? null
+				: phaseAmountUnits(amounts.upfrontAmount) / 10_000,
+		deliveryAmount:
+			amounts.deliveryAmount === null
+				? null
+				: phaseAmountUnits(amounts.deliveryAmount) / 10_000,
+		acceptanceAmount:
+			amounts.acceptanceAmount === null
+				? null
+				: phaseAmountUnits(amounts.acceptanceAmount) / 10_000,
+	};
+};
+
 const getOrganizationAdapter = async (auth: Auth) => {
 	type OrganizationAuthContext = Parameters<typeof getOrgAdapter>[0] & {
 		orgOptions?: Parameters<typeof getOrgAdapter>[1];
@@ -279,11 +361,15 @@ export const createPhase = async (
 		projectId: string;
 		title: string;
 		cost: number;
+		upfrontAmount?: number | null | undefined;
+		deliveryAmount?: number | null | undefined;
+		acceptanceAmount?: number | null | undefined;
 		currency: string;
 		dueAt?: Date | null | undefined;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
+	const amounts = resolvePhaseAmounts(input.cost, input, true);
 
 	return db.transaction(async (tx) => {
 		const [project] = await tx
@@ -310,6 +396,7 @@ export const createPhase = async (
 				projectId: project.id,
 				title: input.title.trim(),
 				cost: input.cost,
+				...amounts,
 				currency: input.currency.toUpperCase(),
 				state: "submitted",
 				dueAt: input.dueAt ?? null,
@@ -333,6 +420,78 @@ export const createPhase = async (
 		});
 
 		return rows[0];
+	});
+};
+
+export const updatePhaseAmounts = async (
+	db: Db,
+	actorId: string,
+	input: PhaseAmountInput & {
+		phaseId: string;
+		expectedVersion: number;
+	},
+) => {
+	await assertAdminUser(db, actorId);
+
+	return db.transaction(async (tx) => {
+		const [phase] = await tx
+			.select({
+				id: phases.id,
+				state: phases.state,
+				version: phases.version,
+				cost: phases.cost,
+			})
+			.from(phases)
+			.where(eq(phases.id, input.phaseId))
+			.for("update");
+
+		if (!phase) {
+			throw new DomainError("NotFound", "Phase not found.");
+		}
+
+		if (phase.version !== input.expectedVersion) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		if (
+			["approved", "in_progress", "delivered", "accepted"].includes(phase.state)
+		) {
+			throw new DomainError(
+				"InvalidTransition",
+				"Phase cost components are locked after approval.",
+			);
+		}
+
+		// The row lock makes the approval transition and this edit serialize;
+		// once approval wins, this guard rejects the amount change.
+		const amounts = resolvePhaseAmounts(phase.cost, input);
+		const rows = await tx
+			.update(phases)
+			.set({ ...amounts, version: sql`${phases.version} + 1` })
+			.where(
+				and(eq(phases.id, phase.id), eq(phases.version, input.expectedVersion)),
+			)
+			.returning({ id: phases.id });
+
+		if (!rows[0]) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		await insertEvent(tx, {
+			aggregateType: "phase",
+			aggregateId: phase.id,
+			aggregateVersion: input.expectedVersion + 1,
+			event: "amounts_updated",
+			actorId,
+		});
+
+		return { idempotent: false };
 	});
 };
 
