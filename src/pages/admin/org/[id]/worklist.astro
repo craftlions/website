@@ -139,6 +139,7 @@ const isUpfrontUnpaid = (phase: WorklistPhase) => {
 };
 const worklist = allPhases
 	.flatMap((phase): WorklistItem[] => {
+		const upfrontUnpaid = isUpfrontUnpaid(phase);
 		const overdueInvoices = phase.invoices.filter(
 			(invoice) =>
 				invoice.stripeStatus === "open" &&
@@ -151,6 +152,7 @@ const worklist = allPhases
 				kind: "Overdue",
 				phase,
 				invoice,
+				upfrontUnpaid,
 			}));
 		}
 
@@ -172,7 +174,7 @@ const worklist = allPhases
 					priority: 4,
 					kind: "In work",
 					phase,
-					upfrontUnpaid: isUpfrontUnpaid(phase),
+					upfrontUnpaid,
 				},
 			];
 		}
@@ -184,7 +186,7 @@ const worklist = allPhases
 					priority: 5,
 					kind: "Awaiting acceptance",
 					phase,
-					upfrontUnpaid: isUpfrontUnpaid(phase),
+					upfrontUnpaid,
 				},
 			];
 		}
@@ -196,7 +198,7 @@ const worklist = allPhases
 				kind: "Unpaid",
 				phase,
 				invoice,
-				upfrontUnpaid: isUpfrontUnpaid(phase),
+				upfrontUnpaid,
 			}));
 	})
 	.toSorted(
