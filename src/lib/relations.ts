@@ -70,13 +70,6 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.projects.id,
 			to: r.phases.projectId,
 		}),
-		events: r.many.events({
-			from: r.projects.id,
-			to: r.events.aggregateId,
-			where: {
-				aggregateType: "project",
-			},
-		}),
 	},
 	phases: {
 		project: r.one.projects({
@@ -87,13 +80,6 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.phases.id,
 			to: r.invoices.phaseId,
 		}),
-		events: r.many.events({
-			from: r.phases.id,
-			to: r.events.aggregateId,
-			where: {
-				aggregateType: "phase",
-			},
-		}),
 	},
 	invoices: {
 		organization: r.one.organization({
@@ -103,13 +89,6 @@ export const relations = defineRelations(schema, (r) => ({
 		phase: r.one.phases({
 			from: r.invoices.phaseId,
 			to: r.phases.id,
-		}),
-		events: r.many.events({
-			from: r.invoices.id,
-			to: r.events.aggregateId,
-			where: {
-				aggregateType: "invoice",
-			},
 		}),
 	},
 }));

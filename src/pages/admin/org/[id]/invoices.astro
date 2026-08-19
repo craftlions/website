@@ -10,6 +10,7 @@ import {
 	invoiceComponents,
 	isInvoiceComponentDue,
 } from "../../../../lib/phase-billing.ts";
+import { getPhaseEventTypes } from "../../../../lib/phase-events.ts";
 
 const { id } = Astro.params;
 
@@ -77,7 +78,6 @@ const [organizationData, projects, unattachedInvoices] = await Promise.all([
 							fetchedAt: true,
 						},
 					},
-					events: { columns: { event: true } },
 				},
 				orderBy: {
 					id: "asc",
@@ -115,12 +115,16 @@ const [organizationData, projects, unattachedInvoices] = await Promise.all([
 const allPhases = projects.flatMap((project) =>
 	project.phases.map((phase) => ({ ...phase, project })),
 );
+const phaseEventTypes = await getPhaseEventTypes(
+	Astro.locals.db,
+	allPhases.map((phase) => phase.id),
+);
 const componentTargets = allPhases.flatMap((phase) =>
 	invoiceComponents.flatMap((component) => {
 		const amount = phase[`${component}Amount`];
 		if (amount === null) return [];
 		const invoice = phase.invoices.find((row) => row.component === component);
-		const events = phase.events.map(({ event }) => event);
+		const events = phaseEventTypes.get(phase.id) ?? [];
 		return [{ ...phase, component, amount, invoice, events }];
 	}),
 );
