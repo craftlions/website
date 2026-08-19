@@ -386,6 +386,7 @@ export const server = {
 		accept: "form",
 		input: z.object({
 			phaseId: z.string().trim().min(1),
+			component: z.enum(["upfront", "delivery", "acceptance"]),
 			invoiceNumber: z.string().trim().min(1).max(80),
 			stripeId: z.string().trim().min(1).max(140),
 			stripePaymentPage: z.string().trim().pipe(z.url()),
@@ -427,6 +428,7 @@ export const server = {
 		input: z.object({
 			invoiceId: z.string().trim().min(1),
 			phaseId: z.string().trim().min(1),
+			component: z.enum(["upfront", "delivery", "acceptance"]),
 			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {

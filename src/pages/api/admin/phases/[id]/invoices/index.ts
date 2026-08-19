@@ -20,6 +20,7 @@ export const POST: APIRoute = async (context) => {
 
 	const validation = z
 		.strictObject({
+			component: z.enum(["upfront", "delivery", "acceptance"]),
 			invoiceNumber: z.string().trim().min(1).max(80),
 			stripeId: z.string().trim().min(1).max(140),
 			stripePaymentPage: z.string().trim().pipe(z.url()),
