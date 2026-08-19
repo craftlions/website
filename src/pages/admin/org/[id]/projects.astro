@@ -1,20 +1,14 @@
 ---
 export const prerender = false;
 
-import type { PhaseComponentItem } from "../../../../components/PhaseComponentBreakdown.astro";
 import { actions } from "astro:actions";
-import { and, eq, inArray } from "drizzle-orm";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import PhaseAmountCalculator from "../../../../components/PhaseAmountCalculator.astro";
 import PhaseComponentBreakdown from "../../../../components/PhaseComponentBreakdown.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
-import {
-	componentBillingStatus,
-	invoiceComponents,
-} from "../../../../lib/phase-billing";
-import { events } from "../../../../lib/schema.ts";
+import { buildPhaseComponents } from "../../../../lib/phase-billing";
 
 const { id } = Astro.params;
 
@@ -67,6 +61,11 @@ const projects = await Astro.locals.db.query.projects.findMany({
 						stripeStatus: true,
 					},
 				},
+				events: {
+					columns: {
+						event: true,
+					},
+				},
 			},
 			orderBy: {
 				id: "asc",
@@ -80,64 +79,20 @@ const projects = await Astro.locals.db.query.projects.findMany({
 		name: "asc",
 	},
 });
-const allPhaseIds = projects.flatMap((p) => p.phases.map((phase) => phase.id));
-const allPhaseEvents =
-	allPhaseIds.length > 0
-		? await Astro.locals.db
-				.select({ event: events.event, aggregateId: events.aggregateId })
-				.from(events)
-				.where(
-					and(
-						eq(events.aggregateType, "phase"),
-						inArray(events.aggregateId, allPhaseIds),
-					),
-				)
-		: [];
-const phaseEventMap = new Map<string, string[]>();
-for (const row of allPhaseEvents) {
-	const list = phaseEventMap.get(row.aggregateId) ?? [];
-	list.push(row.event);
-	phaseEventMap.set(row.aggregateId, list);
-}
-
 const projectsWithComponents = projects.map((project) => ({
 	...project,
-	phases: project.phases.map((phase) => {
-		const eventTypes = phaseEventMap.get(phase.id) ?? [];
-		const invoiceByComponent = new Map(
-			phase.invoices
-				.filter((inv) => inv.component !== null)
-				.map((inv) => [inv.component, inv]),
-		);
-		const components: PhaseComponentItem[] = invoiceComponents
-			.map((component) => {
-				const amount =
-					component === "upfront"
-						? phase.upfrontAmount
-						: component === "delivery"
-							? phase.deliveryAmount
-							: phase.acceptanceAmount;
-				return amount === null
-					? null
-					: {
-							component,
-							amount,
-							status: componentBillingStatus({
-								component,
-								events: eventTypes,
-								invoice: invoiceByComponent.get(component) ?? null,
-							}),
-						};
-			})
-			.filter((item): item is PhaseComponentItem => item !== null);
-		return { ...phase, components };
-	}),
+	phases: project.phases.map((phase) => ({
+		...phase,
+		components: buildPhaseComponents({
+			upfrontAmount: phase.upfrontAmount,
+			deliveryAmount: phase.deliveryAmount,
+			acceptanceAmount: phase.acceptanceAmount,
+			events: phase.events.map((e) => e.event),
+			invoices: phase.invoices,
+		}),
+	})),
 }));
 
-const currencyFormatter = new Intl.NumberFormat("de-DE", {
-	style: "currency",
-	currency: "EUR",
-});
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 ---
 
@@ -214,7 +169,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 										<td class="px-4 py-3">{phase.dueAt ? dateFormatter.format(phase.dueAt) : "-"}</td>
 										<td class="px-4 py-3 text-right tabular-nums">
 										<div class="grid justify-items-end gap-1">
-											<span>{currencyFormatter.format(phase.cost)}</span>
+											<span>{new Intl.NumberFormat("de-DE", { style: "currency", currency: phase.currency }).format(phase.cost)}</span>
 											<PhaseComponentBreakdown items={phase.components} currency={phase.currency} />
 										</div>
 									</td>

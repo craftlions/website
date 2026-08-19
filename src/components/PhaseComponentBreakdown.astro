@@ -1,15 +1,9 @@
 ---
 import type {
 	ComponentBillingStatus,
-	InvoiceComponent,
+	PhaseComponentItem,
 } from "../lib/phase-billing";
 import Badge from "./Badge.astro";
-
-export interface PhaseComponentItem {
-	component: InvoiceComponent;
-	amount: number;
-	status: ComponentBillingStatus;
-}
 
 interface Props {
 	items: PhaseComponentItem[];
