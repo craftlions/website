@@ -1,8 +1,10 @@
 ---
 import type { phaseSelectType } from "../lib/schema";
+import type { PhaseComponentItem } from "./PhaseComponentBreakdown.astro";
 import { actions } from "astro:actions";
 import Badge from "./Badge.astro";
 import Button from "./Button.astro";
+import PhaseComponentBreakdown from "./PhaseComponentBreakdown.astro";
 
 interface Phase {
 	publicId: phaseSelectType["publicId"];
@@ -15,6 +17,7 @@ interface Phase {
 	externalUrl: phaseSelectType["externalUrl"];
 	deliveryState: phaseSelectType["deliveryState"];
 	deliveryUrl: phaseSelectType["deliveryUrl"];
+	components?: PhaseComponentItem[];
 }
 
 interface Props {
@@ -91,11 +94,14 @@ const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 										? dateFormatter.format(phase.dueAt)
 										: "Not scheduled"}
 								</td>
-								<td class="whitespace-nowrap px-4 py-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
-									{new Intl.NumberFormat("de-DE", {
-										style: "currency",
-										currency: phase.currency,
-									}).format(phase.cost)}
+								<td class="px-4 py-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
+									<div class="grid justify-items-end gap-1">
+										<span>{new Intl.NumberFormat("de-DE", {
+											style: "currency",
+											currency: phase.currency,
+										}).format(phase.cost)}</span>
+										{phase.components && <PhaseComponentBreakdown items={phase.components} currency={phase.currency} />}
+									</div>
 								</td>
 								<td class="px-4 py-4">
 									<Badge type={phaseStateToBadgeType(phase.state)}>

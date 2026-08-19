@@ -7,6 +7,7 @@ import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
+import { componentBillingStatus } from "../../../../lib/phase-billing";
 import { events } from "../../../../lib/schema.ts";
 import { getUuidV7Date } from "../../../../lib/uuid.ts";
 
@@ -40,6 +41,7 @@ const projects = await Astro.locals.db.query.projects.findMany({
 				id: true,
 				title: true,
 				cost: true,
+				upfrontAmount: true,
 				currency: true,
 				state: true,
 				version: true,
@@ -48,6 +50,7 @@ const projects = await Astro.locals.db.query.projects.findMany({
 				invoices: {
 					columns: {
 						id: true,
+						component: true,
 						total: true,
 						stripeStatus: true,
 						stripeDueAt: true,
@@ -75,6 +78,7 @@ const phaseEvents =
 		? await Astro.locals.db
 				.select({
 					id: events.id,
+					event: events.event,
 					aggregateId: events.aggregateId,
 				})
 				.from(events)
@@ -87,12 +91,17 @@ const phaseEvents =
 		: [];
 const latestPhaseEventIds = new Map<string, string>();
 
+const phaseEventTypes = new Map<string, string[]>();
 for (const event of phaseEvents) {
 	const current = latestPhaseEventIds.get(event.aggregateId);
 
 	if (!current || event.id > current) {
 		latestPhaseEventIds.set(event.aggregateId, event.id);
 	}
+
+	const list = phaseEventTypes.get(event.aggregateId) ?? [];
+	list.push(event.event);
+	phaseEventTypes.set(event.aggregateId, list);
 }
 
 const now = new Date();
@@ -112,6 +121,21 @@ type WorklistItem = {
 	kind: string;
 	phase: WorklistPhase;
 	invoice?: WorklistInvoice;
+	upfrontUnpaid?: boolean;
+};
+
+const isUpfrontUnpaid = (phase: WorklistPhase) => {
+	if (phase.upfrontAmount === null) return false;
+	const eventTypes = phaseEventTypes.get(phase.id) ?? [];
+	const upfrontInvoice = phase.invoices.find(
+		(inv) => inv.component === "upfront",
+	);
+	const status = componentBillingStatus({
+		component: "upfront",
+		events: eventTypes,
+		invoice: upfrontInvoice ?? null,
+	});
+	return status !== "paid";
 };
 const worklist = allPhases
 	.flatMap((phase): WorklistItem[] => {
@@ -143,17 +167,37 @@ const worklist = allPhases
 		}
 
 		if (phase.state === "in_progress") {
-			return [{ priority: 4, kind: "In work", phase }];
+			return [
+				{
+					priority: 4,
+					kind: "In work",
+					phase,
+					upfrontUnpaid: isUpfrontUnpaid(phase),
+				},
+			];
 		}
 
 		// Billing derives from each invoice's Stripe status (D-phase-billing-truth).
 		if (phase.state === "delivered") {
-			return [{ priority: 5, kind: "Awaiting acceptance", phase }];
+			return [
+				{
+					priority: 5,
+					kind: "Awaiting acceptance",
+					phase,
+					upfrontUnpaid: isUpfrontUnpaid(phase),
+				},
+			];
 		}
 
 		return phase.invoices
 			.filter((invoice) => invoice.stripeStatus === "open")
-			.map((invoice) => ({ priority: 6, kind: "Unpaid", phase, invoice }));
+			.map((invoice) => ({
+				priority: 6,
+				kind: "Unpaid",
+				phase,
+				invoice,
+				upfrontUnpaid: isUpfrontUnpaid(phase),
+			}));
 	})
 	.toSorted(
 		(a, b) =>
@@ -184,7 +228,10 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 			{worklist.length > 0 ? worklist.map((item) => (
 				<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-4 md:grid-cols-subgrid md:items-center">
 					<Badge type={item.priority === 0 ? "error" : "info"}>{item.kind}</Badge>
-					<h3 class="font-medium">{item.phase.project.name} · {item.phase.title}</h3>
+					<div class="grid gap-1 md:place-items-start">
+						<h3 class="font-medium">{item.phase.project.name} · {item.phase.title}</h3>
+						{item.upfrontUnpaid && <Badge type="error">unpaid upfront</Badge>}
+					</div>
 					<p class="text-sm tabular-nums md:text-right">{currencyFormatter.format(item.invoice?.total ?? item.phase.cost)}</p>
 					<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
 						<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{daysInPhaseState(item.phase.id)}d</p>
