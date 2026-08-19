@@ -44,7 +44,7 @@ const organizations = await Astro.locals.db.query.organization.findMany({
 						dueAt: true,
 					},
 					with: {
-						invoice: {
+						invoices: {
 							columns: {
 								id: true,
 								invoiceNumber: true,
@@ -94,26 +94,27 @@ const queue = organizations
 		organization.projects.flatMap((project) =>
 			project.phases.flatMap((phase) => {
 				const link = `/admin/org/${organization.id}`;
+				const overdueInvoices = phase.invoices.filter(
+					(invoice) =>
+						invoice.stripeStatus === "open" &&
+						invoice.stripeDueAt &&
+						invoice.stripeDueAt < now,
+				);
 
-				if (
-					phase.invoice?.stripeStatus === "open" &&
-					phase.invoice.stripeDueAt &&
-					phase.invoice.stripeDueAt < now
-				) {
-					return [
-						{
-							priority: 0,
-							kind: "Overdue",
-							client: organization.name,
-							label: `${project.name} · ${phase.invoice.invoiceNumber}`,
-							amount: phase.invoice.total,
-							days: Math.floor(
-								(now.getTime() - phase.invoice.stripeDueAt.getTime()) /
-									86400000,
-							),
-							link,
-						},
-					];
+				if (overdueInvoices.length > 0) {
+					return overdueInvoices.map((invoice) => ({
+						priority: 0,
+						kind: "Overdue",
+						client: organization.name,
+						label: `${project.name} · ${invoice.invoiceNumber}`,
+						amount: invoice.total,
+						days: Math.floor(
+							(now.getTime() -
+								(invoice.stripeDueAt?.getTime() ?? now.getTime())) /
+								86400000,
+						),
+						link,
+					}));
 				}
 
 				if (phase.state === "submitted") {
@@ -163,18 +164,19 @@ const queue = organizations
 					];
 				}
 
-				if (phase.invoice?.stripeStatus === "open") {
-					return [
-						{
-							priority: 3,
-							kind: "Unpaid",
-							client: organization.name,
-							label: `${project.name} · ${phase.invoice?.invoiceNumber ?? phase.title}`,
-							amount: phase.invoice?.total ?? phase.cost,
-							days: daysSince(phase.invoice?.id ?? phase.id),
-							link,
-						},
-					];
+				const openInvoices = phase.invoices.filter(
+					(invoice) => invoice.stripeStatus === "open",
+				);
+				if (openInvoices.length > 0) {
+					return openInvoices.map((invoice) => ({
+						priority: 3,
+						kind: "Unpaid",
+						client: organization.name,
+						label: `${project.name} · ${invoice.invoiceNumber}`,
+						amount: invoice.total,
+						days: daysSince(invoice.id),
+						link,
+					}));
 				}
 
 				return [];
@@ -190,8 +192,9 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 	const totalProjects = organization.projects.length;
 	const openInvoices = organization.projects
 		.flatMap((project) => project.phases)
-		.filter((phase) => phase.invoice?.stripeStatus === "open")
-		.reduce((total, phase) => total + (phase.invoice?.total ?? phase.cost), 0);
+		.flatMap((phase) => phase.invoices)
+		.filter((invoice) => invoice.stripeStatus === "open")
+		.reduce((total, invoice) => total + invoice.total, 0);
 	const planned = organization.projects
 		.flatMap((project) => project.phases)
 		.filter((phase) => phase.state === "planned").length;
@@ -200,11 +203,12 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 		.filter((phase) => phase.state === "submitted").length;
 	const overdue = organization.projects
 		.flatMap((project) => project.phases)
+		.flatMap((phase) => phase.invoices)
 		.filter(
-			(phase) =>
-				phase.invoice?.stripeStatus === "open" &&
-				phase.invoice.stripeDueAt &&
-				phase.invoice.stripeDueAt < now,
+			(invoice) =>
+				invoice.stripeStatus === "open" &&
+				invoice.stripeDueAt &&
+				invoice.stripeDueAt < now,
 		).length;
 	// S-004 R1/R5: budget usage is the shared module's current-year percentage
 	// (D-budget-consumption-definition, uncapped); null when there is no

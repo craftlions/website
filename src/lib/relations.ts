@@ -83,12 +83,6 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.phases.projectId,
 			to: r.projects.id,
 		}),
-		invoice: r.one.invoices({
-			from: r.phases.id,
-			to: r.invoices.phaseId,
-		}),
-		// Temporary compatibility relation for the pre-S-005 read surfaces. New
-		// component-aware code uses `invoices`; issue #287 replaces `invoice`.
 		invoices: r.many.invoices({
 			from: r.phases.id,
 			to: r.invoices.phaseId,

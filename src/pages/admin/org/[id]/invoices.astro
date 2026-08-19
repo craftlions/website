@@ -129,11 +129,17 @@ const attachableTargets = componentTargets.filter(
 		!target.invoice && isInvoiceComponentDue(target.component, target.events),
 );
 const recordableTargets = attachableTargets;
+const deliveryPhaseIds = new Set<string>();
 const recordedTargets = componentTargets
 	.filter((target) => target.invoice)
-	.toSorted((a, b) => (b.invoice?.id ?? "").localeCompare(a.invoice?.id ?? ""));
+	.toSorted((a, b) => (b.invoice?.id ?? "").localeCompare(a.invoice?.id ?? ""))
+	.map((target) => {
+		const showDelivery = !deliveryPhaseIds.has(target.id);
+		deliveryPhaseIds.add(target.id);
+		return { ...target, showDelivery };
+	});
 const targetValue = (target: (typeof componentTargets)[number]) =>
-	`${target.id}:${target.component}`;
+	`${target.id}:${target.component}:${target.version}`;
 const suggestedTarget = (invoice: (typeof unattachedInvoices)[number]) =>
 	attachableTargets
 		.filter((target) => target.currency === invoice.currency)
@@ -145,10 +151,10 @@ const suggestedTargetValue = (invoice: (typeof unattachedInvoices)[number]) => {
 	const target = suggestedTarget(invoice);
 	return target ? targetValue(target) : "";
 };
-const currencyFormatter = new Intl.NumberFormat("de-DE", {
-	style: "currency",
-	currency: "EUR",
-});
+const formatCurrency = (amount: number, currency: string) =>
+	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
+		amount,
+	);
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 ---
 
@@ -193,15 +199,12 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 								<td class="px-4 py-3 text-right tabular-nums">{new Intl.NumberFormat("de-DE", { style: "currency", currency: invoice.currency }).format(invoice.total)}</td>
 								<td class="px-4 py-3">
 									{attachableTargets.some((target) => target.currency === invoice.currency) ? (
-										<form method="POST" action={actions.attachInvoiceToPhase} class="grid gap-2" data-attach-invoice>
+										<form method="POST" action={actions.attachInvoiceToPhase} class="grid gap-2">
 											<input type="hidden" name="invoiceId" value={invoice.id} />
-											<input type="hidden" name="phaseId" value={suggestedTarget(invoice)?.id ?? ""} />
-											<input type="hidden" name="component" value={suggestedTarget(invoice)?.component ?? ""} />
-											<input type="hidden" name="expectedVersion" value={suggestedTarget(invoice)?.version ?? ""} />
 											<div class="grid grid-cols-[1fr_auto] items-center gap-2">
 												<select name="target" required class="max-w-96 border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300">
 													{attachableTargets.filter((target) => target.currency === invoice.currency).map((target) => (
-														<option value={targetValue(target)} data-phase-id={target.id} data-component={target.component} data-version={target.version} selected={targetValue(target) === suggestedTargetValue(invoice)}>{target.project.name} · {target.title} · {target.component} · {currencyFormatter.format(target.amount)}{targetValue(target) === suggestedTargetValue(invoice) ? " (suggested)" : ""}</option>
+														<option value={targetValue(target)} selected={targetValue(target) === suggestedTargetValue(invoice)}>{target.project.name} · {target.title} · {target.component} · {formatCurrency(target.amount, target.currency)}{targetValue(target) === suggestedTargetValue(invoice) ? " (suggested)" : ""}</option>
 													))}
 												</select>
 												<Button type="submit">Attach</Button>
@@ -230,7 +233,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 							<label class="grid gap-1 text-sm"><span class="font-medium">Invoice number</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="invoiceNumber" required /></label>
 							<label class="grid gap-1 text-sm"><span class="font-medium">Stripe id</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="stripeId" required /></label>
 							<label class="grid gap-1 text-sm"><span class="font-medium">Payment URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="stripePaymentPage" type="url" required /></label>
-							<label class="grid gap-1 text-sm"><span class="font-medium">Total</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="total" type="number" min="0" step="0.0001" value={target.amount} data-component-amount={target.amount} required /><span class="text-xs text-amber-700 dark:text-amber-300" data-amount-warning hidden>Total differs from the gross component amount of {currencyFormatter.format(target.amount)}. Recording remains available.</span></label>
+							<label class="grid gap-1 text-sm"><span class="font-medium">Total</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="total" type="number" min="0" step="0.0001" value={target.amount} data-component-amount={target.amount} required /><span class="text-xs text-amber-700 dark:text-amber-300" data-amount-warning hidden>Total differs from the gross component amount of {formatCurrency(target.amount, target.currency)}. Recording remains available.</span></label>
 							<Button type="submit">Record</Button>
 						</form>
 					))}
@@ -271,9 +274,9 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 									<span class="text-neutral-500 dark:text-neutral-400">No invoice</span>
 								)}
 							</td>
-							<td class="px-4 py-3 text-right tabular-nums">{target.invoice ? <>{currencyFormatter.format(target.invoice.total)}{target.invoice.total !== target.amount && <span class="block text-xs text-amber-700 dark:text-amber-300">Expected {currencyFormatter.format(target.amount)}</span>}</> : "—"}</td>
+							<td class="px-4 py-3 text-right tabular-nums">{target.invoice ? <>{formatCurrency(target.invoice.total, target.currency)}{target.invoice.total !== target.amount && <span class="block text-xs text-amber-700 dark:text-amber-300">Expected {formatCurrency(target.amount, target.currency)}</span>}</> : "—"}</td>
 							<td class="px-4 py-3">
-								<div class="grid gap-2">
+								{target.showDelivery && <div class="grid gap-2">
 									<span class="text-xs uppercase text-neutral-500 dark:text-neutral-400">{target.deliveryState === "url" ? target.deliveryUrl : target.deliveryState === "none" ? "No delivery" : "Not recorded"}</span>
 									{(target.state === "delivered" || target.state === "accepted") && (
 										<form method="POST" action={actions.updatePhaseDelivery} class="grid gap-2">
@@ -284,7 +287,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 										<Button type="submit">Update Delivery</Button>
 									</form>
 									)}
-								</div>
+								</div>}
 							</td>
 							<td class="px-4 py-3">
 								<div class="grid grid-flow-col justify-start gap-2">
@@ -304,37 +307,6 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 </AdminOrgShell>
 
 <script>
-	for (const form of document.querySelectorAll<HTMLFormElement>(
-		"[data-attach-invoice]",
-	)) {
-		const select = form.querySelector('select[name="target"]');
-		const phaseId = form.querySelector('input[name="phaseId"]');
-		const component = form.querySelector('input[name="component"]');
-		const expectedVersion = form.querySelector('input[name="expectedVersion"]');
-
-		if (
-			!(select instanceof HTMLSelectElement) ||
-			!(phaseId instanceof HTMLInputElement) ||
-			!(component instanceof HTMLInputElement) ||
-			!(expectedVersion instanceof HTMLInputElement)
-		) {
-			continue;
-		}
-
-		const syncExpectedVersion = () => {
-			const option = select.selectedOptions[0];
-
-			if (option) {
-				phaseId.value = option.dataset.phaseId ?? "";
-				component.value = option.dataset.component ?? "";
-				expectedVersion.value = option.dataset.version ?? "";
-			}
-		};
-
-		syncExpectedVersion();
-		select.addEventListener("change", syncExpectedVersion);
-	}
-
 	for (const input of document.querySelectorAll("[data-component-amount]")) {
 		if (!(input instanceof HTMLInputElement)) continue;
 		const warning = input.parentElement?.querySelector("[data-amount-warning]");
