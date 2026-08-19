@@ -4,6 +4,13 @@
   "compatibility_date": "2026-04-08",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/worker.ts",
+  "workflows": [
+    {
+      "name": "notifications",
+      "binding": "NOTIFICATION_WORKFLOW",
+      "class_name": "NotificationWorkflow"
+    }
+  ],
   "name": "craftlions-website",
   "cache": {
     "enabled": true

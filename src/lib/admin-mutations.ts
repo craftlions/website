@@ -1,5 +1,6 @@
 import type { Auth } from "./auth.ts";
 import type { Db } from "./database.ts";
+import { env } from "cloudflare:workers";
 import { getOrgAdapter } from "better-auth/plugins/organization";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { resolveDelivery } from "./delivery.ts";
@@ -352,8 +353,8 @@ const transitionPhase = async (
 	from: readonly string[],
 	event: string,
 	invalidTransitionMessage: string,
-) =>
-	db.transaction(async (tx) => {
+) => {
+	const result = await db.transaction(async (tx) => {
 		const [phase] = await tx
 			.select({
 				id: phases.id,
@@ -412,6 +413,27 @@ const transitionPhase = async (
 
 		return { idempotent: false };
 	});
+
+	if (nextState === "planned" && !result.idempotent) {
+		try {
+			await env.NOTIFICATION_WORKFLOW.create({
+				id: `phase-approval-${phaseId}`,
+				params: { kind: "phase_approval", aggregateId: phaseId },
+			});
+		} catch (error) {
+			console.error(
+				JSON.stringify({
+					event: "phase_approval_dispatch_failed",
+					workflowId: `phase-approval-${phaseId}`,
+					phaseId,
+					error: error instanceof Error ? error.message : String(error),
+				}),
+			);
+		}
+	}
+
+	return result;
+};
 
 export const transitionPhaseAsAdmin = async (
 	db: Db,
