@@ -272,8 +272,8 @@ export const phaseState = t.pgEnum("phase_state", [
 	"planned",
 	"approved",
 	"in_progress",
-	"invoiced",
-	"paid",
+	"delivered",
+	"accepted",
 	"cancelled",
 ]);
 

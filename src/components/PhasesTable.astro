@@ -31,9 +31,9 @@ const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 		case "planned":
 		case "approved":
 		case "in_progress":
-		case "invoiced":
+		case "delivered":
 			return "info";
-		case "paid":
+		case "accepted":
 			return "success";
 		case "cancelled":
 			return "error";
