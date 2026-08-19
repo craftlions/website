@@ -1,9 +1,4 @@
-- Add GitHub Linking to Database
-- Add Archived State & Filter
-- TODO: Fix phase transition race — `transitionPhaseAsAdmin` reads the state and updates it in separate steps without locking, so double submits record duplicate transitions/events (seen: two `started` events on one phase). Guard the `UPDATE` with the expected from-state and reject when no row matches.
-
 - (Notifications e.g. Mail, Slack, Webhook)
-- Periodic Stripe invoice sync — list invoices per customer on a schedule, upsert stripe status into the database, and flag invoices that have no matching phase (replaces the per-invoice on-demand refresh, which only covers `invoiced`-state phases)
 - Self-service
   - API
     - Projects
