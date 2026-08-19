@@ -1,3 +1,5 @@
+> Frozen by /to-issues
+
 # S-005 — Milestone phase billing
 
 **Goal** — Split each phase's cost into upfront / delivery / acceptance components billed at their milestones, reaching [O-005](../outcomes/O-005-milestone-phase-billing.md) (revenue follows milestones) under [D-phase-billing-truth](../decisions/D-phase-billing-truth.md) (derived billing, work-only lifecycle) and [D-phase-acceptance](../decisions/D-phase-acceptance.md) (explicit acceptance, reminder mail).
