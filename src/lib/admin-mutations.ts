@@ -151,21 +151,18 @@ const insertEvent = async (
 	}
 };
 
-export const approvePhaseAsClient = async (
+const getAuthorizedClientPhaseId = async (
 	db: Db,
 	actorId: string,
-	input: {
-		phasePublicId: string;
-		event: "approved" | "declined";
-		expectedVersion: number;
-	},
+	phasePublicId: string,
+	forbiddenMessage: string,
 ) => {
 	const phase = await db.query.phases.findFirst({
 		columns: { id: true },
 		with: {
 			project: { columns: { organizationId: true } },
 		},
-		where: { publicId: input.phasePublicId },
+		where: { publicId: phasePublicId },
 	});
 
 	if (!phase?.project) {
@@ -181,16 +178,32 @@ export const approvePhaseAsClient = async (
 	});
 
 	if (!membership || !["owner", "admin"].includes(membership.role)) {
-		throw new DomainError(
-			"Forbidden",
-			"Only organization owners can approve or decline phases.",
-		);
+		throw new DomainError("Forbidden", forbiddenMessage);
 	}
+
+	return phase.id;
+};
+
+export const approvePhaseAsClient = async (
+	db: Db,
+	actorId: string,
+	input: {
+		phasePublicId: string;
+		event: "approved" | "declined";
+		expectedVersion: number;
+	},
+) => {
+	const phaseId = await getAuthorizedClientPhaseId(
+		db,
+		actorId,
+		input.phasePublicId,
+		"Only organization owners can approve or decline phases.",
+	);
 
 	return transitionPhase(
 		db,
 		actorId,
-		phase.id,
+		phaseId,
 		input.expectedVersion,
 		input.event === "approved" ? "approved" : "cancelled",
 		["planned"],
@@ -207,37 +220,17 @@ export const acceptPhaseAsClient = async (
 		expectedVersion: number;
 	},
 ) => {
-	const phase = await db.query.phases.findFirst({
-		columns: { id: true },
-		with: {
-			project: { columns: { organizationId: true } },
-		},
-		where: { publicId: input.phasePublicId },
-	});
-
-	if (!phase?.project) {
-		throw new DomainError("NotFound", "Phase not found.");
-	}
-
-	const membership = await db.query.member.findFirst({
-		columns: { role: true },
-		where: {
-			userId: actorId,
-			organizationId: phase.project.organizationId,
-		},
-	});
-
-	if (!membership || !["owner", "admin"].includes(membership.role)) {
-		throw new DomainError(
-			"Forbidden",
-			"Only organization owners can accept phases.",
-		);
-	}
+	const phaseId = await getAuthorizedClientPhaseId(
+		db,
+		actorId,
+		input.phasePublicId,
+		"Only organization owners or admins can accept phases.",
+	);
 
 	return transitionPhase(
 		db,
 		actorId,
-		phase.id,
+		phaseId,
 		input.expectedVersion,
 		"accepted",
 		["delivered"],
