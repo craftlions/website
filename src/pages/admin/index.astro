@@ -96,7 +96,6 @@ const queue = organizations
 				const link = `/admin/org/${organization.id}`;
 
 				if (
-					phase.state === "invoiced" &&
 					phase.invoice?.stripeStatus === "open" &&
 					phase.invoice.stripeDueAt &&
 					phase.invoice.stripeDueAt < now
@@ -145,7 +144,7 @@ const queue = organizations
 					];
 				}
 
-				if (phase.state === "invoiced") {
+				if (phase.invoice) {
 					return [
 						{
 							priority: 3,
@@ -154,6 +153,20 @@ const queue = organizations
 							label: `${project.name} · ${phase.invoice?.invoiceNumber ?? phase.title}`,
 							amount: phase.invoice?.total ?? phase.cost,
 							days: daysSince(phase.invoice?.id ?? phase.id),
+							link,
+						},
+					];
+				}
+
+				if (phase.state === "delivered") {
+					return [
+						{
+							priority: 4,
+							kind: "Awaiting acceptance",
+							client: organization.name,
+							label: `${project.name} · ${phase.title}`,
+							amount: phase.cost,
+							days: daysSince(phase.id),
 							link,
 						},
 					];
@@ -172,7 +185,7 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 	const totalProjects = organization.projects.length;
 	const openInvoices = organization.projects
 		.flatMap((project) => project.phases)
-		.filter((phase) => phase.state === "invoiced")
+		.filter((phase) => phase.invoice)
 		.reduce((total, phase) => total + (phase.invoice?.total ?? phase.cost), 0);
 	const planned = organization.projects
 		.flatMap((project) => project.phases)
@@ -184,7 +197,6 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 		.flatMap((project) => project.phases)
 		.filter(
 			(phase) =>
-				phase.state === "invoiced" &&
 				phase.invoice?.stripeStatus === "open" &&
 				phase.invoice.stripeDueAt &&
 				phase.invoice.stripeDueAt < now,

@@ -45,12 +45,7 @@ const [organization] = await Astro.locals.db
 				.from(phases)
 				.innerJoin(projects, eq(phases.projectId, projects.id))
 				.innerJoin(invoices, eq(invoices.phaseId, phases.id))
-				.where(
-					and(
-						eq(projects.organizationId, organizationTable.id),
-						eq(phases.state, "invoiced"),
-					),
-				),
+				.where(and(eq(projects.organizationId, organizationTable.id))),
 		),
 		activeProjectCount: scalar(
 			Astro.locals.db
@@ -80,7 +75,7 @@ const [organization] = await Astro.locals.db
 							"planned",
 							"approved",
 							"in_progress",
-							"invoiced",
+							"delivered",
 						]),
 					),
 				),

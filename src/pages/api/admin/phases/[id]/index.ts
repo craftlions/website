@@ -19,13 +19,7 @@ export const PATCH: APIRoute = async (context) => {
 
 	const validation = z
 		.strictObject({
-			nextState: z.enum([
-				"planned",
-				"approved",
-				"in_progress",
-				"cancelled",
-				"paid",
-			]),
+			nextState: z.enum(["planned", "approved", "in_progress", "cancelled"]),
 			expectedVersion: z.number().int().nonnegative(),
 		})
 		.safeParse(await context.request.json());

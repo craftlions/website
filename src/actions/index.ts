@@ -11,6 +11,7 @@ import {
 	createProject,
 	hardDeleteOrganization,
 	onboardOrganization,
+	recordDelivery,
 	recordInvoice,
 	removeNeverLoggedInUser,
 	removeOrganizationMember,
@@ -307,13 +308,7 @@ export const server = {
 		accept: "form",
 		input: z.object({
 			phaseId: z.string().trim().min(1),
-			nextState: z.enum([
-				"planned",
-				"approved",
-				"in_progress",
-				"cancelled",
-				"paid",
-			]),
+			nextState: z.enum(["planned", "approved", "in_progress", "cancelled"]),
 			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
@@ -321,20 +316,31 @@ export const server = {
 			return { success: true };
 		}),
 	}),
-	recordInvoice: defineAction({
+	recordDelivery: defineAction({
 		accept: "form",
 		input: z
 			.object({
 				phaseId: z.string().trim().min(1),
-				invoiceNumber: z.string().trim().min(1).max(80),
-				stripeId: z.string().trim().min(1).max(140),
-				stripePaymentPage: z.string().trim().pipe(z.url()),
-				total: z.coerce.number().nonnegative(),
 				expectedVersion: z.coerce.number().int().nonnegative(),
 				deliveryChoice: deliveryChoiceSchema,
 				deliveryUrl: deliveryUrlSchema,
 			})
 			.superRefine(deliveryPairingIssue),
+		handler: adminHandler(async (input, context, actorId) => {
+			await recordDelivery(context.locals.db, actorId, input);
+			return { success: true };
+		}),
+	}),
+	recordInvoice: defineAction({
+		accept: "form",
+		input: z.object({
+			phaseId: z.string().trim().min(1),
+			invoiceNumber: z.string().trim().min(1).max(80),
+			stripeId: z.string().trim().min(1).max(140),
+			stripePaymentPage: z.string().trim().pipe(z.url()),
+			total: z.coerce.number().nonnegative(),
+			expectedVersion: z.coerce.number().int().nonnegative(),
+		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await recordInvoice(context.locals.db, actorId, {
 				...input,
@@ -346,11 +352,10 @@ export const server = {
 	refreshStripeInvoice: defineAction({
 		accept: "form",
 		input: z.object({ invoiceId: z.string().trim().min(1) }),
-		handler: adminHandler(async (input, context, actorId) => {
+		handler: adminHandler(async (input, context) => {
 			await refreshStripeInvoice(context.locals.db, {
 				invoiceId: input.invoiceId,
 				stripeKey: env.STRIPE_SECRET_KEY,
-				actorId,
 			});
 			return { success: true };
 		}),
@@ -368,15 +373,11 @@ export const server = {
 	}),
 	attachInvoiceToPhase: defineAction({
 		accept: "form",
-		input: z
-			.object({
-				invoiceId: z.string().trim().min(1),
-				phaseId: z.string().trim().min(1),
-				expectedVersion: z.coerce.number().int().nonnegative(),
-				deliveryChoice: deliveryChoiceSchema,
-				deliveryUrl: deliveryUrlSchema,
-			})
-			.superRefine(deliveryPairingIssue),
+		input: z.object({
+			invoiceId: z.string().trim().min(1),
+			phaseId: z.string().trim().min(1),
+			expectedVersion: z.coerce.number().int().nonnegative(),
+		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await attachInvoiceToPhase(context.locals.db, actorId, input);
 			return { success: true };

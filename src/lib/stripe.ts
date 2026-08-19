@@ -1,7 +1,7 @@
 import type { Db } from "./database.ts";
-import { and, eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { assertAdminUser, DomainError } from "./domain.ts";
-import { events, invoices, phases } from "./schema.ts";
+import { invoices } from "./schema.ts";
 
 type StripeTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -180,72 +180,15 @@ export const persistStripeInvoiceSnapshot = async (
 		});
 };
 
-const confirmPaidPhase = async (
-	tx: StripeTransaction,
-	input: { invoiceId: string; actorId: string },
-) => {
-	const invoice = await tx.query.invoices.findFirst({
-		columns: { phaseId: true },
-		where: { id: input.invoiceId },
-	});
-
-	if (!invoice?.phaseId) {
-		return;
-	}
-
-	const [phase] = await tx
-		.select({ id: phases.id, state: phases.state, version: phases.version })
-		.from(phases)
-		.where(eq(phases.id, invoice.phaseId))
-		.for("update");
-
-	if (!phase) {
-		return;
-	}
-
-	if (phase.state !== "invoiced") {
-		return;
-	}
-
-	const rows = await tx
-		.update(phases)
-		.set({ state: "paid", version: sql`${phases.version} + 1` })
-		.where(
-			and(
-				eq(phases.id, phase.id),
-				eq(phases.state, "invoiced"),
-				eq(phases.version, phase.version),
-			),
-		)
-		.returning({ id: phases.id, version: phases.version });
-
-	if (!rows[0]) {
-		return;
-	}
-
-	await tx
-		.insert(events)
-		.values({
-			publicId: crypto.randomUUID(),
-			aggregateType: "phase",
-			aggregateId: rows[0].id,
-			aggregateVersion: rows[0].version,
-			event: "paid",
-			actorType: "user",
-			actorId: input.actorId,
-		})
-		.onConflictDoNothing();
-};
-
 export const refreshStripeInvoice = async (
 	db: Db,
-	input: { invoiceId: string; stripeKey: string; actorId: string },
+	input: { invoiceId: string; stripeKey: string },
 ) => {
 	const invoice = await db.query.invoices.findFirst({
 		columns: { id: true, stripeId: true, total: true },
 		with: {
 			phase: {
-				columns: { currency: true, state: true },
+				columns: { currency: true },
 			},
 		},
 		where: { id: input.invoiceId },
@@ -253,13 +196,6 @@ export const refreshStripeInvoice = async (
 
 	if (!invoice?.phase) {
 		throw new DomainError("NotFound", "Invoice not found.");
-	}
-
-	if (invoice.phase.state !== "invoiced") {
-		throw new DomainError(
-			"InvalidTransition",
-			"Only invoiced-phase invoices can be refreshed.",
-		);
 	}
 
 	const data = await fetchStripeInvoice({
@@ -296,13 +232,6 @@ export const refreshStripeInvoice = async (
 			invoiceId: invoice.id,
 			snapshot,
 		});
-
-		if (snapshot.status === "paid") {
-			await confirmPaidPhase(tx, {
-				invoiceId: invoice.id,
-				actorId: input.actorId,
-			});
-		}
 	});
 };
 
@@ -366,22 +295,6 @@ export const importStripeInvoices = async (
 				stripeInvoice: item,
 				snapshot,
 			});
-
-			if (snapshot.status !== "paid") {
-				return;
-			}
-
-			const imported = await tx.query.invoices.findFirst({
-				columns: { id: true },
-				where: { stripeId: item.id },
-			});
-
-			if (imported) {
-				await confirmPaidPhase(tx, {
-					invoiceId: imported.id,
-					actorId,
-				});
-			}
 		});
 	}
 };

@@ -108,7 +108,6 @@ const daysInPhaseState = (phaseId: string) =>
 const worklist = allPhases
 	.flatMap((phase) => {
 		if (
-			phase.state === "invoiced" &&
 			phase.invoice?.stripeStatus === "open" &&
 			phase.invoice.stripeDueAt &&
 			phase.invoice.stripeDueAt < now
@@ -132,8 +131,12 @@ const worklist = allPhases
 			return [{ priority: 4, kind: "In work", phase }];
 		}
 
-		if (phase.state === "invoiced") {
-			return [{ priority: 5, kind: "Unpaid", phase }];
+		if (phase.invoice) {
+			return [{ priority: 6, kind: "Unpaid", phase }];
+		}
+
+		if (phase.state === "delivered") {
+			return [{ priority: 5, kind: "Awaiting acceptance", phase }];
 		}
 
 		return [];
@@ -175,8 +178,7 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 						{item.phase.state === "planned" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="approved" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Approve</Button></form>}
 						{(item.phase.state === "submitted" || item.phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Cancel</Button></form>}
 						{item.phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Start</Button></form>}
-						{item.phase.state === "invoiced" && item.phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={item.phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
-						{item.phase.state === "invoiced" && item.phase.invoice?.stripeStatus === "paid" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="paid" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Confirm paid</Button></form>}
+						{item.phase.invoice && <form method="POST" action={actions.refreshStripeInvoice}><input type="hidden" name="invoiceId" value={item.phase.invoice.id} /><Button type="submit">Refresh now</Button></form>}
 					</div>
 				</article>
 			)) : (
