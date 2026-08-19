@@ -19,7 +19,7 @@ aubx astro sync
 - Keep markup minimal and semantic.
 - Prefer accessing values directly where they are used instead of creating one-off aliases or derived variables. Add variables only when reused, needed for type narrowing, or when they remove real complexity.
 - Use Drizzle Relational Query Builder v2 (`db.query.*`) for reads when relations or simple table lookups are involved.
-- For schema changes, update `src/lib/schema.ts` and run `pn drizzle-kit generate`; do not manually edit existing migrations or snapshots.
+- For schema changes, update `src/lib/schema.ts` only; leave `aubx drizzle-kit generate` to the user — it can prompt interactively, and a blind answer can accept a wrong rename. Never manually edit existing migrations or snapshots.
 - Reuse `src/components/Button.astro` components
 
 ## Visual Style
