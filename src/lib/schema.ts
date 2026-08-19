@@ -283,6 +283,12 @@ export const phaseDeliveryState = t.pgEnum("phase_delivery_state", [
 	"not_recorded",
 ]);
 
+export const invoiceComponent = t.pgEnum("invoice_component", [
+	"upfront",
+	"delivery",
+	"acceptance",
+]);
+
 export const phases = t.pgTable(
 	"phases",
 	{
@@ -363,6 +369,7 @@ export const invoices = t.pgTable(
 		publicId: t.text("public_id").notNull(),
 		organizationId: t.text("organization_id").notNull(),
 		phaseId: t.uuid("phase_id"),
+		component: invoiceComponent("component"),
 		invoiceNumber: t.text("invoice_number").notNull(),
 		stripeId: t.text("stripe_id").notNull(),
 		stripePaymentPage: t.text("stripe_payment_page").notNull(),
@@ -387,9 +394,15 @@ export const invoices = t.pgTable(
 			columns: [table.id],
 		}),
 		t.uniqueIndex().on(table.publicId),
-		t.uniqueIndex("invoices_phase_id_uidx").on(table.phaseId),
+		t
+			.uniqueIndex("invoices_phase_component_uidx")
+			.on(table.phaseId, table.component),
 		t.uniqueIndex("invoices_stripe_id_uidx").on(table.stripeId),
 		t.index("invoices_organization_id_idx").on(table.organizationId),
+		t.check(
+			"invoices_phase_component_consistency",
+			sql`(${table.phaseId} IS NULL) = (${table.component} IS NULL)`,
+		),
 		t
 			.foreignKey({
 				columns: [table.phaseId],

@@ -5,6 +5,10 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import { resolveDelivery } from "./delivery.ts";
 import { assertAdminUser, DomainError } from "./domain.ts";
 import {
+	type InvoiceComponent,
+	isInvoiceComponentDue,
+} from "./phase-billing.ts";
+import {
 	events,
 	invoices,
 	organizationMetadata,
@@ -748,6 +752,7 @@ export const recordInvoice = async (
 	actorId: string,
 	input: {
 		phaseId: string;
+		component: InvoiceComponent;
 		invoiceNumber: string;
 		stripeId: string;
 		stripePaymentPage: string;
@@ -761,10 +766,13 @@ export const recordInvoice = async (
 	const phase = await db.query.phases.findFirst({
 		columns: {
 			id: true,
-			state: true,
 			currency: true,
 			version: true,
+			upfrontAmount: true,
+			deliveryAmount: true,
+			acceptanceAmount: true,
 		},
+		with: { events: { columns: { event: true } } },
 		where: { id: input.phaseId },
 	});
 
@@ -772,18 +780,23 @@ export const recordInvoice = async (
 		throw new DomainError("NotFound", "Phase not found.");
 	}
 
+	if (phase[`${input.component}Amount`] === null) {
+		throw new DomainError("Validation", "This component is not priced.");
+	}
+
 	const invoice = await db.query.invoices.findFirst({
 		columns: {
 			id: true,
 			publicId: true,
 			phaseId: true,
+			component: true,
 			invoiceNumber: true,
 			stripeId: true,
 			stripePaymentPage: true,
 			currency: true,
 			total: true,
 		},
-		where: { phaseId: phase.id },
+		where: { phaseId: phase.id, component: input.component },
 	});
 
 	const invoiceMatches = (
@@ -791,6 +804,7 @@ export const recordInvoice = async (
 		invoiceRow: typeof invoice,
 	): invoiceRow is NonNullable<typeof invoice> =>
 		invoiceRow?.phaseId === phaseRow.id &&
+		invoiceRow.component === input.component &&
 		invoiceRow.invoiceNumber === input.invoiceNumber.trim() &&
 		invoiceRow.stripeId === input.stripeId.trim() &&
 		invoiceRow.stripePaymentPage === input.stripePaymentPage.trim() &&
@@ -815,11 +829,14 @@ export const recordInvoice = async (
 	}
 
 	if (
-		!["approved", "in_progress", "delivered", "accepted"].includes(phase.state)
+		!isInvoiceComponentDue(
+			input.component,
+			phase.events.map(({ event }) => event),
+		)
 	) {
 		throw new DomainError(
 			"InvalidTransition",
-			"Invoices can only be recorded on phases from approval onward.",
+			`The ${input.component} component is not due yet.`,
 		);
 	}
 
@@ -840,9 +857,11 @@ export const recordInvoice = async (
 			.select({
 				id: phases.id,
 				projectId: phases.projectId,
-				state: phases.state,
 				currency: phases.currency,
 				version: phases.version,
+				upfrontAmount: phases.upfrontAmount,
+				deliveryAmount: phases.deliveryAmount,
+				acceptanceAmount: phases.acceptanceAmount,
 			})
 			.from(phases)
 			.where(eq(phases.id, input.phaseId))
@@ -852,18 +871,28 @@ export const recordInvoice = async (
 			throw new DomainError("NotFound", "Phase not found.");
 		}
 
+		if (lockedPhase[`${input.component}Amount`] === null) {
+			throw new DomainError("Validation", "This component is not priced.");
+		}
+
+		const triggerEvents = await tx.query.events.findMany({
+			columns: { event: true },
+			where: { aggregateType: "phase", aggregateId: lockedPhase.id },
+		});
+
 		const lockedInvoice = await tx.query.invoices.findFirst({
 			columns: {
 				id: true,
 				publicId: true,
 				phaseId: true,
+				component: true,
 				invoiceNumber: true,
 				stripeId: true,
 				stripePaymentPage: true,
 				currency: true,
 				total: true,
 			},
-			where: { phaseId: lockedPhase.id },
+			where: { phaseId: lockedPhase.id, component: input.component },
 		});
 
 		if (lockedInvoice && invoiceMatches(lockedPhase, lockedInvoice)) {
@@ -884,13 +913,14 @@ export const recordInvoice = async (
 		}
 
 		if (
-			!["approved", "in_progress", "delivered", "accepted"].includes(
-				lockedPhase.state,
+			!isInvoiceComponentDue(
+				input.component,
+				triggerEvents.map(({ event }) => event),
 			)
 		) {
 			throw new DomainError(
 				"InvalidTransition",
-				"Invoices can only be recorded on phases from approval onward.",
+				`The ${input.component} component is not due yet.`,
 			);
 		}
 
@@ -916,6 +946,7 @@ export const recordInvoice = async (
 				publicId: publicId(),
 				organizationId: project.organizationId,
 				phaseId: lockedPhase.id,
+				component: input.component,
 				invoiceNumber: input.invoiceNumber.trim(),
 				stripeId: input.stripeId.trim(),
 				stripePaymentPage: input.stripePaymentPage.trim(),
@@ -933,7 +964,11 @@ export const recordInvoice = async (
 			);
 		}
 
-		return { invoice: rows[0], created: true };
+		return {
+			invoice: rows[0],
+			created: true,
+			amountMismatch: lockedPhase[`${input.component}Amount`] !== input.total,
+		};
 	});
 };
 
@@ -943,6 +978,7 @@ export const attachInvoiceToPhase = async (
 	input: {
 		invoiceId: string;
 		phaseId: string;
+		component: InvoiceComponent;
 		expectedVersion: number;
 	},
 ) => {
@@ -953,9 +989,11 @@ export const attachInvoiceToPhase = async (
 			.select({
 				id: phases.id,
 				projectId: phases.projectId,
-				state: phases.state,
 				currency: phases.currency,
 				version: phases.version,
+				upfrontAmount: phases.upfrontAmount,
+				deliveryAmount: phases.deliveryAmount,
+				acceptanceAmount: phases.acceptanceAmount,
 			})
 			.from(phases)
 			.where(eq(phases.id, input.phaseId))
@@ -965,11 +1003,16 @@ export const attachInvoiceToPhase = async (
 			throw new DomainError("NotFound", "Phase not found.");
 		}
 
+		if (phase[`${input.component}Amount`] === null) {
+			throw new DomainError("Validation", "This component is not priced.");
+		}
+
 		const [invoice] = await tx
 			.select({
 				id: invoices.id,
 				organizationId: invoices.organizationId,
 				phaseId: invoices.phaseId,
+				component: invoices.component,
 				currency: invoices.currency,
 			})
 			.from(invoices)
@@ -982,7 +1025,7 @@ export const attachInvoiceToPhase = async (
 
 		// Already attached to this phase: idempotent retry. Attachment no longer
 		// moves the lifecycle (S-005 R5/R7), so no Delivery or state is written.
-		if (invoice.phaseId === phase.id) {
+		if (invoice.phaseId === phase.id && invoice.component === input.component) {
 			return { idempotent: true };
 		}
 
@@ -1002,11 +1045,14 @@ export const attachInvoiceToPhase = async (
 
 		const existingPhaseInvoice = await tx.query.invoices.findFirst({
 			columns: { id: true },
-			where: { phaseId: phase.id },
+			where: { phaseId: phase.id, component: input.component },
 		});
 
 		if (existingPhaseInvoice) {
-			throw new DomainError("Conflict", "This phase already has an invoice.");
+			throw new DomainError(
+				"Conflict",
+				"This component already has an invoice.",
+			);
 		}
 
 		const project = await tx.query.projects.findFirst({
@@ -1025,14 +1071,20 @@ export const attachInvoiceToPhase = async (
 			);
 		}
 
+		const triggerEvents = await tx.query.events.findMany({
+			columns: { event: true },
+			where: { aggregateType: "phase", aggregateId: phase.id },
+		});
+
 		if (
-			!["approved", "in_progress", "delivered", "accepted"].includes(
-				phase.state,
+			!isInvoiceComponentDue(
+				input.component,
+				triggerEvents.map(({ event }) => event),
 			)
 		) {
 			throw new DomainError(
 				"InvalidTransition",
-				"Invoices can only be attached to phases from approval onward.",
+				`The ${input.component} component is not due yet.`,
 			);
 		}
 
@@ -1045,7 +1097,7 @@ export const attachInvoiceToPhase = async (
 
 		const attached = await tx
 			.update(invoices)
-			.set({ phaseId: phase.id })
+			.set({ phaseId: phase.id, component: input.component })
 			.where(and(eq(invoices.id, invoice.id), isNull(invoices.phaseId)))
 			.returning({ id: invoices.id });
 
