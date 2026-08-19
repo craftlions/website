@@ -136,6 +136,7 @@ const canApprovePhases =
 				<PhasesTable
 					phases={project.phases}
 					canApprovePhases={canApprovePhases && !session.session.impersonatedBy}
+					canAcceptPhases={canApprovePhases && !session.session.impersonatedBy}
 				/>
 			</section>
 

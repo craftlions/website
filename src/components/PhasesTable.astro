@@ -20,9 +20,14 @@ interface Phase {
 interface Props {
 	phases: Phase[];
 	canApprovePhases?: boolean;
+	canAcceptPhases?: boolean;
 }
 
-const { canApprovePhases = false, phases } = Astro.props;
+const {
+	canAcceptPhases = false,
+	canApprovePhases = false,
+	phases,
+} = Astro.props;
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 
 const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
@@ -147,6 +152,13 @@ const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 											<Button type="submit">Decline</Button>
 										</form>
 									</div>
+								)}
+								{canAcceptPhases && phase.state === "delivered" && (
+									<form method="POST" action={actions.acceptPhase} data-disable-on-submit>
+										<input type="hidden" name="phaseId" value={phase.publicId} />
+										<input type="hidden" name="expectedVersion" value={phase.version} />
+										<Button type="submit">Accept</Button>
+									</form>
 								)}
 							</td>
 							</tr>

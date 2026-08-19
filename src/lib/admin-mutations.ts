@@ -199,6 +199,53 @@ export const approvePhaseAsClient = async (
 	);
 };
 
+export const acceptPhaseAsClient = async (
+	db: Db,
+	actorId: string,
+	input: {
+		phasePublicId: string;
+		expectedVersion: number;
+	},
+) => {
+	const phase = await db.query.phases.findFirst({
+		columns: { id: true },
+		with: {
+			project: { columns: { organizationId: true } },
+		},
+		where: { publicId: input.phasePublicId },
+	});
+
+	if (!phase?.project) {
+		throw new DomainError("NotFound", "Phase not found.");
+	}
+
+	const membership = await db.query.member.findFirst({
+		columns: { role: true },
+		where: {
+			userId: actorId,
+			organizationId: phase.project.organizationId,
+		},
+	});
+
+	if (!membership || !["owner", "admin"].includes(membership.role)) {
+		throw new DomainError(
+			"Forbidden",
+			"Only organization owners can accept phases.",
+		);
+	}
+
+	return transitionPhase(
+		db,
+		actorId,
+		phase.id,
+		input.expectedVersion,
+		"accepted",
+		["delivered"],
+		"accepted",
+		"Only delivered phases can be accepted.",
+	);
+};
+
 export const createProject = async (
 	db: Db,
 	actorId: string,
@@ -499,6 +546,8 @@ const phaseTransitions = {
 	planned: { from: "submitted", event: "planned" },
 	approved: { from: "planned", event: "approved_on_behalf" },
 	in_progress: { from: "approved", event: "started" },
+	// Acceptance is explicit: only a delivered phase can be accepted.
+	accepted: { from: "delivered", event: "accepted_on_behalf" },
 	cancelled: { from: ["submitted", "planned"], event: "cancelled" },
 } as const;
 
@@ -507,7 +556,7 @@ const transitionPhase = async (
 	actorId: string,
 	phaseId: string,
 	expectedVersion: number,
-	nextState: "planned" | "approved" | "in_progress" | "cancelled",
+	nextState: "planned" | "approved" | "in_progress" | "accepted" | "cancelled",
 	from: readonly string[],
 	event: string,
 	invalidTransitionMessage: string,
@@ -577,7 +626,12 @@ export const transitionPhaseAsAdmin = async (
 	actorId: string,
 	input: {
 		phaseId: string;
-		nextState: "planned" | "approved" | "in_progress" | "cancelled";
+		nextState:
+			| "planned"
+			| "approved"
+			| "in_progress"
+			| "accepted"
+			| "cancelled";
 		expectedVersion: number;
 	},
 ) => {
