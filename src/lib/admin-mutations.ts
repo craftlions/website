@@ -772,13 +772,17 @@ export const recordInvoice = async (
 			deliveryAmount: true,
 			acceptanceAmount: true,
 		},
-		with: { events: { columns: { event: true } } },
 		where: { id: input.phaseId },
 	});
 
 	if (!phase) {
 		throw new DomainError("NotFound", "Phase not found.");
 	}
+
+	const phaseEvents = await db.query.events.findMany({
+		columns: { event: true },
+		where: { aggregateType: "phase", aggregateId: phase.id },
+	});
 
 	if (phase[`${input.component}Amount`] === null) {
 		throw new DomainError("Validation", "This component is not priced.");
@@ -831,7 +835,7 @@ export const recordInvoice = async (
 	if (
 		!isInvoiceComponentDue(
 			input.component,
-			phase.events.map(({ event }) => event),
+			phaseEvents.map(({ event }) => event),
 		)
 	) {
 		throw new DomainError(

@@ -9,6 +9,7 @@ import PhasesTable from "../../../../../components/PhasesTable.astro";
 import ProjectInvoices from "../../../../../components/ProjectInvoices.astro";
 import Shell from "../../../../../layouts/Shell.astro";
 import { buildPhaseComponents } from "../../../../../lib/phase-billing";
+import { getPhaseEventTypes } from "../../../../../lib/phase-events.ts";
 
 const { publicId, slug } = Astro.params;
 
@@ -81,11 +82,6 @@ const project = await Astro.locals.db.query.projects.findFirst({
 						stripeStatus: true,
 					},
 				},
-				events: {
-					columns: {
-						event: true,
-					},
-				},
 			},
 			orderBy: {
 				dueAt: "asc",
@@ -115,13 +111,17 @@ const currentMember = await Astro.locals.db.query.member.findFirst({
 const canApprovePhases =
 	currentMember?.role === "owner" || currentMember?.role === "admin";
 
+const phaseEventTypes = await getPhaseEventTypes(
+	Astro.locals.db,
+	project.phases.map((phase) => phase.id),
+);
 const phasesWithComponents = project.phases.map((phase) => ({
 	...phase,
 	components: buildPhaseComponents({
 		upfrontAmount: phase.upfrontAmount,
 		deliveryAmount: phase.deliveryAmount,
 		acceptanceAmount: phase.acceptanceAmount,
-		events: phase.events.map((e) => e.event),
+		events: phaseEventTypes.get(phase.id) ?? [],
 		invoices: phase.invoices,
 	}),
 }));
