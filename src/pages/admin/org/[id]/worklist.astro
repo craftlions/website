@@ -131,12 +131,15 @@ const worklist = allPhases
 			return [{ priority: 4, kind: "In work", phase }];
 		}
 
-		if (phase.invoice) {
-			return [{ priority: 6, kind: "Unpaid", phase }];
-		}
-
+		// Billing derives from the invoice's Stripe status (D-phase-billing-truth):
+		// only an outstanding invoice reads "Unpaid". A delivered phase surfaces as
+		// "Awaiting acceptance" first — the acceptance action is #285.
 		if (phase.state === "delivered") {
 			return [{ priority: 5, kind: "Awaiting acceptance", phase }];
+		}
+
+		if (phase.invoice?.stripeStatus === "open") {
+			return [{ priority: 6, kind: "Unpaid", phase }];
 		}
 
 		return [];

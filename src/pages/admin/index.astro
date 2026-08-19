@@ -144,20 +144,11 @@ const queue = organizations
 					];
 				}
 
-				if (phase.invoice) {
-					return [
-						{
-							priority: 3,
-							kind: "Unpaid",
-							client: organization.name,
-							label: `${project.name} · ${phase.invoice?.invoiceNumber ?? phase.title}`,
-							amount: phase.invoice?.total ?? phase.cost,
-							days: daysSince(phase.invoice?.id ?? phase.id),
-							link,
-						},
-					];
-				}
-
+				// Billing is derived from the invoice's Stripe status alone
+				// (D-phase-billing-truth): only an outstanding invoice reads "Unpaid".
+				// A delivered phase surfaces as "Awaiting acceptance" regardless of its
+				// invoice — acceptance is the next lifecycle step (S-005 R6; recorded
+				// by #285).
 				if (phase.state === "delivered") {
 					return [
 						{
@@ -167,6 +158,20 @@ const queue = organizations
 							label: `${project.name} · ${phase.title}`,
 							amount: phase.cost,
 							days: daysSince(phase.id),
+							link,
+						},
+					];
+				}
+
+				if (phase.invoice?.stripeStatus === "open") {
+					return [
+						{
+							priority: 3,
+							kind: "Unpaid",
+							client: organization.name,
+							label: `${project.name} · ${phase.invoice?.invoiceNumber ?? phase.title}`,
+							amount: phase.invoice?.total ?? phase.cost,
+							days: daysSince(phase.invoice?.id ?? phase.id),
 							link,
 						},
 					];
@@ -185,7 +190,7 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 	const totalProjects = organization.projects.length;
 	const openInvoices = organization.projects
 		.flatMap((project) => project.phases)
-		.filter((phase) => phase.invoice)
+		.filter((phase) => phase.invoice?.stripeStatus === "open")
 		.reduce((total, phase) => total + (phase.invoice?.total ?? phase.cost), 0);
 	const planned = organization.projects
 		.flatMap((project) => project.phases)
