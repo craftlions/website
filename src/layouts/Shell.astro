@@ -42,7 +42,7 @@ const session = Astro.locals.session;
 			{session?.session.impersonatedBy && (
 				<aside
 					aria-label="Impersonation"
-					class="sticky top-0 z-50 grid w-full max-w-5xl grid-cols-[1fr_auto] items-center gap-3 justify-self-center border border-dashed border-neutral-400 bg-neutral-100 p-3 dark:border-neutral-600 dark:bg-neutral-900"
+					class="sticky top-0 z-50 grid w-full grid-cols-[1fr_auto] items-center gap-3 border-b border-dashed border-neutral-400 bg-neutral-100 p-3 dark:border-neutral-600 dark:bg-neutral-900"
 				>
 					<p class="text-sm font-medium">Viewing as {session.user.name}</p>
 					<stop-impersonating>

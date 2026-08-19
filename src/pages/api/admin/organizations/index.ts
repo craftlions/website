@@ -19,7 +19,7 @@ export const POST: APIRoute = async (context) => {
 
 	const validation = z
 		.strictObject({
-			email: z.string().trim().email(),
+			email: z.string().trim().pipe(z.email()),
 			name: z.string().trim().min(1),
 			organizationName: z.string().trim().min(1),
 			slug: z.string().trim().min(1),

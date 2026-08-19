@@ -1,8 +1,7 @@
 import type { Db } from "./database.ts";
-import { eq } from "drizzle-orm";
-import { assertAdminUser, DomainError } from "./admin-mutations.ts";
-import { invoices } from "./schema.ts";
-import { uuidV7FromDate } from "./uuid.ts";
+import { and, eq, sql } from "drizzle-orm";
+import { assertAdminUser, DomainError } from "./domain.ts";
+import { events, invoices, phases } from "./schema.ts";
 
 type StripeTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -10,6 +9,7 @@ export interface StripeInvoiceSnapshot {
 	status: string | null;
 	paidAt: Date | null;
 	dueAt: Date | null;
+	invoicedAt: Date;
 	fetchedAt: Date;
 }
 
@@ -19,6 +19,7 @@ interface StripeInvoiceResponse {
 	status_transitions?: {
 		paid_at?: number | null;
 	};
+	created?: number;
 	due_date?: number | null;
 	total?: number;
 }
@@ -26,7 +27,6 @@ interface StripeInvoiceResponse {
 interface StripeInvoiceListItem extends StripeInvoiceResponse {
 	id?: string;
 	number?: string | null;
-	created?: number;
 	hosted_invoice_url?: string | null;
 	invoice_pdf?: string | null;
 }
@@ -35,6 +35,7 @@ type ImportableStripeInvoice = StripeInvoiceListItem & {
 	id: string;
 	number: string;
 	currency: string;
+	created: number;
 };
 
 const zeroDecimalCurrencies = new Set([
@@ -59,17 +60,27 @@ const zeroDecimalCurrencies = new Set([
 const fromStripeMinorUnits = (amount: number, currency: string) =>
 	zeroDecimalCurrencies.has(currency.toUpperCase()) ? amount : amount / 100;
 
-const stripeInvoiceSnapshot = (
+export const stripeInvoiceSnapshot = (
 	data: StripeInvoiceResponse,
-): StripeInvoiceSnapshot => ({
-	status: data.status ?? null,
-	paidAt:
-		data.status_transitions?.paid_at != null
-			? new Date(data.status_transitions.paid_at * 1000)
-			: null,
-	dueAt: data.due_date != null ? new Date(data.due_date * 1000) : null,
-	fetchedAt: new Date(),
-});
+): StripeInvoiceSnapshot => {
+	if (data.created == null) {
+		throw new DomainError(
+			"StripeUnavailable",
+			"Stripe invoice response is missing its creation date.",
+		);
+	}
+
+	return {
+		status: data.status ?? null,
+		paidAt:
+			data.status_transitions?.paid_at != null
+				? new Date(data.status_transitions.paid_at * 1000)
+				: null,
+		dueAt: data.due_date != null ? new Date(data.due_date * 1000) : null,
+		invoicedAt: new Date(data.created * 1000),
+		fetchedAt: new Date(),
+	};
+};
 
 const isImportableStripeInvoice = (
 	item: StripeInvoiceListItem,
@@ -79,8 +90,38 @@ const isImportableStripeInvoice = (
 			item.number &&
 			item.currency &&
 			item.status !== "draft" &&
+			item.created != null &&
 			(item.hosted_invoice_url || item.invoice_pdf),
 	);
+
+export const fetchStripeInvoice = async (input: {
+	stripeId: string;
+	stripeKey: string;
+}): Promise<StripeInvoiceResponse> => {
+	let response: Response;
+	try {
+		response = await fetch(
+			`https://api.stripe.com/v1/invoices/${encodeURIComponent(input.stripeId)}`,
+			{
+				headers: {
+					Authorization: `Bearer ${input.stripeKey}`,
+				},
+			},
+		);
+	} catch {
+		throw new DomainError("StripeUnavailable", "Stripe is unreachable.");
+	}
+
+	if (response.status === 404) {
+		throw new DomainError("Validation", "Stripe invoice not found.");
+	}
+
+	if (!response.ok) {
+		throw new DomainError("StripeUnavailable", "Stripe status is unavailable.");
+	}
+
+	return (await response.json()) as StripeInvoiceResponse;
+};
 
 export const persistStripeInvoiceSnapshot = async (
 	tx: StripeTransaction,
@@ -100,6 +141,7 @@ export const persistStripeInvoiceSnapshot = async (
 		stripePaidAt: input.snapshot.paidAt,
 		stripeDueAt: input.snapshot.dueAt,
 		fetchedAt: input.snapshot.fetchedAt,
+		invoicedAt: input.snapshot.invoicedAt,
 	};
 
 	if ("invoiceId" in input) {
@@ -126,9 +168,6 @@ export const persistStripeInvoiceSnapshot = async (
 	await tx
 		.insert(invoices)
 		.values({
-			id: input.stripeInvoice.created
-				? uuidV7FromDate(new Date(input.stripeInvoice.created * 1000))
-				: undefined,
 			publicId: crypto.randomUUID(),
 			organizationId: input.organizationId,
 			stripeId: input.stripeInvoice.id,
@@ -141,9 +180,66 @@ export const persistStripeInvoiceSnapshot = async (
 		});
 };
 
+const confirmPaidPhase = async (
+	tx: StripeTransaction,
+	input: { invoiceId: string; actorId: string },
+) => {
+	const invoice = await tx.query.invoices.findFirst({
+		columns: { phaseId: true },
+		where: { id: input.invoiceId },
+	});
+
+	if (!invoice?.phaseId) {
+		return;
+	}
+
+	const [phase] = await tx
+		.select({ id: phases.id, state: phases.state, version: phases.version })
+		.from(phases)
+		.where(eq(phases.id, invoice.phaseId))
+		.for("update");
+
+	if (!phase) {
+		return;
+	}
+
+	if (phase.state !== "invoiced") {
+		return;
+	}
+
+	const rows = await tx
+		.update(phases)
+		.set({ state: "paid", version: sql`${phases.version} + 1` })
+		.where(
+			and(
+				eq(phases.id, phase.id),
+				eq(phases.state, "invoiced"),
+				eq(phases.version, phase.version),
+			),
+		)
+		.returning({ id: phases.id, version: phases.version });
+
+	if (!rows[0]) {
+		return;
+	}
+
+	await tx
+		.insert(events)
+		.values({
+			publicId: crypto.randomUUID(),
+			aggregateType: "phase",
+			aggregateId: rows[0].id,
+			aggregateVersion: rows[0].version,
+			event: "paid",
+			actorType: "user",
+			actorId: input.actorId,
+		})
+		.onConflictDoNothing();
+};
+
 export const refreshStripeInvoice = async (
 	db: Db,
-	input: { invoiceId: string; stripeKey: string },
+	input: { invoiceId: string; stripeKey: string; actorId: string },
 ) => {
 	const invoice = await db.query.invoices.findFirst({
 		columns: { id: true, stripeId: true, total: true },
@@ -166,20 +262,10 @@ export const refreshStripeInvoice = async (
 		);
 	}
 
-	const response = await fetch(
-		`https://api.stripe.com/v1/invoices/${encodeURIComponent(invoice.stripeId)}`,
-		{
-			headers: {
-				Authorization: `Bearer ${input.stripeKey}`,
-			},
-		},
-	);
-
-	if (!response.ok) {
-		throw new DomainError("StripeUnavailable", "Stripe status is unavailable.");
-	}
-
-	const data = (await response.json()) as StripeInvoiceResponse;
+	const data = await fetchStripeInvoice({
+		stripeId: invoice.stripeId,
+		stripeKey: input.stripeKey,
+	});
 
 	if (
 		data.currency &&
@@ -203,12 +289,21 @@ export const refreshStripeInvoice = async (
 		);
 	}
 
-	await db.transaction((tx) =>
-		persistStripeInvoiceSnapshot(tx, {
+	const snapshot = stripeInvoiceSnapshot(data);
+
+	await db.transaction(async (tx) => {
+		await persistStripeInvoiceSnapshot(tx, {
 			invoiceId: invoice.id,
-			snapshot: stripeInvoiceSnapshot(data),
-		}),
-	);
+			snapshot,
+		});
+
+		if (snapshot.status === "paid") {
+			await confirmPaidPhase(tx, {
+				invoiceId: invoice.id,
+				actorId: input.actorId,
+			});
+		}
+	});
 };
 
 export const importStripeInvoices = async (
@@ -263,13 +358,31 @@ export const importStripeInvoices = async (
 			continue;
 		}
 
-		await db.transaction((tx) =>
-			persistStripeInvoiceSnapshot(tx, {
+		const snapshot = stripeInvoiceSnapshot(item);
+
+		await db.transaction(async (tx) => {
+			await persistStripeInvoiceSnapshot(tx, {
 				organizationId: input.organizationId,
 				stripeInvoice: item,
-				snapshot: stripeInvoiceSnapshot(item),
-			}),
-		);
+				snapshot,
+			});
+
+			if (snapshot.status !== "paid") {
+				return;
+			}
+
+			const imported = await tx.query.invoices.findFirst({
+				columns: { id: true },
+				where: { stripeId: item.id },
+			});
+
+			if (imported) {
+				await confirmPaidPhase(tx, {
+					invoiceId: imported.id,
+					actorId,
+				});
+			}
+		});
 	}
 };
 

@@ -27,6 +27,7 @@
     "@cloudflare/vite-plugin": "1.45.1",
     "@octokit/request": "10.0.8",
     "@octokit/rest": "22.0.1",
+    "@playwright/cli": "0.1.17",
     "@socketsecurity/bun-security-scanner": "1.1.2",
     "@tailwindcss/vite": "4.3.1",
     "@types/node": "25.9.3",
@@ -40,7 +41,7 @@
     "lightningcss": "1.32.0",
     "pg": "8.21.0",
     "tailwindcss": "4.3.1",
-    "typescript": "7.0.2",
+    "typescript": "6.0.3",
     "update-browserslist-db": "1.2.3",
     "vite": "8.1.3",
     "wrangler": "4.112.0"

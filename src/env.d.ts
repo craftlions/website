@@ -6,4 +6,15 @@ declare namespace App {
 			ReturnType<import("./lib/auth.ts").Auth["api"]["getSession"]>
 		>;
 	}
+
+	interface SessionData {
+		"action-result": {
+			actionName: string;
+			actionResult: ReturnType<
+				ReturnType<
+					typeof import("astro:actions").getActionContext
+				>["serializeActionResult"]
+			>;
+		};
+	}
 }

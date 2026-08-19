@@ -1,15 +1,14 @@
 import type { Auth } from "../lib/auth.ts";
 import type { Db } from "../lib/database.ts";
 import { ActionError, defineAction } from "astro:actions";
-import { z } from "astro:schema";
 import { env } from "cloudflare:workers";
+import { z } from "astro/zod";
 import {
 	addOrganizationMember,
 	approvePhaseAsClient,
 	attachInvoiceToPhase,
 	createPhase,
 	createProject,
-	DomainError,
 	hardDeleteOrganization,
 	onboardOrganization,
 	recordInvoice,
@@ -19,7 +18,14 @@ import {
 	transitionPhaseAsAdmin,
 	transitionProject,
 	updateOrganizationSettings,
+	updatePhaseDelivery,
 } from "../lib/admin-mutations.ts";
+import {
+	deliveryChoiceSchema,
+	deliveryPairingIssue,
+	deliveryUrlSchema,
+} from "../lib/delivery.ts";
+import { DomainError } from "../lib/domain.ts";
 import { importStripeInvoices, refreshStripeInvoice } from "../lib/stripe.ts";
 
 const assertNotImpersonating = (
@@ -241,7 +247,7 @@ export const server = {
 	onboardOrganization: defineAction({
 		accept: "form",
 		input: z.object({
-			email: z.string().trim().email(),
+			email: z.string().trim().pipe(z.email()),
 			name: z.string().trim().min(1).max(120),
 			organizationName: z.string().trim().min(1).max(120),
 			slug: z.string().trim().min(1).transform(toSlug),
@@ -317,26 +323,34 @@ export const server = {
 	}),
 	recordInvoice: defineAction({
 		accept: "form",
-		input: z.object({
-			phaseId: z.string().trim().min(1),
-			invoiceNumber: z.string().trim().min(1).max(80),
-			stripeId: z.string().trim().min(1).max(140),
-			stripePaymentPage: z.string().trim().url(),
-			total: z.coerce.number().nonnegative(),
-			expectedVersion: z.coerce.number().int().nonnegative(),
-		}),
+		input: z
+			.object({
+				phaseId: z.string().trim().min(1),
+				invoiceNumber: z.string().trim().min(1).max(80),
+				stripeId: z.string().trim().min(1).max(140),
+				stripePaymentPage: z.string().trim().pipe(z.url()),
+				total: z.coerce.number().nonnegative(),
+				expectedVersion: z.coerce.number().int().nonnegative(),
+				deliveryChoice: deliveryChoiceSchema,
+				deliveryUrl: deliveryUrlSchema,
+			})
+			.superRefine(deliveryPairingIssue),
 		handler: adminHandler(async (input, context, actorId) => {
-			await recordInvoice(context.locals.db, actorId, input);
+			await recordInvoice(context.locals.db, actorId, {
+				...input,
+				stripeKey: env.STRIPE_SECRET_KEY,
+			});
 			return { success: true };
 		}),
 	}),
 	refreshStripeInvoice: defineAction({
 		accept: "form",
 		input: z.object({ invoiceId: z.string().trim().min(1) }),
-		handler: adminHandler(async (input, context) => {
+		handler: adminHandler(async (input, context, actorId) => {
 			await refreshStripeInvoice(context.locals.db, {
 				invoiceId: input.invoiceId,
 				stripeKey: env.STRIPE_SECRET_KEY,
+				actorId,
 			});
 			return { success: true };
 		}),
@@ -354,13 +368,32 @@ export const server = {
 	}),
 	attachInvoiceToPhase: defineAction({
 		accept: "form",
-		input: z.object({
-			invoiceId: z.string().trim().min(1),
-			phaseId: z.string().trim().min(1),
-			expectedVersion: z.coerce.number().int().nonnegative(),
-		}),
+		input: z
+			.object({
+				invoiceId: z.string().trim().min(1),
+				phaseId: z.string().trim().min(1),
+				expectedVersion: z.coerce.number().int().nonnegative(),
+				deliveryChoice: deliveryChoiceSchema,
+				deliveryUrl: deliveryUrlSchema,
+			})
+			.superRefine(deliveryPairingIssue),
 		handler: adminHandler(async (input, context, actorId) => {
 			await attachInvoiceToPhase(context.locals.db, actorId, input);
+			return { success: true };
+		}),
+	}),
+	updatePhaseDelivery: defineAction({
+		accept: "form",
+		input: z
+			.object({
+				phaseId: z.string().trim().min(1),
+				expectedVersion: z.coerce.number().int().nonnegative(),
+				deliveryChoice: deliveryChoiceSchema,
+				deliveryUrl: deliveryUrlSchema,
+			})
+			.superRefine(deliveryPairingIssue),
+		handler: adminHandler(async (input, context, actorId) => {
+			await updatePhaseDelivery(context.locals.db, actorId, input);
 			return { success: true };
 		}),
 	}),
@@ -368,7 +401,7 @@ export const server = {
 		accept: "form",
 		input: z.object({
 			organizationId: z.string().trim().min(1),
-			email: z.string().trim().email(),
+			email: z.string().trim().pipe(z.email()),
 			name: z.string().trim().min(1).max(120),
 			role: z.enum(["owner", "member"]).default("member"),
 		}),
@@ -400,7 +433,7 @@ export const server = {
 	}),
 	resendWelcomeMail: defineAction({
 		accept: "form",
-		input: z.object({ email: z.string().trim().email() }),
+		input: z.object({ email: z.string().trim().pipe(z.email()) }),
 		handler: adminHandler(async (input, context) => {
 			await context.locals.auth.api.requestPasswordReset({
 				body: { email: input.email, redirectTo: "/reset-password" },
@@ -429,7 +462,7 @@ export const server = {
 			slug: z.string().trim().min(1).transform(toSlug),
 			logo: z.preprocess(
 				(value) => (value === "" ? null : value),
-				z.string().trim().url().nullable().optional(),
+				z.string().trim().pipe(z.url()).nullable().optional(),
 			),
 			yearlyBudget: optionalBudget,
 			stripeCustomerId: z.preprocess(

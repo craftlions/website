@@ -27,37 +27,40 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 		slug: true,
 		logo: true,
 	},
-	extras: (organization) => ({
-		projectCount: Astro.locals.db
-			.select({
-				value: count(),
-			})
-			.from(projects)
-			.where(eq(projects.organizationId, organization.id))
-			.getSQL()
-			.mapWith(Number),
-		unarchivedProjectCount: Astro.locals.db
-			.select({
-				value: count(),
-			})
-			.from(projects)
-			.where(
-				and(
-					eq(projects.organizationId, organization.id),
-					ne(projects.state, "archived"),
-				),
-			)
-			.getSQL()
-			.mapWith(Number),
-		memberCount: Astro.locals.db
-			.select({
-				value: count(),
-			})
-			.from(member)
-			.where(eq(member.organizationId, organization.id))
-			.getSQL()
-			.mapWith(Number),
-	}),
+	extras: {
+		projectCount: (organization) =>
+			Astro.locals.db
+				.select({
+					value: count(),
+				})
+				.from(projects)
+				.where(eq(projects.organizationId, organization.id))
+				.getSQL()
+				.mapWith(Number),
+		unarchivedProjectCount: (organization) =>
+			Astro.locals.db
+				.select({
+					value: count(),
+				})
+				.from(projects)
+				.where(
+					and(
+						eq(projects.organizationId, organization.id),
+						ne(projects.state, "archived"),
+					),
+				)
+				.getSQL()
+				.mapWith(Number),
+		memberCount: (organization) =>
+			Astro.locals.db
+				.select({
+					value: count(),
+				})
+				.from(member)
+				.where(eq(member.organizationId, organization.id))
+				.getSQL()
+				.mapWith(Number),
+	},
 	with: {
 		data: {
 			columns: {

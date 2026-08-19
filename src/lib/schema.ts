@@ -281,6 +281,12 @@ export const phaseState = t.pgEnum("phase_state", [
 	"cancelled",
 ]);
 
+export const phaseDeliveryState = t.pgEnum("phase_delivery_state", [
+	"url",
+	"none",
+	"not_recorded",
+]);
+
 export const phases = t.pgTable(
 	"phases",
 	{
@@ -299,6 +305,10 @@ export const phases = t.pgTable(
 			.timestamp("updated_at", { withTimezone: true })
 			.$onUpdate(() => new Date()),
 		externalUrl: t.text("external_url"),
+		deliveryState: phaseDeliveryState("delivery_state")
+			.default("not_recorded")
+			.notNull(),
+		deliveryUrl: t.text("delivery_url"),
 	},
 	(table) => [
 		t.primaryKey({
@@ -306,6 +316,14 @@ export const phases = t.pgTable(
 		}),
 		t.uniqueIndex().on(table.publicId),
 		t.index("phases_project_id_idx").on(table.projectId),
+		t.check(
+			"phases_delivery_state_consistency",
+			sql`(
+				(${table.deliveryState} = 'url' AND ${table.deliveryUrl} IS NOT NULL)
+				OR (${table.deliveryState} = 'none' AND ${table.deliveryUrl} IS NULL)
+				OR (${table.deliveryState} = 'not_recorded' AND ${table.deliveryUrl} IS NULL)
+			)`,
+		),
 		t
 			.foreignKey({
 				columns: [table.projectId],
@@ -329,6 +347,10 @@ export const invoices = t.pgTable(
 		currency: t.char("currency", { length: 3 }).notNull(),
 		total: t
 			.numeric("total", { precision: 19, scale: 4, mode: "number" })
+			.notNull(),
+		invoicedAt: t
+			.timestamp("invoiced_at", { withTimezone: true })
+			.defaultNow()
 			.notNull(),
 		updatedAt: t
 			.timestamp("updated_at", { withTimezone: true })

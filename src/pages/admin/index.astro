@@ -7,13 +7,13 @@ import Button from "../../components/Button.astro";
 import Footer from "../../components/Footer.astro";
 import Nav from "../../components/Nav.astro";
 import Shell from "../../layouts/Shell.astro";
+import {
+	deriveBudgetConsumption,
+	getSpendByYear,
+} from "../../lib/budget-consumption.ts";
 import { getUuidV7Date } from "../../lib/uuid.ts";
 
 const onboardResult = Astro.getActionResult(actions.onboardOrganization);
-
-if (onboardResult && !onboardResult.error) {
-	return Astro.redirect("/admin");
-}
 
 const organizations = await Astro.locals.db.query.organization.findMany({
 	columns: {
@@ -66,6 +66,16 @@ const organizations = await Astro.locals.db.query.organization.findMany({
 		name: "asc",
 	},
 });
+
+// S-004 R2/R4: one full-history module read per organization; deriveBudget
+// selects the current-year rows. Any read failure aborts this page render —
+// no partial ledger or fallback (R8).
+const organizationsWithSpend = await Promise.all(
+	organizations.map(async (organization) => ({
+		organization,
+		spendRows: await getSpendByYear(Astro.locals.db, organization.id),
+	})),
+);
 
 const now = new Date();
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
@@ -155,7 +165,7 @@ const queue = organizations
 	)
 	.toSorted((a, b) => a.priority - b.priority || b.days - a.days);
 
-const ledger = organizations.map((organization) => {
+const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 	const activeProjects = organization.projects.filter(
 		(project) => project.state === "active",
 	).length;
@@ -179,6 +189,11 @@ const ledger = organizations.map((organization) => {
 				phase.invoice.stripeDueAt &&
 				phase.invoice.stripeDueAt < now,
 		).length;
+	// S-004 R1/R5: budget usage is the shared module's current-year percentage
+	// (D-budget-consumption-definition, uncapped); null when there is no
+	// positive yearly budget (R7 "No budget").
+	const yearlyBudget = organization.data?.yearlyBudget ?? 0;
+	const { usagePercentage } = deriveBudgetConsumption(spendRows, yearlyBudget);
 
 	return {
 		...organization,
@@ -188,10 +203,7 @@ const ledger = organizations.map((organization) => {
 		planned,
 		submitted,
 		overdue,
-		budgetUsage:
-			organization.data?.yearlyBudget && organization.data.yearlyBudget > 0
-				? (openInvoices / organization.data.yearlyBudget) * 100
-				: null,
+		budgetUsage: yearlyBudget > 0 ? usagePercentage : null,
 	};
 });
 const outstandingTotal = ledger.reduce(
@@ -296,7 +308,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 								<th class="px-4 py-3" scope="col">Client</th>
 								<th class="px-4 py-3" scope="col">Attention</th>
 								<th class="px-4 py-3" scope="col">Projects</th>
-								<th class="px-4 py-3" scope="col">Budget</th>
+								<th class="px-4 py-3" scope="col">Budget used</th>
 								<th class="px-4 py-3 text-right" scope="col">Open</th>
 							</tr>
 						</thead>

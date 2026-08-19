@@ -5,20 +5,29 @@ import Button from "./Button.astro";
 interface Invoice {
 	invoiceNumber: string;
 	stripePaymentPage: string;
-	createdAt: Date | null;
+	invoicedAt: Date;
 	stripeStatus: string | null;
 	stripePaidAt: Date | null;
 	stripeDueAt: Date | null;
 	total: number;
 	currency: string;
+	// S-003 R2/R3: work is derived from the invoice's one phase, never copied.
+	work: {
+		projectPublicId: string;
+		projectName: string;
+		phasePublicId: string;
+		phaseTitle: string;
+	} | null;
+	deliveryState: "url" | "none" | "not_recorded" | "unavailable";
+	deliveryUrl: string | null;
 }
 
 interface Props {
 	invoices: Invoice[];
-	pageSize?: number;
+	slug: string;
 }
 
-const { invoices, pageSize = 5 } = Astro.props;
+const { invoices, slug } = Astro.props;
 const now = new Date();
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 const formatAmount = (total: number, currency: string) =>
@@ -49,7 +58,7 @@ const showFilter =
 	rows.some((row) => row.status === "paid");
 ---
 
-<invoice-table class="grid gap-3" data-page-size={pageSize}>
+<invoice-table class="grid gap-3">
 	{rows.length > 0 && (
 			<dl class="grid grid-flow-col justify-start gap-8 text-sm">
 				<div class="grid gap-1">
@@ -74,33 +83,33 @@ const showFilter =
 			</nav>
 		)}
 	{rows.length > 0 ? (
-			<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
-				<table class="w-full min-w-2xl text-left text-sm">
-					<thead>
-						<tr class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Invoice</th>
-							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Created</th>
-							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Due</th>
-							<th scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase">Amount</th>
-							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Status</th>
-							<th scope="col" class="px-4 py-3 text-xs font-semibold uppercase">Payment Link</th>
-						</tr>
-					</thead>
-					<tbody>
-							{rows.map((invoice) => (
-									<tr
-										class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700"
-										data-category={invoice.status === "paid" ? "paid" : invoice.status === "open" || invoice.status === "overdue" ? "open" : "other"}
-									>
-										<td class="whitespace-nowrap px-4 py-3 font-medium">{invoice.invoiceNumber}</td>
-										<td class="whitespace-nowrap px-4 py-3">
-											{invoice.createdAt ? dateFormatter.format(invoice.createdAt) : "—"}
-										</td>
-										<td class:list={["whitespace-nowrap px-4 py-3", invoice.status === "overdue" && "text-red-700 dark:text-red-300"]}>
+			<ul class="grid gap-3">
+				{rows.map((invoice) => (
+					<li
+						class="grid gap-2 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+						data-invoice-item
+						data-category={invoice.status === "paid" ? "paid" : invoice.status === "open" || invoice.status === "overdue" ? "open" : "other"}
+					>
+						<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+							<div class="grid gap-2">
+								<div class="grid gap-1">
+									<p class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+										Invoice {invoice.invoiceNumber}
+									</p>
+									<p class="text-xl/none font-semibold tabular-nums">
+										{formatAmount(invoice.total, invoice.currency)}
+									</p>
+								</div>
+								<dl class="grid gap-x-6 gap-y-3 text-sm leading-snug sm:grid-cols-[minmax(0,1fr)_auto]">
+									<div class="grid gap-1">
+										<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">Due</dt>
+										<dd class:list={[invoice.status === "overdue" && "text-red-700 dark:text-red-300"]}>
 											{invoice.stripeDueAt ? dateFormatter.format(invoice.stripeDueAt) : "—"}
-										</td>
-										<td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatAmount(invoice.total, invoice.currency)}</td>
-										<td class="px-4 py-3">
+										</dd>
+									</div>
+									<div class="grid gap-1">
+										<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">Status</dt>
+										<dd>
 											<div class="grid grid-flow-col items-center justify-start gap-2 whitespace-nowrap">
 												{invoice.status === "overdue" ? <Badge type="error">Overdue</Badge>
 													: invoice.status === "open" ? <Badge type="info">Open</Badge>
@@ -111,90 +120,97 @@ const showFilter =
 													<span class="text-xs text-neutral-500 dark:text-neutral-400">{dateFormatter.format(invoice.stripePaidAt)}</span>
 												)}
 											</div>
-										</td>
-										<td class="px-4 py-3">
-											<Button
-												href={invoice.stripePaymentPage}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												{invoice.status === "open" || invoice.status === "overdue" ? "Pay" : "Details"}
-											</Button>
-										</td>
-									</tr>
-								))}
-					</tbody>
-				</table>
-			</div>
+										</dd>
+									</div>
+									<div class="grid gap-1">
+										<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">Work</dt>
+										<dd>
+											{invoice.work ? (
+												<a
+													href={`/dash/org/${slug}/project/${invoice.work.projectPublicId}#phase-${invoice.work.phasePublicId}`}
+													class="font-medium underline decoration-dashed underline-offset-4"
+												>
+													{invoice.work.projectName} · {invoice.work.phaseTitle}
+												</a>
+											) : (
+												<span class="text-neutral-500 dark:text-neutral-400">Unassigned</span>
+											)}
+										</dd>
+									</div>
+									<div class="grid gap-1">
+										<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">Delivery</dt>
+										<dd>
+											{invoice.deliveryState === "url" && invoice.deliveryUrl ? (
+												<a
+													href={invoice.deliveryUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													aria-label={`Open Delivery for ${invoice.work?.phaseTitle ?? "the invoice"}`}
+													class="underline decoration-dashed underline-offset-4"
+												>
+													Open
+												</a>
+											) : invoice.deliveryState === "none" ? (
+												<span class="text-neutral-600 dark:text-neutral-400">No delivery</span>
+											) : invoice.deliveryState === "not_recorded" ? (
+												<span class="text-neutral-500 dark:text-neutral-400">Not recorded</span>
+											) : (
+												<span class="text-neutral-500 dark:text-neutral-400">Unavailable</span>
+											)}
+										</dd>
+									</div>
+								</dl>
+							</div>
+							<div class="grid justify-start sm:justify-self-end">
+								<Button
+									href={invoice.stripePaymentPage}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={`${invoice.status === "open" || invoice.status === "overdue" ? "Pay" : "Details"} invoice ${invoice.invoiceNumber}`}
+								>
+									{invoice.status === "open" || invoice.status === "overdue" ? "Pay" : "Details"}
+								</Button>
+							</div>
+						</div>
+					</li>
+				))}
+			</ul>
 		) : (
 			<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
 				No invoices yet.
 			</p>
 		)}
-	<nav
-		aria-label="Invoice pagination"
-		class="grid grid-cols-[auto_1fr_auto] items-center gap-3 text-sm"
-		data-invoice-pagination="controls"
-		hidden
-	>
-		<Button type="button" data-invoice-pagination="previous">Previous</Button>
-		<output
-			aria-live="polite"
-			class="text-center text-neutral-600 dark:text-neutral-400"
-			data-invoice-pagination="status"
-		></output>
-		<Button type="button" data-invoice-pagination="next">Next</Button>
-	</nav>
 </invoice-table>
 
 <script>
 	class InvoiceTable extends HTMLElement {
-		page = 1;
 		filter = "all";
 
 		connectedCallback() {
 			if (this.dataset.initialized === "true") {
-				this.renderPage();
+				this.renderList();
 				return;
 			}
 
 			this.dataset.initialized = "true";
-			this.querySelector(
-				'[data-invoice-pagination="previous"]',
-			)?.addEventListener("click", () => {
-				this.page -= 1;
-				this.renderPage();
-			});
-			this.querySelector('[data-invoice-pagination="next"]')?.addEventListener(
-				"click",
-				() => {
-					this.page += 1;
-					this.renderPage();
-				},
-			);
 			for (const button of this.querySelectorAll<HTMLButtonElement>(
 				"[data-invoice-filter]",
 			)) {
 				button.addEventListener("click", () => {
 					this.filter = button.dataset.invoiceFilter ?? "all";
-					this.page = 1;
-					this.renderPage();
+					this.renderList();
 				});
 			}
-			this.renderPage();
+			this.renderList();
 		}
 
-		renderPage() {
+		renderList() {
 			const rows = Array.from(
-				this.querySelectorAll<HTMLTableRowElement>("tbody tr"),
+				this.querySelectorAll<HTMLElement>("[data-invoice-item]"),
 			);
-			const parsed = Number(this.dataset.pageSize);
-			const pageSize = Math.max(1, Number.isFinite(parsed) ? parsed : 5);
 			const matching = rows.filter(
 				(row) => this.filter === "all" || row.dataset.category === this.filter,
 			);
-			const pageCount = Math.ceil(matching.length / pageSize);
-			this.page = Math.min(Math.max(this.page, 1), Math.max(pageCount, 1));
 
 			for (const button of this.querySelectorAll<HTMLButtonElement>(
 				"[data-invoice-filter]",
@@ -206,40 +222,8 @@ const showFilter =
 			}
 
 			for (const row of rows) {
-				const index = matching.indexOf(row);
-				row.hidden =
-					index === -1 ||
-					(pageCount > 1 &&
-						(index < (this.page - 1) * pageSize ||
-							index >= this.page * pageSize));
+				row.hidden = !matching.includes(row);
 			}
-
-			const controls = this.querySelector<HTMLElement>(
-				'[data-invoice-pagination="controls"]',
-			);
-			const previousButton = this.querySelector<HTMLButtonElement>(
-				'[data-invoice-pagination="previous"]',
-			);
-			const nextButton = this.querySelector<HTMLButtonElement>(
-				'[data-invoice-pagination="next"]',
-			);
-			const status = this.querySelector<HTMLElement>(
-				'[data-invoice-pagination="status"]',
-			);
-
-			if (!controls || !previousButton || !nextButton || !status) {
-				return;
-			}
-
-			controls.hidden = pageCount <= 1;
-
-			if (pageCount <= 1) {
-				return;
-			}
-
-			previousButton.disabled = this.page === 1;
-			nextButton.disabled = this.page === pageCount;
-			status.textContent = `Page ${this.page} of ${pageCount}`;
 		}
 	}
 

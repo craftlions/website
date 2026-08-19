@@ -1,7 +1,6 @@
 ---
 export const prerender = false;
 
-import { actions } from "astro:actions";
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
 import Footer from "../../../../../components/Footer.astro";
@@ -51,16 +50,6 @@ if (!organization) {
 	return Astro.redirect("/dash");
 }
 
-const approveResult = Astro.getActionResult(actions.approvePhase);
-const declineResult = Astro.getActionResult(actions.declinePhase);
-
-if (
-	(approveResult && !approveResult.error) ||
-	(declineResult && !declineResult.error)
-) {
-	return Astro.redirect(Astro.url.pathname);
-}
-
 const project = await Astro.locals.db.query.projects.findFirst({
 	columns: {
 		id: true,
@@ -77,6 +66,8 @@ const project = await Astro.locals.db.query.projects.findFirst({
 				state: true,
 				version: true,
 				externalUrl: true,
+				deliveryState: true,
+				deliveryUrl: true,
 			},
 			with: {},
 			orderBy: {
@@ -113,12 +104,12 @@ const canApprovePhases =
 >
 	<Fragment slot="head"> <title>craftlions | {project.name}</title> </Fragment>
 	<Fragment slot="body">
-		<header class="grid gap-6 max-w-3xl mx-auto w-full">
+		<header class="grid gap-6 max-w-6xl mx-auto w-full">
 			<Nav organizationSlug={slug} />
 		</header>
 
 		<main
-			class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
+			class="w-full grid content-start min-h-0 pl-3 max-w-6xl mx-auto gap-6"
 		>
 			<Button href={`/dash/org/${slug}`}>Back to Dashboard</Button>
 
@@ -155,7 +146,7 @@ const canApprovePhases =
 				>
 					Invoices
 				</h2>
-				<ProjectInvoices id={project.id} />
+				<ProjectInvoices id={project.id} slug={slug} />
 			</section>
 		</main>
 		<Footer />

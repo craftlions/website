@@ -1,17 +1,16 @@
 ---
-import { getUuidV7Date } from "../lib/uuid.ts";
 import InvoiceTable from "./InvoiceTable.astro";
 
 interface Props {
 	id: string;
+	slug: string;
 }
 
-const { id } = Astro.props;
+const { id, slug } = Astro.props;
 
 const invoices = (
 	await Astro.locals.db.query.invoices.findMany({
 		columns: {
-			id: true,
 			invoiceNumber: true,
 			stripePaymentPage: true,
 			stripeStatus: true,
@@ -19,23 +18,59 @@ const invoices = (
 			stripeDueAt: true,
 			total: true,
 			currency: true,
+			invoicedAt: true,
+		},
+		// S-003 R2: an attached invoice derives its project, phase, and Delivery
+		// from its one phase — nothing is copied onto the invoice row.
+		with: {
+			phase: {
+				columns: {
+					publicId: true,
+					title: true,
+					deliveryState: true,
+					deliveryUrl: true,
+				},
+				with: {
+					project: {
+						columns: {
+							publicId: true,
+							name: true,
+						},
+					},
+				},
+			},
 		},
 		where: { organizationId: id },
+		orderBy: { invoicedAt: "desc" },
 	})
-)
-	.map((invoice) => ({
+).map((invoice) => {
+	const phase = invoice.phase;
+
+	return {
 		invoiceNumber: invoice.invoiceNumber,
 		stripePaymentPage: invoice.stripePaymentPage,
-		createdAt: getUuidV7Date(invoice.id),
+		invoicedAt: invoice.invoicedAt,
 		stripeStatus: invoice.stripeStatus,
 		stripePaidAt: invoice.stripePaidAt,
 		stripeDueAt: invoice.stripeDueAt,
 		total: invoice.total,
 		currency: invoice.currency,
-	}))
-	.toSorted(
-		(a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
-	);
+		work: phase?.project
+			? {
+					projectPublicId: phase.project.publicId,
+					projectName: phase.project.name,
+					phasePublicId: phase.publicId,
+					phaseTitle: phase.title,
+				}
+			: null,
+		deliveryState: (phase ? phase.deliveryState : "unavailable") as
+			| "url"
+			| "none"
+			| "not_recorded"
+			| "unavailable",
+		deliveryUrl: phase?.deliveryUrl ?? null,
+	};
+});
 ---
 
-<InvoiceTable invoices={invoices} />
+<InvoiceTable invoices={invoices} slug={slug} />

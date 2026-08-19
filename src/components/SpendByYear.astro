@@ -1,0 +1,240 @@
+---
+import type { SpendByYearRow } from "../lib/budget-consumption.ts";
+
+interface Props {
+	rows: SpendByYearRow[];
+}
+
+const { rows } = Astro.props;
+
+const UNASSIGNED = "Unassigned";
+const UNTITLED_PROJECT = "Untitled project";
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+});
+const projectNameCollator = new Intl.Collator("de-DE", {
+	numeric: true,
+	sensitivity: "base",
+});
+const currentYear = new Date().getUTCFullYear();
+
+// Distinct ink colors keep projects easy to separate at a glance.
+const segmentMarks = [
+	"text-blue-700/70 dark:text-blue-300/80",
+	"text-cyan-700/70 dark:text-cyan-300/80",
+	"text-orange-700/70 dark:text-orange-300/80",
+	"text-pink-700/70 dark:text-pink-300/80",
+	"text-violet-700/70 dark:text-violet-300/80",
+	"text-emerald-700/70 dark:text-emerald-300/80",
+];
+
+const validRows = rows.filter(
+	(row) =>
+		Number.isSafeInteger(row.year) &&
+		row.year >= 1 &&
+		row.year <= 9999 &&
+		Number.isFinite(row.total),
+);
+const projectsByKey = new Map<string, { id: string; name: string }>();
+const totalsByYear = new Map<number, Map<string, number>>();
+for (const row of validRows) {
+	const key = row.projectId ?? "unassigned";
+	if (!projectsByKey.has(key)) {
+		projectsByKey.set(key, {
+			id: key,
+			name:
+				key === "unassigned"
+					? UNASSIGNED
+					: row.projectName.trim() || UNTITLED_PROJECT,
+		});
+	}
+
+	if (!totalsByYear.has(row.year)) {
+		totalsByYear.set(row.year, new Map());
+	}
+	const totalsForYear = totalsByYear.get(row.year);
+	if (totalsForYear) {
+		totalsForYear.set(key, (totalsForYear.get(key) ?? 0) + row.total);
+	}
+}
+const projectKeys = [...projectsByKey.values()]
+	.sort((a, b) => {
+		if (a.id === "unassigned") return 1;
+		if (b.id === "unassigned") return -1;
+		return (
+			projectNameCollator.compare(a.name, b.name) || a.id.localeCompare(b.id)
+		);
+	})
+	.map((project, index) => ({
+		...project,
+		mark:
+			project.id === "unassigned"
+				? "text-neutral-500/55 dark:text-neutral-400/55"
+				: (segmentMarks[index % segmentMarks.length] ?? segmentMarks[0]),
+		segmentId: `segment-${project.id}`,
+	}));
+
+const dataYears = [...totalsByYear.keys()].sort((a, b) => a - b);
+const firstYear = Math.min(currentYear, dataYears[0] ?? currentYear);
+const lastYear = Math.max(currentYear, dataYears.at(-1) ?? currentYear);
+const years =
+	lastYear - firstYear <= 50
+		? Array.from(
+				{ length: lastYear - firstYear + 1 },
+				(_, index) => firstYear + index,
+			)
+		: [...new Set([...dataYears, currentYear])].sort((a, b) => a - b);
+const hasCondensedYears = lastYear - firstYear > 50;
+const bars = years.map((year) => {
+	const totalsForYear = totalsByYear.get(year);
+	const segments = projectKeys.flatMap((project) =>
+		totalsForYear?.has(project.id)
+			? [{ ...project, total: totalsForYear.get(project.id) ?? 0 }]
+			: [],
+	);
+	return {
+		year,
+		total: segments.reduce((sum, segment) => sum + segment.total, 0),
+		segments,
+	};
+});
+const maxTotal = Math.max(...bars.map((bar) => bar.total), 1);
+const hasNegativeSpend = bars.some((bar) =>
+	bar.segments.some((segment) => segment.total < 0),
+);
+---
+
+<section aria-labelledby="spend-heading" class="grid content-start gap-3">
+	<h2
+		id="spend-heading"
+		class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+	>
+		Spend by year
+	</h2>
+
+	{rows.length === 0 ? (
+		<p
+			class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
+		>
+			No invoices yet.
+		</p>
+	) : validRows.length === 0 ? (
+		<p
+			class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300"
+		>
+			Invoice spend could not be summarized. Please reload the page and try
+			again.
+		</p>
+	) : (
+		<>
+			{validRows.length < rows.length && (
+				<p
+					class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300"
+				>
+					Some invoice amounts could not be included. Please reload the page; if
+					the problem persists, contact craftlions.
+				</p>
+			)}
+
+			{hasNegativeSpend ? (
+				<p
+					class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
+				>
+					The chart cannot represent negative invoice adjustments. See the
+					invoice list for the complete breakdown.
+				</p>
+			) : (
+				<div
+					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+				>
+				<div class="grid gap-1 overflow-x-auto" dir="rtl">
+					<div
+						class="grid w-full min-w-max gap-2"
+						dir="ltr"
+						style={`grid-template-columns: repeat(${bars.length}, minmax(6.5rem, 1fr))`}
+					>
+						{bars.map((bar) => {
+							const reversed = bar.segments
+								.filter((segment) => segment.total > 0)
+								.reverse();
+							return (
+								<div class="grid min-w-0">
+									<div
+										class="grid h-36 items-end border-b border-dashed border-neutral-300 dark:border-neutral-700"
+									>
+										<div
+											class="grid gap-px"
+											style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total / bar.total}fr`).join(" ")}`}
+											aria-hidden="true"
+										>
+											{reversed.map((segment) => (
+												<div
+													class:list={[
+														"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[transform,filter] duration-150 hover:scale-y-105 hover:brightness-125",
+														segment.mark,
+													]}
+													title={`${segment.name}: ${currencyFormatter.format(segment.total)}`}
+													data-segment-id={segment.segmentId}
+												/>
+											))}
+										</div>
+									</div>
+									<div class="grid gap-0.5 pt-1 text-center">
+										<span
+										class:list={[
+											"whitespace-nowrap text-sm font-medium tabular-nums",
+											bar.year === currentYear &&
+												"underline decoration-dashed decoration-neutral-400 underline-offset-4 dark:decoration-neutral-600",
+										]}
+										>
+											{currencyFormatter.format(bar.total)}
+										</span>
+										<span
+											class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+										>
+											{bar.year}
+											{bar.year === currentYear && (
+												<span class="sr-only"> (current year)</span>
+											)}
+										</span>
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				</div>
+
+				<ul
+					aria-label="Spend by project"
+					class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,9rem),1fr))] gap-x-4 gap-y-2 text-sm"
+				>
+					{projectKeys.map((project) => (
+						<li
+							class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-sm px-1 py-0.5 transition-colors duration-150 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+							title={project.name}
+						>
+							<span
+								aria-hidden="true"
+								class:list={[
+									"size-3 border border-dashed border-current bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-transform duration-150 group-hover:scale-110",
+									project.mark,
+								]}
+							/>
+							<span class="min-w-0 wrap-break-word" dir="auto"
+								>{project.name}</span
+							>
+						</li>
+					))}
+				</ul>
+				{hasCondensedYears && (
+					<p class="text-xs text-neutral-500 dark:text-neutral-400">
+						Long gaps between invoice years are condensed.
+					</p>
+				)}
+				</div>
+			)}
+
+		</>
+	)}
+</section>

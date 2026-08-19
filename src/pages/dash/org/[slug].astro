@@ -8,10 +8,18 @@ import Button from "../../../components/Button.astro";
 import Footer from "../../../components/Footer.astro";
 import Nav from "../../../components/Nav.astro";
 import OrganizationInvoices from "../../../components/OrganizationInvoices.astro";
+import SpendByYear from "../../../components/SpendByYear.astro";
 import Shell from "../../../layouts/Shell.astro";
-import { getUuidV7Date } from "../../../lib/uuid.ts";
+import {
+	deriveBudgetConsumption,
+	getSpendByYear,
+} from "../../../lib/budget-consumption.ts";
 
 const { slug } = Astro.params;
+
+if (!slug) {
+	return Astro.redirect("/dash");
+}
 
 const session = Astro.locals.session;
 
@@ -48,50 +56,45 @@ if (!organization) {
 	return Astro.redirect("/dash");
 }
 
-const organizationData = await Astro.locals.db.query.organization.findFirst({
-	columns: {
-		id: true,
-	},
-	with: {
-		data: {
-			columns: {
-				yearlyBudget: true,
-			},
+const [organizationData, spendRows] = await Promise.all([
+	Astro.locals.db.query.organization.findFirst({
+		columns: {
+			id: true,
 		},
-		projects: {
-			columns: {
-				publicId: true,
-				name: true,
-				state: true,
+		with: {
+			data: {
+				columns: {
+					yearlyBudget: true,
+				},
 			},
-			with: {
-				phases: {
-					columns: {
-						cost: true,
-					},
-					with: {
-						invoice: {
-							columns: {
-								id: true,
-								total: true,
-							},
+			projects: {
+				columns: {
+					publicId: true,
+					name: true,
+					state: true,
+				},
+				with: {
+					phases: {
+						columns: {
+							cost: true,
 						},
 					},
 				},
-			},
-			orderBy: {
-				name: "asc",
+				orderBy: {
+					name: "asc",
+				},
 			},
 		},
-	},
-	where: {
-		id: organization.id,
-	},
-});
+		where: {
+			id: organization.id,
+		},
+	}),
+	// S-004 R2/R3: one shared-module read returns the full spend history for
+	// this organization; the Spend chart and all budget figures derive from it.
+	getSpendByYear(Astro.locals.db, organization.id),
+]);
 
 const now = new Date();
-const startOfYear = new Date(now.getFullYear(), 0, 1);
-const startOfNextYear = new Date(now.getFullYear() + 1, 0, 1);
 const projects =
 	organizationData?.projects.map((project) => ({
 		publicId: project.publicId,
@@ -105,39 +108,12 @@ const projects =
 const completedProjectCount = projects.filter(
 	(project) => project.state === "completed",
 ).length;
-const activeProjectCount = projects.filter(
-	(project) => project.state === "active",
-).length;
-const totalInvoicedAmount =
-	organizationData?.projects
-		.flatMap((project) => project.phases)
-		.flatMap((phase) => (phase.invoice ? [phase.invoice] : []))
-		.reduce((total, invoice) => {
-			const createdAt = getUuidV7Date(invoice.id);
-
-			if (
-				!createdAt ||
-				createdAt < startOfYear ||
-				createdAt >= startOfNextYear
-			) {
-				return total;
-			}
-
-			return total + invoice.total;
-		}, 0) ?? 0;
 const yearlyBudget = organizationData?.data?.yearlyBudget ?? 0;
-const remainingBudget = yearlyBudget - totalInvoicedAmount;
-const budgetUsagePercentage =
-	yearlyBudget > 0 ? (totalInvoicedAmount / yearlyBudget) * 100 : 0;
+// S-004 R3 + R5: current-year total, remaining budget, and usage percentage
+// derive from the module's full-history rows (D-budget-consumption-definition).
+const { currentYearTotal, remainingBudget, usagePercentage } =
+	deriveBudgetConsumption(spendRows, yearlyBudget);
 const budgetPacePercentage = ((now.getMonth() + 1) / 12) * 100;
-const budgetStatus =
-	yearlyBudget <= 0
-		? "Budget not set"
-		: remainingBudget < 0
-			? "Over yearly budget"
-			: budgetUsagePercentage > budgetPacePercentage
-				? "Ahead of calendar pace"
-				: "Within calendar pace";
 const budgetPaceGridLineClass = [
 	"col-start-2",
 	"col-start-3",
@@ -176,16 +152,18 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 <Shell
 	bodyClass="min-h-dvh grid bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
 >
-	<Fragment slot="head"> <title>craftlions | Dashboard</title> </Fragment>
+	<Fragment slot="head">
+		<title>craftlions | {organization.name}’s Dashboard</title>
+	</Fragment>
 	<Fragment slot="body">
-		<header class="grid gap-6 max-w-3xl mx-auto w-full">
+		<header class="grid gap-6 max-w-6xl mx-auto w-full">
 			<Nav organizationSlug={slug} />
 		</header>
 
 		<main
-			class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
+			class="w-full grid content-start min-h-0 pl-3 max-w-6xl mx-auto gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,3fr)] sm:items-start"
 		>
-			<section class="grid grid-cols-[1fr_auto] items-start gap-4">
+			<section class="grid gap-4 sm:col-span-2">
 				<h1
 					class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight wrap-break-word dark:border-neutral-600"
 				>
@@ -193,33 +171,34 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 				</h1>
 			</section>
 
-			<section
-				aria-labelledby="overview-heading"
-				class="grid content-start gap-4"
-			>
-				<div class="grid gap-1">
-					<h2
-						id="overview-heading"
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>
-						Overview
-					</h2>
-					<p class="max-w-prose text-sm text-neutral-600 dark:text-neutral-400">
-						Budget and project state for the current calendar year.
-					</p>
-				</div>
-				<div
-					class="grid border border-dashed border-neutral-300 bg-transparent dark:border-neutral-700"
+			<div class="grid min-w-0 content-start gap-6">
+				<section
+					aria-labelledby="overview-heading"
+					class="grid content-start gap-4"
 				>
-					<dl class="grid sm:grid-cols-2">
+					<div class="grid gap-1">
+						<h2
+							id="overview-heading"
+							class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+						>
+							Overview
+						</h2>
+						<p
+							class="max-w-prose text-sm text-neutral-600 dark:text-neutral-400"
+						>
+							Budget and project state for the current calendar year.
+						</p>
+					</div>
+					<dl
+						class="grid border-t border-dashed border-neutral-300 dark:border-neutral-700"
+					>
 						<div
-							class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:border-r"
+							class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700"
 						>
 							<dt
 								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>Yearly budget</dt
 							>
-								Yearly budget
-							</dt>
 							<dd class="text-xl font-semibold tabular-nums">
 								{yearlyBudget > 0 ? currencyFormatter.format(yearlyBudget) : "—"}
 							</dd>
@@ -229,23 +208,10 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 						>
 							<dt
 								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>Invoiced this year</dt
 							>
-								Invoiced this year
-							</dt>
 							<dd class="text-xl font-semibold tabular-nums">
-								{currencyFormatter.format(totalInvoicedAmount)}
-							</dd>
-						</div>
-						<div
-							class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:border-r"
-						>
-							<dt
-								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-							>
-								Used
-							</dt>
-							<dd class="text-xl font-semibold tabular-nums">
-								{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "—"}
+								{currencyFormatter.format(currentYearTotal)}
 							</dd>
 						</div>
 						<div
@@ -253,141 +219,127 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 						>
 							<dt
 								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>Budget used</dt
 							>
-								Remaining
-							</dt>
 							<dd
 								class:list={[
-										"text-xl font-semibold tabular-nums",
-										yearlyBudget > 0 &&
-											remainingBudget < 0 &&
-											"text-red-700 dark:text-red-300",
-									]}
+									"text-xl font-semibold tabular-nums",
+									yearlyBudget > 0 &&
+										usagePercentage > 100 &&
+										"text-red-700 dark:text-red-300",
+								]}
 							>
 								{yearlyBudget > 0
-										? currencyFormatter.format(remainingBudget)
-										: "—"}
+									? `${usagePercentage.toFixed(1)}%`
+									: "No budget"}
+							</dd>
+						</div>
+						<div
+							class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+						>
+							<dt
+								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								>Remaining</dt
+							>
+							<dd
+								class:list={[
+									"text-xl font-semibold tabular-nums",
+									yearlyBudget > 0 &&
+										remainingBudget < 0 &&
+										"text-red-700 dark:text-red-300",
+								]}
+							>
+								{yearlyBudget > 0
+									? currencyFormatter.format(remainingBudget)
+									: "—"}
 							</dd>
 						</div>
 					</dl>
-					<div class="grid gap-4 p-4">
-						<div class="grid gap-2">
-							<div
-								class="grid grid-cols-[1fr_auto] items-baseline gap-3 text-sm"
-							>
+					<div class="grid gap-2 px-4">
+						<div class="grid grid-cols-[1fr_auto] items-baseline gap-3 text-sm">
+							<div class="grid grid-flow-col justify-start gap-2">
 								<label
 									for="budget-progress"
 									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 								>
-									Budget use
+									Budget used
 								</label>
-								<p
-									class:list={[
-							  				"tabular-nums text-neutral-700 dark:text-neutral-300",
-							  				yearlyBudget > 0 &&
-							  					budgetUsagePercentage > 100 &&
-							  					"text-red-700 dark:text-red-300",
-							  			]}
-								>
-									{yearlyBudget > 0 ? `${budgetUsagePercentage.toFixed(1)}%` : "No budget"}
-								</p>
+								<span class="group relative grid place-items-center">
+									<button
+										type="button"
+										aria-describedby="budget-pace-tooltip"
+										class="grid size-4 place-items-center border border-dashed border-neutral-400 text-[10px] leading-none text-neutral-600 outline-none focus-visible:border-neutral-700 focus-visible:text-neutral-900 dark:border-neutral-600 dark:text-neutral-300 dark:focus-visible:border-neutral-300 dark:focus-visible:text-neutral-100"
+									>
+										i
+									</button>
+									<span
+										id="budget-pace-tooltip"
+										role="tooltip"
+										class="pointer-events-none absolute top-full left-0 z-10 mt-2 hidden w-64 border border-dashed border-neutral-300 bg-neutral-50 p-2 text-xs leading-relaxed text-neutral-700 group-hover:grid group-focus-within:grid dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
+									>
+										{yearlyBudget > 0
+											? `Based on invoices created this calendar year. The marker shows ${budgetPacePercentage.toFixed(1)}% calendar pace.`
+											: "Set a yearly budget to compare invoices against calendar pace."}
+									</span>
+								</span>
 							</div>
+							<p
+								class:list={[
+									"tabular-nums text-neutral-700 dark:text-neutral-300",
+									yearlyBudget > 0 &&
+										usagePercentage > 100 &&
+										"text-red-700 dark:text-red-300",
+								]}
+							>
+								{yearlyBudget > 0 ? `${usagePercentage.toFixed(1)}%` : "No budget"}
+							</p>
+						</div>
+						{yearlyBudget > 0 && (
 							<div class="relative grid">
 								<progress
 									id="budget-progress"
 									max="100"
-									value={yearlyBudget > 0
-							  				? Math.min(budgetUsagePercentage, 100)
-							  				: 0}
+									value={Math.min(usagePercentage, 100)}
 									class:list={[
-							  				"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
-							  				yearlyBudget > 0 &&
-							  					budgetUsagePercentage > 100 &&
-							  					"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
-							  			]}
+										"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
+										usagePercentage > 100 &&
+											"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
+									]}
 								>
-									{yearlyBudget > 0
-							  				? `${budgetUsagePercentage.toFixed(1)}% used`
-							  				: "No yearly budget set"}
+									{`${usagePercentage.toFixed(1)}% used`}
 								</progress>
-								{yearlyBudget > 0 && (
-							  				<span
-							  					aria-hidden="true"
-							  					class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
-							  				>
-							  					<span
-							  						class:list={[
-							  							"h-full w-0.75 justify-self-start border-x border-neutral-50 bg-neutral-950 dark:border-neutral-950 dark:bg-neutral-50",
-							  							budgetPaceGridLineClass,
-							  						]}
-							  					/>
-							  				</span>
-							  			)}
-							</div>
-							<p
-								class="max-w-prose text-sm text-neutral-600 dark:text-neutral-400"
-							>
-								{yearlyBudget > 0
-							  			? `Based on invoices created this calendar year. The marker shows ${budgetPacePercentage.toFixed(1)}% calendar pace.`
-							  			: "Set a yearly budget to compare invoices against calendar pace."}
-							</p>
-						</div>
-
-						<dl
-							class="grid gap-3 border-t border-dashed border-neutral-300 pt-4 text-sm dark:border-neutral-700 sm:grid-cols-3"
-						>
-							<div class="grid gap-1">
-								<dt
-									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+								<span
+									aria-hidden="true"
+									class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
 								>
-									Budget status
-								</dt>
-								<dd
-									class:list={[
-											"font-medium",
-											yearlyBudget > 0 &&
-												remainingBudget < 0 &&
-												"text-red-700 dark:text-red-300",
+									<span
+										class:list={[
+											"h-full w-0.75 justify-self-start border-x border-neutral-50 bg-neutral-950 dark:border-neutral-950 dark:bg-neutral-50",
+											budgetPaceGridLineClass,
 										]}
-								>
-									{budgetStatus}
-								</dd>
+									/>
+								</span>
 							</div>
-							<div class="grid gap-1">
-								<dt
-									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-								>
-									Active projects
-								</dt>
-								<dd class="font-medium tabular-nums">{activeProjectCount}</dd>
-							</div>
-							<div class="grid gap-1">
-								<dt
-									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-								>
-									Completed projects
-								</dt>
-								<dd class="font-medium tabular-nums"
-									>{completedProjectCount}</dd
-								>
-							</div>
-						</dl>
+						)}
 					</div>
-				</div>
-			</section>
+				</section>
 
-			<section
-				aria-labelledby="projects-list-heading"
-				class="group grid content-start gap-3"
-			>
-				<div class="grid grid-cols-[1fr_auto] items-center gap-3">
-					<h2
-						id="projects-list-heading"
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>
-						Projects
-					</h2>
-					{completedProjectCount > 0 && (
+				<SpendByYear rows={spendRows} />
+			</div>
+
+			<div class="grid min-w-0 content-start gap-6">
+				<section
+					aria-labelledby="projects-list-heading"
+					class="group grid content-start gap-3"
+				>
+					<div class="grid grid-cols-[1fr_auto] items-center gap-3">
+						<h2
+							id="projects-list-heading"
+							class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+						>
+							Projects
+						</h2>
+						{completedProjectCount > 0 && (
 							<label
 								class="grid cursor-pointer grid-flow-col items-center gap-2 text-sm font-medium text-neutral-700 select-none dark:text-neutral-300"
 							>
@@ -398,45 +350,45 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 								<span>Hide completed</span>
 							</label>
 						)}
-				</div>
-				<div
-					class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700"
-				>
-					<table class="w-full min-w-xl text-sm">
-						<thead>
-							<tr
-								class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
+					</div>
+					<div
+						class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700"
+					>
+						<table class="w-full min-w-xl text-sm">
+							<thead>
+								<tr
+									class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
+								>
+									<th
+										scope="col"
+										class="px-4 py-3 text-left text-xs font-semibold uppercase"
+									>
+										Name
+									</th>
+									<th
+										scope="col"
+										class="px-4 py-3 text-left text-xs font-semibold uppercase"
+									>
+										Status
+									</th>
+									<th
+										scope="col"
+										class="px-4 py-3 text-right text-xs font-semibold uppercase"
+									>
+										Total Cost
+									</th>
+									<th
+										scope="col"
+										class="px-4 py-3 text-left text-xs font-semibold uppercase"
+									>
+										Actions
+									</th>
+								</tr>
+							</thead>
+							<tbody
+								class="divide-y divide-dashed divide-neutral-300 dark:divide-neutral-700"
 							>
-								<th
-									scope="col"
-									class="px-4 py-3 text-left text-xs font-semibold uppercase"
-								>
-									Name
-								</th>
-								<th
-									scope="col"
-									class="px-4 py-3 text-left text-xs font-semibold uppercase"
-								>
-									Status
-								</th>
-								<th
-									scope="col"
-									class="px-4 py-3 text-right text-xs font-semibold uppercase"
-								>
-									Total Cost
-								</th>
-								<th
-									scope="col"
-									class="px-4 py-3 text-left text-xs font-semibold uppercase"
-								>
-									Actions
-								</th>
-							</tr>
-						</thead>
-						<tbody
-							class="divide-y divide-dashed divide-neutral-300 dark:divide-neutral-700"
-						>
-							{projects.length > 0 ? (
+								{projects.length > 0 ? (
 									projects.map((project) => (
 										<tr
 											class:list={[
@@ -452,7 +404,7 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 														"text-neutral-500 dark:text-neutral-400",
 												]}
 											>
-												{project.name}
+												<a href={`/dash/org/${slug}/project/${project.publicId}`} class="underline decoration-dashed underline-offset-4">{project.name}</a>
 											</th>
 											<td class="px-4 py-3">
 												<Badge type={projectStateToBadgeType(project.state)}>
@@ -474,6 +426,7 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 												<td class="px-4 py-3">
 													<Button
 														href={`/dash/org/${slug}/project/${project.publicId}`}
+													aria-label={`Details for ${project.name}`}
 													>
 													Details
 												</Button>
@@ -490,7 +443,7 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 										</td>
 									</tr>
 								)}
-							{projects.length > 0 && completedProjectCount === projects.length && (
+								{projects.length > 0 && completedProjectCount === projects.length && (
 									<tr class="hidden group-has-[:checked]:table-row">
 										<td
 											colspan="4"
@@ -500,23 +453,24 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 										</td>
 									</tr>
 								)}
-						</tbody>
-					</table>
-				</div>
-			</section>
-			<section
-				aria-labelledby="invoices-heading"
-				class="grid content-start gap-3"
-			>
-				<h2
-					id="invoices-heading"
-					class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+							</tbody>
+						</table>
+					</div>
+				</section>
+				<section
+					aria-labelledby="invoices-heading"
+					class="grid content-start gap-3"
 				>
-					Invoices
-				</h2>
-				<OrganizationInvoices id={organization.id} />
-			</section>
+					<h2
+						id="invoices-heading"
+						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>
+						Invoices
+					</h2>
+					<OrganizationInvoices id={organization.id} slug={slug} />
+				</section>
+			</div>
 		</main>
-		<Footer />
+		<Footer wide />
 	</Fragment>
 </Shell>

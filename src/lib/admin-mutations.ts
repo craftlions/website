@@ -3,6 +3,8 @@ import type { Db } from "./database.ts";
 import { env } from "cloudflare:workers";
 import { getOrgAdapter } from "better-auth/plugins/organization";
 import { and, eq, isNull, sql } from "drizzle-orm";
+import { resolveDelivery } from "./delivery.ts";
+import { assertAdminUser, DomainError } from "./domain.ts";
 import {
 	events,
 	invoices,
@@ -10,22 +12,7 @@ import {
 	phases,
 	projects,
 } from "./schema.ts";
-
-export class DomainError extends Error {
-	constructor(
-		public code:
-			| "AlreadyExists"
-			| "Conflict"
-			| "Forbidden"
-			| "InvalidTransition"
-			| "NotFound"
-			| "StripeUnavailable"
-			| "Validation",
-		message: string,
-	) {
-		super(message);
-	}
-}
+import { fetchStripeInvoice, stripeInvoiceSnapshot } from "./stripe.ts";
 
 export const toSlug = (value: string) =>
 	value
@@ -33,17 +20,6 @@ export const toSlug = (value: string) =>
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/^-|-$/g, "");
-
-export const assertAdminUser = async (db: Db, actorId: string) => {
-	const actor = await db.query.user.findFirst({
-		columns: { id: true, role: true },
-		where: { id: actorId },
-	});
-
-	if (actor?.role !== "admin") {
-		throw new DomainError("Forbidden", "Only admins can perform this action.");
-	}
-};
 
 const publicId = () => crypto.randomUUID();
 
@@ -511,28 +487,127 @@ export const recordInvoice = async (
 		stripePaymentPage: string;
 		total: number;
 		expectedVersion: number;
+		stripeKey: string;
+		deliveryChoice?: "url" | "none" | undefined;
+		deliveryUrl?: string | null | undefined;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
 
+	const delivery = resolveDelivery(input.deliveryChoice, input.deliveryUrl);
+
+	const phase = await db.query.phases.findFirst({
+		columns: {
+			id: true,
+			state: true,
+			currency: true,
+			version: true,
+			deliveryState: true,
+			deliveryUrl: true,
+		},
+		where: { id: input.phaseId },
+	});
+
+	if (!phase) {
+		throw new DomainError("NotFound", "Phase not found.");
+	}
+
+	const invoice = await db.query.invoices.findFirst({
+		columns: {
+			id: true,
+			publicId: true,
+			phaseId: true,
+			invoiceNumber: true,
+			stripeId: true,
+			stripePaymentPage: true,
+			currency: true,
+			total: true,
+		},
+		where: { phaseId: phase.id },
+	});
+
+	const invoiceMatches = (
+		phaseRow: { id: string; state: string; currency: string; version: number },
+		invoiceRow: typeof invoice,
+	): invoiceRow is NonNullable<typeof invoice> =>
+		invoiceRow?.phaseId === phaseRow.id &&
+		invoiceRow.invoiceNumber === input.invoiceNumber.trim() &&
+		invoiceRow.stripeId === input.stripeId.trim() &&
+		invoiceRow.stripePaymentPage === input.stripePaymentPage.trim() &&
+		invoiceRow.currency === phaseRow.currency &&
+		invoiceRow.total === input.total;
+
+	const deliveryMatches = (phaseRow: {
+		deliveryState: "url" | "none" | "not_recorded";
+		deliveryUrl: string | null;
+	}) =>
+		phaseRow.deliveryState === delivery.deliveryState &&
+		phaseRow.deliveryUrl === delivery.deliveryUrl;
+
+	if (
+		phase.state === "invoiced" &&
+		phase.version === input.expectedVersion + 1 &&
+		invoiceMatches(phase, invoice)
+	) {
+		if (deliveryMatches(phase)) {
+			return {
+				invoice: { id: invoice.id, publicId: invoice.publicId },
+				created: false,
+			};
+		}
+
+		throw new DomainError(
+			"AlreadyExists",
+			"This invoice is already recorded with a different Delivery choice. Review the recorded invoice and update Delivery from there instead.",
+		);
+	}
+
+	if (phase.version !== input.expectedVersion) {
+		throw new DomainError(
+			"Conflict",
+			"This phase was changed by another request. Refresh and try again.",
+		);
+	}
+
+	if (phase.state !== "in_progress") {
+		throw new DomainError(
+			"InvalidTransition",
+			"Invoices can only be recorded on in-progress phases.",
+		);
+	}
+
+	if (invoice) {
+		throw new DomainError(
+			"AlreadyExists",
+			"This phase already has an invoice.",
+		);
+	}
+
+	const stripeInvoice = await fetchStripeInvoice({
+		stripeId: input.stripeId.trim(),
+		stripeKey: input.stripeKey,
+	});
+
 	return db.transaction(async (tx) => {
-		const [phase] = await tx
+		const [lockedPhase] = await tx
 			.select({
 				id: phases.id,
 				projectId: phases.projectId,
 				state: phases.state,
 				currency: phases.currency,
 				version: phases.version,
+				deliveryState: phases.deliveryState,
+				deliveryUrl: phases.deliveryUrl,
 			})
 			.from(phases)
 			.where(eq(phases.id, input.phaseId))
 			.for("update");
 
-		if (!phase) {
+		if (!lockedPhase) {
 			throw new DomainError("NotFound", "Phase not found.");
 		}
 
-		const invoice = await tx.query.invoices.findFirst({
+		const lockedInvoice = await tx.query.invoices.findFirst({
 			columns: {
 				id: true,
 				publicId: true,
@@ -543,42 +618,45 @@ export const recordInvoice = async (
 				currency: true,
 				total: true,
 			},
-			where: { phaseId: phase.id },
+			where: { phaseId: lockedPhase.id },
 		});
-		const invoiceMatches =
-			invoice?.phaseId === phase.id &&
-			invoice.invoiceNumber === input.invoiceNumber.trim() &&
-			invoice.stripeId === input.stripeId.trim() &&
-			invoice.stripePaymentPage === input.stripePaymentPage.trim() &&
-			invoice.currency === phase.currency &&
-			invoice.total === input.total;
 
 		if (
-			phase.state === "invoiced" &&
-			phase.version === input.expectedVersion + 1 &&
-			invoiceMatches
+			lockedPhase.state === "invoiced" &&
+			lockedPhase.version === input.expectedVersion + 1 &&
+			invoiceMatches(lockedPhase, lockedInvoice)
 		) {
-			return {
-				invoice: { id: invoice.id, publicId: invoice.publicId },
-				created: false,
-			};
+			if (deliveryMatches(lockedPhase)) {
+				return {
+					invoice: {
+						id: lockedInvoice.id,
+						publicId: lockedInvoice.publicId,
+					},
+					created: false,
+				};
+			}
+
+			throw new DomainError(
+				"AlreadyExists",
+				"This invoice is already recorded with a different Delivery choice. Review the recorded invoice and update Delivery from there instead.",
+			);
 		}
 
-		if (phase.version !== input.expectedVersion) {
+		if (lockedPhase.version !== input.expectedVersion) {
 			throw new DomainError(
 				"Conflict",
 				"This phase was changed by another request. Refresh and try again.",
 			);
 		}
 
-		if (phase.state !== "in_progress") {
+		if (lockedPhase.state !== "in_progress") {
 			throw new DomainError(
 				"InvalidTransition",
 				"Invoices can only be recorded on in-progress phases.",
 			);
 		}
 
-		if (invoice) {
+		if (lockedInvoice) {
 			throw new DomainError(
 				"AlreadyExists",
 				"This phase already has an invoice.",
@@ -587,7 +665,7 @@ export const recordInvoice = async (
 
 		const project = await tx.query.projects.findFirst({
 			columns: { organizationId: true },
-			where: { id: phase.projectId },
+			where: { id: lockedPhase.projectId },
 		});
 
 		if (!project) {
@@ -599,12 +677,13 @@ export const recordInvoice = async (
 			.values({
 				publicId: publicId(),
 				organizationId: project.organizationId,
-				phaseId: phase.id,
+				phaseId: lockedPhase.id,
 				invoiceNumber: input.invoiceNumber.trim(),
 				stripeId: input.stripeId.trim(),
 				stripePaymentPage: input.stripePaymentPage.trim(),
-				currency: phase.currency,
+				currency: lockedPhase.currency,
 				total: input.total,
+				invoicedAt: stripeInvoiceSnapshot(stripeInvoice).invoicedAt,
 			})
 			.onConflictDoNothing()
 			.returning({ id: invoices.id, publicId: invoices.publicId });
@@ -618,10 +697,15 @@ export const recordInvoice = async (
 
 		const transitioned = await tx
 			.update(phases)
-			.set({ state: "invoiced", version: sql`${phases.version} + 1` })
+			.set({
+				state: "invoiced",
+				version: sql`${phases.version} + 1`,
+				deliveryState: delivery.deliveryState,
+				deliveryUrl: delivery.deliveryUrl,
+			})
 			.where(
 				and(
-					eq(phases.id, phase.id),
+					eq(phases.id, lockedPhase.id),
 					eq(phases.state, "in_progress"),
 					eq(phases.version, input.expectedVersion),
 				),
@@ -637,7 +721,7 @@ export const recordInvoice = async (
 
 		await insertEvent(tx, {
 			aggregateType: "phase",
-			aggregateId: phase.id,
+			aggregateId: lockedPhase.id,
 			aggregateVersion: input.expectedVersion + 1,
 			event: "invoiced",
 			actorId,
@@ -650,9 +734,17 @@ export const recordInvoice = async (
 export const attachInvoiceToPhase = async (
 	db: Db,
 	actorId: string,
-	input: { invoiceId: string; phaseId: string; expectedVersion: number },
+	input: {
+		invoiceId: string;
+		phaseId: string;
+		expectedVersion: number;
+		deliveryChoice?: "url" | "none" | undefined;
+		deliveryUrl?: string | null | undefined;
+	},
 ) => {
 	await assertAdminUser(db, actorId);
+
+	const delivery = resolveDelivery(input.deliveryChoice, input.deliveryUrl);
 
 	return db.transaction(async (tx) => {
 		const [phase] = await tx
@@ -662,6 +754,8 @@ export const attachInvoiceToPhase = async (
 				state: phases.state,
 				currency: phases.currency,
 				version: phases.version,
+				deliveryState: phases.deliveryState,
+				deliveryUrl: phases.deliveryUrl,
 			})
 			.from(phases)
 			.where(eq(phases.id, input.phaseId))
@@ -686,13 +780,27 @@ export const attachInvoiceToPhase = async (
 			throw new DomainError("NotFound", "Invoice not found.");
 		}
 
+		const deliveryMatches = (phaseRow: {
+			deliveryState: "url" | "none" | "not_recorded";
+			deliveryUrl: string | null;
+		}) =>
+			phaseRow.deliveryState === delivery.deliveryState &&
+			phaseRow.deliveryUrl === delivery.deliveryUrl;
+
 		if (
 			invoice.phaseId === phase.id &&
 			phase.state === "invoiced" &&
 			(phase.version === input.expectedVersion ||
 				phase.version === input.expectedVersion + 1)
 		) {
-			return { idempotent: true };
+			if (deliveryMatches(phase)) {
+				return { idempotent: true };
+			}
+
+			throw new DomainError(
+				"AlreadyExists",
+				"This invoice is already attached with a different Delivery choice. Update Delivery from the invoice row instead.",
+			);
 		}
 
 		if (phase.version !== input.expectedVersion) {
@@ -764,7 +872,12 @@ export const attachInvoiceToPhase = async (
 		if (phase.state === "in_progress") {
 			const transitioned = await tx
 				.update(phases)
-				.set({ state: "invoiced", version: sql`${phases.version} + 1` })
+				.set({
+					state: "invoiced",
+					version: sql`${phases.version} + 1`,
+					deliveryState: delivery.deliveryState,
+					deliveryUrl: delivery.deliveryUrl,
+				})
 				.where(
 					and(
 						eq(phases.id, phase.id),
@@ -788,7 +901,130 @@ export const attachInvoiceToPhase = async (
 				event: "invoiced",
 				actorId,
 			});
+		} else {
+			// Attaching to an already-invoiced phase only sets its Delivery state;
+			// the invoice relationship already holds and the lifecycle state is unchanged.
+			const updated = await tx
+				.update(phases)
+				.set({
+					version: sql`${phases.version} + 1`,
+					deliveryState: delivery.deliveryState,
+					deliveryUrl: delivery.deliveryUrl,
+				})
+				.where(
+					and(
+						eq(phases.id, phase.id),
+						eq(phases.state, "invoiced"),
+						eq(phases.version, input.expectedVersion),
+					),
+				)
+				.returning({ id: phases.id });
+
+			if (!updated[0]) {
+				throw new DomainError(
+					"Conflict",
+					"This phase was changed by another request. Refresh and try again.",
+				);
+			}
+
+			await insertEvent(tx, {
+				aggregateType: "phase",
+				aggregateId: phase.id,
+				aggregateVersion: input.expectedVersion + 1,
+				event: "delivery_updated",
+				actorId,
+			});
 		}
+
+		return { idempotent: false };
+	});
+};
+
+export const updatePhaseDelivery = async (
+	db: Db,
+	actorId: string,
+	input: {
+		phaseId: string;
+		expectedVersion: number;
+		deliveryChoice?: "url" | "none" | undefined;
+		deliveryUrl?: string | null | undefined;
+	},
+) => {
+	await assertAdminUser(db, actorId);
+
+	const delivery = resolveDelivery(input.deliveryChoice, input.deliveryUrl);
+
+	return db.transaction(async (tx) => {
+		const [phase] = await tx
+			.select({
+				id: phases.id,
+				version: phases.version,
+				deliveryState: phases.deliveryState,
+				deliveryUrl: phases.deliveryUrl,
+			})
+			.from(phases)
+			.where(eq(phases.id, input.phaseId))
+			.for("update");
+
+		if (!phase) {
+			throw new DomainError("NotFound", "Phase not found.");
+		}
+
+		// Delivery can only be corrected from an attached-invoice admin row (S-003 AC7),
+		// so reject phases that carry no invoice even when the incoming Delivery matches.
+		const attachedInvoice = await tx.query.invoices.findFirst({
+			columns: { id: true },
+			where: { phaseId: phase.id },
+		});
+
+		if (!attachedInvoice) {
+			throw new DomainError(
+				"InvalidTransition",
+				"Delivery can only be updated for phases with an attached invoice.",
+			);
+		}
+
+		// Same Delivery already stored: nothing to change, stay idempotent on retry.
+		if (
+			phase.deliveryState === delivery.deliveryState &&
+			phase.deliveryUrl === delivery.deliveryUrl
+		) {
+			return { idempotent: true };
+		}
+
+		if (phase.version !== input.expectedVersion) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		const updated = await tx
+			.update(phases)
+			.set({
+				version: sql`${phases.version} + 1`,
+				deliveryState: delivery.deliveryState,
+				deliveryUrl: delivery.deliveryUrl,
+			})
+			.where(
+				and(eq(phases.id, phase.id), eq(phases.version, input.expectedVersion)),
+			)
+			.returning({ id: phases.id });
+
+		if (!updated[0]) {
+			throw new DomainError(
+				"Conflict",
+				"This phase was changed by another request. Refresh and try again.",
+			);
+		}
+
+		await insertEvent(tx, {
+			aggregateType: "phase",
+			aggregateId: phase.id,
+			aggregateVersion: input.expectedVersion + 1,
+			event: "delivery_updated",
+			actorId,
+		});
 
 		return { idempotent: false };
 	});

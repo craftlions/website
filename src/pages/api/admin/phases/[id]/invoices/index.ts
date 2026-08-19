@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
 import { recordInvoice } from "../../../../../../lib/admin-mutations.ts";
 import {
@@ -7,6 +8,11 @@ import {
 	requireJson,
 	verifyAdminApiKey,
 } from "../../../../../../lib/api-adapters.ts";
+import {
+	deliveryChoiceSchema,
+	deliveryPairingIssue,
+	deliveryUrlSchema,
+} from "../../../../../../lib/delivery.ts";
 
 export const prerender = false;
 
@@ -21,10 +27,13 @@ export const POST: APIRoute = async (context) => {
 		.strictObject({
 			invoiceNumber: z.string().trim().min(1).max(80),
 			stripeId: z.string().trim().min(1).max(140),
-			stripePaymentPage: z.string().trim().url(),
+			stripePaymentPage: z.string().trim().pipe(z.url()),
 			total: z.number().nonnegative(),
 			expectedVersion: z.number().int().nonnegative(),
+			deliveryChoice: deliveryChoiceSchema,
+			deliveryUrl: deliveryUrlSchema,
 		})
+		.superRefine(deliveryPairingIssue)
 		.safeParse(await context.request.json());
 
 	if (!validation.success) {
@@ -38,6 +47,7 @@ export const POST: APIRoute = async (context) => {
 			{
 				phaseId: String(context.params.id),
 				...validation.data,
+				stripeKey: env.STRIPE_SECRET_KEY,
 			},
 		);
 		return new Response(JSON.stringify(result.invoice), {
