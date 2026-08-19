@@ -1,3 +1,5 @@
+import type { phaseSelectType } from "./schema.ts";
+
 export const invoiceComponents = ["upfront", "delivery", "acceptance"] as const;
 
 export type InvoiceComponent = (typeof invoiceComponents)[number];
@@ -9,27 +11,32 @@ export interface PhaseComponentItem {
 	status: ComponentBillingStatus;
 }
 
-const dueEvents: Record<InvoiceComponent, ReadonlySet<string>> = {
-	upfront: new Set(["approved", "approved_on_behalf"]),
-	delivery: new Set(["delivered"]),
-	acceptance: new Set(["accepted", "accepted_on_behalf"]),
+// Due-ness derives from the phase's persisted state, never from the events
+// table — events is an audit log and must not feed UI or domain state.
+const dueStates: Record<
+	InvoiceComponent,
+	ReadonlySet<phaseSelectType["state"]>
+> = {
+	upfront: new Set(["approved", "in_progress", "delivered", "accepted"]),
+	delivery: new Set(["delivered", "accepted"]),
+	acceptance: new Set(["accepted"]),
 };
 
 export const isInvoiceComponentDue = (
 	component: InvoiceComponent,
-	events: readonly string[],
-) => events.some((event) => dueEvents[component].has(event));
+	state: phaseSelectType["state"],
+) => dueStates[component].has(state);
 
 export const componentBillingStatus = (input: {
 	component: InvoiceComponent;
-	events: readonly string[];
+	state: phaseSelectType["state"];
 	invoice?: { stripeStatus: string | null } | null;
 }): ComponentBillingStatus => {
 	// D-phase-billing-truth: the tagged invoice and Stripe outrank the trigger;
 	// billing state is derived here and is never persisted on the component.
 	if (input.invoice?.stripeStatus === "paid") return "paid";
 	if (input.invoice) return "invoiced";
-	return isInvoiceComponentDue(input.component, input.events)
+	return isInvoiceComponentDue(input.component, input.state)
 		? "due"
 		: "not_due";
 };
@@ -38,7 +45,7 @@ export const buildPhaseComponents = (input: {
 	upfrontAmount: number | null;
 	deliveryAmount: number | null;
 	acceptanceAmount: number | null;
-	events: readonly string[];
+	state: phaseSelectType["state"];
 	invoices: ReadonlyArray<{
 		component: string | null;
 		stripeStatus: string | null;
@@ -74,7 +81,7 @@ export const buildPhaseComponents = (input: {
 						amount,
 						status: componentBillingStatus({
 							component,
-							events: input.events,
+							state: input.state,
 							invoice: invoiceByComponent.get(component) ?? null,
 						}),
 					};

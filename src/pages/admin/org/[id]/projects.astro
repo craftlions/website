@@ -9,7 +9,6 @@ import PhaseComponentBreakdown from "../../../../components/PhaseComponentBreakd
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import { buildPhaseComponents } from "../../../../lib/phase-billing";
-import { getPhaseEventTypes } from "../../../../lib/phase-events.ts";
 
 const { id } = Astro.params;
 
@@ -75,10 +74,6 @@ const projects = await Astro.locals.db.query.projects.findMany({
 		name: "asc",
 	},
 });
-const phaseEventTypes = await getPhaseEventTypes(
-	Astro.locals.db,
-	projects.flatMap((project) => project.phases.map((phase) => phase.id)),
-);
 const projectsWithComponents = projects.map((project) => ({
 	...project,
 	phases: project.phases.map((phase) => ({
@@ -87,7 +82,7 @@ const projectsWithComponents = projects.map((project) => ({
 			upfrontAmount: phase.upfrontAmount,
 			deliveryAmount: phase.deliveryAmount,
 			acceptanceAmount: phase.acceptanceAmount,
-			events: phaseEventTypes.get(phase.id) ?? [],
+			state: phase.state,
 			invoices: phase.invoices,
 		}),
 	})),

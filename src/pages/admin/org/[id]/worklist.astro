@@ -78,7 +78,6 @@ const phaseEvents =
 		? await Astro.locals.db
 				.select({
 					id: events.id,
-					event: events.event,
 					aggregateId: events.aggregateId,
 				})
 				.from(events)
@@ -91,17 +90,12 @@ const phaseEvents =
 		: [];
 const latestPhaseEventIds = new Map<string, string>();
 
-const phaseEventTypes = new Map<string, string[]>();
 for (const event of phaseEvents) {
 	const current = latestPhaseEventIds.get(event.aggregateId);
 
 	if (!current || event.id > current) {
 		latestPhaseEventIds.set(event.aggregateId, event.id);
 	}
-
-	const list = phaseEventTypes.get(event.aggregateId) ?? [];
-	list.push(event.event);
-	phaseEventTypes.set(event.aggregateId, list);
 }
 
 const now = new Date();
@@ -126,13 +120,12 @@ type WorklistItem = {
 
 const isUpfrontUnpaid = (phase: WorklistPhase) => {
 	if (phase.upfrontAmount === null) return false;
-	const eventTypes = phaseEventTypes.get(phase.id) ?? [];
 	const upfrontInvoice = phase.invoices.find(
 		(inv) => inv.component === "upfront",
 	);
 	const status = componentBillingStatus({
 		component: "upfront",
-		events: eventTypes,
+		state: phase.state,
 		invoice: upfrontInvoice ?? null,
 	});
 	return status !== "paid";
