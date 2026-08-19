@@ -1,13 +1,20 @@
 ---
 export const prerender = false;
 
+import type { PhaseComponentItem } from "../../../../../components/PhaseComponentBreakdown.astro";
 import { isAPIError } from "better-auth/api";
+import { and, eq, inArray } from "drizzle-orm";
 import Button from "../../../../../components/Button.astro";
 import Footer from "../../../../../components/Footer.astro";
 import Nav from "../../../../../components/Nav.astro";
 import PhasesTable from "../../../../../components/PhasesTable.astro";
 import ProjectInvoices from "../../../../../components/ProjectInvoices.astro";
 import Shell from "../../../../../layouts/Shell.astro";
+import {
+	componentBillingStatus,
+	invoiceComponents,
+} from "../../../../../lib/phase-billing";
+import { events } from "../../../../../lib/schema";
 
 const { publicId, slug } = Astro.params;
 
@@ -58,10 +65,14 @@ const project = await Astro.locals.db.query.projects.findFirst({
 	with: {
 		phases: {
 			columns: {
+				id: true,
 				publicId: true,
 				title: true,
 				dueAt: true,
 				cost: true,
+				upfrontAmount: true,
+				deliveryAmount: true,
+				acceptanceAmount: true,
 				currency: true,
 				state: true,
 				version: true,
@@ -69,7 +80,14 @@ const project = await Astro.locals.db.query.projects.findFirst({
 				deliveryState: true,
 				deliveryUrl: true,
 			},
-			with: {},
+			with: {
+				invoices: {
+					columns: {
+						component: true,
+						stripeStatus: true,
+					},
+				},
+			},
 			orderBy: {
 				dueAt: "asc",
 				id: "asc",
@@ -97,6 +115,57 @@ const currentMember = await Astro.locals.db.query.member.findFirst({
 });
 const canApprovePhases =
 	currentMember?.role === "owner" || currentMember?.role === "admin";
+
+const phaseIds = project.phases.map((phase) => phase.id);
+const phaseEvents =
+	phaseIds.length > 0
+		? await Astro.locals.db
+				.select({ event: events.event, aggregateId: events.aggregateId })
+				.from(events)
+				.where(
+					and(
+						eq(events.aggregateType, "phase"),
+						inArray(events.aggregateId, phaseIds),
+					),
+				)
+		: [];
+const phaseEventMap = new Map<string, string[]>();
+for (const row of phaseEvents) {
+	const list = phaseEventMap.get(row.aggregateId) ?? [];
+	list.push(row.event);
+	phaseEventMap.set(row.aggregateId, list);
+}
+
+const phasesWithComponents = project.phases.map((phase) => {
+	const eventTypes = phaseEventMap.get(phase.id) ?? [];
+	const invoiceByComponent = new Map(
+		phase.invoices
+			.filter((inv) => inv.component !== null)
+			.map((inv) => [inv.component, inv]),
+	);
+	const components: PhaseComponentItem[] = invoiceComponents
+		.map((component) => {
+			const amount =
+				component === "upfront"
+					? phase.upfrontAmount
+					: component === "delivery"
+						? phase.deliveryAmount
+						: phase.acceptanceAmount;
+			return amount === null
+				? null
+				: {
+						component,
+						amount,
+						status: componentBillingStatus({
+							component,
+							events: eventTypes,
+							invoice: invoiceByComponent.get(component) ?? null,
+						}),
+					};
+		})
+		.filter((item): item is PhaseComponentItem => item !== null);
+	return { ...phase, components };
+});
 ---
 
 <Shell
@@ -134,7 +203,7 @@ const canApprovePhases =
 					Phases
 				</h2>
 				<PhasesTable
-					phases={project.phases}
+					phases={phasesWithComponents}
 					canApprovePhases={canApprovePhases && !session.session.impersonatedBy}
 					canAcceptPhases={canApprovePhases && !session.session.impersonatedBy}
 				/>

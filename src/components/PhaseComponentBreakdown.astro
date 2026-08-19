@@ -1,0 +1,47 @@
+---
+import type {
+	ComponentBillingStatus,
+	InvoiceComponent,
+} from "../lib/phase-billing";
+import Badge from "./Badge.astro";
+
+export interface PhaseComponentItem {
+	component: InvoiceComponent;
+	amount: number;
+	status: ComponentBillingStatus;
+}
+
+interface Props {
+	items: PhaseComponentItem[];
+	currency: string;
+}
+
+const { items, currency } = Astro.props;
+
+const statusBadgeType: Record<
+	ComponentBillingStatus,
+	"info" | "success" | "error" | "gray"
+> = {
+	not_due: "gray",
+	due: "info",
+	invoiced: "info",
+	paid: "success",
+};
+
+const formatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency,
+});
+---
+
+{items.length > 0 && (
+	<ul class="grid gap-0.5">
+		{items.map(({ component, amount, status }) => (
+			<li class="grid grid-cols-[auto_1fr_auto] items-center gap-x-2">
+				<span class="text-xs text-neutral-600 dark:text-neutral-400">{component}</span>
+				<span class="text-xs tabular-nums text-neutral-700 dark:text-neutral-300">{formatter.format(amount)}</span>
+				<Badge type={statusBadgeType[status]}>{status.replaceAll("_", " ")}</Badge>
+			</li>
+		))}
+	</ul>
+)}
