@@ -10,7 +10,6 @@ import {
 	invoiceComponents,
 	isInvoiceComponentDue,
 } from "../../../../lib/phase-billing.ts";
-import { getPhaseEventTypes } from "../../../../lib/phase-events.ts";
 
 const { id } = Astro.params;
 
@@ -115,22 +114,17 @@ const [organizationData, projects, unattachedInvoices] = await Promise.all([
 const allPhases = projects.flatMap((project) =>
 	project.phases.map((phase) => ({ ...phase, project })),
 );
-const phaseEventTypes = await getPhaseEventTypes(
-	Astro.locals.db,
-	allPhases.map((phase) => phase.id),
-);
 const componentTargets = allPhases.flatMap((phase) =>
 	invoiceComponents.flatMap((component) => {
 		const amount = phase[`${component}Amount`];
 		if (amount === null) return [];
 		const invoice = phase.invoices.find((row) => row.component === component);
-		const events = phaseEventTypes.get(phase.id) ?? [];
-		return [{ ...phase, component, amount, invoice, events }];
+		return [{ ...phase, component, amount, invoice }];
 	}),
 );
 const attachableTargets = componentTargets.filter(
 	(target) =>
-		!target.invoice && isInvoiceComponentDue(target.component, target.events),
+		!target.invoice && isInvoiceComponentDue(target.component, target.state),
 );
 const recordableTargets = attachableTargets;
 const deliveryPhaseIds = new Set<string>();
@@ -273,7 +267,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 							<td class="px-4 py-3">{target.project.name} · {target.title} · {target.component}</td>
 							<td class="px-4 py-3">
 								{target.invoice ? (
-									<>{componentBillingStatus({ component: target.component, events: target.events, invoice: target.invoice })} · Stripe {target.invoice.stripeStatus ?? "not fetched"}{target.invoice.stripeDueAt ? ` · due ${dateFormatter.format(target.invoice.stripeDueAt)}` : ""}{target.invoice.stripePaidAt ? ` · paid ${dateFormatter.format(target.invoice.stripePaidAt)}` : ""}{target.invoice.fetchedAt ? ` · ${dateFormatter.format(target.invoice.fetchedAt)}` : ""}</>
+									<>{componentBillingStatus({ component: target.component, state: target.state, invoice: target.invoice })} · Stripe {target.invoice.stripeStatus ?? "not fetched"}{target.invoice.stripeDueAt ? ` · due ${dateFormatter.format(target.invoice.stripeDueAt)}` : ""}{target.invoice.stripePaidAt ? ` · paid ${dateFormatter.format(target.invoice.stripePaidAt)}` : ""}{target.invoice.fetchedAt ? ` · ${dateFormatter.format(target.invoice.fetchedAt)}` : ""}</>
 								) : (
 									<span class="text-neutral-500 dark:text-neutral-400">No invoice</span>
 								)}

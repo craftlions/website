@@ -767,6 +767,7 @@ export const recordInvoice = async (
 		columns: {
 			id: true,
 			currency: true,
+			state: true,
 			version: true,
 			upfrontAmount: true,
 			deliveryAmount: true,
@@ -778,11 +779,6 @@ export const recordInvoice = async (
 	if (!phase) {
 		throw new DomainError("NotFound", "Phase not found.");
 	}
-
-	const phaseEvents = await db.query.events.findMany({
-		columns: { event: true },
-		where: { aggregateType: "phase", aggregateId: phase.id },
-	});
 
 	if (phase[`${input.component}Amount`] === null) {
 		throw new DomainError("Validation", "This component is not priced.");
@@ -832,12 +828,7 @@ export const recordInvoice = async (
 		);
 	}
 
-	if (
-		!isInvoiceComponentDue(
-			input.component,
-			phaseEvents.map(({ event }) => event),
-		)
-	) {
+	if (!isInvoiceComponentDue(input.component, phase.state)) {
 		throw new DomainError(
 			"InvalidTransition",
 			`The ${input.component} component is not due yet.`,
@@ -862,6 +853,7 @@ export const recordInvoice = async (
 				id: phases.id,
 				projectId: phases.projectId,
 				currency: phases.currency,
+				state: phases.state,
 				version: phases.version,
 				upfrontAmount: phases.upfrontAmount,
 				deliveryAmount: phases.deliveryAmount,
@@ -878,11 +870,6 @@ export const recordInvoice = async (
 		if (lockedPhase[`${input.component}Amount`] === null) {
 			throw new DomainError("Validation", "This component is not priced.");
 		}
-
-		const triggerEvents = await tx.query.events.findMany({
-			columns: { event: true },
-			where: { aggregateType: "phase", aggregateId: lockedPhase.id },
-		});
 
 		const lockedInvoice = await tx.query.invoices.findFirst({
 			columns: {
@@ -916,12 +903,7 @@ export const recordInvoice = async (
 			);
 		}
 
-		if (
-			!isInvoiceComponentDue(
-				input.component,
-				triggerEvents.map(({ event }) => event),
-			)
-		) {
+		if (!isInvoiceComponentDue(input.component, lockedPhase.state)) {
 			throw new DomainError(
 				"InvalidTransition",
 				`The ${input.component} component is not due yet.`,
@@ -994,6 +976,7 @@ export const attachInvoiceToPhase = async (
 				id: phases.id,
 				projectId: phases.projectId,
 				currency: phases.currency,
+				state: phases.state,
 				version: phases.version,
 				upfrontAmount: phases.upfrontAmount,
 				deliveryAmount: phases.deliveryAmount,
@@ -1075,17 +1058,7 @@ export const attachInvoiceToPhase = async (
 			);
 		}
 
-		const triggerEvents = await tx.query.events.findMany({
-			columns: { event: true },
-			where: { aggregateType: "phase", aggregateId: phase.id },
-		});
-
-		if (
-			!isInvoiceComponentDue(
-				input.component,
-				triggerEvents.map(({ event }) => event),
-			)
-		) {
+		if (!isInvoiceComponentDue(input.component, phase.state)) {
 			throw new DomainError(
 				"InvalidTransition",
 				`The ${input.component} component is not due yet.`,
