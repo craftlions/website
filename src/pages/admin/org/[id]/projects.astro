@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
+import PhaseAmountCalculator from "../../../../components/PhaseAmountCalculator.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 
@@ -25,6 +26,7 @@ const actionResults = [
 	Astro.getActionResult(actions.createPhase),
 	Astro.getActionResult(actions.transitionPhase),
 	Astro.getActionResult(actions.recordDelivery),
+	Astro.getActionResult(actions.updatePhaseAmounts),
 ];
 const actionError = actionResults.find((result) => result?.error)?.error;
 const actionSucceeded = actionResults.some((result) => result && !result.error);
@@ -42,6 +44,9 @@ const projects = await Astro.locals.db.query.projects.findMany({
 				id: true,
 				title: true,
 				cost: true,
+				upfrontAmount: true,
+				deliveryAmount: true,
+				acceptanceAmount: true,
 				currency: true,
 				state: true,
 				version: true,
@@ -111,12 +116,13 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 							{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="archived" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Archive</Button></form>}
 						</div>
 					</div>
-					<form method="POST" action={actions.createPhase} class="grid gap-3 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_8rem_5rem_max-content_max-content] md:items-end">
+					<form method="POST" action={actions.createPhase} class="grid gap-3 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_8rem_5rem_max-content_max-content] md:items-end" data-phase-amount-form>
 						<input type="hidden" name="projectId" value={project.id} />
 						<label class="grid gap-1 text-sm"><span class="font-medium">Phase title</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="title" required /></label>
-						<label class="grid gap-1 text-sm"><span class="font-medium">Cost</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="cost" type="number" min="0" step="0.01" required /></label>
+						<label class="grid gap-1 text-sm"><span class="font-medium">Cost</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="cost" data-phase-cost-input type="number" min="0" step="0.0001" required /></label>
 						<label class="grid gap-1 text-sm"><span class="font-medium">Currency</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="currency" value="EUR" maxlength="3" required /></label>
 						<label class="grid gap-1 text-sm"><span class="font-medium">Due</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="dueAt" type="date" /></label>
+						<div class="md:col-span-full"><PhaseAmountCalculator cost={0} acceptanceAmount={0} /></div>
 						<Button type="submit">Add phase</Button>
 					</form>
 					<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
@@ -132,6 +138,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 							</thead>
 							<tbody>
 								{project.phases.length > 0 ? project.phases.map((phase) => (
+									<Fragment>
 									<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
 										<td class="px-4 py-3 font-medium">{phase.title}</td>
 										<td class="px-4 py-3">{phase.dueAt ? dateFormatter.format(phase.dueAt) : "-"}</td>
@@ -155,6 +162,25 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 											</div>
 										</td>
 									</tr>
+									{!['approved', 'in_progress', 'delivered', 'accepted'].includes(phase.state) && (
+										<tr class="border-b border-dashed border-neutral-300 dark:border-neutral-700">
+											<td class="px-4 py-3" colspan="5">
+												<form method="POST" action={actions.updatePhaseAmounts} class="grid gap-3" data-phase-amount-form>
+													<input type="hidden" name="phaseId" value={phase.id} />
+													<input type="hidden" name="expectedVersion" value={phase.version} />
+													<input type="hidden" data-phase-cost-input value={phase.cost} />
+													<PhaseAmountCalculator
+														cost={phase.cost}
+														upfrontAmount={phase.upfrontAmount}
+														deliveryAmount={phase.deliveryAmount}
+														acceptanceAmount={phase.acceptanceAmount}
+													/>
+													<Button type="submit">Save cost split</Button>
+												</form>
+											</td>
+										</tr>
+									)}
+									</Fragment>
 								)) : (
 									<tr>
 										<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="5">No phases yet.</td>
@@ -172,6 +198,79 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 </AdminOrgShell>
 
 <script>
+	const formatAmount = (amount: number) =>
+		amount.toFixed(4).replace(/\.?0+$/, "") || "0";
+
+	for (const form of document.querySelectorAll("[data-phase-amount-form]")) {
+		if (!(form instanceof HTMLFormElement)) {
+			continue;
+		}
+
+		const costInput = form.querySelector("[data-phase-cost-input]");
+		const percentages = [
+			...form.querySelectorAll<HTMLInputElement>("[data-phase-amount-percent]"),
+		];
+		const amounts = [
+			...form.querySelectorAll<HTMLInputElement>("[data-phase-amount-value]"),
+		];
+		const total = form.querySelector("[data-phase-amount-total]");
+		const error = form.querySelector("[data-phase-amount-error]");
+		const submit = form.querySelector('button[type="submit"]');
+
+		if (
+			!(costInput instanceof HTMLInputElement) ||
+			!(total instanceof HTMLElement) ||
+			!(error instanceof HTMLElement) ||
+			!(submit instanceof HTMLButtonElement)
+		) {
+			continue;
+		}
+
+		const syncAmounts = () => {
+			const cost = Number(costInput.value);
+			const safeCost = Number.isFinite(cost) && cost >= 0 ? cost : 0;
+			const values = percentages.map((input) => Number(input.value));
+			const percentTotal = values.reduce(
+				(sum, value) => sum + (Number.isFinite(value) ? value : 0),
+				0,
+			);
+			const activeIndexes = values.flatMap((value, index) =>
+				Number.isFinite(value) && value > 0 ? [index] : [],
+			);
+			let remaining = safeCost;
+
+			for (const [index, amountInput] of amounts.entries()) {
+				const percentage = values[index] ?? 0;
+				if (!Number.isFinite(percentage) || percentage <= 0) {
+					amountInput.value = "";
+					continue;
+				}
+
+				const isLastActive = index === activeIndexes.at(-1);
+				// Assign the rounded remainder to the last active component so the
+				// stored amounts still sum exactly to the database cost.
+				const amount = isLastActive
+					? remaining
+					: Math.round(((safeCost * percentage) / 100) * 10_000) / 10_000;
+				amountInput.value = formatAmount(amount);
+				remaining = Math.round((remaining - amount) * 10_000) / 10_000;
+			}
+
+			total.textContent = `${percentTotal.toFixed(2)}% · ${formatAmount(safeCost)}`;
+			const valid =
+				Math.abs(percentTotal - 100) < 0.0001 && activeIndexes.length > 0;
+			error.hidden = valid;
+			error.textContent = valid ? "" : "Percentages must total 100%.";
+			submit.disabled = !valid;
+		};
+
+		for (const input of percentages) {
+			input.addEventListener("input", syncAmounts);
+		}
+		costInput.addEventListener("input", syncAmounts);
+		syncAmounts();
+	}
+
 	for (const select of document.querySelectorAll("[data-delivery-choice]")) {
 		if (!(select instanceof HTMLSelectElement)) {
 			continue;

@@ -293,6 +293,21 @@ export const phases = t.pgTable(
 		cost: t
 			.numeric("cost", { precision: 19, scale: 4, mode: "number" })
 			.notNull(),
+		upfrontAmount: t.numeric("upfront_amount", {
+			precision: 19,
+			scale: 4,
+			mode: "number",
+		}),
+		deliveryAmount: t.numeric("delivery_amount", {
+			precision: 19,
+			scale: 4,
+			mode: "number",
+		}),
+		acceptanceAmount: t.numeric("acceptance_amount", {
+			precision: 19,
+			scale: 4,
+			mode: "number",
+		}),
 		currency: t.char("currency", { length: 3 }).notNull(),
 		state: phaseState("state").notNull(),
 		version: t.integer("version").default(0).notNull(),
@@ -318,6 +333,17 @@ export const phases = t.pgTable(
 				(${table.deliveryState} = 'url' AND ${table.deliveryUrl} IS NOT NULL)
 				OR (${table.deliveryState} = 'none' AND ${table.deliveryUrl} IS NULL)
 				OR (${table.deliveryState} = 'not_recorded' AND ${table.deliveryUrl} IS NULL)
+			)`,
+		),
+		t.check(
+			"phases_cost_components_consistency",
+			sql`(
+				(${table.upfrontAmount} IS NOT NULL
+					OR ${table.deliveryAmount} IS NOT NULL
+					OR ${table.acceptanceAmount} IS NOT NULL)
+				AND coalesce(${table.upfrontAmount}, 0)
+					+ coalesce(${table.deliveryAmount}, 0)
+					+ coalesce(${table.acceptanceAmount}, 0) = ${table.cost}
 			)`,
 		),
 		t

@@ -19,6 +19,7 @@ import {
 	transitionPhaseAsAdmin,
 	transitionProject,
 	updateOrganizationSettings,
+	updatePhaseAmounts,
 	updatePhaseDelivery,
 } from "../lib/admin-mutations.ts";
 import {
@@ -216,6 +217,11 @@ const optionalBudget = z.preprocess(
 	z.coerce.number().int().positive().optional(),
 );
 
+const optionalPhaseAmount = z.preprocess(
+	(value) => (value === "" || value === undefined ? null : Number(value)),
+	z.number().nonnegative().nullable(),
+);
+
 export const server = {
 	approvePhase: defineAction({
 		accept: "form",
@@ -293,6 +299,9 @@ export const server = {
 			projectId: z.string().trim().min(1),
 			title: z.string().trim().min(1).max(180),
 			cost: z.coerce.number().nonnegative(),
+			upfrontAmount: optionalPhaseAmount,
+			deliveryAmount: optionalPhaseAmount,
+			acceptanceAmount: optionalPhaseAmount,
 			currency: z.string().trim().length(3),
 			dueAt: z.preprocess(
 				(value) => (value === "" ? null : value),
@@ -301,6 +310,20 @@ export const server = {
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await createPhase(context.locals.db, actorId, input);
+			return { success: true };
+		}),
+	}),
+	updatePhaseAmounts: defineAction({
+		accept: "form",
+		input: z.object({
+			phaseId: z.string().trim().min(1),
+			expectedVersion: z.coerce.number().int().nonnegative(),
+			upfrontAmount: optionalPhaseAmount,
+			deliveryAmount: optionalPhaseAmount,
+			acceptanceAmount: optionalPhaseAmount,
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await updatePhaseAmounts(context.locals.db, actorId, input);
 			return { success: true };
 		}),
 	}),
