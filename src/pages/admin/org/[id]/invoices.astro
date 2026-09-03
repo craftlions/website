@@ -134,21 +134,14 @@ const pendingTargets = unbilledTargets.filter(
 	(target) => !isInvoiceComponentDue(target.component, target.state),
 );
 const recordableTargets = attachableTargets;
-const deliveryPhaseIds = new Set<string>();
 type ComponentTarget = (typeof componentTargets)[number];
 type RecordedTarget = ComponentTarget & {
 	invoice: NonNullable<ComponentTarget["invoice"]>;
 };
 
-const recordedTargets: (RecordedTarget & { showDelivery: boolean })[] =
-	componentTargets
-		.filter((target): target is RecordedTarget => Boolean(target.invoice))
-		.toSorted((a, b) => b.invoice.id.localeCompare(a.invoice.id))
-		.map((target) => {
-			const showDelivery = !deliveryPhaseIds.has(target.id);
-			deliveryPhaseIds.add(target.id);
-			return { ...target, showDelivery };
-		});
+const recordedTargets: RecordedTarget[] = componentTargets
+	.filter((target): target is RecordedTarget => Boolean(target.invoice))
+	.toSorted((a, b) => b.invoice.id.localeCompare(a.invoice.id));
 const targetValue = (target: (typeof componentTargets)[number]) =>
 	`${target.id}:${target.component}:${target.version}`;
 const suggestedTarget = (invoice: (typeof unattachedInvoices)[number]) =>
@@ -225,6 +218,20 @@ const totalDueToBill = sumByCurrency(
 		currency: t.currency,
 	})),
 );
+const openCount = recordedTargets.filter(
+	(t) => t.invoice.stripeStatus === "open",
+).length;
+const paidCount = recordedTargets.filter(
+	(t) => t.invoice.stripeStatus === "paid",
+).length;
+const showRecordedFilter = openCount > 0 && paidCount > 0;
+
+const latestFetch = [
+	...unattachedInvoices.map((i) => i.fetchedAt),
+	...recordedTargets.map((t) => t.invoice.fetchedAt),
+]
+	.filter((d): d is Date => d instanceof Date)
+	.sort((a, b) => b.getTime() - a.getTime())[0];
 
 const getInvoiceStatus = (invoice: {
 	stripeStatus: string | null;
@@ -326,8 +333,24 @@ const sectionLabelClass =
 >
 	{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
 	<section class="grid gap-6" aria-labelledby="invoices-heading">
-		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-			<h2 id="invoices-heading" class={sectionLabelClass}>Invoices</h2>
+		<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+			<div class="grid gap-1">
+				<h2 id="invoices-heading" class={sectionLabelClass}>Invoices</h2>
+				{organizationData?.stripeCustomerId ? (
+					<p class="text-xs text-neutral-500 dark:text-neutral-400">
+						<span>Customer </span>
+						<a
+							class="underline decoration-dashed underline-offset-4 hover:text-neutral-900 dark:hover:text-neutral-100"
+							href={`https://dashboard.stripe.com/customers/${organizationData.stripeCustomerId}`}
+							target="_blank"
+							rel="noreferrer"
+						>{organizationData.stripeCustomerId}</a>
+						{latestFetch && <span> · Synced {dateFormatter.format(latestFetch)}</span>}
+					</p>
+				) : (
+					<p class="text-xs text-neutral-500 dark:text-neutral-400">No Stripe customer linked</p>
+				)}
+			</div>
 			{organizationData?.stripeCustomerId ? (
 				<form method="POST" action={actions.importStripeInvoices}>
 					<input type="hidden" name="organizationId" value={organization.id} />
@@ -457,15 +480,15 @@ const sectionLabelClass =
 							<Badge type="info">due</Badge>
 							<details class="grid gap-3 md:col-span-3">
 								<summary class={summaryClass}>Record invoice</summary>
-								<form method="POST" action={actions.recordInvoice} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)_8rem] md:items-start">
+								<form method="POST" action={actions.recordInvoice} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:grid-cols-2 lg:grid-cols-4 items-start">
 									<input type="hidden" name="phaseId" value={target.id} />
 									<input type="hidden" name="component" value={target.component} />
 									<input type="hidden" name="expectedVersion" value={target.version} />
-									<label class="grid gap-1 text-sm"><span class="font-medium">Invoice number</span><input class={inputClass} name="invoiceNumber" required /></label>
-									<label class="grid gap-1 text-sm"><span class="font-medium">Stripe id</span><input class={inputClass} name="stripeId" required /></label>
-									<label class="grid gap-1 text-sm"><span class="font-medium">Payment URL</span><input class={inputClass} name="stripePaymentPage" type="url" required /></label>
-									<label class="grid gap-1 text-sm"><span class="font-medium">Total</span><input class={inputClass} name="total" type="number" min="0" step="0.0001" value={target.amount} data-component-amount={target.amount} required /><span class="text-xs text-amber-700 dark:text-amber-300" data-amount-warning hidden>Differs from the component amount of {formatCurrency(target.amount, target.currency)}.</span></label>
-									<Button type="submit" class="md:col-span-full">Record</Button>
+									<label class="grid gap-1 text-sm"><span class="font-medium">Invoice number</span><input class={inputClass} name="invoiceNumber" autocomplete="off" required /></label>
+									<label class="grid gap-1 text-sm"><span class="font-medium">Stripe id</span><input class={inputClass} name="stripeId" autocomplete="off" placeholder="in_..." required /></label>
+									<label class="grid gap-1 text-sm"><span class="font-medium">Payment URL</span><input class={inputClass} name="stripePaymentPage" type="url" placeholder="https://invoice.stripe.com/..." required /></label>
+									<label class="grid gap-1 text-sm"><span class="font-medium">Total ({target.currency})</span><input class={inputClass} name="total" type="number" min="0" step="0.0001" value={target.amount} data-component-amount={target.amount} required /><span class="text-xs text-amber-700 dark:text-amber-300" data-amount-warning hidden>Differs from component amount ({formatCurrency(target.amount, target.currency)}).</span></label>
+									<Button type="submit" class="sm:col-span-2 lg:col-span-4">Record</Button>
 								</form>
 							</details>
 						</li>
@@ -475,14 +498,28 @@ const sectionLabelClass =
 		)}
 
 		<div class="grid gap-3">
-			<h3 class={sectionLabelClass}>Recorded</h3>
+			<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+				<h3 class={sectionLabelClass}>Recorded</h3>
+				{showRecordedFilter && (
+					<nav aria-label="Filter recorded invoices" class="grid grid-flow-col justify-start gap-2" data-invoice-filter-nav>
+						<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-invoice-filter="all" aria-pressed="true">All ({recordedTargets.length})</Button>
+						<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-invoice-filter="open" aria-pressed="false">Open ({openCount})</Button>
+						<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-invoice-filter="paid" aria-pressed="false">Paid ({paidCount})</Button>
+					</nav>
+				)}
+			</div>
 			<ul
 				class="grid border border-dashed border-neutral-300 dark:border-neutral-700"
 			>
 				{recordedTargets.length > 0 ? recordedTargets.map((target) => {
 					const status = getInvoiceStatus(target.invoice);
+					const rowCategory = target.invoice.stripeStatus === "paid" ? "paid" : "open";
 					return (
-					<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start">
+					<li
+						class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start"
+						data-recorded-row
+						data-row-category={rowCategory}
+					>
 						<div class="grid gap-1">
 							<a class="w-max font-medium underline decoration-dashed underline-offset-4" href={target.invoice.stripePaymentPage}>{target.invoice.invoiceNumber}</a>
 							<p class="text-sm"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${target.project.publicId}`}>{target.project.name}</a> · {target.title} · <span class="capitalize">{target.component}</span></p>
@@ -510,9 +547,9 @@ const sectionLabelClass =
 									</>
 								)}
 							</p>
-							{target.showDelivery && (
+							{target.component === "delivery" && (
 								target.deliveryState === "url" && target.deliveryUrl ? (
-									<a class="w-max text-xs underline decoration-dashed underline-offset-4" href={target.deliveryUrl} rel="noreferrer" target="_blank">Delivery</a>
+									<a class="w-max text-xs underline decoration-dashed underline-offset-4" href={target.deliveryUrl} rel="noreferrer" target="_blank">Delivery PR/MR</a>
 								) : (
 									<p class="text-xs text-neutral-500 dark:text-neutral-400">{target.deliveryState === "none" ? "Delivered without PR/MR" : "Delivery not recorded"}</p>
 								)
@@ -527,7 +564,7 @@ const sectionLabelClass =
 							<input type="hidden" name="invoiceId" value={target.invoice.id} />
 							<button type="submit" class={quietButtonClass}>Refresh</button>
 						</form>
-						{target.showDelivery && (target.state === "delivered" || target.state === "accepted") && (
+						{target.component === "delivery" && (target.state === "delivered" || target.state === "accepted") && (
 							<details class="grid gap-3 md:col-span-4">
 								<summary class={summaryClass}>Edit delivery</summary>
 								<form method="POST" action={actions.updatePhaseDelivery} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-end">
@@ -541,7 +578,17 @@ const sectionLabelClass =
 						)}
 					</li>
 				);}) : (
-					<li class="p-4 text-sm text-neutral-600 dark:text-neutral-400">No invoices recorded.</li>
+					<li class="grid gap-2 p-6 text-sm text-neutral-600 dark:text-neutral-400">
+						<p class="font-medium text-neutral-900 dark:text-neutral-100">No invoices recorded yet</p>
+						<p class="text-xs">
+							{allPhases.length === 0
+								? "No project phases found. Create a project and add priced phases to begin billing."
+								: "Invoices will appear here once imported from Stripe or recorded against due phase components."}
+						</p>
+						{allPhases.length === 0 && (
+							<Button href={`/admin/org/${organization.id}/projects`} class="w-max mt-1">Go to projects</Button>
+						)}
+					</li>
 				)}
 			</ul>
 		</div>
@@ -592,5 +639,30 @@ const sectionLabelClass =
 
 		syncDeliveryUrl();
 		select.addEventListener("change", syncDeliveryUrl);
+	}
+
+	for (const nav of document.querySelectorAll("[data-invoice-filter-nav]")) {
+		const buttons = nav.querySelectorAll<HTMLButtonElement>(
+			"[data-invoice-filter]",
+		);
+		const rows = document.querySelectorAll<HTMLElement>("[data-recorded-row]");
+
+		for (const button of buttons) {
+			button.addEventListener("click", () => {
+				const filter = button.dataset.invoiceFilter;
+				for (const btn of buttons) {
+					btn.setAttribute("aria-pressed", String(btn === button));
+				}
+				for (const row of rows) {
+					if (filter === "all") {
+						row.hidden = false;
+					} else if (filter === "open") {
+						row.hidden = row.dataset.rowCategory !== "open";
+					} else if (filter === "paid") {
+						row.hidden = row.dataset.rowCategory !== "paid";
+					}
+				}
+			});
+		}
 	}
 </script>
