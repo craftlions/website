@@ -72,7 +72,10 @@ const projectKeys = [...projectsByKey.values()]
 			project.id === "unassigned"
 				? "text-neutral-500/55 dark:text-neutral-400/55"
 				: (segmentMarks[index % segmentMarks.length] ?? segmentMarks[0]),
-		segmentId: `segment-${project.id}`,
+		total: [...totalsByYear.values()].reduce(
+			(sum, totalsForYear) => sum + (totalsForYear.get(project.id) ?? 0),
+			0,
+		),
 	}));
 
 const dataYears = [...totalsByYear.keys()].sort((a, b) => a - b);
@@ -147,6 +150,7 @@ const hasNegativeSpend = bars.some((bar) =>
 			) : (
 				<div
 					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+					data-spend-chart
 				>
 				<div class="grid gap-1 overflow-x-auto" dir="rtl">
 					<div
@@ -171,11 +175,12 @@ const hasNegativeSpend = bars.some((bar) =>
 											{reversed.map((segment) => (
 												<div
 													class:list={[
-														"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[transform,filter] duration-150 hover:scale-y-105 hover:brightness-125",
+														"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[transform,filter,opacity] duration-150 hover:scale-y-105",
 														segment.mark,
 													]}
-													title={`${segment.name}: ${currencyFormatter.format(segment.total)}`}
-													data-segment-id={segment.segmentId}
+													data-project={segment.id}
+													data-amount={currencyFormatter.format(segment.total)}
+													data-year={bar.year}
 												/>
 											))}
 										</div>
@@ -211,8 +216,9 @@ const hasNegativeSpend = bars.some((bar) =>
 				>
 					{projectKeys.map((project) => (
 						<li
-							class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-sm px-1 py-0.5 transition-colors duration-150 hover:bg-neutral-100 dark:hover:bg-neutral-900"
-							title={project.name}
+							class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-sm px-1 py-0.5 transition-[background-color,opacity] duration-150 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+							data-project={project.id}
+							data-amount={currencyFormatter.format(project.total)}
 						>
 							<span
 								aria-hidden="true"
@@ -224,6 +230,11 @@ const hasNegativeSpend = bars.some((bar) =>
 							<span class="min-w-0 wrap-break-word" dir="auto"
 								>{project.name}</span
 							>
+							<span
+								class="whitespace-nowrap text-xs tabular-nums text-neutral-500 dark:text-neutral-400"
+								data-legend-amount
+								hidden
+							/>
 						</li>
 					))}
 				</ul>
@@ -238,3 +249,44 @@ const hasNegativeSpend = bars.some((bar) =>
 		</>
 	)}
 </section>
+
+<script>
+	for (const chart of document.querySelectorAll("[data-spend-chart]")) {
+		const items = chart.querySelectorAll<HTMLElement>("[data-project]");
+
+		const setActive = (active: HTMLElement | null) => {
+			for (const item of items) {
+				const match = item.dataset.project === active?.dataset.project;
+				item.classList.toggle("opacity-30", active !== null && !match);
+				item.classList.toggle(
+					"brightness-125",
+					match && "year" in item.dataset,
+				);
+				item.classList.toggle(
+					"bg-neutral-100",
+					match && !("year" in item.dataset),
+				);
+				item.classList.toggle(
+					"dark:bg-neutral-900",
+					match && !("year" in item.dataset),
+				);
+
+				const amount = item.querySelector<HTMLElement>("[data-legend-amount]");
+				if (!amount) continue;
+				amount.hidden = !match;
+				// A hovered bar segment shows that year's share; the legend itself
+				// shows the project total across all years.
+				amount.textContent = match
+					? active?.dataset.year
+						? `${active.dataset.amount} · ${active.dataset.year}`
+						: (item.dataset.amount ?? "")
+					: "";
+			}
+		};
+
+		for (const item of items) {
+			item.addEventListener("mouseenter", () => setActive(item));
+			item.addEventListener("mouseleave", () => setActive(null));
+		}
+	}
+</script>
