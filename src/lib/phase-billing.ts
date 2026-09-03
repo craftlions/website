@@ -74,7 +74,9 @@ export const buildPhaseComponents = (input: {
 					: component === "delivery"
 						? input.deliveryAmount
 						: input.acceptanceAmount;
-			return amount === null
+			// A zero amount is nothing to bill; zero-cost phases must still store
+			// one 0 component to satisfy the cost-components check constraint.
+			return amount === null || amount === 0
 				? null
 				: {
 						component,

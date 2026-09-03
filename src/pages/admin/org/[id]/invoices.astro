@@ -117,7 +117,7 @@ const allPhases = projects.flatMap((project) =>
 const componentTargets = allPhases.flatMap((phase) =>
 	invoiceComponents.flatMap((component) => {
 		const amount = phase[`${component}Amount`];
-		if (amount === null) return [];
+		if (amount === null || amount === 0) return [];
 		const invoice = phase.invoices.find((row) => row.component === component);
 		return [{ ...phase, component, amount, invoice }];
 	}),
