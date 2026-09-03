@@ -4,11 +4,8 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
-import PhaseAmountCalculator from "../../../../components/PhaseAmountCalculator.astro";
-import PhaseComponentBreakdown from "../../../../components/PhaseComponentBreakdown.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
-import { buildPhaseComponents } from "../../../../lib/phase-billing";
 
 const { id } = Astro.params;
 
@@ -22,48 +19,20 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-const actionResults = [
-	Astro.getActionResult(actions.createProject),
-	Astro.getActionResult(actions.transitionProject),
-	Astro.getActionResult(actions.createPhase),
-	Astro.getActionResult(actions.transitionPhase),
-	Astro.getActionResult(actions.recordDelivery),
-	Astro.getActionResult(actions.updatePhaseAmounts),
-];
-const actionError = actionResults.find((result) => result?.error)?.error;
-const actionSucceeded = actionResults.some((result) => result && !result.error);
+const actionResult = Astro.getActionResult(actions.createProject);
 
 const projects = await Astro.locals.db.query.projects.findMany({
 	columns: {
-		id: true,
+		publicId: true,
 		name: true,
 		state: true,
-		version: true,
 	},
 	with: {
 		phases: {
 			columns: {
-				id: true,
-				title: true,
 				cost: true,
-				upfrontAmount: true,
-				deliveryAmount: true,
-				acceptanceAmount: true,
 				currency: true,
 				state: true,
-				version: true,
-				dueAt: true,
-			},
-			with: {
-				invoices: {
-					columns: {
-						component: true,
-						stripeStatus: true,
-					},
-				},
-			},
-			orderBy: {
-				id: "asc",
 			},
 		},
 	},
@@ -74,40 +43,73 @@ const projects = await Astro.locals.db.query.projects.findMany({
 		name: "asc",
 	},
 });
-const projectsWithComponents = projects.map((project) => ({
-	...project,
-	phases: project.phases.map((phase) => ({
-		...phase,
-		components: buildPhaseComponents({
-			upfrontAmount: phase.upfrontAmount,
-			deliveryAmount: phase.deliveryAmount,
-			acceptanceAmount: phase.acceptanceAmount,
-			state: phase.state,
-			invoices: phase.invoices,
-		}),
-	})),
-}));
 
-const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
+const attentionLabels = {
+	submitted: "to send",
+	planned: "awaiting approval",
+	approved: "ready to start",
+	in_progress: "in work",
+	delivered: "awaiting acceptance",
+} as const;
+
+const summarize = (project: (typeof projects)[number]) => {
+	const totals = new Map<string, number>();
+	const attention = new Map<keyof typeof attentionLabels, number>();
+	for (const phase of project.phases) {
+		if (phase.state === "cancelled") continue;
+		totals.set(phase.currency, (totals.get(phase.currency) ?? 0) + phase.cost);
+		if (phase.state in attentionLabels) {
+			const state = phase.state as keyof typeof attentionLabels;
+			attention.set(state, (attention.get(state) ?? 0) + 1);
+		}
+	}
+	return {
+		total:
+			[...totals]
+				.map(([currency, total]) =>
+					new Intl.NumberFormat("de-DE", {
+						style: "currency",
+						currency,
+					}).format(total),
+				)
+				.join(" · ") || "—",
+		attention: [...attention]
+			.map(([state, count]) => `${count} ${attentionLabels[state]}`)
+			.join(" · "),
+	};
+};
+
+const activeProjects = projects.filter(
+	(project) => project.state !== "archived",
+);
+const archivedProjects = projects.filter(
+	(project) => project.state === "archived",
+);
 ---
 
 <AdminOrgShell
 	{organization}
 	activePage="projects"
-	showSuccess={actionSucceeded}
+	showSuccess={Boolean(actionResult && !actionResult.error)}
 >
-	{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
-	<section class="grid gap-6" aria-labelledby="projects-heading">
-		<div class="grid gap-3">
+	{actionResult?.error && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionResult.error.message}</p>}
+	<section class="grid gap-4" aria-labelledby="projects-heading">
+		<div class="grid grid-cols-[1fr_auto] items-center gap-3">
 			<h2
 				id="projects-heading"
 				class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 				>Projects</h2
 			>
+		</div>
+		<details class="grid gap-3">
+			<summary
+				class="inline-grid w-max cursor-pointer list-none border border-dashed border-neutral-300 px-3 py-1 text-sm font-medium text-neutral-900 transition-colors hover:border-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-100 dark:hover:border-neutral-500 dark:hover:bg-neutral-900"
+				>New project</summary
+			>
 			<form
 				method="POST"
 				action={actions.createProject}
-				class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[1fr_auto] md:items-end"
+				class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto] md:items-end"
 			>
 				<input type="hidden" name="organizationId" value={organization.id}>
 				<label class="grid gap-1 text-sm">
@@ -120,215 +122,47 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 				</label>
 				<Button type="submit">Create project</Button>
 			</form>
-		</div>
-		<div class="grid gap-4">
-			{projectsWithComponents.length > 0 ? projectsWithComponents.map((project) => (
-				<article class="grid gap-4 border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
-					<div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
-						<div class="grid grid-cols-[minmax(0,max-content)_max-content] items-center justify-start gap-2">
-							<h3 class="text-lg font-semibold">{project.name}</h3>
-							<Badge type={project.state === "completed" ? "success" : project.state === "archived" ? "gray" : "info"}>{project.state}</Badge>
-						</div>
-						<div class="grid grid-flow-col justify-start gap-2">
-							{project.state === "draft" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Activate</Button></form>}
-							{project.state === "active" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="completed" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Complete</Button></form>}
-							{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Reopen</Button></form>}
-							{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="archived" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Archive</Button></form>}
-						</div>
-					</div>
-					<form method="POST" action={actions.createPhase} class="grid gap-3 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_8rem_5rem_max-content_max-content] md:items-end" data-phase-amount-form>
-						<input type="hidden" name="projectId" value={project.id} />
-						<label class="grid gap-1 text-sm"><span class="font-medium">Phase title</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="title" required /></label>
-						<label class="grid gap-1 text-sm"><span class="font-medium">Cost</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="cost" data-phase-cost-input type="number" min="0" step="0.0001" required /></label>
-						<label class="grid gap-1 text-sm"><span class="font-medium">Currency</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="currency" value="EUR" maxlength="3" required /></label>
-						<label class="grid gap-1 text-sm"><span class="font-medium">Due</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="dueAt" type="date" /></label>
-						<div class="md:col-span-full"><PhaseAmountCalculator cost={0} acceptanceAmount={0} /></div>
-						<Button type="submit">Add phase</Button>
-					</form>
-					<div class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700">
-						<table class="w-full min-w-3xl border-collapse text-left text-sm">
-							<thead>
-								<tr class="border-b border-dashed border-neutral-300 text-xs uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-									<th class="px-4 py-3" scope="col">Phase</th>
-									<th class="px-4 py-3" scope="col">Due</th>
-									<th class="px-4 py-3 text-right" scope="col">Cost</th>
-									<th class="px-4 py-3" scope="col">State</th>
-									<th class="px-4 py-3" scope="col">Actions</th>
-								</tr>
-							</thead>
-							<tbody>
-								{project.phases.length > 0 ? project.phases.map((phase) => (
-									<Fragment>
-									<tr class="border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700">
-										<td class="px-4 py-3 font-medium">{phase.title}</td>
-										<td class="px-4 py-3">{phase.dueAt ? dateFormatter.format(phase.dueAt) : "-"}</td>
-										<td class="px-4 py-3 text-right tabular-nums">
-										<div class="grid justify-items-end gap-1">
-											<span>{new Intl.NumberFormat("de-DE", { style: "currency", currency: phase.currency }).format(phase.cost)}</span>
-											<PhaseComponentBreakdown items={phase.components} currency={phase.currency} />
-										</div>
-									</td>
-										<td class="px-4 py-3"><Badge type={phase.state === "accepted" ? "success" : phase.state === "cancelled" ? "error" : "info"}>{phase.state.replaceAll("_", " ")}</Badge></td>
-										<td class="px-4 py-3">
-											<div class="grid grid-flow-col justify-start gap-2">
-												{phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Send</Button></form>}
-												{phase.state === "planned" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="approved" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Approve</Button></form>}
-												{(phase.state === "submitted" || phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Cancel</Button></form>}
-												{phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Start</Button></form>}
-												{phase.state === "delivered" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="accepted" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Record acceptance</Button></form>}
-												{phase.state === "in_progress" && (
-													<form method="POST" action={actions.recordDelivery} class="grid gap-2" data-record-delivery>
-														<input type="hidden" name="phaseId" value={phase.id} />
-														<input type="hidden" name="expectedVersion" value={phase.version} />
-														<select name="deliveryChoice" aria-label="Delivery" data-delivery-choice required class="border border-dashed border-neutral-300 bg-transparent px-2 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"><option value="url" selected>Delivery link</option><option value="none">No delivery PR/MR</option></select>
-														<label data-delivery-url-field class="grid gap-1 text-sm"><span class="font-medium">Delivery URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="deliveryUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://github.com/…" /></label>
-														<Button type="submit">Record delivery</Button>
-													</form>
-												)}
-											</div>
-										</td>
-									</tr>
-									{!['approved', 'in_progress', 'delivered', 'accepted'].includes(phase.state) && (
-										<tr class="border-b border-dashed border-neutral-300 dark:border-neutral-700">
-											<td class="px-4 py-3" colspan="5">
-												<form method="POST" action={actions.updatePhaseAmounts} class="grid gap-3" data-phase-amount-form>
-													<input type="hidden" name="phaseId" value={phase.id} />
-													<input type="hidden" name="expectedVersion" value={phase.version} />
-													<input type="hidden" data-phase-cost-input value={phase.cost} />
-													<PhaseAmountCalculator
-														cost={phase.cost}
-														upfrontAmount={phase.upfrontAmount}
-														deliveryAmount={phase.deliveryAmount}
-														acceptanceAmount={phase.acceptanceAmount}
-													/>
-													<Button type="submit">Save cost split</Button>
-												</form>
-											</td>
-										</tr>
-									)}
-									</Fragment>
-								)) : (
-									<tr>
-										<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="5">No phases yet.</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
-					</div>
-				</article>
-			)) : (
-				<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">No projects yet.</p>
-			)}
-		</div>
+		</details>
+		{activeProjects.length > 0 ? (
+			<ul class="grid gap-4 md:grid-cols-2">
+				{activeProjects.map((project) => {
+					const summary = summarize(project);
+					return (
+						<li class="grid">
+							<a
+								href={`/admin/org/${organization.id}/projects/${project.publicId}`}
+								class="grid content-start gap-3 border border-dashed border-neutral-300 p-4 transition-colors hover:border-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900"
+							>
+								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+									<h3 class="text-lg font-semibold wrap-break-word">{project.name}</h3>
+									<Badge type={project.state === "completed" ? "success" : "info"}>{project.state}</Badge>
+								</div>
+								<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-sm">
+									<dt class="text-neutral-500 dark:text-neutral-400">Phases</dt>
+									<dd class="tabular-nums">{project.phases.filter((phase) => phase.state !== "cancelled").length}</dd>
+									<dt class="text-neutral-500 dark:text-neutral-400">Total</dt>
+									<dd class="tabular-nums">{summary.total}</dd>
+								</dl>
+								<p class="text-sm text-neutral-600 dark:text-neutral-400">{summary.attention || "Nothing needs attention."}</p>
+							</a>
+						</li>
+					);
+				})}
+			</ul>
+		) : (
+			<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">No projects yet.</p>
+		)}
+		{archivedProjects.length > 0 && (
+			<details class="grid gap-2">
+				<summary class="w-max cursor-pointer list-none text-sm text-neutral-500 underline decoration-dashed underline-offset-4 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100">Archived ({archivedProjects.length})</summary>
+				<ul class="grid gap-1 text-sm">
+					{archivedProjects.map((project) => (
+						<li>
+							<a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${project.publicId}`}>{project.name}</a>
+						</li>
+					))}
+				</ul>
+			</details>
+		)}
 	</section>
 </AdminOrgShell>
-
-<script>
-	const formatAmount = (amount: number) =>
-		amount.toFixed(4).replace(/\.?0+$/, "") || "0";
-
-	for (const form of document.querySelectorAll("[data-phase-amount-form]")) {
-		if (!(form instanceof HTMLFormElement)) {
-			continue;
-		}
-
-		const costInput = form.querySelector("[data-phase-cost-input]");
-		const percentages = [
-			...form.querySelectorAll<HTMLInputElement>("[data-phase-amount-percent]"),
-		];
-		const amounts = [
-			...form.querySelectorAll<HTMLInputElement>("[data-phase-amount-value]"),
-		];
-		const total = form.querySelector("[data-phase-amount-total]");
-		const error = form.querySelector("[data-phase-amount-error]");
-		const submit = form.querySelector('button[type="submit"]');
-
-		if (
-			!(costInput instanceof HTMLInputElement) ||
-			!(total instanceof HTMLElement) ||
-			!(error instanceof HTMLElement) ||
-			!(submit instanceof HTMLButtonElement)
-		) {
-			continue;
-		}
-
-		const syncAmounts = () => {
-			const cost = Number(costInput.value);
-			const safeCost = Number.isFinite(cost) && cost >= 0 ? cost : 0;
-			const values = percentages.map((input) => Number(input.value));
-			const percentTotal = values.reduce(
-				(sum, value) => sum + (Number.isFinite(value) ? value : 0),
-				0,
-			);
-			const activeIndexes = values.flatMap((value, index) =>
-				Number.isFinite(value) && value > 0 ? [index] : [],
-			);
-			let remaining = safeCost;
-
-			for (const [index, amountInput] of amounts.entries()) {
-				const percentage = values[index] ?? 0;
-				if (!Number.isFinite(percentage) || percentage <= 0) {
-					amountInput.value = "";
-					continue;
-				}
-
-				const isLastActive = index === activeIndexes.at(-1);
-				// Assign the rounded remainder to the last active component so the
-				// stored amounts still sum exactly to the database cost.
-				const amount = isLastActive
-					? remaining
-					: Math.round(((safeCost * percentage) / 100) * 10_000) / 10_000;
-				amountInput.value = formatAmount(amount);
-				remaining = Math.round((remaining - amount) * 10_000) / 10_000;
-			}
-
-			total.textContent = `${percentTotal.toFixed(2)}% · ${formatAmount(safeCost)}`;
-			// Displayed percentages are rounded to four decimals, so allow the
-			// accumulated rounding drift from the three component values.
-			const valid =
-				Math.abs(percentTotal - 100) < 0.0002 && activeIndexes.length > 0;
-			error.hidden = valid;
-			error.textContent = valid ? "" : "Percentages must total 100%.";
-			submit.disabled = !valid;
-		};
-
-		for (const input of percentages) {
-			input.addEventListener("input", syncAmounts);
-		}
-		costInput.addEventListener("input", syncAmounts);
-		syncAmounts();
-	}
-
-	for (const select of document.querySelectorAll("[data-delivery-choice]")) {
-		if (!(select instanceof HTMLSelectElement)) {
-			continue;
-		}
-
-		const field = select
-			.closest("form")
-			?.querySelector<HTMLLabelElement>("[data-delivery-url-field]");
-		const input = field?.querySelector<HTMLInputElement>(
-			'input[name="deliveryUrl"]',
-		);
-
-		if (
-			!(field instanceof HTMLElement) ||
-			!(input instanceof HTMLInputElement)
-		) {
-			continue;
-		}
-
-		const syncDeliveryUrl = () => {
-			const show = select.value === "url";
-			field.hidden = !show;
-			input.required = show;
-
-			if (!show) {
-				input.value = "";
-			}
-		};
-
-		syncDeliveryUrl();
-		select.addEventListener("change", syncDeliveryUrl);
-	}
-</script>

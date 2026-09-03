@@ -1,0 +1,373 @@
+---
+export const prerender = false;
+
+import { actions } from "astro:actions";
+import Badge from "../../../../../components/Badge.astro";
+import Button from "../../../../../components/Button.astro";
+import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculator.astro";
+import AdminOrgShell from "../../../../../layouts/AdminOrgShell.astro";
+import { getAdminOrganizationCore } from "../../../../../lib/admin-org.ts";
+import { buildPhaseComponents } from "../../../../../lib/phase-billing";
+
+const { id, publicId } = Astro.params;
+
+if (!id || !publicId) {
+	return Astro.redirect("/admin");
+}
+
+const organization = await getAdminOrganizationCore(Astro.locals.db, id);
+
+if (!organization) {
+	return Astro.redirect("/admin");
+}
+
+const project = await Astro.locals.db.query.projects.findFirst({
+	columns: {
+		id: true,
+		publicId: true,
+		name: true,
+		state: true,
+		version: true,
+	},
+	with: {
+		phases: {
+			columns: {
+				id: true,
+				title: true,
+				cost: true,
+				upfrontAmount: true,
+				deliveryAmount: true,
+				acceptanceAmount: true,
+				currency: true,
+				state: true,
+				version: true,
+				dueAt: true,
+				externalUrl: true,
+				deliveryState: true,
+				deliveryUrl: true,
+			},
+			with: {
+				invoices: {
+					columns: {
+						component: true,
+						stripeStatus: true,
+					},
+				},
+			},
+			orderBy: {
+				id: "asc",
+			},
+		},
+	},
+	where: {
+		organizationId: id,
+		publicId,
+	},
+});
+
+if (!project) {
+	return Astro.redirect(`/admin/org/${organization.id}/projects`);
+}
+
+const actionResults = [
+	Astro.getActionResult(actions.transitionProject),
+	Astro.getActionResult(actions.createPhase),
+	Astro.getActionResult(actions.transitionPhase),
+	Astro.getActionResult(actions.recordDelivery),
+	Astro.getActionResult(actions.updatePhaseAmounts),
+];
+const actionError = actionResults.find((result) => result?.error)?.error;
+const actionSucceeded = actionResults.some((result) => result && !result.error);
+
+const phases = project.phases.map((phase) => ({
+	...phase,
+	components: buildPhaseComponents(phase),
+	locked: ["approved", "in_progress", "delivered", "accepted"].includes(
+		phase.state,
+	),
+}));
+
+const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
+const percentFormatter = new Intl.NumberFormat("de-DE", {
+	style: "percent",
+	maximumFractionDigits: 2,
+});
+const inputClass =
+	"border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300";
+const quietButtonClass =
+	"w-max cursor-pointer text-sm text-neutral-500 underline decoration-dashed underline-offset-4 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100";
+const summaryClass =
+	"w-max cursor-pointer list-none text-sm text-neutral-500 underline decoration-dashed underline-offset-4 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100";
+---
+
+<AdminOrgShell
+	{organization}
+	activePage="projects"
+	showSuccess={actionSucceeded}
+>
+	{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
+	<section class="grid gap-6" aria-labelledby="project-heading">
+		<div class="grid gap-4">
+			<Button href={`/admin/org/${organization.id}/projects`}
+				>Back to projects</Button
+			>
+			<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+				<div class="grid gap-2">
+					<div
+						class="grid grid-cols-[minmax(0,max-content)_max-content] items-center gap-3"
+					>
+						<h2
+							id="project-heading"
+							class="text-2xl font-semibold wrap-break-word"
+							>{project.name}</h2
+						>
+						<Badge
+							type={project.state === "completed" ? "success" : project.state === "archived" ? "gray" : "info"}
+							>{project.state}</Badge
+						>
+					</div>
+					<a
+						class="w-max text-sm underline decoration-dashed underline-offset-4"
+						href={`/dash/org/${organization.slug}/project/${project.publicId}`}
+						>View as client</a
+					>
+				</div>
+				<div
+					class="grid grid-flow-col items-center justify-start gap-4 md:justify-end"
+				>
+					{project.state === "draft" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Activate</Button></form>}
+					{project.state === "active" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="completed" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Complete</Button></form>}
+					{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="active" /><input type="hidden" name="expectedVersion" value={project.version} /><Button type="submit">Reopen</Button></form>}
+					{project.state === "completed" && <form method="POST" action={actions.transitionProject}><input type="hidden" name="projectId" value={project.id} /><input type="hidden" name="nextState" value="archived" /><input type="hidden" name="expectedVersion" value={project.version} /><button type="submit" class={quietButtonClass}>Archive</button></form>}
+				</div>
+			</div>
+		</div>
+
+		<div class="grid gap-3">
+			<h3
+				class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				>Phases</h3
+			>
+			<ol
+				class="grid border border-dashed border-neutral-300 dark:border-neutral-700"
+			>
+				{phases.length > 0 ? phases.map((phase) => (
+					<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start">
+						<div class="grid gap-1">
+							<p class="font-medium wrap-break-word">{phase.title}</p>
+							<p class="text-sm text-neutral-500 dark:text-neutral-400">{phase.dueAt ? `Due ${dateFormatter.format(phase.dueAt)}` : "No due date"}</p>
+							{phase.externalUrl && <a class="w-max text-sm underline decoration-dashed underline-offset-4" href={phase.externalUrl} rel="noreferrer" target="_blank">External link</a>}
+							{phase.deliveryState === "url" && phase.deliveryUrl && <a class="w-max text-sm underline decoration-dashed underline-offset-4" href={phase.deliveryUrl} rel="noreferrer" target="_blank">Delivery</a>}
+							{phase.deliveryState === "none" && <p class="text-sm text-neutral-500 dark:text-neutral-400">Delivered without PR/MR</p>}
+						</div>
+						<Badge type={phase.state === "accepted" ? "success" : phase.state === "cancelled" ? "error" : "info"}>{phase.state.replaceAll("_", " ")}</Badge>
+						<div class="grid gap-1 md:text-right">
+							<p class="font-medium tabular-nums">{new Intl.NumberFormat("de-DE", { style: "currency", currency: phase.currency }).format(phase.cost)}</p>
+							{phase.components.length > 0 && (
+								<p class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+									{phase.components.map(({ component, amount, status }) => `${component} ${percentFormatter.format(phase.cost > 0 ? amount / phase.cost : 0)}${status === "not_due" ? "" : ` ${status}`}`).join(" · ")}
+								</p>
+							)}
+						</div>
+						<div class="grid grid-flow-col items-center justify-start gap-4 md:justify-self-end">
+							{phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Send</Button></form>}
+							{phase.state === "planned" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="approved" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Approve</Button></form>}
+							{phase.state === "approved" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="in_progress" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Start</Button></form>}
+							{phase.state === "delivered" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="accepted" /><input type="hidden" name="expectedVersion" value={phase.version} /><Button type="submit">Record acceptance</Button></form>}
+							{(phase.state === "submitted" || phase.state === "planned") && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={phase.id} /><input type="hidden" name="nextState" value="cancelled" /><input type="hidden" name="expectedVersion" value={phase.version} /><button type="submit" class={quietButtonClass}>Cancel</button></form>}
+						</div>
+						{phase.state === "in_progress" && (
+							<details class="grid gap-3 md:col-span-4">
+								<summary class={summaryClass}>Record delivery</summary>
+								<form method="POST" action={actions.recordDelivery} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-end" data-record-delivery>
+									<input type="hidden" name="phaseId" value={phase.id} />
+									<input type="hidden" name="expectedVersion" value={phase.version} />
+									<label class="grid gap-1 text-sm"><span class="font-medium">Delivery</span><select name="deliveryChoice" data-delivery-choice required class={inputClass}><option value="url" selected>Delivery link</option><option value="none">No delivery PR/MR</option></select></label>
+									<label data-delivery-url-field class="grid gap-1 text-sm"><span class="font-medium">Delivery URL</span><input class={inputClass} name="deliveryUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://github.com/…" /></label>
+									<Button type="submit">Record delivery</Button>
+								</form>
+							</details>
+						)}
+						{!phase.locked && phase.state !== "cancelled" && (
+							<details class="grid gap-3 md:col-span-4">
+								<summary class={summaryClass}>Edit cost split</summary>
+								<form method="POST" action={actions.updatePhaseAmounts} class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700" data-phase-amount-form>
+									<input type="hidden" name="phaseId" value={phase.id} />
+									<input type="hidden" name="expectedVersion" value={phase.version} />
+									<input type="hidden" data-phase-cost-input value={phase.cost} />
+									<PhaseAmountCalculator
+										cost={phase.cost}
+										upfrontAmount={phase.upfrontAmount}
+										deliveryAmount={phase.deliveryAmount}
+										acceptanceAmount={phase.acceptanceAmount}
+									/>
+									<Button type="submit">Save cost split</Button>
+								</form>
+							</details>
+						)}
+					</li>
+				)) : (
+					<li class="p-4 text-sm text-neutral-600 dark:text-neutral-400">No phases yet.</li>
+				)}
+			</ol>
+			<details class="grid gap-3">
+				<summary
+					class="cursor-pointer list-none border border-dashed border-neutral-300 p-3 text-center text-sm font-medium transition-colors hover:border-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900"
+					>Add phase</summary
+				>
+				<form
+					method="POST"
+					action={actions.createPhase}
+					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_8rem_5rem_max-content] md:items-end"
+					data-phase-amount-form
+				>
+					<input type="hidden" name="projectId" value={project.id}>
+					<label class="grid gap-1 text-sm"
+						><span class="font-medium">Phase title</span>
+						<input class={inputClass} name="title" required></label
+					>
+					<label class="grid gap-1 text-sm"
+						><span class="font-medium">Cost</span>
+						<input
+							class={inputClass}
+							name="cost"
+							data-phase-cost-input
+							type="number"
+							min="0"
+							step="0.0001"
+							required
+						></label
+					>
+					<label class="grid gap-1 text-sm"
+						><span class="font-medium">Currency</span>
+						<input
+							class={inputClass}
+							name="currency"
+							value="EUR"
+							maxlength="3"
+							required
+						></label
+					>
+					<label class="grid gap-1 text-sm"
+						><span class="font-medium">Due</span>
+						<input class={inputClass} name="dueAt" type="date"></label
+					>
+					<div class="md:col-span-full"
+						><PhaseAmountCalculator cost={0} acceptanceAmount={0} /></div
+					>
+					<Button type="submit" class="md:col-span-full">Add phase</Button>
+				</form>
+			</details>
+		</div>
+	</section>
+</AdminOrgShell>
+
+<script>
+	const formatAmount = (amount: number) =>
+		amount.toFixed(4).replace(/\.?0+$/, "") || "0";
+
+	for (const form of document.querySelectorAll("[data-phase-amount-form]")) {
+		if (!(form instanceof HTMLFormElement)) {
+			continue;
+		}
+
+		const costInput = form.querySelector("[data-phase-cost-input]");
+		const percentages = [
+			...form.querySelectorAll<HTMLInputElement>("[data-phase-amount-percent]"),
+		];
+		const amounts = [
+			...form.querySelectorAll<HTMLInputElement>("[data-phase-amount-value]"),
+		];
+		const total = form.querySelector("[data-phase-amount-total]");
+		const error = form.querySelector("[data-phase-amount-error]");
+		const submit = form.querySelector('button[type="submit"]');
+
+		if (
+			!(costInput instanceof HTMLInputElement) ||
+			!(total instanceof HTMLElement) ||
+			!(error instanceof HTMLElement) ||
+			!(submit instanceof HTMLButtonElement)
+		) {
+			continue;
+		}
+
+		const syncAmounts = () => {
+			const cost = Number(costInput.value);
+			const safeCost = Number.isFinite(cost) && cost >= 0 ? cost : 0;
+			const values = percentages.map((input) => Number(input.value));
+			const percentTotal = values.reduce(
+				(sum, value) => sum + (Number.isFinite(value) ? value : 0),
+				0,
+			);
+			const activeIndexes = values.flatMap((value, index) =>
+				Number.isFinite(value) && value > 0 ? [index] : [],
+			);
+			let remaining = safeCost;
+
+			for (const [index, amountInput] of amounts.entries()) {
+				const percentage = values[index] ?? 0;
+				if (!Number.isFinite(percentage) || percentage <= 0) {
+					amountInput.value = "";
+					continue;
+				}
+
+				const isLastActive = index === activeIndexes.at(-1);
+				// Assign the rounded remainder to the last active component so the
+				// stored amounts still sum exactly to the database cost.
+				const amount = isLastActive
+					? remaining
+					: Math.round(((safeCost * percentage) / 100) * 10_000) / 10_000;
+				amountInput.value = formatAmount(amount);
+				remaining = Math.round((remaining - amount) * 10_000) / 10_000;
+			}
+
+			total.textContent = `${percentTotal.toFixed(2)}% · ${formatAmount(safeCost)}`;
+			// Displayed percentages are rounded to four decimals, so allow the
+			// accumulated rounding drift from the three component values.
+			const valid =
+				Math.abs(percentTotal - 100) < 0.0002 && activeIndexes.length > 0;
+			error.hidden = valid;
+			error.textContent = valid ? "" : "Percentages must total 100%.";
+			submit.disabled = !valid;
+		};
+
+		for (const input of percentages) {
+			input.addEventListener("input", syncAmounts);
+		}
+		costInput.addEventListener("input", syncAmounts);
+		syncAmounts();
+	}
+
+	for (const select of document.querySelectorAll("[data-delivery-choice]")) {
+		if (!(select instanceof HTMLSelectElement)) {
+			continue;
+		}
+
+		const field = select
+			.closest("form")
+			?.querySelector<HTMLLabelElement>("[data-delivery-url-field]");
+		const input = field?.querySelector<HTMLInputElement>(
+			'input[name="deliveryUrl"]',
+		);
+
+		if (
+			!(field instanceof HTMLElement) ||
+			!(input instanceof HTMLInputElement)
+		) {
+			continue;
+		}
+
+		const syncDeliveryUrl = () => {
+			const show = select.value === "url";
+			field.hidden = !show;
+			input.required = show;
+
+			if (!show) {
+				input.value = "";
+			}
+		};
+
+		syncDeliveryUrl();
+		select.addEventListener("change", syncDeliveryUrl);
+	}
+</script>

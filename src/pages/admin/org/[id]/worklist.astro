@@ -33,6 +33,7 @@ const actionSucceeded = actionResults.some((result) => result && !result.error);
 const projects = await Astro.locals.db.query.projects.findMany({
 	columns: {
 		id: true,
+		publicId: true,
 		name: true,
 	},
 	with: {
@@ -224,7 +225,7 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 				<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-4 md:grid-cols-subgrid md:items-center">
 					<Badge type={item.priority === 0 ? "error" : "info"}>{item.kind}</Badge>
 					<div class="grid gap-1 md:place-items-start">
-						<h3 class="font-medium">{item.phase.project.name} · {item.phase.title}</h3>
+						<h3 class="font-medium"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${item.phase.project.publicId}`}>{item.phase.project.name}</a> · {item.phase.title}</h3>
 						{item.upfrontUnpaid && <Badge type="error">unpaid upfront</Badge>}
 					</div>
 					<p class="text-sm tabular-nums md:text-right">{currencyFormatter.format(item.invoice?.total ?? item.phase.cost)}</p>
