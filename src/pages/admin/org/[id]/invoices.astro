@@ -72,6 +72,7 @@ const [organizationData, projects, unattachedInvoices] = await Promise.all([
 							component: true,
 							invoiceNumber: true,
 							stripePaymentPage: true,
+							currency: true,
 							total: true,
 							stripeStatus: true,
 							stripePaidAt: true,
@@ -102,6 +103,7 @@ const [organizationData, projects, unattachedInvoices] = await Promise.all([
 			stripeStatus: true,
 			stripeDueAt: true,
 			stripePaidAt: true,
+			fetchedAt: true,
 		},
 		where: {
 			organizationId: id,
@@ -131,14 +133,20 @@ const attachableTargets = componentTargets.filter(
 );
 const recordableTargets = attachableTargets;
 const deliveryPhaseIds = new Set<string>();
-const recordedTargets = componentTargets
-	.filter((target) => target.invoice)
-	.toSorted((a, b) => (b.invoice?.id ?? "").localeCompare(a.invoice?.id ?? ""))
-	.map((target) => {
-		const showDelivery = !deliveryPhaseIds.has(target.id);
-		deliveryPhaseIds.add(target.id);
-		return { ...target, showDelivery };
-	});
+type ComponentTarget = (typeof componentTargets)[number];
+type RecordedTarget = ComponentTarget & {
+	invoice: NonNullable<ComponentTarget["invoice"]>;
+};
+
+const recordedTargets: (RecordedTarget & { showDelivery: boolean })[] =
+	componentTargets
+		.filter((target): target is RecordedTarget => Boolean(target.invoice))
+		.toSorted((a, b) => b.invoice.id.localeCompare(a.invoice.id))
+		.map((target) => {
+			const showDelivery = !deliveryPhaseIds.has(target.id);
+			deliveryPhaseIds.add(target.id);
+			return { ...target, showDelivery };
+		});
 const targetValue = (target: (typeof componentTargets)[number]) =>
 	`${target.id}:${target.component}:${target.version}`;
 const suggestedTarget = (invoice: (typeof unattachedInvoices)[number]) =>
@@ -152,11 +160,70 @@ const suggestedTargetValue = (invoice: (typeof unattachedInvoices)[number]) => {
 	const target = suggestedTarget(invoice);
 	return target ? targetValue(target) : "";
 };
+const now = new Date();
+const defaultCurrency =
+	allPhases[0]?.currency ?? unattachedInvoices[0]?.currency ?? "EUR";
 const formatCurrency = (amount: number, currency: string) =>
 	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
 		amount,
 	);
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
+
+const sumByCurrency = (
+	items: ReadonlyArray<{ amount: number; currency: string }>,
+) => {
+	const sums = new Map<string, number>();
+	for (const item of items) {
+		sums.set(item.currency, (sums.get(item.currency) ?? 0) + item.amount);
+	}
+	if (sums.size === 0) return formatCurrency(0, defaultCurrency);
+	return [...sums]
+		.map(([currency, total]) => formatCurrency(total, currency))
+		.join(" + ");
+};
+
+const totalInvoiced = sumByCurrency(
+	recordedTargets.map((t) => ({
+		amount: t.invoice.total,
+		currency: t.invoice.currency ?? t.currency,
+	})),
+);
+const totalOutstanding = sumByCurrency(
+	recordedTargets
+		.filter((t) => t.invoice.stripeStatus === "open")
+		.map((t) => ({
+			amount: t.invoice.total,
+			currency: t.invoice.currency ?? t.currency,
+		})),
+);
+const overdueTargets = recordedTargets.filter(
+	(t) =>
+		t.invoice.stripeStatus === "open" &&
+		t.invoice.stripeDueAt &&
+		t.invoice.stripeDueAt < now,
+);
+const totalOverdue = sumByCurrency(
+	overdueTargets.map((t) => ({
+		amount: t.invoice.total,
+		currency: t.invoice.currency ?? t.currency,
+	})),
+);
+const overdueCount = overdueTargets.length;
+const totalPaid = sumByCurrency(
+	recordedTargets
+		.filter((t) => t.invoice.stripeStatus === "paid")
+		.map((t) => ({
+			amount: t.invoice.total,
+			currency: t.invoice.currency ?? t.currency,
+		})),
+);
+const totalDueToBill = sumByCurrency(
+	recordableTargets.map((t) => ({
+		amount: t.amount,
+		currency: t.currency,
+	})),
+);
+
 const inputClass =
 	"border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300";
 const quietButtonClass =
@@ -200,6 +267,53 @@ const stripeLine = (invoice: {
 				<Button href={`/admin/org/${organization.id}/settings`}>Link Stripe customer</Button>
 			)}
 		</div>
+
+		<dl
+			class="grid grid-cols-2 gap-4 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:grid-cols-3 lg:grid-cols-5"
+			aria-label="Invoicing summary"
+		>
+			<div class="grid gap-1">
+				<dt
+					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>Total Invoiced</dt
+				>
+				<dd class="text-lg font-semibold tabular-nums">{totalInvoiced}</dd>
+			</div>
+			<div class="grid gap-1">
+				<dt
+					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>Outstanding</dt
+				>
+				<dd class="text-lg font-semibold tabular-nums">{totalOutstanding}</dd>
+			</div>
+			<div class="grid gap-1">
+				<dt
+					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>Overdue</dt
+				>
+				<dd
+					class:list={["text-lg font-semibold tabular-nums", overdueCount > 0 && "text-red-700 dark:text-red-300"]}
+					>{totalOverdue}</dd
+				>
+			</div>
+			<div class="grid gap-1">
+				<dt
+					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>Due to Bill</dt
+				>
+				<dd class="text-lg font-semibold tabular-nums">{totalDueToBill}</dd>
+			</div>
+			<div class="grid gap-1">
+				<dt
+					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					>Paid</dt
+				>
+				<dd
+					class="text-lg font-semibold tabular-nums text-emerald-700 dark:text-emerald-300"
+					>{totalPaid}</dd
+				>
+			</div>
+		</dl>
 
 		{unattachedInvoices.length > 0 && (
 			<div class="grid gap-3">
