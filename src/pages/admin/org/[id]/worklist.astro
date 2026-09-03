@@ -119,7 +119,7 @@ type WorklistItem = {
 };
 
 const isUpfrontUnpaid = (phase: WorklistPhase) => {
-	if (phase.upfrontAmount === null) return false;
+	if (phase.upfrontAmount === null || phase.upfrontAmount === 0) return false;
 	const upfrontInvoice = phase.invoices.find(
 		(inv) => inv.component === "upfront",
 	);

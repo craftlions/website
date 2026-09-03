@@ -5,6 +5,7 @@
     - Phases
     - Invoices
   - Export CSV 
+- Refactor: store `null` instead of `0` for phase cost components that carry nothing (currently zero-cost phases must keep one `0` component because of the `phases_cost_components_consistency` check; UI/billing code filters `amount === 0` as a workaround)
 
 ## commands
 
