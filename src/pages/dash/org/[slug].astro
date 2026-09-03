@@ -231,7 +231,7 @@ const worklist: WorklistItem[] = [
 	...worklistPhases.map(
 		({ project, phase }): WorklistItem => ({
 			priority: phase.state === "planned" ? 1 : 2,
-			kind: phase.state === "planned" ? "To approve" : "To accept",
+			kind: phase.state === "planned" ? "To approve" : "To review",
 			project,
 			phase,
 			dueAt: phase.dueAt,
