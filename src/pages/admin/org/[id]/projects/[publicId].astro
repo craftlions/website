@@ -218,11 +218,11 @@ const summaryClass =
 				<form
 					method="POST"
 					action={actions.createPhase}
-					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_8rem_5rem_max-content] md:items-end"
+					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-3 md:items-end"
 					data-phase-amount-form
 				>
 					<input type="hidden" name="projectId" value={project.id}>
-					<label class="grid gap-1 text-sm"
+					<label class="grid gap-1 text-sm md:col-span-full"
 						><span class="font-medium">Phase title</span>
 						<input class={inputClass} name="title" required></label
 					>
@@ -332,8 +332,30 @@ const summaryClass =
 			submit.disabled = !valid;
 		};
 
-		for (const input of percentages) {
-			input.addEventListener("input", syncAmounts);
+		// Editing one percentage rebalances the remainder onto the last other
+		// component so the split always totals 100% without manual arithmetic.
+		const rebalance = (edited: number) => {
+			const balancer = percentages.findLastIndex(
+				(_, index) => index !== edited,
+			);
+			const balancerInput = percentages[balancer];
+			if (!balancerInput) return;
+			const others = percentages.reduce((sum, input, index) => {
+				const value = Number(input.value);
+				return index === balancer || !Number.isFinite(value)
+					? sum
+					: sum + value;
+			}, 0);
+			balancerInput.value = formatAmount(
+				Math.max(0, Math.round((100 - others) * 10_000) / 10_000),
+			);
+		};
+
+		for (const [index, input] of percentages.entries()) {
+			input.addEventListener("input", () => {
+				rebalance(index);
+				syncAmounts();
+			});
 		}
 		costInput.addEventListener("input", syncAmounts);
 		syncAmounts();
