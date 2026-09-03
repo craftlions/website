@@ -30,47 +30,54 @@ const percentageFor = (amount: number | null, index: number) => {
 };
 ---
 
-<fieldset class="grid gap-3" data-phase-amount-fields>
-	<legend class="text-sm font-semibold">Cost split</legend>
-	<p class="text-sm text-neutral-600 dark:text-neutral-400">
-		Set percentages totalling 100%. The amounts are calculated from the phase
-		cost and stored.
-	</p>
-	<div class="grid gap-3 sm:grid-cols-3">
+<fieldset class="grid gap-2" data-phase-amount-fields>
+	<legend
+		class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+		>Cost split</legend
+	>
+	<div
+		class="grid grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2 text-sm"
+	>
 		{labels.map((label, index) => (
-			<div class="grid gap-2">
-				<label class="grid gap-1 text-sm">
-					<span class="font-medium">{label} %</span>
-					<input
-						class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
-						data-phase-amount-percent
-						min="0"
-						max="100"
-						step="0.0001"
-						type="number"
-						value={percentageFor(amounts[index] ?? null, index)}
-						inputmode="decimal"
-					/>
+			<>
+				<label class="contents">
+					<span class="font-medium">{label}</span>
+					<span class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-neutral-300 px-3 py-2 transition-colors focus-within:border-neutral-600 dark:border-neutral-700 dark:focus-within:border-neutral-300">
+						<input
+							class="min-w-0 bg-transparent tabular-nums outline-none"
+							data-phase-amount-percent
+							min="0"
+							max="100"
+							step="0.0001"
+							type="number"
+							value={percentageFor(amounts[index] ?? null, index)}
+							inputmode="decimal"
+						/>
+						<span class="text-neutral-500 dark:text-neutral-400">%</span>
+					</span>
 				</label>
-				<label class="grid gap-1 text-sm">
-					<span class="font-medium">{label} amount</span>
-					<input
-						class="border border-dashed border-neutral-300 bg-neutral-100 px-3 py-2 text-sm tabular-nums outline-none dark:border-neutral-700 dark:bg-neutral-900"
-						data-phase-amount-value
-						name={`${label.toLowerCase()}Amount`}
-						readonly
-						value={formatAmount(amounts[index] ?? null)}
-						aria-readonly="true"
-					/>
-				</label>
-			</div>
+				<input
+					class="min-w-0 bg-transparent text-right tabular-nums text-neutral-600 outline-none dark:text-neutral-400"
+					data-phase-amount-value
+					name={`${label.toLowerCase()}Amount`}
+					readonly
+					tabindex="-1"
+					value={formatAmount(amounts[index] ?? null)}
+					aria-readonly="true"
+					aria-label={`${label} amount`}
+				/>
+			</>
 		))}
+		<span
+			class="border-t border-dashed border-neutral-300 pt-2 text-xs font-medium uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
+			>Total</span
+		>
+		<p
+			class="col-span-2 border-t border-dashed border-neutral-300 pt-2 text-right text-xs tabular-nums text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
+			data-phase-amount-total
+			role="status"
+		></p>
 	</div>
-	<p
-		class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400"
-		data-phase-amount-total
-		role="status"
-	></p>
 	<p
 		class="text-sm text-red-700 dark:text-red-300"
 		data-phase-amount-error
