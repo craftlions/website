@@ -24,7 +24,7 @@ if (!session) {
 	);
 }
 
-if (!session.session.impersonatedBy && !session.session.activeOrganizationId) {
+if (!session.session.activeOrganizationId) {
 	try {
 		await Astro.locals.auth.api.setActiveOrganization({
 			body: {
@@ -158,8 +158,8 @@ const phasesWithComponents = project.phases.map((phase) => ({
 				</h2>
 				<PhasesTable
 					phases={phasesWithComponents}
-					canApprovePhases={canApprovePhases && !session.session.impersonatedBy}
-					canAcceptPhases={canApprovePhases && !session.session.impersonatedBy}
+					canApprovePhases={canApprovePhases}
+					canAcceptPhases={canApprovePhases}
 				/>
 			</section>
 
