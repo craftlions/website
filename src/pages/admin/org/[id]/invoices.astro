@@ -46,6 +46,7 @@ const [organizationData, projects, unattachedInvoices] = await Promise.all([
 	Astro.locals.db.query.projects.findMany({
 		columns: {
 			id: true,
+			publicId: true,
 			name: true,
 		},
 		with: {
@@ -227,7 +228,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 							<input type="hidden" name="phaseId" value={target.id} />
 							<input type="hidden" name="component" value={target.component} />
 							<input type="hidden" name="expectedVersion" value={target.version} />
-							<p class="text-sm font-medium md:col-span-5">{target.project.name} · {target.title} · {target.component}</p>
+							<p class="text-sm font-medium md:col-span-5"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${target.project.publicId}`}>{target.project.name}</a> · {target.title} · {target.component}</p>
 							<label class="grid gap-1 text-sm"><span class="font-medium">Invoice number</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="invoiceNumber" required /></label>
 							<label class="grid gap-1 text-sm"><span class="font-medium">Stripe id</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="stripeId" required /></label>
 							<label class="grid gap-1 text-sm"><span class="font-medium">Payment URL</span><input class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300" name="stripePaymentPage" type="url" required /></label>
@@ -264,7 +265,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 									<span class="text-neutral-500 dark:text-neutral-400">—</span>
 								)}
 							</td>
-							<td class="px-4 py-3">{target.project.name} · {target.title} · {target.component}</td>
+							<td class="px-4 py-3"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${target.project.publicId}`}>{target.project.name}</a> · {target.title} · {target.component}</td>
 							<td class="px-4 py-3">
 								{target.invoice ? (
 									<>{componentBillingStatus({ component: target.component, state: target.state, invoice: target.invoice })} · Stripe {target.invoice.stripeStatus ?? "not fetched"}{target.invoice.stripeDueAt ? ` · due ${dateFormatter.format(target.invoice.stripeDueAt)}` : ""}{target.invoice.stripePaidAt ? ` · paid ${dateFormatter.format(target.invoice.stripePaidAt)}` : ""}{target.invoice.fetchedAt ? ` · ${dateFormatter.format(target.invoice.fetchedAt)}` : ""}</>
