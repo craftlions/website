@@ -30,7 +30,7 @@ if (!session) {
 	);
 }
 
-if (!session.session.impersonatedBy && !session.session.activeOrganizationId) {
+if (!session.session.activeOrganizationId) {
 	try {
 		await Astro.locals.auth.api.setActiveOrganization({
 			body: {
@@ -203,8 +203,7 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 };
 
 const canManagePhases =
-	(currentMember?.role === "owner" || currentMember?.role === "admin") &&
-	!session.session.impersonatedBy;
+	currentMember?.role === "owner" || currentMember?.role === "admin";
 
 // Client worklist: phases waiting on the client's decision plus open invoices
 // waiting on the client's payment. Mirrors the admin worklist ordering so the
