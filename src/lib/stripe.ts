@@ -152,26 +152,22 @@ export const persistStripeInvoiceSnapshot = async (
 		return;
 	}
 
-	const invoiceFields = {
-		invoiceNumber: input.stripeInvoice.number,
-		stripePaymentPage:
-			input.stripeInvoice.hosted_invoice_url ??
-			input.stripeInvoice.invoice_pdf ??
-			"",
-		currency: input.stripeInvoice.currency.toUpperCase(),
-		total: fromStripeMinorUnits(
-			input.stripeInvoice.total ?? 0,
-			input.stripeInvoice.currency,
-		),
-	};
-
 	await tx
 		.insert(invoices)
 		.values({
 			publicId: crypto.randomUUID(),
 			organizationId: input.organizationId,
 			stripeId: input.stripeInvoice.id,
-			...invoiceFields,
+			invoiceNumber: input.stripeInvoice.number,
+			stripePaymentPage:
+				input.stripeInvoice.hosted_invoice_url ??
+				input.stripeInvoice.invoice_pdf ??
+				"",
+			currency: input.stripeInvoice.currency.toUpperCase(),
+			total: fromStripeMinorUnits(
+				input.stripeInvoice.total ?? 0,
+				input.stripeInvoice.currency,
+			),
 			...stripeFields,
 		})
 		.onConflictDoUpdate({
@@ -227,12 +223,12 @@ export const refreshStripeInvoice = async (
 
 	const snapshot = stripeInvoiceSnapshot(data);
 
-	await db.transaction(async (tx) => {
-		await persistStripeInvoiceSnapshot(tx, {
+	await db.transaction((tx) =>
+		persistStripeInvoiceSnapshot(tx, {
 			invoiceId: invoice.id,
 			snapshot,
-		});
-	});
+		}),
+	);
 };
 
 export const importStripeInvoices = async (
@@ -289,22 +285,12 @@ export const importStripeInvoices = async (
 
 		const snapshot = stripeInvoiceSnapshot(item);
 
-		await db.transaction(async (tx) => {
-			await persistStripeInvoiceSnapshot(tx, {
+		await db.transaction((tx) =>
+			persistStripeInvoiceSnapshot(tx, {
 				organizationId: input.organizationId,
 				stripeInvoice: item,
 				snapshot,
-			});
-		});
+			}),
+		);
 	}
-};
-
-export const markStripeRefreshAttempt = async (
-	db: Db,
-	input: { invoiceId: string },
-) => {
-	await db
-		.update(invoices)
-		.set({ fetchedAt: new Date() })
-		.where(eq(invoices.id, input.invoiceId));
 };
