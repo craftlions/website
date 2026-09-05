@@ -79,6 +79,21 @@ const phaseEvents =
 				where: {
 					aggregateType: "phase",
 					aggregateId: { in: phaseIds },
+					// Only state changes reset the age; amount and delivery edits do not.
+					event: {
+						in: [
+							"created",
+							"planned",
+							"approved",
+							"approved_on_behalf",
+							"declined",
+							"cancelled",
+							"started",
+							"delivered",
+							"accepted",
+							"accepted_on_behalf",
+						],
+					},
 				},
 			})
 		: [];
