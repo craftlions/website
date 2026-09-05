@@ -2,13 +2,11 @@
 export const prerender = false;
 
 import { actions } from "astro:actions";
-import { and, eq, inArray } from "drizzle-orm";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import { componentBillingStatus } from "../../../../lib/phase-billing";
-import { events } from "../../../../lib/schema.ts";
 import { getUuidV7Date } from "../../../../lib/uuid.ts";
 
 const { id } = Astro.params;
@@ -76,18 +74,13 @@ const allPhases = projects.flatMap((project) =>
 const phaseIds = allPhases.map((phase) => phase.id);
 const phaseEvents =
 	phaseIds.length > 0
-		? await Astro.locals.db
-				.select({
-					id: events.id,
-					aggregateId: events.aggregateId,
-				})
-				.from(events)
-				.where(
-					and(
-						eq(events.aggregateType, "phase"),
-						inArray(events.aggregateId, phaseIds),
-					),
-				)
+		? await Astro.locals.db.query.events.findMany({
+				columns: { id: true, aggregateId: true },
+				where: {
+					aggregateType: "phase",
+					aggregateId: { in: phaseIds },
+				},
+			})
 		: [];
 const latestPhaseEventIds = new Map<string, string>();
 
@@ -100,15 +93,13 @@ for (const event of phaseEvents) {
 }
 
 const now = new Date();
-const daysSince = (eventId: string) => {
-	const date = getUuidV7Date(eventId);
+const daysInPhaseState = (phaseId: string) => {
+	const date = getUuidV7Date(latestPhaseEventIds.get(phaseId) ?? phaseId);
 
 	return date
 		? Math.max(0, Math.floor((now.getTime() - date.getTime()) / 86400000))
 		: 0;
 };
-const daysInPhaseState = (phaseId: string) =>
-	daysSince(latestPhaseEventIds.get(phaseId) ?? phaseId);
 type WorklistPhase = (typeof allPhases)[number];
 type WorklistInvoice = WorklistPhase["invoices"][number];
 type WorklistItem = {
@@ -121,13 +112,11 @@ type WorklistItem = {
 
 const isUpfrontUnpaid = (phase: WorklistPhase) => {
 	if (phase.upfrontAmount === null || phase.upfrontAmount === 0) return false;
-	const upfrontInvoice = phase.invoices.find(
-		(inv) => inv.component === "upfront",
-	);
 	const status = componentBillingStatus({
 		component: "upfront",
 		state: phase.state,
-		invoice: upfrontInvoice ?? null,
+		invoice:
+			phase.invoices.find((invoice) => invoice.component === "upfront") ?? null,
 	});
 	return status !== "paid";
 };
