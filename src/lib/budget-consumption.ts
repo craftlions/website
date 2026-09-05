@@ -76,8 +76,10 @@ export function deriveBudgetConsumption(
 	const currentYearTotal = rows
 		.filter((row) => row.year === currentYear)
 		.reduce((total, row) => total + row.total, 0);
-	const remainingBudget = yearlyBudget - currentYearTotal;
-	const usagePercentage =
-		yearlyBudget > 0 ? (currentYearTotal / yearlyBudget) * 100 : 0;
-	return { currentYearTotal, remainingBudget, usagePercentage };
+	return {
+		currentYearTotal,
+		remainingBudget: yearlyBudget - currentYearTotal,
+		usagePercentage:
+			yearlyBudget > 0 ? (currentYearTotal / yearlyBudget) * 100 : 0,
+	};
 }
