@@ -133,7 +133,6 @@ const attachableTargets = unbilledTargets.filter((target) =>
 const pendingTargets = unbilledTargets.filter(
 	(target) => !isInvoiceComponentDue(target.component, target.state),
 );
-const recordableTargets = attachableTargets;
 type ComponentTarget = (typeof componentTargets)[number];
 type RecordedTarget = ComponentTarget & {
 	invoice: NonNullable<ComponentTarget["invoice"]>;
@@ -144,15 +143,13 @@ const recordedTargets: RecordedTarget[] = componentTargets
 	.toSorted((a, b) => b.invoice.id.localeCompare(a.invoice.id));
 const targetValue = (target: (typeof componentTargets)[number]) =>
 	`${target.id}:${target.component}:${target.version}`;
-const suggestedTarget = (invoice: (typeof unattachedInvoices)[number]) =>
-	attachableTargets
+const suggestedTargetValue = (invoice: (typeof unattachedInvoices)[number]) => {
+	const target = attachableTargets
 		.filter((target) => target.currency === invoice.currency)
 		.toSorted(
 			(a, b) =>
 				Math.abs(a.amount - invoice.total) - Math.abs(b.amount - invoice.total),
 		)[0];
-const suggestedTargetValue = (invoice: (typeof unattachedInvoices)[number]) => {
-	const target = suggestedTarget(invoice);
 	return target ? targetValue(target) : "";
 };
 const now = new Date();
@@ -203,7 +200,6 @@ const totalOverdue = sumByCurrency(
 		currency: t.invoice.currency ?? t.currency,
 	})),
 );
-const overdueCount = overdueTargets.length;
 const totalPaid = sumByCurrency(
 	recordedTargets
 		.filter((t) => t.invoice.stripeStatus === "paid")
@@ -212,12 +208,7 @@ const totalPaid = sumByCurrency(
 			currency: t.invoice.currency ?? t.currency,
 		})),
 );
-const totalDueToBill = sumByCurrency(
-	recordableTargets.map((t) => ({
-		amount: t.amount,
-		currency: t.currency,
-	})),
-);
+const totalDueToBill = sumByCurrency(attachableTargets);
 const openCount = recordedTargets.filter(
 	(t) => t.invoice.stripeStatus === "open",
 ).length;
@@ -385,7 +376,7 @@ const sectionLabelClass =
 					>Overdue</dt
 				>
 				<dd
-					class:list={["text-lg font-semibold tabular-nums", overdueCount > 0 && "text-red-700 dark:text-red-300"]}
+					class:list={["text-lg font-semibold tabular-nums", overdueTargets.length > 0 && "text-red-700 dark:text-red-300"]}
 					>{totalOverdue}</dd
 				>
 			</div>
@@ -414,6 +405,7 @@ const sectionLabelClass =
 				<ul class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
 					{unattachedInvoices.map((invoice) => {
 						const guidance = getAttachmentGuidance(invoice);
+						const suggested = suggestedTargetValue(invoice);
 						return (
 						<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.5fr)] md:items-center">
 							<div class="grid gap-1">
@@ -449,7 +441,7 @@ const sectionLabelClass =
 									<input type="hidden" name="invoiceId" value={invoice.id} />
 									<select name="target" aria-label="Phase component" required class={inputClass}>
 										{guidance.targets.map((target) => (
-											<option value={targetValue(target)} selected={targetValue(target) === suggestedTargetValue(invoice)}>{target.project.name} · {target.title} · {target.component} · {formatCurrency(target.amount, target.currency)}{targetValue(target) === suggestedTargetValue(invoice) ? " (suggested)" : ""}</option>
+											<option value={targetValue(target)} selected={targetValue(target) === suggested}>{target.project.name} · {target.title} · {target.component} · {formatCurrency(target.amount, target.currency)}{targetValue(target) === suggested ? " (suggested)" : ""}</option>
 										))}
 									</select>
 									<Button type="submit">Attach</Button>
@@ -466,11 +458,11 @@ const sectionLabelClass =
 			</div>
 		)}
 
-		{recordableTargets.length > 0 && (
+		{attachableTargets.length > 0 && (
 			<div class="grid gap-3">
 				<h3 class={sectionLabelClass}>Due, not invoiced</h3>
 				<ul class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
-					{recordableTargets.map((target) => (
+					{attachableTargets.map((target) => (
 						<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center">
 							<div class="grid gap-1">
 								<p class="font-medium"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${target.project.publicId}`}>{target.project.name}</a> · {target.title}</p>
