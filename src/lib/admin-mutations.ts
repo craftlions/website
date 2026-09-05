@@ -24,8 +24,6 @@ export const toSlug = (value: string) =>
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/^-|-$/g, "");
 
-const publicId = () => crypto.randomUUID();
-
 type PhaseAmountInput = {
 	upfrontAmount?: number | null | undefined;
 	deliveryAmount?: number | null | undefined;
@@ -127,7 +125,7 @@ const insertEvent = async (
 	},
 ) => {
 	const values = {
-		publicId: publicId(),
+		publicId: crypto.randomUUID(),
 		aggregateType: input.aggregateType,
 		aggregateId: input.aggregateId,
 		aggregateVersion: input.aggregateVersion,
@@ -263,7 +261,7 @@ export const createProject = async (
 		const rows = await tx
 			.insert(projects)
 			.values({
-				publicId: publicId(),
+				publicId: crypto.randomUUID(),
 				organizationId: input.organizationId,
 				name: input.name.trim(),
 				state: "draft",
@@ -436,7 +434,7 @@ export const createPhase = async (
 		const rows = await tx
 			.insert(phases)
 			.values({
-				publicId: publicId(),
+				publicId: crypto.randomUUID(),
 				projectId: project.id,
 				title: input.title.trim(),
 				cost: input.cost,
@@ -511,10 +509,12 @@ export const updatePhaseAmounts = async (
 
 		// The row lock makes the approval transition and this edit serialize;
 		// once approval wins, this guard rejects the amount change.
-		const amounts = resolvePhaseAmounts(phase.cost, input);
 		const rows = await tx
 			.update(phases)
-			.set({ ...amounts, version: sql`${phases.version} + 1` })
+			.set({
+				...resolvePhaseAmounts(phase.cost, input),
+				version: sql`${phases.version} + 1`,
+			})
 			.where(
 				and(eq(phases.id, phase.id), eq(phases.version, input.expectedVersion)),
 			)
@@ -540,11 +540,11 @@ export const updatePhaseAmounts = async (
 };
 
 const phaseTransitions = {
-	planned: { from: "submitted", event: "planned" },
-	approved: { from: "planned", event: "approved_on_behalf" },
-	in_progress: { from: "approved", event: "started" },
+	planned: { from: ["submitted"], event: "planned" },
+	approved: { from: ["planned"], event: "approved_on_behalf" },
+	in_progress: { from: ["approved"], event: "started" },
 	// Acceptance is explicit: only a delivered phase can be accepted.
-	accepted: { from: "delivered", event: "accepted_on_behalf" },
+	accepted: { from: ["delivered"], event: "accepted_on_behalf" },
 	cancelled: { from: ["submitted", "planned"], event: "cancelled" },
 } as const;
 
@@ -635,8 +635,6 @@ export const transitionPhaseAsAdmin = async (
 	await assertAdminUser(db, actorId);
 
 	const transition = phaseTransitions[input.nextState];
-	const from: readonly string[] =
-		typeof transition.from === "string" ? [transition.from] : transition.from;
 
 	return transitionPhase(
 		db,
@@ -644,7 +642,7 @@ export const transitionPhaseAsAdmin = async (
 		input.phaseId,
 		input.expectedVersion,
 		input.nextState,
-		from,
+		transition.from,
 		transition.event,
 		"Invalid phase transition.",
 	);
@@ -929,7 +927,7 @@ export const recordInvoice = async (
 		const rows = await tx
 			.insert(invoices)
 			.values({
-				publicId: publicId(),
+				publicId: crypto.randomUUID(),
 				organizationId: project.organizationId,
 				phaseId: lockedPhase.id,
 				component: input.component,
@@ -1194,19 +1192,16 @@ const writeOrganizationOnboardingRemainder = async (
 				set: { yearlyBudget: input.yearlyBudget ?? null },
 			});
 
-		const existingCreatedEvent = await tx
-			.select({ id: events.id })
-			.from(events)
-			.where(
-				and(
-					eq(events.aggregateType, "organization"),
-					eq(events.aggregateId, input.organizationId),
-					eq(events.event, "created"),
-				),
-			)
-			.limit(1);
+		const existingCreatedEvent = await tx.query.events.findFirst({
+			columns: { id: true },
+			where: {
+				aggregateType: "organization",
+				aggregateId: input.organizationId,
+				event: "created",
+			},
+		});
 
-		if (!existingCreatedEvent[0]) {
+		if (!existingCreatedEvent) {
 			await insertEvent(tx, {
 				aggregateType: "organization",
 				aggregateId: input.organizationId,
