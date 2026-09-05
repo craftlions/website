@@ -11,15 +11,16 @@ interface Invoice {
 	stripeDueAt: Date | null;
 	total: number;
 	currency: string;
-	// S-003 R2/R3: work is derived from the invoice's one phase, never copied.
-	work: {
-		projectPublicId: string;
-		projectName: string;
-		phasePublicId: string;
-		phaseTitle: string;
+	phase: {
+		publicId: string;
+		title: string;
+		deliveryState: "url" | "none" | "not_recorded";
+		deliveryUrl: string | null;
+		project: {
+			publicId: string;
+			name: string;
+		} | null;
 	} | null;
-	deliveryState: "url" | "none" | "not_recorded" | "unavailable";
-	deliveryUrl: string | null;
 }
 
 interface Props {
@@ -52,7 +53,7 @@ const totalWhere = (statuses: string[]) => {
 		.map(([currency, total]) => formatAmount(total, currency))
 		.join(" + ");
 };
-const overdueCount = rows.filter((row) => row.status === "overdue").length;
+const hasOverdue = rows.some((row) => row.status === "overdue");
 const showFilter =
 	rows.some((row) => row.status === "open" || row.status === "overdue") &&
 	rows.some((row) => row.status === "paid");
@@ -67,7 +68,7 @@ const showFilter =
 				</div>
 				<div class="grid gap-1">
 					<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Overdue</dt>
-					<dd class:list={["tabular-nums", overdueCount > 0 && "text-red-700 dark:text-red-300"]}>{totalWhere(["overdue"])}</dd>
+					<dd class:list={["tabular-nums", hasOverdue && "text-red-700 dark:text-red-300"]}>{totalWhere(["overdue"])}</dd>
 				</div>
 				<div class="grid gap-1">
 					<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Paid</dt>
@@ -125,12 +126,12 @@ const showFilter =
 									<div class="grid gap-1">
 										<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">Work</dt>
 										<dd>
-											{invoice.work ? (
+											{invoice.phase?.project ? (
 												<a
-													href={`/dash/org/${slug}/project/${invoice.work.projectPublicId}#phase-${invoice.work.phasePublicId}`}
+													href={`/dash/org/${slug}/project/${invoice.phase.project.publicId}#phase-${invoice.phase.publicId}`}
 													class="font-medium underline decoration-dashed underline-offset-4"
 												>
-													{invoice.work.projectName} · {invoice.work.phaseTitle}
+													{invoice.phase.project.name} · {invoice.phase.title}
 												</a>
 											) : (
 												<span class="text-neutral-500 dark:text-neutral-400">Unassigned</span>
@@ -140,19 +141,19 @@ const showFilter =
 									<div class="grid gap-1">
 										<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">Delivery</dt>
 										<dd>
-											{invoice.deliveryState === "url" && invoice.deliveryUrl ? (
+											{invoice.phase?.deliveryState === "url" && invoice.phase.deliveryUrl ? (
 												<a
-													href={invoice.deliveryUrl}
+													href={invoice.phase.deliveryUrl}
 													target="_blank"
 													rel="noopener noreferrer"
-													aria-label={`Open Delivery for ${invoice.work?.phaseTitle ?? "the invoice"}`}
+													aria-label={`Open Delivery for ${invoice.phase.project ? invoice.phase.title : "the invoice"}`}
 													class="underline decoration-dashed underline-offset-4"
 												>
 													Open
 												</a>
-											) : invoice.deliveryState === "none" ? (
+											) : invoice.phase?.deliveryState === "none" ? (
 												<span class="text-neutral-600 dark:text-neutral-400">No delivery</span>
-											) : invoice.deliveryState === "not_recorded" ? (
+											) : invoice.phase?.deliveryState === "not_recorded" ? (
 												<span class="text-neutral-500 dark:text-neutral-400">Not recorded</span>
 											) : (
 												<span class="text-neutral-500 dark:text-neutral-400">Unavailable</span>
@@ -205,13 +206,6 @@ const showFilter =
 		}
 
 		renderList() {
-			const rows = Array.from(
-				this.querySelectorAll<HTMLElement>("[data-invoice-item]"),
-			);
-			const matching = rows.filter(
-				(row) => this.filter === "all" || row.dataset.category === this.filter,
-			);
-
 			for (const button of this.querySelectorAll<HTMLButtonElement>(
 				"[data-invoice-filter]",
 			)) {
@@ -221,8 +215,11 @@ const showFilter =
 				);
 			}
 
-			for (const row of rows) {
-				row.hidden = !matching.includes(row);
+			for (const row of this.querySelectorAll<HTMLElement>(
+				"[data-invoice-item]",
+			)) {
+				row.hidden =
+					this.filter !== "all" && row.dataset.category !== this.filter;
 			}
 		}
 	}
