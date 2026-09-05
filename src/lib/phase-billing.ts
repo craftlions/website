@@ -52,28 +52,11 @@ export const buildPhaseComponents = (input: {
 	}>;
 }): PhaseComponentItem[] => {
 	const invoiceByComponent = new Map(
-		input.invoices
-			.filter(
-				(
-					inv,
-				): inv is {
-					component: InvoiceComponent;
-					stripeStatus: string | null;
-				} =>
-					inv.component === "upfront" ||
-					inv.component === "delivery" ||
-					inv.component === "acceptance",
-			)
-			.map((inv) => [inv.component, inv]),
+		input.invoices.map((invoice) => [invoice.component, invoice]),
 	);
 	return invoiceComponents
 		.map((component) => {
-			const amount =
-				component === "upfront"
-					? input.upfrontAmount
-					: component === "delivery"
-						? input.deliveryAmount
-						: input.acceptanceAmount;
+			const amount = input[`${component}Amount`];
 			// A zero amount is nothing to bill; zero-cost phases must still store
 			// one 0 component to satisfy the cost-components check constraint.
 			return amount === null || amount === 0
