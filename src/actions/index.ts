@@ -1,5 +1,4 @@
 import type { Auth } from "../lib/auth.ts";
-import type { Db } from "../lib/database.ts";
 import { ActionError, defineAction } from "astro:actions";
 import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
@@ -31,7 +30,7 @@ import {
 import { DomainError } from "../lib/domain.ts";
 import { importStripeInvoices, refreshStripeInvoice } from "../lib/stripe.ts";
 
-export const assertAdmin = async (headers: Headers, auth: Auth) => {
+const assertAdmin = async (headers: Headers, auth: Auth) => {
 	const session = await auth.api.getSession({ headers });
 
 	if (!session) {
@@ -45,70 +44,6 @@ export const assertAdmin = async (headers: Headers, auth: Auth) => {
 		throw new ActionError({
 			code: "FORBIDDEN",
 			message: "Only admins can manage projects.",
-		});
-	}
-
-	return session;
-};
-
-export const assertOrganizationMember = async (
-	headers: Headers,
-	organizationId: string,
-	auth: Auth,
-	db: Db,
-) => {
-	const session = await auth.api.getSession({ headers });
-
-	if (!session) {
-		throw new ActionError({
-			code: "UNAUTHORIZED",
-			message: "Sign in to manage organization.",
-		});
-	}
-
-	const member = await db.query.member.findFirst({
-		where: {
-			userId: session.user.id,
-			organizationId,
-		},
-	});
-
-	if (!member) {
-		throw new ActionError({
-			code: "FORBIDDEN",
-			message: "You are not a member of this organization.",
-		});
-	}
-
-	return session;
-};
-
-export const assertOrganizationOwnerOrAdmin = async (
-	headers: Headers,
-	organizationId: string,
-	auth: Auth,
-	db: Db,
-) => {
-	const session = await auth.api.getSession({ headers });
-
-	if (!session) {
-		throw new ActionError({
-			code: "UNAUTHORIZED",
-			message: "Sign in to manage organization.",
-		});
-	}
-
-	const member = await db.query.member.findFirst({
-		where: {
-			userId: session.user.id,
-			organizationId,
-		},
-	});
-
-	if (!member || (member.role !== "owner" && member.role !== "admin")) {
-		throw new ActionError({
-			code: "FORBIDDEN",
-			message: "Only organization owners can perform this action.",
 		});
 	}
 

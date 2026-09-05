@@ -7,8 +7,6 @@ import { createDb } from "./database.ts";
 import * as schema from "./schema.ts";
 
 export function createAuth(env: Cloudflare.Env) {
-	const db = env ? createDb(env) : null;
-
 	return betterAuth({
 		socialProviders: {
 			github: {
@@ -40,13 +38,11 @@ export function createAuth(env: Cloudflare.Env) {
 			allowedHosts: ["craftlions.com", "*.craftlions.com", "localhost:*"],
 			protocol: "auto",
 		},
-		database: db
-			? drizzleAdapter(db, {
-					provider: "pg",
-					schema: schema,
-					transaction: true,
-				})
-			: undefined,
+		database: drizzleAdapter(createDb(env), {
+			provider: "pg",
+			schema,
+			transaction: true,
+		}),
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: true,
@@ -93,9 +89,6 @@ export function createAuth(env: Cloudflare.Env) {
 				},
 			},
 		},
-		experimental: {
-			// joins: true,
-		},
 		plugins: [
 			dash({
 				activityTracking: {
@@ -105,8 +98,6 @@ export function createAuth(env: Cloudflare.Env) {
 			}),
 			organization({
 				allowUserToCreateOrganization: false,
-				// teams
-				// sendInvitationEmail
 			}),
 			admin(),
 			oAuthProxy({
