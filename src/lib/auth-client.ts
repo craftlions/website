@@ -24,11 +24,11 @@ export const authClient = createAuthClient({
 		refetchWhenOffline: false,
 	},
 	fetchOptions: {
-		onError: async (context) => {
-			const { response } = context;
+		onError: ({ response }) => {
 			if (response.status === 429) {
-				const retryAfter = response.headers.get("X-Retry-After");
-				console.log(`Rate limit exceeded. Retry after ${retryAfter} seconds`);
+				console.log(
+					`Rate limit exceeded. Retry after ${response.headers.get("X-Retry-After")} seconds`,
+				);
 			}
 		},
 	},
