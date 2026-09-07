@@ -4,9 +4,11 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
+import CostSplit from "../../../../components/CostSplit.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import {
+	buildPhaseComponents,
 	invoiceComponents,
 	isInvoiceComponentDue,
 } from "../../../../lib/phase-billing.ts";
@@ -209,6 +211,70 @@ const totalPaid = sumByCurrency(
 		})),
 );
 const totalDueToBill = sumByCurrency(attachableTargets);
+
+// Invoiced and due-to-bill totals grouped by cost part and currency so all
+// three types stay visible in the summary, not just the grand totals.
+const groupByPartAndCurrency = (
+	entries: ReadonlyArray<{
+		component: string;
+		amount: number;
+		currency: string;
+	}>,
+) => {
+	const byCurrency = new Map<
+		string,
+		{ upfront: number; delivery: number; acceptance: number }
+	>();
+	for (const entry of entries) {
+		const bucket = byCurrency.get(entry.currency) ?? {
+			upfront: 0,
+			delivery: 0,
+			acceptance: 0,
+		};
+		if (
+			entry.component === "upfront" ||
+			entry.component === "delivery" ||
+			entry.component === "acceptance"
+		) {
+			bucket[entry.component] += entry.amount;
+		}
+		byCurrency.set(entry.currency, bucket);
+	}
+	return [...byCurrency].map(([currency, bucket]) => ({
+		currency,
+		total: bucket.upfront + bucket.delivery + bucket.acceptance,
+		items: (
+			[
+				{ component: "upfront", amount: bucket.upfront },
+				{ component: "delivery", amount: bucket.delivery },
+				{ component: "acceptance", amount: bucket.acceptance },
+			] as const
+		)
+			.filter((item) => item.amount !== 0)
+			.map((item) => ({ ...item, status: "not_due" as const })),
+	}));
+};
+const invoicedByPart = groupByPartAndCurrency(
+	recordedTargets.map((target) => ({
+		component: target.component,
+		amount: target.invoice.total,
+		currency: target.invoice.currency ?? target.currency,
+	})),
+);
+const dueByPart = groupByPartAndCurrency(attachableTargets);
+const componentLabel: Record<string, string> = {
+	upfront: "Upfront part",
+	delivery: "Delivery part",
+	acceptance: "Acceptance part",
+};
+const phaseSplit = (target: (typeof componentTargets)[number]) =>
+	buildPhaseComponents({
+		upfrontAmount: target.upfrontAmount,
+		deliveryAmount: target.deliveryAmount,
+		acceptanceAmount: target.acceptanceAmount,
+		state: target.state,
+		invoices: target.invoices,
+	});
 const openCount = recordedTargets.filter(
 	(t) => t.invoice.stripeStatus === "open",
 ).length;
@@ -399,6 +465,43 @@ const sectionLabelClass =
 			</div>
 		</dl>
 
+		{(invoicedByPart.length > 0 || dueByPart.length > 0) && (
+			<div class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:grid-cols-2">
+				{invoicedByPart.length > 0 && (
+					<div class="grid content-start gap-2">
+						<p class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+							Invoiced by cost part
+						</p>
+						{invoicedByPart.map((split) => (
+							<CostSplit
+								items={split.items}
+								currency={split.currency}
+								total={split.total}
+								variant="compact"
+								showStatus={false}
+							/>
+						))}
+					</div>
+				)}
+				{dueByPart.length > 0 && (
+					<div class="grid content-start gap-2">
+						<p class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+							Due to bill by cost part
+						</p>
+						{dueByPart.map((split) => (
+							<CostSplit
+								items={split.items}
+								currency={split.currency}
+								total={split.total}
+								variant="compact"
+								showStatus={false}
+							/>
+						))}
+					</div>
+				)}
+			</div>
+		)}
+
 		{unattachedInvoices.length > 0 && (
 			<div class="grid gap-3">
 				<h3 class={sectionLabelClass}>Unattached from Stripe</h3>
@@ -463,12 +566,23 @@ const sectionLabelClass =
 				<h3 class={sectionLabelClass}>Due, not invoiced</h3>
 				<ul class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
 					{attachableTargets.map((target) => (
-						<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center">
-							<div class="grid gap-1">
+						<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-start">
+							<div class="grid gap-2">
 								<p class="font-medium"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${target.project.publicId}`}>{target.project.name}</a> · {target.title}</p>
-								<p class="text-xs capitalize text-neutral-500 dark:text-neutral-400">{target.component}</p>
+								<div class="max-w-xs">
+									<CostSplit
+										items={phaseSplit(target)}
+										currency={target.currency}
+										total={target.cost}
+										variant="compact"
+										highlight={target.component}
+									/>
+								</div>
 							</div>
-							<p class="font-medium tabular-nums md:text-right">{formatCurrency(target.amount, target.currency)}</p>
+							<div class="grid gap-1 md:justify-items-end md:text-right">
+								<p class="font-medium tabular-nums">{formatCurrency(target.amount, target.currency)}</p>
+								<Badge type="info">{componentLabel[target.component] ?? target.component}</Badge>
+							</div>
 							<Badge type="info">due</Badge>
 							<details class="grid gap-3 md:col-span-3">
 								<summary class={summaryClass}>Record invoice</summary>
@@ -512,9 +626,21 @@ const sectionLabelClass =
 						data-recorded-row
 						data-row-category={rowCategory}
 					>
-						<div class="grid gap-1">
-							<a class="w-max font-medium underline decoration-dashed underline-offset-4" href={target.invoice.stripePaymentPage}>{target.invoice.invoiceNumber}</a>
-							<p class="text-sm"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${target.project.publicId}`}>{target.project.name}</a> · {target.title} · <span class="capitalize">{target.component}</span></p>
+						<div class="grid gap-2">
+							<div class="grid grid-flow-col items-center justify-start gap-2">
+								<a class="w-max font-medium underline decoration-dashed underline-offset-4" href={target.invoice.stripePaymentPage}>{target.invoice.invoiceNumber}</a>
+								<Badge type="info">{componentLabel[target.component] ?? target.component}</Badge>
+							</div>
+							<p class="text-sm"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${target.project.publicId}`}>{target.project.name}</a> · {target.title}</p>
+							<div class="max-w-xs">
+								<CostSplit
+									items={phaseSplit(target)}
+									currency={target.currency}
+									total={target.cost}
+									variant="compact"
+									highlight={target.component}
+								/>
+							</div>
 							<p class="text-xs text-neutral-500 dark:text-neutral-400">
 								<span>Stripe {target.invoice.stripeStatus ?? "not fetched"}</span>
 								{target.invoice.stripeDueAt && (

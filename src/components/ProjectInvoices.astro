@@ -10,6 +10,7 @@ const { id, slug } = Astro.props;
 
 const invoices = await Astro.locals.db.query.invoices.findMany({
 	columns: {
+		component: true,
 		invoiceNumber: true,
 		stripePaymentPage: true,
 		stripeStatus: true,
@@ -26,6 +27,12 @@ const invoices = await Astro.locals.db.query.invoices.findMany({
 			columns: {
 				publicId: true,
 				title: true,
+				cost: true,
+				upfrontAmount: true,
+				deliveryAmount: true,
+				acceptanceAmount: true,
+				currency: true,
+				state: true,
 				deliveryState: true,
 				deliveryUrl: true,
 			},
@@ -34,6 +41,12 @@ const invoices = await Astro.locals.db.query.invoices.findMany({
 					columns: {
 						publicId: true,
 						name: true,
+					},
+				},
+				invoices: {
+					columns: {
+						component: true,
+						stripeStatus: true,
 					},
 				},
 			},

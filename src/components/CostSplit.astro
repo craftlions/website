@@ -1,0 +1,150 @@
+---
+import type {
+	ComponentBillingStatus,
+	InvoiceComponent,
+	PhaseComponentItem,
+} from "../lib/phase-billing";
+import Badge from "./Badge.astro";
+
+interface Props {
+	items: PhaseComponentItem[];
+	currency: string;
+	total: number;
+	variant?: "full" | "compact";
+	showStatus?: boolean;
+	highlight?: InvoiceComponent | null;
+	caption?: string | null;
+}
+
+const {
+	items,
+	currency,
+	total,
+	variant = "full",
+	showStatus = true,
+	highlight = null,
+	caption = null,
+} = Astro.props;
+
+const formatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency,
+});
+const percentFormatter = new Intl.NumberFormat("de-DE", {
+	style: "percent",
+	maximumFractionDigits: 1,
+});
+
+const dueHint: Record<InvoiceComponent, string> = {
+	upfront: "on approval",
+	delivery: "on delivery",
+	acceptance: "on acceptance",
+};
+
+const statusBadgeType: Record<
+	ComponentBillingStatus,
+	"info" | "success" | "error" | "gray"
+> = {
+	not_due: "gray",
+	due: "info",
+	invoiced: "info",
+	paid: "success",
+};
+
+const share = (amount: number) =>
+	total > 0 ? percentFormatter.format(amount / total) : "—";
+const accessibleSummary =
+	items.length === 0
+		? `Total ${formatter.format(total)}, no chargeable parts.`
+		: `Total ${formatter.format(total)} in ${items.length} part${items.length === 1 ? "" : "s"}: ${items
+				.map(
+					(item) =>
+						`${item.component} ${formatter.format(item.amount)} (${share(item.amount)}) ${dueHint[item.component]}${showStatus ? `, ${item.status.replaceAll("_", " ")}` : ""}`,
+				)
+				.join("; ")}.`;
+---
+
+{items.length === 0 ? (
+	<p class="text-xs text-neutral-500 dark:text-neutral-400">
+		No chargeable parts · {formatter.format(total)}
+	</p>
+) : variant === "compact" ? (
+	<figure class="grid min-w-0 gap-1">
+		<figcaption class="sr-only">{accessibleSummary}</figcaption>
+		<ul class="grid gap-0.5" aria-label="Cost split">
+			{items.map((item) => (
+				<li
+					class:list={[
+						"grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-1.5 text-xs",
+						highlight && item.component !== highlight && "opacity-60",
+					]}
+					title={`${dueHint[item.component]}${showStatus ? ` · ${item.status.replaceAll("_", " ")}` : ""}`}
+				>
+					<span class="min-w-0 truncate capitalize text-neutral-600 dark:text-neutral-400">
+						{item.component}
+						<span class="normal-case"> · {dueHint[item.component]}</span>
+					</span>
+					<span class="whitespace-nowrap tabular-nums text-neutral-700 dark:text-neutral-300">
+						{formatter.format(item.amount)} · {share(item.amount)}
+					</span>
+				</li>
+			))}
+		</ul>
+		{caption && (
+			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">{caption}</p>
+		)}
+		{items.length === 1 && !caption && (
+			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
+				Single payment {dueHint[items[0]?.component ?? "acceptance"]}
+			</p>
+		)}
+	</figure>
+) : (
+	<figure class="grid min-w-0 gap-1.5">
+		<figcaption class="sr-only">{accessibleSummary}</figcaption>
+		<ul class="grid gap-1" aria-label="Cost split">
+			{items.map((item) => (
+				<li
+					class:list={[
+						"grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2",
+						highlight && item.component !== highlight && "opacity-60",
+					]}
+				>
+					<span class="grid min-w-0 gap-0.5">
+						<span class="grid grid-flow-col items-baseline justify-start gap-x-1.5 text-xs">
+							<span class="font-medium capitalize">{item.component}</span>
+							<span class="truncate text-neutral-500 dark:text-neutral-400">
+								{dueHint[item.component]}
+							</span>
+						</span>
+						<span class="text-xs tabular-nums text-neutral-700 dark:text-neutral-300">
+							{formatter.format(item.amount)}
+							<span class="text-neutral-500 dark:text-neutral-400">
+								{" "}· {share(item.amount)}
+							</span>
+						</span>
+					</span>
+					{showStatus ? (
+						<Badge type={statusBadgeType[item.status]}>
+							{item.status.replaceAll("_", " ")}
+						</Badge>
+					) : highlight === item.component ? (
+						<Badge type="info">this invoice</Badge>
+					) : null}
+				</li>
+			))}
+		</ul>
+		{caption ? (
+			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">{caption}</p>
+		) : items.length === 1 ? (
+			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
+				Single payment {dueHint[items[0]?.component ?? "acceptance"]} ·{" "}
+				{formatter.format(total)} total
+			</p>
+		) : (
+			<p class="text-[11px] tabular-nums text-neutral-500 dark:text-neutral-400">
+				{formatter.format(total)} total in {items.length} parts
+			</p>
+		)}
+	</figure>
+)}

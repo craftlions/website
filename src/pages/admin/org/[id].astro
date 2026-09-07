@@ -12,6 +12,7 @@ import {
 	sql,
 	sum,
 } from "drizzle-orm";
+import CostSplit from "../../../components/CostSplit.astro";
 import AdminOrgShell from "../../../layouts/AdminOrgShell.astro";
 import {
 	deriveBudgetConsumption,
@@ -129,6 +130,26 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
+// Open attached invoices grouped by cost part so the overview shows all
+// three types, matching the openInvoiceTotal scope (attached only).
+const openAttachedInvoices = await Astro.locals.db.query.invoices.findMany({
+	columns: { component: true, total: true, currency: true },
+	where: {
+		organizationId: id,
+		stripeStatus: "open",
+		phaseId: { isNotNull: true },
+	},
+});
+const openByPart = ["upfront", "delivery", "acceptance"]
+	.map((component) => ({
+		component: component as "upfront" | "delivery" | "acceptance",
+		amount: openAttachedInvoices
+			.filter((invoice) => invoice.component === component)
+			.reduce((total, invoice) => total + invoice.total, 0),
+	}))
+	.filter((part) => part.amount !== 0)
+	.map((part) => ({ ...part, status: "not_due" as const }));
+
 // S-004 R4: one full-history module read per organization; deriveBudget
 // selects the current-year rows. Any read failure aborts this page — no
 // fallback or alternate calculation (R8).
@@ -187,7 +208,7 @@ const sections = [
 					>{hasBudget ? `${usagePercentage.toFixed(1)}%` : "No budget"}</dd
 				>
 			</div>
-			<div class="grid gap-1">
+			<div class="grid content-start gap-1">
 				<dt
 					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 					>Open invoices</dt
@@ -195,6 +216,17 @@ const sections = [
 				<dd class="text-xl font-semibold tabular-nums"
 					>{currencyFormatter.format(organization.openInvoiceTotal)}</dd
 				>
+				{openByPart.length > 0 && (
+					<dd>
+						<CostSplit
+							items={openByPart}
+							currency="EUR"
+							total={organization.openInvoiceTotal}
+							variant="compact"
+							showStatus={false}
+						/>
+					</dd>
+				)}
 			</div>
 			<div class="grid gap-1">
 				<dt

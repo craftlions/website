@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../components/Badge.astro";
 import Button from "../../components/Button.astro";
+import CostSplit from "../../components/CostSplit.astro";
 import Footer from "../../components/Footer.astro";
 import Nav from "../../components/Nav.astro";
 import Shell from "../../layouts/Shell.astro";
@@ -11,6 +12,7 @@ import {
 	deriveBudgetConsumption,
 	getSpendByYear,
 } from "../../lib/budget-consumption.ts";
+import { buildPhaseComponents } from "../../lib/phase-billing.ts";
 import { getUuidV7Date } from "../../lib/uuid.ts";
 
 const onboardResult = Astro.getActionResult(actions.onboardOrganization);
@@ -39,6 +41,9 @@ const organizations = await Astro.locals.db.query.organization.findMany({
 						id: true,
 						title: true,
 						cost: true,
+						upfrontAmount: true,
+						deliveryAmount: true,
+						acceptanceAmount: true,
 						currency: true,
 						state: true,
 						dueAt: true,
@@ -47,6 +52,7 @@ const organizations = await Astro.locals.db.query.organization.findMany({
 						invoices: {
 							columns: {
 								id: true,
+								component: true,
 								invoiceNumber: true,
 								total: true,
 								stripeStatus: true,
@@ -82,6 +88,15 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
 	currency: "EUR",
 });
+const formatAmount = (amount: number, currency: string) =>
+	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
+		amount,
+	);
+const componentLabel: Record<string, string> = {
+	upfront: "Upfront",
+	delivery: "Delivery",
+	acceptance: "Acceptance",
+};
 const daysSince = (id: string) => {
 	const date = getUuidV7Date(id);
 	return date
@@ -94,6 +109,13 @@ const queue = organizations
 		organization.projects.flatMap((project) =>
 			project.phases.flatMap((phase) => {
 				const link = `/admin/org/${organization.id}`;
+				const components = buildPhaseComponents({
+					upfrontAmount: phase.upfrontAmount,
+					deliveryAmount: phase.deliveryAmount,
+					acceptanceAmount: phase.acceptanceAmount,
+					state: phase.state,
+					invoices: phase.invoices,
+				});
 				const overdueInvoices = phase.invoices.filter(
 					(invoice) =>
 						invoice.stripeStatus === "open" &&
@@ -108,6 +130,10 @@ const queue = organizations
 						client: organization.name,
 						label: `${project.name} · ${invoice.invoiceNumber}`,
 						amount: invoice.total,
+						currency: phase.currency,
+						component: invoice.component,
+						components,
+						phaseCost: phase.cost,
 						days: Math.floor(
 							(now.getTime() -
 								(invoice.stripeDueAt?.getTime() ?? now.getTime())) /
@@ -125,6 +151,10 @@ const queue = organizations
 							client: organization.name,
 							label: `${project.name} · ${phase.title}`,
 							amount: phase.cost,
+							currency: phase.currency,
+							component: null,
+							components,
+							phaseCost: phase.cost,
 							days: daysSince(phase.id),
 							link,
 						},
@@ -139,6 +169,10 @@ const queue = organizations
 							client: organization.name,
 							label: `${project.name} · ${phase.title}`,
 							amount: phase.cost,
+							currency: phase.currency,
+							component: null,
+							components,
+							phaseCost: phase.cost,
 							days: daysSince(phase.id),
 							link,
 						},
@@ -158,6 +192,10 @@ const queue = organizations
 							client: organization.name,
 							label: `${project.name} · ${phase.title}`,
 							amount: phase.cost,
+							currency: phase.currency,
+							component: null,
+							components,
+							phaseCost: phase.cost,
 							days: daysSince(phase.id),
 							link,
 						},
@@ -174,6 +212,10 @@ const queue = organizations
 						client: organization.name,
 						label: `${project.name} · ${invoice.invoiceNumber}`,
 						amount: invoice.total,
+						currency: phase.currency,
+						component: invoice.component,
+						components,
+						phaseCost: phase.cost,
 						days: daysSince(invoice.id),
 						link,
 					}));
@@ -190,11 +232,20 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 		(project) => project.state === "active",
 	).length;
 	const totalProjects = organization.projects.length;
-	const openInvoices = organization.projects
+	const openInvoiceRows = organization.projects
 		.flatMap((project) => project.phases)
 		.flatMap((phase) => phase.invoices)
-		.filter((invoice) => invoice.stripeStatus === "open")
-		.reduce((total, invoice) => total + invoice.total, 0);
+		.filter((invoice) => invoice.stripeStatus === "open");
+	const openInvoices = openInvoiceRows.reduce(
+		(total, invoice) => total + invoice.total,
+		0,
+	);
+	const openByPart = ["upfront", "delivery", "acceptance"].map((component) => ({
+		component: component as "upfront" | "delivery" | "acceptance",
+		amount: openInvoiceRows
+			.filter((invoice) => invoice.component === component)
+			.reduce((total, invoice) => total + invoice.total, 0),
+	}));
 	const planned = organization.projects
 		.flatMap((project) => project.phases)
 		.filter((phase) => phase.state === "planned").length;
@@ -221,6 +272,9 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 		activeProjects,
 		totalProjects,
 		openInvoices,
+		openByPart: openByPart
+			.filter((part) => part.amount !== 0)
+			.map((part) => ({ ...part, status: "not_due" as const })),
 		planned,
 		submitted,
 		overdue,
@@ -231,6 +285,21 @@ const outstandingTotal = ledger.reduce(
 	(total, organization) => total + organization.openInvoices,
 	0,
 );
+const outstandingByPart = ["upfront", "delivery", "acceptance"].map(
+	(component) => ({
+		component: component as "upfront" | "delivery" | "acceptance",
+		amount: ledger.reduce(
+			(total, organization) =>
+				total +
+				(organization.openByPart.find((part) => part.component === component)
+					?.amount ?? 0),
+			0,
+		),
+	}),
+);
+const outstandingPartItems = outstandingByPart
+	.filter((part) => part.amount !== 0)
+	.map((part) => ({ ...part, status: "not_due" as const }));
 const overdueCount = queue.filter((item) => item.priority === 0).length;
 ---
 
@@ -255,7 +324,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 					>
 				</div>
 				<dl class="grid grid-flow-col justify-start gap-8 text-sm">
-					<div class="grid gap-1">
+					<div class="grid content-start gap-1">
 						<dt
 							class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 							>Outstanding</dt
@@ -263,6 +332,17 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 						<dd class="tabular-nums"
 							>{currencyFormatter.format(outstandingTotal)}</dd
 						>
+						{outstandingPartItems.length > 0 && (
+							<dd class="max-w-56">
+								<CostSplit
+									items={outstandingPartItems}
+									currency="EUR"
+									total={outstandingTotal}
+									variant="compact"
+									showStatus={false}
+								/>
+							</dd>
+						)}
 					</div>
 					<div class="grid gap-1">
 						<dt
@@ -300,7 +380,31 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 									<h3 class="font-medium">{item.client}</h3>
 									<p class="text-sm text-neutral-600 dark:text-neutral-400">{item.label}</p>
 								</div>
-								<p class="text-sm tabular-nums sm:text-right">{currencyFormatter.format(item.amount)}</p>
+								<div class="grid min-w-48 gap-1.5 sm:justify-items-end">
+									<div class="grid grid-flow-col items-center justify-start gap-2 sm:justify-end">
+										<p class="text-sm font-medium tabular-nums">{formatAmount(item.amount, item.currency)}</p>
+										{item.component && componentLabel[item.component] && (
+											<Badge type="info">{componentLabel[item.component]}</Badge>
+										)}
+									</div>
+									{item.components.length > 0 && (
+										<div class="w-full max-w-56">
+											<CostSplit
+												items={item.components}
+												currency={item.currency}
+												total={item.phaseCost}
+												variant="compact"
+												highlight={
+													item.component === "upfront" ||
+													item.component === "delivery" ||
+													item.component === "acceptance"
+														? item.component
+													: null
+												}
+											/>
+										</div>
+									)}
+								</div>
 								<div class="grid grid-flow-col items-center gap-3 sm:justify-self-end">
 									<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{item.days}d</p>
 									<Button href={item.link}>Open</Button>
@@ -356,7 +460,22 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 												</div>
 											)}
 										</td>
-										<td class="px-4 py-3 text-right tabular-nums">{currencyFormatter.format(organization.openInvoices)}</td>
+										<td class="px-4 py-3">
+											<div class="grid justify-items-end gap-1.5">
+													<p class="tabular-nums">{currencyFormatter.format(organization.openInvoices)}</p>
+													{organization.openByPart.length > 0 && (
+														<div class="w-full min-w-40 max-w-52">
+															<CostSplit
+																items={organization.openByPart}
+																currency="EUR"
+																total={organization.openInvoices}
+																variant="compact"
+																showStatus={false}
+															/>
+														</div>
+													)}
+												</div>
+											</td>
 									</tr>
 								)) : (
 									<tr>
@@ -370,9 +489,22 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 									class="border-t border-dashed border-neutral-300 font-semibold dark:border-neutral-700"
 								>
 									<td class="px-4 py-3" colspan="4">Outstanding</td>
-									<td class="px-4 py-3 text-right tabular-nums"
-										>{currencyFormatter.format(outstandingTotal)}</td
-									>
+									<td class="px-4 py-3">
+										<div class="grid justify-items-end gap-1.5">
+											<p class="tabular-nums">{currencyFormatter.format(outstandingTotal)}</p>
+											{outstandingPartItems.length > 0 && (
+												<div class="w-full min-w-40 max-w-52">
+													<CostSplit
+														items={outstandingPartItems}
+														currency="EUR"
+														total={outstandingTotal}
+														variant="compact"
+														showStatus={false}
+													/>
+												</div>
+											)}
+										</div>
+									</td>
 								</tr>
 							</tfoot>
 						)}

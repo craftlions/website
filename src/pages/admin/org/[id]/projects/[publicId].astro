@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../../components/Badge.astro";
 import Button from "../../../../../components/Button.astro";
+import CostSplit from "../../../../../components/CostSplit.astro";
 import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculator.astro";
 import AdminOrgShell from "../../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../../lib/admin-org.ts";
@@ -88,10 +89,6 @@ const phases = project.phases.map((phase) => ({
 }));
 
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
-const percentFormatter = new Intl.NumberFormat("de-DE", {
-	style: "percent",
-	maximumFractionDigits: 2,
-});
 const inputClass =
 	"border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300";
 const quietButtonClass =
@@ -161,12 +158,16 @@ const summaryClass =
 							{phase.deliveryState === "none" && <p class="text-sm text-neutral-500 dark:text-neutral-400">Delivered without PR/MR</p>}
 						</div>
 						<Badge type={phase.state === "accepted" ? "success" : phase.state === "cancelled" ? "error" : "info"}>{phase.state.replaceAll("_", " ")}</Badge>
-						<div class="grid gap-1 md:text-right">
+						<div class="grid min-w-52 gap-1.5 md:justify-items-end md:text-right">
 							<p class="font-medium tabular-nums">{new Intl.NumberFormat("de-DE", { style: "currency", currency: phase.currency }).format(phase.cost)}</p>
 							{phase.components.length > 0 && (
-								<p class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
-									{phase.components.map(({ component, amount, status }) => `${component} ${percentFormatter.format(phase.cost > 0 ? amount / phase.cost : 0)}${status === "not_due" ? "" : ` ${status}`}`).join(" · ")}
-								</p>
+								<div class="w-full max-w-64">
+									<CostSplit
+										items={phase.components}
+										currency={phase.currency}
+										total={phase.cost}
+									/>
+								</div>
 							)}
 						</div>
 						<div class="grid grid-flow-col items-center justify-start gap-4 md:justify-self-end">
