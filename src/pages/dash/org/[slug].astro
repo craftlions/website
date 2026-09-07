@@ -6,6 +6,7 @@ import { actions } from "astro:actions";
 import { isAPIError } from "better-auth/api";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
+import CostSplit from "../../../components/CostSplit.astro";
 import Footer from "../../../components/Footer.astro";
 import Nav from "../../../components/Nav.astro";
 import OrganizationInvoices from "../../../components/OrganizationInvoices.astro";
@@ -15,6 +16,7 @@ import {
 	deriveBudgetConsumption,
 	getSpendByYear,
 } from "../../../lib/budget-consumption.ts";
+import { buildPhaseComponents } from "../../../lib/phase-billing.ts";
 
 const { slug } = Astro.params;
 
@@ -82,8 +84,20 @@ const [organizationData, spendRows, currentMember, worklistInvoices] =
 								title: true,
 								state: true,
 								cost: true,
+								upfrontAmount: true,
+								deliveryAmount: true,
+								acceptanceAmount: true,
+								currency: true,
 								dueAt: true,
 								version: true,
+							},
+							with: {
+								invoices: {
+									columns: {
+										component: true,
+										stripeStatus: true,
+									},
+								},
 							},
 						},
 					},
@@ -110,6 +124,7 @@ const [organizationData, spendRows, currentMember, worklistInvoices] =
 		}),
 		Astro.locals.db.query.invoices.findMany({
 			columns: {
+				component: true,
 				invoiceNumber: true,
 				total: true,
 				currency: true,
@@ -122,12 +137,24 @@ const [organizationData, spendRows, currentMember, worklistInvoices] =
 					columns: {
 						publicId: true,
 						title: true,
+						cost: true,
+						upfrontAmount: true,
+						deliveryAmount: true,
+						acceptanceAmount: true,
+						currency: true,
+						state: true,
 					},
 					with: {
 						project: {
 							columns: {
 								publicId: true,
 								name: true,
+							},
+						},
+						invoices: {
+							columns: {
+								component: true,
+								stripeStatus: true,
 							},
 						},
 					},
@@ -145,15 +172,41 @@ const [organizationData, spendRows, currentMember, worklistInvoices] =
 
 const now = new Date();
 const projects =
-	organizationData?.projects.map((project) => ({
-		publicId: project.publicId,
-		name: project.name,
-		state: project.state,
-		cost:
-			project.phases.length > 0
-				? project.phases.reduce((total, phase) => total + phase.cost, 0)
-				: null,
-	})) ?? [];
+	organizationData?.projects.map((project) => {
+		const totalsByCurrency = new Map<
+			string,
+			{ total: number; upfront: number; delivery: number; acceptance: number }
+		>();
+		for (const phase of project.phases) {
+			const entry = totalsByCurrency.get(phase.currency) ?? {
+				total: 0,
+				upfront: 0,
+				delivery: 0,
+				acceptance: 0,
+			};
+			entry.total += phase.cost;
+			entry.upfront += phase.upfrontAmount ?? 0;
+			entry.delivery += phase.deliveryAmount ?? 0;
+			entry.acceptance += phase.acceptanceAmount ?? 0;
+			totalsByCurrency.set(phase.currency, entry);
+		}
+		return {
+			publicId: project.publicId,
+			name: project.name,
+			state: project.state,
+			splits: [...totalsByCurrency].map(([currency, entry]) => ({
+				currency,
+				total: entry.total,
+				items: [
+					{ component: "upfront" as const, amount: entry.upfront },
+					{ component: "delivery" as const, amount: entry.delivery },
+					{ component: "acceptance" as const, amount: entry.acceptance },
+				]
+					.filter((item) => item.amount !== 0)
+					.map((item) => ({ ...item, status: "not_due" as const })),
+			})),
+		};
+	}) ?? [];
 const completedProjectCount = projects.filter(
 	(project) => project.state === "completed",
 ).length;
@@ -205,6 +258,12 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 const canManagePhases =
 	currentMember?.role === "owner" || currentMember?.role === "admin";
 
+const componentLabel: Record<string, string> = {
+	upfront: "Upfront part",
+	delivery: "Delivery part",
+	acceptance: "Acceptance part",
+};
+
 // Client worklist: phases waiting on the client's decision plus open invoices
 // waiting on the client's payment. Mirrors the admin worklist ordering so the
 // most urgent items (overdue money, pending decisions) surface first.
@@ -214,7 +273,17 @@ const worklistPhases =
 			.filter(
 				(phase) => phase.state === "planned" || phase.state === "delivered",
 			)
-			.map((phase) => ({ project, phase })),
+			.map((phase) => ({
+				project,
+				phase,
+				components: buildPhaseComponents({
+					upfrontAmount: phase.upfrontAmount,
+					deliveryAmount: phase.deliveryAmount,
+					acceptanceAmount: phase.acceptanceAmount,
+					state: phase.state,
+					invoices: phase.invoices,
+				}),
+			})),
 	) ?? [];
 type WorklistPhase = (typeof worklistPhases)[number];
 type WorklistInvoice = (typeof worklistInvoices)[number];
@@ -224,16 +293,19 @@ type WorklistItem = {
 	dueAt: Date | null;
 	project?: WorklistPhase["project"];
 	phase?: WorklistPhase["phase"];
+	components?: WorklistPhase["components"];
 	invoice?: WorklistInvoice;
+	invoiceComponents?: ReturnType<typeof buildPhaseComponents>;
 };
 
 const worklist: WorklistItem[] = [
 	...worklistPhases.map(
-		({ project, phase }): WorklistItem => ({
+		({ project, phase, components }): WorklistItem => ({
 			priority: phase.state === "planned" ? 1 : 2,
 			kind: phase.state === "planned" ? "To approve" : "To review",
 			project,
 			phase,
+			components,
 			dueAt: phase.dueAt,
 		}),
 	),
@@ -246,6 +318,15 @@ const worklist: WorklistItem[] = [
 					? "Overdue"
 					: "Unpaid",
 			invoice,
+			invoiceComponents: invoice.phase
+				? buildPhaseComponents({
+						upfrontAmount: invoice.phase.upfrontAmount,
+						deliveryAmount: invoice.phase.deliveryAmount,
+						acceptanceAmount: invoice.phase.acceptanceAmount,
+						state: invoice.phase.state,
+						invoices: invoice.phase.invoices,
+					})
+				: [],
 			dueAt: invoice.stripeDueAt,
 		}),
 	),
@@ -325,13 +406,53 @@ const worklist: WorklistItem[] = [
 									</p>
 								)}
 							</div>
-							<p class="text-sm tabular-nums md:text-right">
-								{item.phase
-									? currencyFormatter.format(item.phase.cost)
-									: item.invoice
-										? formatAmount(item.invoice.total, item.invoice.currency)
-										: null}
-							</p>
+							<div class="grid min-w-48 gap-1.5 md:justify-items-end">
+								{item.phase && item.components ? (
+									<>
+										<p class="text-sm font-medium tabular-nums md:text-right">
+											{formatAmount(item.phase.cost, item.phase.currency)}
+										</p>
+										{item.components.length > 0 && (
+											<div class="w-full max-w-56">
+												<CostSplit
+													items={item.components}
+													currency={item.phase.currency}
+													total={item.phase.cost}
+													variant="compact"
+												/>
+											</div>
+											)}
+									</>
+								) : item.invoice ? (
+									<>
+										<div class="grid grid-flow-col items-center justify-start gap-2 md:justify-end">
+											<p class="text-sm font-medium tabular-nums md:text-right">
+												{formatAmount(item.invoice.total, item.invoice.currency)}
+											</p>
+											{item.invoice.component && componentLabel[item.invoice.component] && (
+												<Badge type="info">{componentLabel[item.invoice.component]}</Badge>
+											)}
+										</div>
+										{item.invoice.phase && item.invoiceComponents && item.invoiceComponents.length > 0 && (
+											<div class="w-full max-w-56">
+												<CostSplit
+													items={item.invoiceComponents}
+													currency={item.invoice.phase.currency}
+													total={item.invoice.phase.cost}
+													variant="compact"
+													highlight={
+													item.invoice.component === "upfront" ||
+													item.invoice.component === "delivery" ||
+													item.invoice.component === "acceptance"
+														? item.invoice.component
+													: null
+												}
+												/>
+											</div>
+											)}
+									</>
+								) : null}
+							</div>
 							<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
 								{item.phase && item.project && canManagePhases && item.phase.state === "planned" && (
 									<>
@@ -616,15 +737,34 @@ const worklist: WorklistItem[] = [
 											</td>
 											<td
 												class:list={[
-													"whitespace-nowrap px-4 py-3 text-right tabular-nums",
+													"px-4 py-3 text-right tabular-nums",
 													project.state === "completed"
 														? "text-neutral-500 dark:text-neutral-400"
 														: "text-neutral-700 dark:text-neutral-300",
 												]}
 											>
-												{project.cost !== null
-													? currencyFormatter.format(project.cost)
-													: "—"}
+												{project.splits.length > 0 ? (
+													<div class="grid justify-items-end gap-2">
+														{project.splits.map((split) => (
+															<div class="grid w-full min-w-48 max-w-64 gap-1">
+																<p class="whitespace-nowrap font-medium">
+																	{formatAmount(split.total, split.currency)}
+																</p>
+																{split.items.length > 0 && (
+																	<CostSplit
+																		items={split.items}
+																		currency={split.currency}
+																		total={split.total}
+																		variant="compact"
+																		showStatus={false}
+																	/>
+																	)}
+																</div>
+															))}
+													</div>
+												) : (
+													"—"
+												)}
 											</td>
 												<td class="px-4 py-3">
 													<Button

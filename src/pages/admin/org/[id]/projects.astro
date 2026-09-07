@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
+import CostSplit from "../../../../components/CostSplit.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 
@@ -31,6 +32,9 @@ const projects = await Astro.locals.db.query.projects.findMany({
 		phases: {
 			columns: {
 				cost: true,
+				upfrontAmount: true,
+				deliveryAmount: true,
+				acceptanceAmount: true,
 				currency: true,
 				state: true,
 			},
@@ -53,26 +57,41 @@ const attentionLabels = {
 } as const;
 
 const summarize = (project: (typeof projects)[number]) => {
-	const totals = new Map<string, number>();
+	const totals = new Map<
+		string,
+		{ total: number; upfront: number; delivery: number; acceptance: number }
+	>();
 	const attention = new Map<keyof typeof attentionLabels, number>();
 	for (const phase of project.phases) {
 		if (phase.state === "cancelled") continue;
-		totals.set(phase.currency, (totals.get(phase.currency) ?? 0) + phase.cost);
+		const entry = totals.get(phase.currency) ?? {
+			total: 0,
+			upfront: 0,
+			delivery: 0,
+			acceptance: 0,
+		};
+		entry.total += phase.cost;
+		entry.upfront += phase.upfrontAmount ?? 0;
+		entry.delivery += phase.deliveryAmount ?? 0;
+		entry.acceptance += phase.acceptanceAmount ?? 0;
+		totals.set(phase.currency, entry);
 		if (phase.state in attentionLabels) {
 			const state = phase.state as keyof typeof attentionLabels;
 			attention.set(state, (attention.get(state) ?? 0) + 1);
 		}
 	}
 	return {
-		total:
-			[...totals]
-				.map(([currency, total]) =>
-					new Intl.NumberFormat("de-DE", {
-						style: "currency",
-						currency,
-					}).format(total),
-				)
-				.join(" · ") || "—",
+		splits: [...totals].map(([currency, entry]) => ({
+			currency,
+			total: entry.total,
+			items: [
+				{ component: "upfront" as const, amount: entry.upfront },
+				{ component: "delivery" as const, amount: entry.delivery },
+				{ component: "acceptance" as const, amount: entry.acceptance },
+			]
+				.filter((item) => item.amount !== 0)
+				.map((item) => ({ ...item, status: "not_due" as const })),
+		})),
 		attention: [...attention]
 			.map(([state, count]) => `${count} ${attentionLabels[state]}`)
 			.join(" · "),
@@ -137,11 +156,26 @@ const archivedProjects = projects.filter(
 									<h3 class="text-lg font-semibold wrap-break-word">{project.name}</h3>
 									<Badge type={project.state === "completed" ? "success" : "info"}>{project.state}</Badge>
 								</div>
-								<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-sm">
+								<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
 									<dt class="text-neutral-500 dark:text-neutral-400">Phases</dt>
 									<dd class="tabular-nums">{project.phases.filter((phase) => phase.state !== "cancelled").length}</dd>
 									<dt class="text-neutral-500 dark:text-neutral-400">Total</dt>
-									<dd class="tabular-nums">{summary.total}</dd>
+									<dd class="grid gap-2">
+										{summary.splits.length > 0 ? summary.splits.map((split) => (
+											<div class="grid gap-1">
+												<p class="tabular-nums">{new Intl.NumberFormat("de-DE", { style: "currency", currency: split.currency }).format(split.total)}</p>
+												{split.items.length > 0 && (
+													<CostSplit
+														items={split.items}
+														currency={split.currency}
+														total={split.total}
+														variant="compact"
+														showStatus={false}
+													/>
+												)}
+											</div>
+										)) : "—"}
+									</dd>
 								</dl>
 								<p class="text-sm text-neutral-600 dark:text-neutral-400">{summary.attention || "Nothing needs attention."}</p>
 							</a>

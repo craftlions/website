@@ -4,9 +4,13 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
+import CostSplit from "../../../../components/CostSplit.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
-import { componentBillingStatus } from "../../../../lib/phase-billing";
+import {
+	buildPhaseComponents,
+	componentBillingStatus,
+} from "../../../../lib/phase-billing";
 import { getUuidV7Date } from "../../../../lib/uuid.ts";
 
 const { id } = Astro.params;
@@ -41,6 +45,8 @@ const projects = await Astro.locals.db.query.projects.findMany({
 				title: true,
 				cost: true,
 				upfrontAmount: true,
+				deliveryAmount: true,
+				acceptanceAmount: true,
 				currency: true,
 				state: true,
 				version: true,
@@ -204,10 +210,15 @@ const worklist = allPhases
 			a.priority - b.priority ||
 			daysInPhaseState(b.phase.id) - daysInPhaseState(a.phase.id),
 	);
-const currencyFormatter = new Intl.NumberFormat("de-DE", {
-	style: "currency",
-	currency: "EUR",
-});
+const formatAmount = (amount: number, currency: string) =>
+	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
+		amount,
+	);
+const componentLabel: Record<string, string> = {
+	upfront: "Upfront part",
+	delivery: "Delivery part",
+	acceptance: "Acceptance part",
+};
 ---
 
 <AdminOrgShell
@@ -232,7 +243,57 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 						<h3 class="font-medium"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${item.phase.project.publicId}`}>{item.phase.project.name}</a> · {item.phase.title}</h3>
 						{item.upfrontUnpaid && <Badge type="error">unpaid upfront</Badge>}
 					</div>
-					<p class="text-sm tabular-nums md:text-right">{currencyFormatter.format(item.invoice?.total ?? item.phase.cost)}</p>
+					<div class="grid min-w-48 gap-1.5 md:justify-items-end">
+						{item.invoice ? (
+							<>
+								<div class="grid grid-flow-col items-center justify-start gap-2 md:justify-end">
+									<p class="text-sm font-medium tabular-nums">{formatAmount(item.invoice.total, item.phase.currency)}</p>
+									{item.invoice.component && componentLabel[item.invoice.component] && (
+										<Badge type="info">{componentLabel[item.invoice.component]}</Badge>
+									)}
+								</div>
+								<div class="w-full max-w-56">
+									<CostSplit
+										items={buildPhaseComponents({
+											upfrontAmount: item.phase.upfrontAmount,
+											deliveryAmount: item.phase.deliveryAmount,
+											acceptanceAmount: item.phase.acceptanceAmount,
+											state: item.phase.state,
+											invoices: item.phase.invoices,
+										})}
+										currency={item.phase.currency}
+										total={item.phase.cost}
+										variant="compact"
+										highlight={
+											item.invoice.component === "upfront" ||
+											item.invoice.component === "delivery" ||
+											item.invoice.component === "acceptance"
+												? item.invoice.component
+												: null
+										}
+									/>
+								</div>
+							</>
+						) : (
+							<>
+								<p class="text-sm font-medium tabular-nums md:text-right">{formatAmount(item.phase.cost, item.phase.currency)}</p>
+								<div class="w-full max-w-56">
+									<CostSplit
+										items={buildPhaseComponents({
+											upfrontAmount: item.phase.upfrontAmount,
+											deliveryAmount: item.phase.deliveryAmount,
+											acceptanceAmount: item.phase.acceptanceAmount,
+											state: item.phase.state,
+											invoices: item.phase.invoices,
+										})}
+										currency={item.phase.currency}
+										total={item.phase.cost}
+										variant="compact"
+									/>
+								</div>
+							</>
+						)}
+					</div>
 					<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
 						<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{daysInPhaseState(item.phase.id)}d</p>
 						{item.phase.state === "submitted" && <form method="POST" action={actions.transitionPhase}><input type="hidden" name="phaseId" value={item.phase.id} /><input type="hidden" name="nextState" value="planned" /><input type="hidden" name="expectedVersion" value={item.phase.version} /><Button type="submit">Send</Button></form>}

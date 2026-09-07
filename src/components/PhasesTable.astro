@@ -95,12 +95,20 @@ const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 										: "Not scheduled"}
 								</td>
 								<td class="px-4 py-4 text-right tabular-nums text-neutral-700 dark:text-neutral-300">
-									<div class="grid justify-items-end gap-1">
+									<div class="grid justify-items-end gap-1.5">
 										<span>{new Intl.NumberFormat("de-DE", {
 											style: "currency",
 											currency: phase.currency,
 										}).format(phase.cost)}</span>
-										{phase.components && <PhaseComponentBreakdown items={phase.components} currency={phase.currency} />}
+										{phase.components && (
+											<div class="w-full min-w-48 max-w-64">
+												<PhaseComponentBreakdown
+													items={phase.components}
+													currency={phase.currency}
+													total={phase.cost}
+												/>
+											</div>
+										)}
 									</div>
 								</td>
 								<td class="px-4 py-4">
