@@ -8,8 +8,8 @@ import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
 import CostSplit from "../../../components/CostSplit.astro";
 import Footer from "../../../components/Footer.astro";
+import InvoiceTable from "../../../components/InvoiceTable.astro";
 import Nav from "../../../components/Nav.astro";
-import OrganizationInvoices from "../../../components/OrganizationInvoices.astro";
 import SpendByYear from "../../../components/SpendByYear.astro";
 import Shell from "../../../layouts/Shell.astro";
 import {
@@ -47,110 +47,48 @@ if (!session.session.activeOrganizationId) {
 	}
 }
 
-const organization = await Astro.locals.auth.api.getFullOrganization({
-	query: {
-		organizationSlug: slug,
-		membersLimit: 0,
+// One read resolves the slug, checks this user's membership, and loads the
+// project tree; it replaces better-auth's multi-query getFullOrganization.
+const organization = await Astro.locals.db.query.organization.findFirst({
+	columns: {
+		id: true,
+		name: true,
 	},
-	headers: Astro.request.headers,
-});
-
-if (!organization) {
-	return Astro.redirect("/dash");
-}
-
-const [organizationData, spendRows, currentMember, worklistInvoices] =
-	await Promise.all([
-		Astro.locals.db.query.organization.findFirst({
-			columns: {
-				id: true,
-			},
-			with: {
-				data: {
-					columns: {
-						yearlyBudget: true,
-					},
-				},
-				projects: {
-					columns: {
-						publicId: true,
-						name: true,
-						state: true,
-					},
-					with: {
-						phases: {
-							columns: {
-								publicId: true,
-								title: true,
-								state: true,
-								cost: true,
-								upfrontAmount: true,
-								deliveryAmount: true,
-								acceptanceAmount: true,
-								currency: true,
-								dueAt: true,
-								version: true,
-							},
-							with: {
-								invoices: {
-									columns: {
-										component: true,
-										stripeStatus: true,
-									},
-								},
-							},
-						},
-					},
-					orderBy: {
-						name: "asc",
-					},
-				},
-			},
-			where: {
-				id: organization.id,
-			},
-		}),
-		// S-004 R2/R3: one shared-module read returns the full spend history for
-		// this organization; the Spend chart and all budget figures derive from it.
-		getSpendByYear(Astro.locals.db, organization.id),
-		Astro.locals.db.query.member.findFirst({
+	with: {
+		members: {
 			columns: {
 				role: true,
 			},
 			where: {
-				organizationId: organization.id,
 				userId: session.user.id,
 			},
-		}),
-		Astro.locals.db.query.invoices.findMany({
+		},
+		data: {
 			columns: {
-				component: true,
-				invoiceNumber: true,
-				total: true,
-				currency: true,
-				stripePaymentPage: true,
-				stripeDueAt: true,
-				invoicedAt: true,
+				yearlyBudget: true,
+			},
+		},
+		projects: {
+			columns: {
+				publicId: true,
+				name: true,
+				state: true,
 			},
 			with: {
-				phase: {
+				phases: {
 					columns: {
 						publicId: true,
 						title: true,
+						state: true,
 						cost: true,
 						upfrontAmount: true,
 						deliveryAmount: true,
 						acceptanceAmount: true,
 						currency: true,
-						state: true,
+						dueAt: true,
+						version: true,
 					},
 					with: {
-						project: {
-							columns: {
-								publicId: true,
-								name: true,
-							},
-						},
 						invoices: {
 							columns: {
 								component: true,
@@ -160,57 +98,122 @@ const [organizationData, spendRows, currentMember, worklistInvoices] =
 					},
 				},
 			},
-			where: {
-				organizationId: organization.id,
-				stripeStatus: "open",
-			},
 			orderBy: {
-				invoicedAt: "asc",
+				name: "asc",
 			},
-		}),
-	]);
+		},
+	},
+	where: {
+		slug,
+	},
+});
+const [currentMember] = organization?.members ?? [];
+
+if (!organization || !currentMember) {
+	return Astro.redirect("/dash");
+}
+
+const [spendRows, invoices] = await Promise.all([
+	// S-004 R2/R3: one shared-module read returns the full spend history for
+	// this organization; the Spend chart and all budget figures derive from it.
+	getSpendByYear(Astro.locals.db, organization.id),
+	Astro.locals.db.query.invoices.findMany({
+		columns: {
+			component: true,
+			invoiceNumber: true,
+			stripePaymentPage: true,
+			stripeStatus: true,
+			stripePaidAt: true,
+			stripeDueAt: true,
+			total: true,
+			currency: true,
+			invoicedAt: true,
+		},
+		// S-003 R2: an attached invoice derives its project, phase, and Delivery
+		// from its one phase — nothing is copied onto the invoice row.
+		with: {
+			phase: {
+				columns: {
+					publicId: true,
+					title: true,
+					cost: true,
+					upfrontAmount: true,
+					deliveryAmount: true,
+					acceptanceAmount: true,
+					currency: true,
+					state: true,
+					deliveryState: true,
+					deliveryUrl: true,
+				},
+				with: {
+					project: {
+						columns: {
+							publicId: true,
+							name: true,
+						},
+					},
+					invoices: {
+						columns: {
+							component: true,
+							stripeStatus: true,
+						},
+					},
+				},
+			},
+		},
+		where: {
+			organizationId: organization.id,
+		},
+		orderBy: {
+			invoicedAt: "desc",
+		},
+	}),
+]);
+// The worklist lists open invoices oldest first; the table lists all newest first.
+const worklistInvoices = invoices
+	.filter((invoice) => invoice.stripeStatus === "open")
+	.toReversed();
 
 const now = new Date();
-const projects =
-	organizationData?.projects.map((project) => {
-		const totalsByCurrency = new Map<
-			string,
-			{ total: number; upfront: number; delivery: number; acceptance: number }
-		>();
-		for (const phase of project.phases) {
-			const entry = totalsByCurrency.get(phase.currency) ?? {
-				total: 0,
-				upfront: 0,
-				delivery: 0,
-				acceptance: 0,
-			};
-			entry.total += phase.cost;
-			entry.upfront += phase.upfrontAmount ?? 0;
-			entry.delivery += phase.deliveryAmount ?? 0;
-			entry.acceptance += phase.acceptanceAmount ?? 0;
-			totalsByCurrency.set(phase.currency, entry);
-		}
-		return {
-			publicId: project.publicId,
-			name: project.name,
-			state: project.state,
-			splits: [...totalsByCurrency].map(([currency, entry]) => ({
-				currency,
-				total: entry.total,
-				items: [
-					{ component: "upfront" as const, amount: entry.upfront },
-					{ component: "delivery" as const, amount: entry.delivery },
-					{ component: "acceptance" as const, amount: entry.acceptance },
-				]
-					.filter((item) => item.amount !== 0)
-					.map((item) => ({ ...item, status: "not_due" as const })),
-			})),
+const projects = organization.projects.map((project) => {
+	const totalsByCurrency = new Map<
+		string,
+		{ total: number; upfront: number; delivery: number; acceptance: number }
+	>();
+	for (const phase of project.phases) {
+		const entry = totalsByCurrency.get(phase.currency) ?? {
+			total: 0,
+			upfront: 0,
+			delivery: 0,
+			acceptance: 0,
 		};
-	}) ?? [];
+		entry.total += phase.cost;
+		entry.upfront += phase.upfrontAmount ?? 0;
+		entry.delivery += phase.deliveryAmount ?? 0;
+		entry.acceptance += phase.acceptanceAmount ?? 0;
+		totalsByCurrency.set(phase.currency, entry);
+	}
+	return {
+		publicId: project.publicId,
+		name: project.name,
+		state: project.state,
+		splits: [...totalsByCurrency].map(([currency, entry]) => ({
+			currency,
+			total: entry.total,
+			items: [
+				{ component: "upfront" as const, amount: entry.upfront },
+				{ component: "delivery" as const, amount: entry.delivery },
+				{ component: "acceptance" as const, amount: entry.acceptance },
+			]
+				.filter((item) => item.amount !== 0)
+				.map((item) => ({ ...item, status: "not_due" as const })),
+		})),
+	};
+});
 const completedProjectCount = projects.filter(
 	(project) => project.state === "completed",
 ).length;
-const yearlyBudget = organizationData?.data?.yearlyBudget ?? 0;
+const yearlyBudget = organization.data?.yearlyBudget ?? 0;
 // S-004 R3 + R5: current-year total, remaining budget, and usage percentage
 // derive from the module's full-history rows (D-budget-consumption-definition).
 const { currentYearTotal, remainingBudget, usagePercentage } =
@@ -256,7 +259,7 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 };
 
 const canManagePhases =
-	currentMember?.role === "owner" || currentMember?.role === "admin";
+	currentMember.role === "owner" || currentMember.role === "admin";
 
 const componentLabel: Record<string, string> = {
 	upfront: "Upfront part",
@@ -267,24 +270,21 @@ const componentLabel: Record<string, string> = {
 // Client worklist: phases waiting on the client's decision plus open invoices
 // waiting on the client's payment. Mirrors the admin worklist ordering so the
 // most urgent items (overdue money, pending decisions) surface first.
-const worklistPhases =
-	organizationData?.projects.flatMap((project) =>
-		project.phases
-			.filter(
-				(phase) => phase.state === "planned" || phase.state === "delivered",
-			)
-			.map((phase) => ({
-				project,
-				phase,
-				components: buildPhaseComponents({
-					upfrontAmount: phase.upfrontAmount,
-					deliveryAmount: phase.deliveryAmount,
-					acceptanceAmount: phase.acceptanceAmount,
-					state: phase.state,
-					invoices: phase.invoices,
-				}),
-			})),
-	) ?? [];
+const worklistPhases = organization.projects.flatMap((project) =>
+	project.phases
+		.filter((phase) => phase.state === "planned" || phase.state === "delivered")
+		.map((phase) => ({
+			project,
+			phase,
+			components: buildPhaseComponents({
+				upfrontAmount: phase.upfrontAmount,
+				deliveryAmount: phase.deliveryAmount,
+				acceptanceAmount: phase.acceptanceAmount,
+				state: phase.state,
+				invoices: phase.invoices,
+			}),
+		})),
+);
 type WorklistPhase = (typeof worklistPhases)[number];
 type WorklistInvoice = (typeof worklistInvoices)[number];
 type WorklistItem = {
@@ -810,7 +810,7 @@ const worklist: WorklistItem[] = [
 					>
 						Invoices
 					</h2>
-					<OrganizationInvoices id={organization.id} slug={slug} />
+					<InvoiceTable {invoices} {slug} />
 				</section>
 			</div>
 		</main>
