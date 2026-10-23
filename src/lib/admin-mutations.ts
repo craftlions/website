@@ -256,12 +256,13 @@ export const createProject = async (
 	actorId: string,
 	input: { organizationId: string; name: string },
 ) => {
-	await assertAdminUser(db, actorId);
-
-	const selectedOrganization = await db.query.organization.findFirst({
-		columns: { id: true },
-		where: { id: input.organizationId },
-	});
+	const [, selectedOrganization] = await Promise.all([
+		assertAdminUser(db, actorId),
+		db.query.organization.findFirst({
+			columns: { id: true },
+			where: { id: input.organizationId },
+		}),
+	]);
 
 	if (!selectedOrganization) {
 		throw new DomainError("NotFound", "Organization not found.");
@@ -769,36 +770,37 @@ export const recordInvoice = async (
 		stripeKey: string;
 	},
 ) => {
-	await assertAdminUser(db, actorId);
-
-	const phase = await db.query.phases.findFirst({
-		columns: {
-			id: true,
-			currency: true,
-			state: true,
-			version: true,
-			upfrontAmount: true,
-			deliveryAmount: true,
-			acceptanceAmount: true,
-		},
-		with: {
-			invoices: {
-				columns: {
-					id: true,
-					publicId: true,
-					phaseId: true,
-					component: true,
-					invoiceNumber: true,
-					stripeId: true,
-					stripePaymentPage: true,
-					currency: true,
-					total: true,
-				},
-				where: { component: input.component },
+	const [, phase] = await Promise.all([
+		assertAdminUser(db, actorId),
+		db.query.phases.findFirst({
+			columns: {
+				id: true,
+				currency: true,
+				state: true,
+				version: true,
+				upfrontAmount: true,
+				deliveryAmount: true,
+				acceptanceAmount: true,
 			},
-		},
-		where: { id: input.phaseId },
-	});
+			with: {
+				invoices: {
+					columns: {
+						id: true,
+						publicId: true,
+						phaseId: true,
+						component: true,
+						invoiceNumber: true,
+						stripeId: true,
+						stripePaymentPage: true,
+						currency: true,
+						total: true,
+					},
+					where: { component: input.component },
+				},
+			},
+			where: { id: input.phaseId },
+		}),
+	]);
 
 	if (!phase) {
 		throw new DomainError("NotFound", "Phase not found.");
@@ -1221,19 +1223,20 @@ export const onboardOrganization = async (
 		yearlyBudget?: number | null | undefined;
 	},
 ) => {
-	await assertAdminUser(db, actorId);
-
 	const email = input.email.trim().toLowerCase();
 	const slug = toSlug(input.slug);
-	let selectedUser = await db.query.user.findFirst({
-		columns: { id: true },
-		where: { email },
-	});
+	let [, selectedUser, existingOrganization] = await Promise.all([
+		assertAdminUser(db, actorId),
+		db.query.user.findFirst({
+			columns: { id: true },
+			where: { email },
+		}),
+		db.query.organization.findFirst({
+			columns: { id: true },
+			where: { slug },
+		}),
+	]);
 	let createdUser = false;
-	const existingOrganization = await db.query.organization.findFirst({
-		columns: { id: true },
-		where: { slug },
-	});
 
 	if (existingOrganization) {
 		if (!selectedUser) {
@@ -1311,13 +1314,14 @@ export const addOrganizationMember = async (
 		role: "owner" | "member";
 	},
 ) => {
-	await assertAdminUser(db, actorId);
-
 	const email = input.email.trim().toLowerCase();
-	let selectedUser = await db.query.user.findFirst({
-		columns: { id: true },
-		where: { email },
-	});
+	let [, selectedUser] = await Promise.all([
+		assertAdminUser(db, actorId),
+		db.query.user.findFirst({
+			columns: { id: true },
+			where: { email },
+		}),
+	]);
 	let createdUser = false;
 
 	if (!selectedUser) {
@@ -1367,15 +1371,16 @@ export const removeOrganizationMember = async (
 	actorId: string,
 	input: { organizationId: string; memberId: string },
 ) => {
-	await assertAdminUser(db, actorId);
-
-	const selectedMember = await db.query.member.findFirst({
-		columns: { id: true },
-		where: {
-			id: input.memberId,
-			organizationId: input.organizationId,
-		},
-	});
+	const [, selectedMember] = await Promise.all([
+		assertAdminUser(db, actorId),
+		db.query.member.findFirst({
+			columns: { id: true },
+			where: {
+				id: input.memberId,
+				organizationId: input.organizationId,
+			},
+		}),
+	]);
 
 	if (!selectedMember) {
 		throw new DomainError("NotFound", "Member not found.");
@@ -1400,12 +1405,14 @@ export const removeNeverLoggedInUser = async (
 	actorId: string,
 	input: { userId: string },
 ) => {
-	await assertAdminUser(db, actorId);
-
-	const selectedUser = await db.query.user.findFirst({
-		columns: { id: true, lastActiveAt: true },
-		where: { id: input.userId },
-	});
+	const [, selectedUser] = await Promise.all([
+		assertAdminUser(db, actorId),
+		db.query.user.findFirst({
+			columns: { id: true, lastActiveAt: true },
+			with: { memberships: { columns: { organizationId: true } } },
+			where: { id: input.userId },
+		}),
+	]);
 
 	if (!selectedUser) {
 		throw new DomainError("NotFound", "User not found.");
@@ -1418,17 +1425,13 @@ export const removeNeverLoggedInUser = async (
 		);
 	}
 
-	const memberships = await db.query.member.findMany({
-		columns: { organizationId: true },
-		where: { userId: input.userId },
-	});
 	const context = await auth.$context;
 	await context.internalAdapter.deleteUserSessions(input.userId);
 	await context.internalAdapter.deleteUser(input.userId);
 
-	if (memberships.length > 0) {
+	if (selectedUser.memberships.length > 0) {
 		await db.insert(events).values(
-			memberships.map((membership) =>
+			selectedUser.memberships.map((membership) =>
 				eventValues({
 					aggregateType: "organization",
 					aggregateId: membership.organizationId,
@@ -1506,13 +1509,14 @@ export const hardDeleteOrganization = async (
 	actorId: string,
 	input: { organizationId: string; confirmation: string },
 ) => {
-	await assertAdminUser(db, actorId);
-
-	const selectedOrganization = await db.query.organization.findFirst({
-		columns: { id: true, name: true },
-		with: { projects: { columns: { id: true } } },
-		where: { id: input.organizationId },
-	});
+	const [, selectedOrganization] = await Promise.all([
+		assertAdminUser(db, actorId),
+		db.query.organization.findFirst({
+			columns: { id: true, name: true },
+			with: { projects: { columns: { id: true }, limit: 1 } },
+			where: { id: input.organizationId },
+		}),
+	]);
 
 	if (!selectedOrganization) {
 		throw new DomainError("NotFound", "Organization not found.");
