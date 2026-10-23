@@ -10,7 +10,10 @@ jailBuilds: true
 trustPolicy: no-downgrade
 minimumReleaseAgeStrict: true
 minimumReleaseAgeExclude:
+  - "@better-auth/*"
   - "@drizzle-team/minipg"
+  - auth
+  - better-auth
   - drizzle-kit
   - drizzle-orm
 strictStoreIntegrity: true
