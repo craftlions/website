@@ -22,7 +22,7 @@
     "@astrojs/sitemap": "3.7.3",
     "@better-auth/api-key": "1.7.12",
     "@better-auth/drizzle-adapter": "1.7.12",
-    "@better-auth/infra": "0.4.20",
+    "@better-auth/infra": "0.4.22",
     "@biomejs/biome": "2.5.0",
     "@cloudflare/vite-plugin": "1.45.1",
     "@drizzle-team/minipg": "0.4.2",
