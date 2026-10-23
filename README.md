@@ -62,6 +62,7 @@ aubr deploy
 pn auth info
 pn auth generate
 
+aubx drizzle-kit up
 pn drizzle-kit generate
 aubx drizzle-kit generate
 pn drizzle-kit check
