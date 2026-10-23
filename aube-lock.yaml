@@ -23,6 +23,9 @@ importers:
       '@better-auth/utils':
         specifier: 0.4.2
         version: 0.4.2
+      '@types/pg':
+        specifier: '*'
+        version: 8.20.0
       better-call:
         specifier: 1.3.6
         version: 1.3.6(zod@4.4.3)
@@ -32,6 +35,9 @@ importers:
       jiti:
         specifier: '>=1.21.0'
         version: 2.7.0
+      pg:
+        specifier: ^8.0.0
+        version: 8.21.0
       yaml:
         specifier: ^2.4.2
         version: 2.9.0
@@ -69,6 +75,9 @@ importers:
       '@cloudflare/vite-plugin':
         specifier: 1.45.1
         version: 1.45.1(vite@8.1.3(@types/node@25.9.3)(esbuild@0.28.0)(jiti@2.7.0)(yaml@2.9.0))(wrangler@4.112.0)
+      '@drizzle-team/minipg':
+        specifier: 0.4.2
+        version: 0.4.2
       '@octokit/request':
         specifier: 10.0.8
         version: 10.0.8
@@ -87,9 +96,6 @@ importers:
       '@types/node':
         specifier: 25.9.3
         version: 25.9.3
-      '@types/pg':
-        specifier: 8.20.0
-        version: 8.20.0
       astro:
         specifier: 7.1.4
         version: 7.1.4
@@ -103,17 +109,14 @@ importers:
         specifier: 4.28.2
         version: 4.28.2
       drizzle-kit:
-        specifier: 1.0.0-rc.4-ca0f029
-        version: 1.0.0-rc.4-ca0f029
+        specifier: 1.0.0-rc.5
+        version: 1.0.0-rc.5(drizzle-orm@1.0.0-rc.5(@drizzle-team/minipg@0.4.2)(@types/pg@8.20.0)(pg@8.21.0)(zod@4.4.3))
       drizzle-orm:
-        specifier: 1.0.0-rc.4-5d5b77c
-        version: 1.0.0-rc.4-5d5b77c(@types/pg@8.20.0)(pg@8.21.0)(zod@4.4.3)
+        specifier: 1.0.0-rc.5
+        version: 1.0.0-rc.5(@drizzle-team/minipg@0.4.2)(@types/pg@8.20.0)(pg@8.21.0)(zod@4.4.3)
       lightningcss:
         specifier: 1.32.0
         version: 1.32.0
-      pg:
-        specifier: 8.21.0
-        version: 8.21.0
       tailwindcss:
         specifier: 4.3.1
         version: 4.3.1
@@ -692,6 +695,10 @@ packages:
 
   '@drizzle-team/brocli@0.11.0':
     resolution: {integrity: sha512-hD3pekGiPg0WPCCGAZmusBBJsDqGUR66Y452YgQsZOnkdQ7ViEPKuyP4huUGEZQefp8g34RRodXYmJ2TbCH+tg==}
+
+  '@drizzle-team/minipg@0.4.2':
+    resolution: {integrity: sha512-pSCO0XuPAr5WQyCqmzYsw/2R9evG35/zq8QEqrr2pT5aMCLRbIbvOEYNHbxN2QSrSw1PscC0WsPlTENsSHcYWw==}
+    engines: {node: '>=22.12'}
 
   '@emmetio/abbreviation@2.3.3':
     resolution: {integrity: sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA==}
@@ -1623,6 +1630,15 @@ packages:
     resolution: {integrity: sha512-hM1K72ptIPOpJDScHo7cAF+K8A8Tr3q2yHvBJvOZWvLn2lN+G4RDUvG3rT3ohlSE2O3BN/s7g3e3JiQLStt8iQ==}
     hasBin: true
 
+  drizzle-kit@1.0.0-rc.5:
+    resolution: {integrity: sha512-8glQN7iFK3e1aOIoRit1NtslcsqE/rnlqNw/1jUC5Ph4RFVh/E5Jricxd6Nu2ugj2HlFZlZ6O4006AwqJ9e24g==}
+    hasBin: true
+    peerDependencies:
+      drizzle-orm: '>=1.0.0-rc.5'
+    peerDependenciesMeta:
+      drizzle-orm:
+        optional: true
+
   drizzle-orm@1.0.0-rc.4-5d5b77c:
     resolution: {integrity: sha512-Oq9W4B11PracWY9cuCLTFT+JA5kXqR6rBmWcM8oh0xwLgCviVl9wh6ZuWX7Zpv1Jir/8W+M37syvjSYtj1f5iA==}
     peerDependencies:
@@ -1695,6 +1711,161 @@ packages:
       '@tursodatabase/database-common':
         optional: true
       '@tursodatabase/database-wasm':
+        optional: true
+      '@types/better-sqlite3':
+        optional: true
+      '@types/mssql':
+        optional: true
+      '@types/pg':
+        optional: true
+      '@types/sql.js':
+        optional: true
+      '@upstash/redis':
+        optional: true
+      '@vercel/postgres':
+        optional: true
+      '@xata.io/client':
+        optional: true
+      arktype:
+        optional: true
+      better-sqlite3:
+        optional: true
+      bun-types:
+        optional: true
+      effect:
+        optional: true
+      expo-sqlite:
+        optional: true
+      mssql:
+        optional: true
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      postgres:
+        optional: true
+      sql.js:
+        optional: true
+      sqlite3:
+        optional: true
+      typebox:
+        optional: true
+      valibot:
+        optional: true
+      zod:
+        optional: true
+
+  drizzle-orm@1.0.0-rc.5:
+    resolution: {integrity: sha512-7BMYTsAZbQ9DcQCtLG4G202Hq6nc/e8o1EBKN6nBweRI8EGPFe/VdyvWQCsU9fuZSiRjNpELolUSi//JFBq+lw==}
+    peerDependencies:
+      '@aws-sdk/client-rds-data': '>=3'
+      '@aws/aurora-dsql-node-postgres-connector': '>=0.1.9'
+      '@aws/aurora-dsql-postgresjs-connector': '>=0.3.0'
+      '@cloudflare/workers-types': '>=4'
+      '@drizzle-team/minipg': '>=0.4.2'
+      '@effect/sql-d1': '>=4.0.0'
+      '@effect/sql-libsql': '>=4.0.0'
+      '@effect/sql-mysql2': '>=4.0.0'
+      '@effect/sql-pg': '>=4.0.0'
+      '@effect/sql-pglite': '>=4.0.0'
+      '@effect/sql-sqlite-bun': '>=4.0.0'
+      '@effect/sql-sqlite-do': '>=4.0.0'
+      '@effect/sql-sqlite-node': '>=4.0.0'
+      '@effect/sql-sqlite-wasm': '>=4.0.0'
+      '@electric-sql/pglite': '>=0.2.0'
+      '@libsql/client': '>=0.10.0'
+      '@libsql/client-wasm': '>=0.10.0'
+      '@neondatabase/serverless': '>=0.10.0'
+      '@op-engineering/op-sqlite': '>=17'
+      '@opentelemetry/api': ^1.4.1
+      '@planetscale/database': '>=1.13'
+      '@sinclair/typebox': '>=0.34.8'
+      '@sqlitecloud/drivers': '>=1.0.653'
+      '@tidbcloud/serverless': '*'
+      '@tursodatabase/database': '>=0.7.1'
+      '@tursodatabase/database-common': '>=0.7.1'
+      '@tursodatabase/database-wasm': '>=0.7.1'
+      '@tursodatabase/serverless': '>=1.4.0'
+      '@tursodatabase/sync': '>=0.7.1'
+      '@types/better-sqlite3': '*'
+      '@types/mssql': ^9.1.4
+      '@types/pg': '*'
+      '@types/sql.js': '*'
+      '@upstash/redis': '>=1.34.7'
+      '@vercel/postgres': '>=0.8.0'
+      '@xata.io/client': '*'
+      arktype: '>=2.0.0'
+      better-sqlite3: '>=9.3.0'
+      bun-types: '*'
+      effect: '>=4.0.0'
+      expo-sqlite: '>=14.0.0'
+      mssql: ^11.0.1
+      mysql2: '>=2'
+      pg: '>=8'
+      postgres: '>=3'
+      sql.js: '>=1'
+      sqlite3: '>=5'
+      typebox: '>=1.2.0'
+      valibot: '>=1.0.0-beta.7'
+      zod: ^3.25.0 || ^4.0.0
+    peerDependenciesMeta:
+      '@aws-sdk/client-rds-data':
+        optional: true
+      '@aws/aurora-dsql-node-postgres-connector':
+        optional: true
+      '@aws/aurora-dsql-postgresjs-connector':
+        optional: true
+      '@cloudflare/workers-types':
+        optional: true
+      '@drizzle-team/minipg':
+        optional: true
+      '@effect/sql-d1':
+        optional: true
+      '@effect/sql-libsql':
+        optional: true
+      '@effect/sql-mysql2':
+        optional: true
+      '@effect/sql-pg':
+        optional: true
+      '@effect/sql-pglite':
+        optional: true
+      '@effect/sql-sqlite-bun':
+        optional: true
+      '@effect/sql-sqlite-do':
+        optional: true
+      '@effect/sql-sqlite-node':
+        optional: true
+      '@effect/sql-sqlite-wasm':
+        optional: true
+      '@electric-sql/pglite':
+        optional: true
+      '@libsql/client':
+        optional: true
+      '@libsql/client-wasm':
+        optional: true
+      '@neondatabase/serverless':
+        optional: true
+      '@op-engineering/op-sqlite':
+        optional: true
+      '@opentelemetry/api':
+        optional: true
+      '@planetscale/database':
+        optional: true
+      '@sinclair/typebox':
+        optional: true
+      '@sqlitecloud/drivers':
+        optional: true
+      '@tidbcloud/serverless':
+        optional: true
+      '@tursodatabase/database':
+        optional: true
+      '@tursodatabase/database-common':
+        optional: true
+      '@tursodatabase/database-wasm':
+        optional: true
+      '@tursodatabase/serverless':
+        optional: true
+      '@tursodatabase/sync':
         optional: true
       '@types/better-sqlite3':
         optional: true
@@ -3444,6 +3615,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.11.0': {}
 
+  '@drizzle-team/minipg@0.4.2': {}
+
   '@emmetio/abbreviation@2.3.3':
     dependencies:
       '@emmetio/scanner': 1.0.4
@@ -4353,8 +4526,19 @@ snapshots:
       get-tsconfig: 4.14.0
       jiti: 2.7.0
 
+  drizzle-kit@1.0.0-rc.5(drizzle-orm@1.0.0-rc.5(@drizzle-team/minipg@0.4.2)(@types/pg@8.20.0)(pg@8.21.0)(zod@4.4.3)):
+    dependencies:
+      drizzle-orm: 1.0.0-rc.5(@drizzle-team/minipg@0.4.2)(@types/pg@8.20.0)(pg@8.21.0)(zod@4.4.3)
+
   drizzle-orm@1.0.0-rc.4-5d5b77c(@types/pg@8.20.0)(pg@8.21.0)(zod@4.4.3):
     dependencies:
+      '@types/pg': 8.20.0
+      pg: 8.21.0
+      zod: 4.4.3
+
+  drizzle-orm@1.0.0-rc.5(@drizzle-team/minipg@0.4.2)(@types/pg@8.20.0)(pg@8.21.0)(zod@4.4.3):
+    dependencies:
+      '@drizzle-team/minipg': 0.4.2
       '@types/pg': 8.20.0
       pg: 8.21.0
       zod: 4.4.3
