@@ -1,5 +1,5 @@
 import type { Db } from "./database.ts";
-import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
+import { and, eq, isNull, notInArray, or, sql } from "drizzle-orm";
 import { invoices, phases, projects } from "./schema.ts";
 
 /**
@@ -50,8 +50,7 @@ export async function getSpendByYear(
 				eq(invoices.organizationId, organizationId),
 				or(
 					isNull(invoices.stripeStatus),
-					ne(invoices.stripeStatus, "void"),
-					ne(invoices.stripeStatus, "uncollectible"),
+					notInArray(invoices.stripeStatus, ["void", "uncollectible"]),
 				),
 			),
 		)
