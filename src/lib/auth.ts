@@ -24,7 +24,7 @@ export function createAuth(env: Cloudflare.Env, db: Db) {
 			accountLinking: {
 				enabled: true,
 				allowDifferentEmails: true,
-				updateUserInfoOnLinking: true,
+				updateUserInfoOnLink: true,
 			},
 		},
 		advanced: {
@@ -36,6 +36,9 @@ export function createAuth(env: Cloudflare.Env, db: Db) {
 		appName: "craftlions website",
 		baseURL: {
 			allowedHosts: ["craftlions.com", "*.craftlions.com", "localhost:*"],
+			// 1.7 fails closed without a request host; server-side calls such as
+			// createUser and requestPasswordReset run without request headers.
+			fallback: "https://craftlions.com",
 			protocol: "auto",
 		},
 		database: drizzleAdapter(db, {
