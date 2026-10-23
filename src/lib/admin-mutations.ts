@@ -168,22 +168,26 @@ const getAuthorizedClientPhaseId = async (
 	const phase = await db.query.phases.findFirst({
 		columns: { id: true },
 		with: {
-			project: { columns: { organizationId: true } },
+			project: {
+				columns: {},
+				with: {
+					organization: {
+						columns: {},
+						with: {
+							members: { columns: { role: true }, where: { userId: actorId } },
+						},
+					},
+				},
+			},
 		},
 		where: { publicId: phasePublicId },
 	});
 
-	if (!phase?.project) {
+	if (!phase?.project?.organization) {
 		throw new DomainError("NotFound", "Phase not found.");
 	}
 
-	const membership = await db.query.member.findFirst({
-		columns: { role: true },
-		where: {
-			userId: actorId,
-			organizationId: phase.project.organizationId,
-		},
-	});
+	const membership = phase.project.organization.members[0];
 
 	if (!membership || !["owner", "admin"].includes(membership.role)) {
 		throw new DomainError("Forbidden", forbiddenMessage);
