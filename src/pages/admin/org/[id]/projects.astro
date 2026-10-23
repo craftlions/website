@@ -14,39 +14,40 @@ if (!id) {
 	return Astro.redirect("/admin");
 }
 
-const organization = await getAdminOrganizationCore(Astro.locals.db, id);
+const actionResult = Astro.getActionResult(actions.createProject);
+
+const [organization, projects] = await Promise.all([
+	getAdminOrganizationCore(Astro.locals.db, id),
+	Astro.locals.db.query.projects.findMany({
+		columns: {
+			publicId: true,
+			name: true,
+			state: true,
+		},
+		with: {
+			phases: {
+				columns: {
+					cost: true,
+					upfrontAmount: true,
+					deliveryAmount: true,
+					acceptanceAmount: true,
+					currency: true,
+					state: true,
+				},
+			},
+		},
+		where: {
+			organizationId: id,
+		},
+		orderBy: {
+			name: "asc",
+		},
+	}),
+]);
 
 if (!organization) {
 	return Astro.redirect("/admin");
 }
-
-const actionResult = Astro.getActionResult(actions.createProject);
-
-const projects = await Astro.locals.db.query.projects.findMany({
-	columns: {
-		publicId: true,
-		name: true,
-		state: true,
-	},
-	with: {
-		phases: {
-			columns: {
-				cost: true,
-				upfrontAmount: true,
-				deliveryAmount: true,
-				acceptanceAmount: true,
-				currency: true,
-				state: true,
-			},
-		},
-	},
-	where: {
-		organizationId: id,
-	},
-	orderBy: {
-		name: "asc",
-	},
-});
 
 const attentionLabels = {
 	submitted: "to send",

@@ -12,12 +12,6 @@ if (!id) {
 	return Astro.redirect("/admin");
 }
 
-const organization = await getAdminOrganizationCore(Astro.locals.db, id);
-
-if (!organization) {
-	return Astro.redirect("/admin");
-}
-
 const actionResults = [
 	Astro.getActionResult(actions.addOrganizationMember),
 	Astro.getActionResult(actions.removeOrganizationMember),
@@ -27,29 +21,36 @@ const actionResults = [
 const actionError = actionResults.find((result) => result?.error)?.error;
 const actionSucceeded = actionResults.some((result) => result && !result.error);
 
-const members = await Astro.locals.db.query.member.findMany({
-	columns: {
-		id: true,
-		role: true,
-		userId: true,
-	},
-	with: {
-		user: {
-			columns: {
-				id: true,
-				email: true,
-				name: true,
-				lastActiveAt: true,
+const [organization, members] = await Promise.all([
+	getAdminOrganizationCore(Astro.locals.db, id),
+	Astro.locals.db.query.member.findMany({
+		columns: {
+			id: true,
+			role: true,
+			userId: true,
+		},
+		with: {
+			user: {
+				columns: {
+					id: true,
+					email: true,
+					name: true,
+					lastActiveAt: true,
+				},
 			},
 		},
-	},
-	where: {
-		organizationId: id,
-	},
-	orderBy: {
-		createdAt: "asc",
-	},
-});
+		where: {
+			organizationId: id,
+		},
+		orderBy: {
+			createdAt: "asc",
+		},
+	}),
+]);
+
+if (!organization) {
+	return Astro.redirect("/admin");
+}
 ---
 
 <AdminOrgShell

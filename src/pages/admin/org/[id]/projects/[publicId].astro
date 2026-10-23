@@ -16,55 +16,56 @@ if (!id || !publicId) {
 	return Astro.redirect("/admin");
 }
 
-const organization = await getAdminOrganizationCore(Astro.locals.db, id);
+const [organization, project] = await Promise.all([
+	getAdminOrganizationCore(Astro.locals.db, id),
+	Astro.locals.db.query.projects.findFirst({
+		columns: {
+			id: true,
+			publicId: true,
+			name: true,
+			state: true,
+			version: true,
+		},
+		with: {
+			phases: {
+				columns: {
+					id: true,
+					title: true,
+					cost: true,
+					upfrontAmount: true,
+					deliveryAmount: true,
+					acceptanceAmount: true,
+					currency: true,
+					state: true,
+					version: true,
+					dueAt: true,
+					externalUrl: true,
+					deliveryState: true,
+					deliveryUrl: true,
+				},
+				with: {
+					invoices: {
+						columns: {
+							component: true,
+							stripeStatus: true,
+						},
+					},
+				},
+				orderBy: {
+					id: "asc",
+				},
+			},
+		},
+		where: {
+			organizationId: id,
+			publicId,
+		},
+	}),
+]);
 
 if (!organization) {
 	return Astro.redirect("/admin");
 }
-
-const project = await Astro.locals.db.query.projects.findFirst({
-	columns: {
-		id: true,
-		publicId: true,
-		name: true,
-		state: true,
-		version: true,
-	},
-	with: {
-		phases: {
-			columns: {
-				id: true,
-				title: true,
-				cost: true,
-				upfrontAmount: true,
-				deliveryAmount: true,
-				acceptanceAmount: true,
-				currency: true,
-				state: true,
-				version: true,
-				dueAt: true,
-				externalUrl: true,
-				deliveryState: true,
-				deliveryUrl: true,
-			},
-			with: {
-				invoices: {
-					columns: {
-						component: true,
-						stripeStatus: true,
-					},
-				},
-			},
-			orderBy: {
-				id: "asc",
-			},
-		},
-	},
-	where: {
-		organizationId: id,
-		publicId,
-	},
-});
 
 if (!project) {
 	return Astro.redirect(`/admin/org/${organization.id}/projects`);
