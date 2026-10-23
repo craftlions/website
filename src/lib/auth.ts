@@ -116,8 +116,11 @@ export function createAuth(env: Cloudflare.Env, db: Db) {
 			max: 100,
 		},
 		session: {
+			// Serves getSession from an encrypted cookie for up to five minutes
+			// instead of reading the session and user rows on every request; role,
+			// ban, and sign-out changes elsewhere can lag by that window.
 			cookieCache: {
-				enabled: false,
+				enabled: true,
 				maxAge: 5 * 60,
 				strategy: "jwe",
 			},
