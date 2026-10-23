@@ -4,9 +4,9 @@ export const prerender = false;
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
 import Footer from "../../../../../components/Footer.astro";
+import InvoiceTable from "../../../../../components/InvoiceTable.astro";
 import Nav from "../../../../../components/Nav.astro";
 import PhasesTable from "../../../../../components/PhasesTable.astro";
-import ProjectInvoices from "../../../../../components/ProjectInvoices.astro";
 import Shell from "../../../../../layouts/Shell.astro";
 import { buildPhaseComponents } from "../../../../../lib/phase-billing";
 
@@ -39,24 +39,27 @@ if (!session.session.activeOrganizationId) {
 	}
 }
 
-const organization = await Astro.locals.auth.api.getFullOrganization({
-	query: {
-		organizationSlug: slug,
-		membersLimit: 0,
-	},
-	headers: Astro.request.headers,
-});
-
-if (!organization) {
-	return Astro.redirect("/dash");
-}
-
+// One read resolves the project within the slug's organization, this user's
+// membership, and every phase invoice the invoice table needs.
 const project = await Astro.locals.db.query.projects.findFirst({
 	columns: {
-		id: true,
+		publicId: true,
 		name: true,
 	},
 	with: {
+		organization: {
+			columns: {},
+			with: {
+				members: {
+					columns: {
+						role: true,
+					},
+					where: {
+						userId: session.user.id,
+					},
+				},
+			},
+		},
 		phases: {
 			columns: {
 				id: true,
@@ -78,7 +81,14 @@ const project = await Astro.locals.db.query.projects.findFirst({
 				invoices: {
 					columns: {
 						component: true,
+						invoiceNumber: true,
+						stripePaymentPage: true,
 						stripeStatus: true,
+						stripePaidAt: true,
+						stripeDueAt: true,
+						total: true,
+						currency: true,
+						invoicedAt: true,
 					},
 				},
 			},
@@ -90,7 +100,9 @@ const project = await Astro.locals.db.query.projects.findFirst({
 	},
 	where: {
 		publicId,
-		organizationId: organization.id,
+		organization: {
+			slug,
+		},
 	},
 });
 
@@ -98,17 +110,25 @@ if (!project) {
 	return Astro.redirect(`/dash/org/${slug}`);
 }
 
-const currentMember = await Astro.locals.db.query.member.findFirst({
-	columns: {
-		role: true,
-	},
-	where: {
-		organizationId: organization.id,
-		userId: session.user.id,
-	},
-});
+const [currentMember] = project.organization?.members ?? [];
+
+if (!currentMember) {
+	return Astro.redirect("/dash");
+}
+
 const canApprovePhases =
-	currentMember?.role === "owner" || currentMember?.role === "admin";
+	currentMember.role === "owner" || currentMember.role === "admin";
+
+// S-003 R2: an attached invoice derives its project, phase, and Delivery from
+// its one phase — nothing is copied onto the invoice row.
+const invoices = project.phases
+	.flatMap((phase) =>
+		phase.invoices.map((invoice) => ({
+			...invoice,
+			phase: { ...phase, project },
+		})),
+	)
+	.toSorted((a, b) => b.invoicedAt.getTime() - a.invoicedAt.getTime());
 
 const phasesWithComponents = project.phases.map((phase) => ({
 	...phase,
@@ -170,7 +190,7 @@ const phasesWithComponents = project.phases.map((phase) => ({
 				>
 					Invoices
 				</h2>
-				<ProjectInvoices id={project.id} slug={slug} />
+				<InvoiceTable {invoices} {slug} />
 			</section>
 		</main>
 		<Footer />
