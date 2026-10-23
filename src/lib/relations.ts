@@ -53,6 +53,10 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.user.id,
 			to: r.session.userId,
 		}),
+		memberships: r.many.member({
+			from: r.user.id,
+			to: r.member.userId,
+		}),
 	},
 	// CUSTOM
 	organizationMetadata: {
