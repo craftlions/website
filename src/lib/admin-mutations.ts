@@ -114,25 +114,31 @@ const getOrganizationAdapter = async (auth: Auth) => {
 	return getOrgAdapter(context, context.orgOptions);
 };
 
+type EventInput = {
+	aggregateType: "invoice" | "organization" | "phase" | "project";
+	aggregateId: string;
+	aggregateVersion?: number;
+	event: string;
+	actorId: string;
+};
+
+const eventValues = (input: EventInput) => ({
+	publicId: crypto.randomUUID(),
+	aggregateType: input.aggregateType,
+	aggregateId: input.aggregateId,
+	aggregateVersion: input.aggregateVersion,
+	event: input.event,
+	actorType: "user" as const,
+	actorId: input.actorId,
+});
+
+// Accepts the plain db too: a lone event insert is atomic on its own and
+// skips the BEGIN/COMMIT round trips of a transaction.
 const insertEvent = async (
-	tx: Parameters<Parameters<Db["transaction"]>[0]>[0],
-	input: {
-		aggregateType: "invoice" | "organization" | "phase" | "project";
-		aggregateId: string;
-		aggregateVersion?: number;
-		event: string;
-		actorId: string;
-	},
+	tx: Db | Parameters<Parameters<Db["transaction"]>[0]>[0],
+	input: EventInput,
 ) => {
-	const values = {
-		publicId: crypto.randomUUID(),
-		aggregateType: input.aggregateType,
-		aggregateId: input.aggregateId,
-		aggregateVersion: input.aggregateVersion,
-		event: input.event,
-		actorType: "user" as const,
-		actorId: input.actorId,
-	};
+	const values = eventValues(input);
 
 	if (input.aggregateVersion === undefined) {
 		await tx.insert(events).values(values);
@@ -1350,13 +1356,11 @@ export const addOrganizationMember = async (
 		});
 	}
 
-	await db.transaction(async (tx) => {
-		await insertEvent(tx, {
-			aggregateType: "organization",
-			aggregateId: input.organizationId,
-			event: existingMember ? "member_unchanged" : "member_added",
-			actorId,
-		});
+	await insertEvent(db, {
+		aggregateType: "organization",
+		aggregateId: input.organizationId,
+		event: existingMember ? "member_unchanged" : "member_added",
+		actorId,
 	});
 
 	if (createdUser) {
@@ -1391,13 +1395,11 @@ export const removeOrganizationMember = async (
 		organizationId: input.organizationId,
 	});
 
-	await db.transaction(async (tx) => {
-		await insertEvent(tx, {
-			aggregateType: "organization",
-			aggregateId: input.organizationId,
-			event: "member_removed",
-			actorId,
-		});
+	await insertEvent(db, {
+		aggregateType: "organization",
+		aggregateId: input.organizationId,
+		event: "member_removed",
+		actorId,
 	});
 };
 
@@ -1433,16 +1435,18 @@ export const removeNeverLoggedInUser = async (
 	await context.internalAdapter.deleteUserSessions(input.userId);
 	await context.internalAdapter.deleteUser(input.userId);
 
-	await db.transaction(async (tx) => {
-		for (const membership of memberships) {
-			await insertEvent(tx, {
-				aggregateType: "organization",
-				aggregateId: membership.organizationId,
-				event: "user_removed",
-				actorId,
-			});
-		}
-	});
+	if (memberships.length > 0) {
+		await db.insert(events).values(
+			memberships.map((membership) =>
+				eventValues({
+					aggregateType: "organization",
+					aggregateId: membership.organizationId,
+					event: "user_removed",
+					actorId,
+				}),
+			),
+		);
+	}
 };
 
 export const updateOrganizationSettings = async (
@@ -1541,12 +1545,10 @@ export const hardDeleteOrganization = async (
 		selectedOrganization.id,
 	);
 
-	await db.transaction(async (tx) => {
-		await insertEvent(tx, {
-			aggregateType: "organization",
-			aggregateId: selectedOrganization.id,
-			event: "deleted",
-			actorId,
-		});
+	await insertEvent(db, {
+		aggregateType: "organization",
+		aggregateId: selectedOrganization.id,
+		event: "deleted",
+		actorId,
 	});
 };
