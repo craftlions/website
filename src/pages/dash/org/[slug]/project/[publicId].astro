@@ -4,11 +4,9 @@ export const prerender = false;
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
 import Footer from "../../../../../components/Footer.astro";
-import InvoiceTable from "../../../../../components/InvoiceTable.astro";
 import Nav from "../../../../../components/Nav.astro";
-import PhasesTable from "../../../../../components/PhasesTable.astro";
+import PhaseOverview from "../../../../../components/PhaseOverview.astro";
 import Shell from "../../../../../layouts/Shell.astro";
-import { buildPhaseComponents } from "../../../../../lib/phase-billing";
 
 const { publicId, slug } = Astro.params;
 
@@ -40,10 +38,9 @@ if (!session.session.activeOrganizationId) {
 }
 
 // One read resolves the project within the slug's organization, this user's
-// membership, and every phase invoice the invoice table needs.
+// membership, and every phase invoice its payment schedule needs.
 const project = await Astro.locals.db.query.projects.findFirst({
 	columns: {
-		publicId: true,
 		name: true,
 	},
 	with: {
@@ -62,7 +59,6 @@ const project = await Astro.locals.db.query.projects.findFirst({
 		},
 		phases: {
 			columns: {
-				id: true,
 				publicId: true,
 				title: true,
 				dueAt: true,
@@ -88,7 +84,6 @@ const project = await Astro.locals.db.query.projects.findFirst({
 						stripeDueAt: true,
 						total: true,
 						currency: true,
-						invoicedAt: true,
 					},
 				},
 			},
@@ -118,28 +113,6 @@ if (!currentMember) {
 
 const canApprovePhases =
 	currentMember.role === "owner" || currentMember.role === "admin";
-
-// S-003 R2: an attached invoice derives its project, phase, and Delivery from
-// its one phase — nothing is copied onto the invoice row.
-const invoices = project.phases
-	.flatMap((phase) =>
-		phase.invoices.map((invoice) => ({
-			...invoice,
-			phase: { ...phase, project },
-		})),
-	)
-	.toSorted((a, b) => b.invoicedAt.getTime() - a.invoicedAt.getTime());
-
-const phasesWithComponents = project.phases.map((phase) => ({
-	...phase,
-	components: buildPhaseComponents({
-		upfrontAmount: phase.upfrontAmount,
-		deliveryAmount: phase.deliveryAmount,
-		acceptanceAmount: phase.acceptanceAmount,
-		state: phase.state,
-		invoices: phase.invoices,
-	}),
-}));
 ---
 
 <Shell
@@ -169,28 +142,18 @@ const phasesWithComponents = project.phases.map((phase) => ({
 				</h1>
 			</section>
 
-			<section>
+			<section class="grid gap-3" aria-labelledby="phases">
 				<h2
 					id="phases"
 					class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
 				>
-					Phases
+					Phases &amp; Billing
 				</h2>
-				<PhasesTable
-					phases={phasesWithComponents}
+				<PhaseOverview
+					phases={project.phases}
 					canApprovePhases={canApprovePhases}
 					canAcceptPhases={canApprovePhases}
 				/>
-			</section>
-
-			<section>
-				<h2
-					id="invoices"
-					class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-				>
-					Invoices
-				</h2>
-				<InvoiceTable {invoices} {slug} />
 			</section>
 		</main>
 		<Footer />
