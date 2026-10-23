@@ -1,9 +1,7 @@
 import type { Db } from "./database.ts";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { assertAdminUser, DomainError } from "./domain.ts";
 import { invoices } from "./schema.ts";
-
-type StripeTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 export interface StripeInvoiceSnapshot {
 	status: string | null;
@@ -123,58 +121,13 @@ export const fetchStripeInvoice = async (input: {
 	return (await response.json()) as StripeInvoiceResponse;
 };
 
-export const persistStripeInvoiceSnapshot = async (
-	tx: StripeTransaction,
-	input:
-		| {
-				invoiceId: string;
-				snapshot: StripeInvoiceSnapshot;
-		  }
-		| {
-				organizationId: string;
-				stripeInvoice: ImportableStripeInvoice;
-				snapshot: StripeInvoiceSnapshot;
-		  },
-) => {
-	const stripeFields = {
-		stripeStatus: input.snapshot.status,
-		stripePaidAt: input.snapshot.paidAt,
-		stripeDueAt: input.snapshot.dueAt,
-		fetchedAt: input.snapshot.fetchedAt,
-		invoicedAt: input.snapshot.invoicedAt,
-	};
-
-	if ("invoiceId" in input) {
-		await tx
-			.update(invoices)
-			.set(stripeFields)
-			.where(eq(invoices.id, input.invoiceId));
-		return;
-	}
-
-	await tx
-		.insert(invoices)
-		.values({
-			publicId: crypto.randomUUID(),
-			organizationId: input.organizationId,
-			stripeId: input.stripeInvoice.id,
-			invoiceNumber: input.stripeInvoice.number,
-			stripePaymentPage:
-				input.stripeInvoice.hosted_invoice_url ??
-				input.stripeInvoice.invoice_pdf ??
-				"",
-			currency: input.stripeInvoice.currency.toUpperCase(),
-			total: fromStripeMinorUnits(
-				input.stripeInvoice.total ?? 0,
-				input.stripeInvoice.currency,
-			),
-			...stripeFields,
-		})
-		.onConflictDoUpdate({
-			target: invoices.stripeId,
-			set: stripeFields,
-		});
-};
+const stripeFields = (snapshot: StripeInvoiceSnapshot) => ({
+	stripeStatus: snapshot.status,
+	stripePaidAt: snapshot.paidAt,
+	stripeDueAt: snapshot.dueAt,
+	fetchedAt: snapshot.fetchedAt,
+	invoicedAt: snapshot.invoicedAt,
+});
 
 export const refreshStripeInvoice = async (
 	db: Db,
@@ -221,14 +174,10 @@ export const refreshStripeInvoice = async (
 		);
 	}
 
-	const snapshot = stripeInvoiceSnapshot(data);
-
-	await db.transaction((tx) =>
-		persistStripeInvoiceSnapshot(tx, {
-			invoiceId: invoice.id,
-			snapshot,
-		}),
-	);
+	await db
+		.update(invoices)
+		.set(stripeFields(stripeInvoiceSnapshot(data)))
+		.where(eq(invoices.id, invoice.id));
 };
 
 export const importStripeInvoices = async (
@@ -236,12 +185,13 @@ export const importStripeInvoices = async (
 	actorId: string,
 	input: { organizationId: string; stripeKey: string },
 ) => {
-	await assertAdminUser(db, actorId);
-
-	const metadata = await db.query.organizationMetadata.findFirst({
-		columns: { stripeCustomerId: true },
-		where: { organizationId: input.organizationId },
-	});
+	const [, metadata] = await Promise.all([
+		assertAdminUser(db, actorId),
+		db.query.organizationMetadata.findFirst({
+			columns: { stripeCustomerId: true },
+			where: { organizationId: input.organizationId },
+		}),
+	]);
 
 	if (!metadata?.stripeCustomerId) {
 		throw new DomainError(
@@ -278,19 +228,36 @@ export const importStripeInvoices = async (
 		startingAfter = page.has_more ? page.data?.at(-1)?.id : undefined;
 	} while (startingAfter);
 
-	for (const item of fetched) {
-		if (!isImportableStripeInvoice(item)) {
-			continue;
-		}
+	const importable = fetched.filter(isImportableStripeInvoice);
 
-		const snapshot = stripeInvoiceSnapshot(item);
-
-		await db.transaction((tx) =>
-			persistStripeInvoiceSnapshot(tx, {
-				organizationId: input.organizationId,
-				stripeInvoice: item,
-				snapshot,
-			}),
-		);
+	if (importable.length === 0) {
+		return;
 	}
+
+	// One multi-row upsert instead of a transaction per invoice; existing rows
+	// only refresh their Stripe fields.
+	await db
+		.insert(invoices)
+		.values(
+			importable.map((item) => ({
+				publicId: crypto.randomUUID(),
+				organizationId: input.organizationId,
+				stripeId: item.id,
+				invoiceNumber: item.number,
+				stripePaymentPage: item.hosted_invoice_url ?? item.invoice_pdf ?? "",
+				currency: item.currency.toUpperCase(),
+				total: fromStripeMinorUnits(item.total ?? 0, item.currency),
+				...stripeFields(stripeInvoiceSnapshot(item)),
+			})),
+		)
+		.onConflictDoUpdate({
+			target: invoices.stripeId,
+			set: {
+				stripeStatus: sql`excluded.stripe_status`,
+				stripePaidAt: sql`excluded.stripe_paid_at`,
+				stripeDueAt: sql`excluded.stripe_due_at`,
+				fetchedAt: sql`excluded.fetched_at`,
+				invoicedAt: sql`excluded.invoiced_at`,
+			},
+		});
 };
