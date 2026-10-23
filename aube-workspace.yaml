@@ -9,6 +9,10 @@ paranoid: true
 jailBuilds: true
 trustPolicy: no-downgrade
 minimumReleaseAgeStrict: true
+minimumReleaseAgeExclude:
+  - "@drizzle-team/minipg"
+  - drizzle-kit
+  - drizzle-orm
 strictStoreIntegrity: true
 advisoryCheck: required
 advisoryCheckOnInstall: required
