@@ -1,0 +1,500 @@
+---
+import type { invoiceSelectType, phaseSelectType } from "../lib/schema";
+import { actions } from "astro:actions";
+import { buildPhaseComponents } from "../lib/phase-billing";
+import Badge from "./Badge.astro";
+import Button from "./Button.astro";
+
+interface Phase {
+	publicId: phaseSelectType["publicId"];
+	title: phaseSelectType["title"];
+	dueAt: phaseSelectType["dueAt"];
+	cost: phaseSelectType["cost"];
+	upfrontAmount: phaseSelectType["upfrontAmount"];
+	deliveryAmount: phaseSelectType["deliveryAmount"];
+	acceptanceAmount: phaseSelectType["acceptanceAmount"];
+	currency: phaseSelectType["currency"];
+	state: phaseSelectType["state"];
+	version: phaseSelectType["version"];
+	externalUrl: phaseSelectType["externalUrl"];
+	deliveryState: phaseSelectType["deliveryState"];
+	deliveryUrl: phaseSelectType["deliveryUrl"];
+	invoices: Pick<
+		invoiceSelectType,
+		| "component"
+		| "invoiceNumber"
+		| "stripePaymentPage"
+		| "stripeStatus"
+		| "stripePaidAt"
+		| "stripeDueAt"
+		| "total"
+		| "currency"
+	>[];
+}
+
+interface Props {
+	phases: Phase[];
+	canApprovePhases?: boolean;
+	canAcceptPhases?: boolean;
+}
+
+const {
+	canAcceptPhases = false,
+	canApprovePhases = false,
+	phases,
+} = Astro.props;
+const now = new Date();
+const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
+const formatAmount = (amount: number, currency: string) =>
+	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
+		amount,
+	);
+const percentFormatter = new Intl.NumberFormat("de-DE", {
+	style: "percent",
+	maximumFractionDigits: 1,
+});
+const billedOn = {
+	upfront: "Billed on approval",
+	delivery: "Billed on delivery",
+	acceptance: "Billed on acceptance",
+};
+
+const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
+	switch (phaseState) {
+		case "accepted":
+			return "success";
+		case "cancelled":
+			return "error";
+		default:
+			return "info";
+	}
+};
+
+// Each cost part has at most one invoice (invoices_phase_component_uidx), so
+// a phase's invoices fold into its payment schedule part by part.
+const rows = phases.map((phase) => {
+	const parts = buildPhaseComponents(phase).map((part) => {
+		const invoice = phase.invoices.find(
+			(invoice) => invoice.component === part.component,
+		);
+		return {
+			...part,
+			invoice: invoice && {
+				...invoice,
+				status:
+					invoice.stripeStatus === "open" &&
+					invoice.stripeDueAt &&
+					invoice.stripeDueAt < now
+						? "overdue"
+						: invoice.stripeStatus,
+			},
+		};
+	});
+	return {
+		...phase,
+		parts,
+		paidAmount: parts
+			.filter((part) => part.status === "paid")
+			.reduce((sum, part) => sum + part.amount, 0),
+		overdueCount: parts.filter((part) => part.invoice?.status === "overdue")
+			.length,
+		openCount: parts.filter((part) => part.invoice?.status === "open").length,
+	};
+});
+
+// Totals stay per currency; phases of one project may bill in different ones.
+const sumByCurrency = (entries: { amount: number; currency: string }[]) => {
+	const sums = new Map<string, number>();
+	for (const entry of entries) {
+		sums.set(entry.currency, (sums.get(entry.currency) ?? 0) + entry.amount);
+	}
+	return sums.size === 0
+		? formatAmount(0, phases[0]?.currency ?? "EUR")
+		: [...sums]
+				.map(([currency, amount]) => formatAmount(amount, currency))
+				.join(" + ");
+};
+const invoicesWhere = (statuses: string[]) =>
+	rows.flatMap((row) =>
+		row.parts.flatMap((part) =>
+			part.invoice && statuses.includes(part.invoice.status ?? "")
+				? [{ amount: part.invoice.total, currency: part.invoice.currency }]
+				: [],
+		),
+	);
+const hasOverdue = rows.some((row) => row.overdueCount > 0);
+---
+
+<phase-overview class="grid gap-3">
+	{rows.length > 0 ? (
+		<>
+			<div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+				<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
+					<div class="grid gap-1">
+						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Est. Cost</dt>
+						<dd class="tabular-nums">
+							{sumByCurrency(
+								rows
+									.filter((row) => row.state !== "cancelled")
+									.map((row) => ({ amount: row.cost, currency: row.currency })),
+							)}
+						</dd>
+					</div>
+					<div class="grid gap-1">
+						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Paid</dt>
+						<dd class="tabular-nums">{sumByCurrency(invoicesWhere(["paid"]))}</dd>
+					</div>
+					<div class="grid gap-1">
+						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Outstanding</dt>
+						<dd class="tabular-nums">{sumByCurrency(invoicesWhere(["open", "overdue"]))}</dd>
+					</div>
+					<div class="grid gap-1">
+						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Overdue</dt>
+						<dd class:list={["tabular-nums", hasOverdue && "text-red-700 dark:text-red-300"]}>
+							{sumByCurrency(invoicesWhere(["overdue"]))}
+						</dd>
+					</div>
+				</dl>
+				<nav aria-label="Phase view" class="grid grid-flow-col justify-start gap-2">
+					<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-phase-view="compact" aria-pressed="true">Compact</Button>
+					<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-phase-view="detailed" aria-pressed="false">Detailed</Button>
+				</nav>
+			</div>
+
+			<div class="grid border border-dashed border-neutral-300 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] md:gap-x-6">
+				<div aria-hidden="true" class="hidden border-b border-dashed border-neutral-300 px-4 py-3 text-xs font-semibold uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400 md:col-span-5 md:grid md:grid-cols-subgrid">
+					<span>Phase</span>
+					<span>State</span>
+					<span class="text-right">Billing</span>
+					<span class="col-span-2">Actions</span>
+				</div>
+				<ul class="grid md:col-span-5 md:grid-cols-subgrid">
+					{rows.map((phase) => (
+						<li
+							id={`phase-${phase.publicId}`}
+							class="grid scroll-mt-20 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-5 md:grid-cols-subgrid md:items-center"
+							data-phase
+						>
+							<div class="grid gap-1">
+								<h3 class:list={["font-medium", phase.state === "cancelled" && "text-neutral-500 line-through dark:text-neutral-400"]}>
+									{phase.title}
+								</h3>
+								<p class="text-sm text-neutral-600 dark:text-neutral-400">
+									{phase.dueAt ? `Due ${dateFormatter.format(phase.dueAt)}` : "Not scheduled"}
+								</p>
+							</div>
+							<Badge type={phaseStateToBadgeType(phase.state)}>
+								{phase.state.replaceAll("_", " ")}
+							</Badge>
+							<div class="grid w-full gap-1.5 md:w-44 md:justify-items-end">
+								<p class="text-sm tabular-nums md:text-right">
+									<span class="font-medium">{formatAmount(phase.cost, phase.currency)}</span>
+								</p>
+								{phase.parts.length > 0 && (
+									<ol aria-label="Payment progress" class="grid w-full max-w-44 auto-cols-fr grid-flow-col gap-1">
+										{phase.parts.map((part) => (
+											<li
+												title={`${part.component}: ${part.invoice?.status ?? part.status.replaceAll("_", " ")}`}
+												class:list={[
+													"h-1.5 border border-dashed",
+													part.invoice?.status === "overdue"
+														? "border-red-500 bg-red-500/70 dark:border-red-400 dark:bg-red-400/70"
+														: part.status === "paid"
+															? "border-emerald-500 bg-emerald-500/70 dark:border-emerald-400 dark:bg-emerald-400/70"
+															: part.invoice
+																? "border-sky-500 bg-sky-500/30 dark:border-sky-400 dark:bg-sky-400/30"
+																: "border-neutral-400 dark:border-neutral-600",
+												]}
+											>
+												<span class="sr-only">
+													{part.component} {part.invoice?.status ?? part.status.replaceAll("_", " ")}
+												</span>
+											</li>
+										))}
+									</ol>
+								)}
+								<p
+									class:list={[
+										"text-xs md:text-right",
+										phase.overdueCount > 0
+											? "font-medium text-red-700 dark:text-red-300"
+											: "text-neutral-500 dark:text-neutral-400",
+									]}
+								>
+									{phase.overdueCount > 0
+										? `${phase.overdueCount} invoice${phase.overdueCount === 1 ? "" : "s"} overdue`
+										: phase.openCount > 0
+											? `${phase.openCount} invoice${phase.openCount === 1 ? "" : "s"} to pay`
+											: phase.parts.length === 0
+												? "Nothing to bill"
+												: phase.parts.every((part) => part.status === "paid")
+													? "Fully paid"
+													: phase.paidAmount > 0
+														? `${formatAmount(phase.paidAmount, phase.currency)} paid`
+														: "Not invoiced yet"}
+								</p>
+							</div>
+							<div class="grid grid-flow-col justify-start gap-2 max-md:empty:hidden">
+								{canApprovePhases && phase.state === "planned" && (
+									<>
+										<form method="POST" action={actions.approvePhase} data-disable-on-submit>
+											<input type="hidden" name="phaseId" value={phase.publicId} />
+											<input type="hidden" name="expectedVersion" value={phase.version} />
+											<Button type="submit">Approve</Button>
+										</form>
+										<form method="POST" action={actions.declinePhase} data-disable-on-submit>
+											<input type="hidden" name="phaseId" value={phase.publicId} />
+											<input type="hidden" name="expectedVersion" value={phase.version} />
+											<Button type="submit">Decline</Button>
+										</form>
+									</>
+								)}
+								{canAcceptPhases && phase.state === "delivered" && (
+									<form method="POST" action={actions.acceptPhase} data-disable-on-submit>
+										<input type="hidden" name="phaseId" value={phase.publicId} />
+										<input type="hidden" name="expectedVersion" value={phase.version} />
+										<Button type="submit">Accept</Button>
+									</form>
+								)}
+							</div>
+							<Button
+								type="button"
+								class="group"
+								aria-expanded="false"
+								aria-controls={`phase-${phase.publicId}-details`}
+								data-phase-toggle
+							>
+								Details
+								<svg aria-hidden="true" viewBox="0 0 12 12" class="size-3 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none">
+									<path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+								</svg>
+							</Button>
+
+							<div
+								id={`phase-${phase.publicId}-details`}
+								class="grid gap-4 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700 md:col-span-5"
+								hidden
+							>
+								<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
+									<div class="grid gap-1">
+										<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Epic</dt>
+										<dd>
+											{phase.externalUrl ? (
+												<a href={phase.externalUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open Epic for ${phase.title}`} class="underline decoration-dashed underline-offset-4">Open</a>
+											) : (
+												<span class="text-neutral-500 dark:text-neutral-400">None</span>
+											)}
+										</dd>
+									</div>
+									<div class="grid gap-1">
+										<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Delivery</dt>
+										<dd>
+											{phase.deliveryState === "url" && phase.deliveryUrl ? (
+												<a href={phase.deliveryUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open Delivery for ${phase.title}`} class="underline decoration-dashed underline-offset-4">Open</a>
+											) : phase.deliveryState === "none" ? (
+												<span class="text-neutral-600 dark:text-neutral-400">No delivery</span>
+											) : (
+												<span class="text-neutral-500 dark:text-neutral-400">Not recorded</span>
+											)}
+										</dd>
+									</div>
+								</dl>
+
+								<section class="grid gap-2" aria-labelledby={`phase-${phase.publicId}-schedule`}>
+									<h4 id={`phase-${phase.publicId}-schedule`} class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+										Payment Schedule
+									</h4>
+									{phase.parts.length > 0 ? (
+										<ol class="grid border border-dashed border-neutral-300 dark:border-neutral-700 sm:grid-cols-[9rem_10rem_minmax(0,1fr)_auto] sm:gap-x-6">
+											{phase.parts.map((part) => (
+												<li class="grid gap-y-2 border-b border-dashed border-neutral-300 p-3 text-sm last:border-b-0 dark:border-neutral-700 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
+													<div class="grid gap-0.5">
+														<p class="font-medium capitalize">{part.component}</p>
+														<p class="text-xs text-neutral-500 dark:text-neutral-400">{billedOn[part.component]}</p>
+													</div>
+													<p class="tabular-nums">
+														{formatAmount(part.amount, phase.currency)}
+														<span class="text-neutral-500 dark:text-neutral-400">
+															{" "}· {phase.cost > 0 ? percentFormatter.format(part.amount / phase.cost) : "—"}
+														</span>
+													</p>
+													<div class="grid grid-flow-col items-center justify-start gap-2">
+														{part.invoice?.status === "overdue" ? <Badge type="error">Overdue</Badge>
+															: part.invoice?.status === "open" ? <Badge type="info">Open</Badge>
+															: part.invoice?.status === "paid" ? <Badge type="success">Paid</Badge>
+															: part.invoice?.status ? <Badge type="gray">{part.invoice.status}</Badge>
+															: part.invoice ? <Badge type="info">Invoiced</Badge>
+															: part.status === "due" ? <Badge type="gray">Invoice pending</Badge>
+															: <Badge type="gray">Not due</Badge>}
+														<span class:list={["text-xs", part.invoice?.status === "overdue" ? "text-red-700 dark:text-red-300" : "text-neutral-500 dark:text-neutral-400"]}>
+															{part.invoice?.status === "paid" && part.invoice.stripePaidAt
+																? `on ${dateFormatter.format(part.invoice.stripePaidAt)}`
+																: part.invoice?.stripeDueAt && (part.invoice.status === "open" || part.invoice.status === "overdue")
+																	? `due ${dateFormatter.format(part.invoice.stripeDueAt)}`
+																	: null}
+														</span>
+													</div>
+													{part.invoice ? (
+														<div class="grid grid-flow-col items-center justify-start gap-3 sm:justify-end">
+															<span class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+																Invoice {part.invoice.invoiceNumber} · {formatAmount(part.invoice.total, part.invoice.currency)}
+															</span>
+															<Button
+																href={part.invoice.stripePaymentPage}
+																target="_blank"
+																rel="noopener noreferrer"
+																aria-label={`${part.invoice.status === "open" || part.invoice.status === "overdue" ? "Pay" : "View"} invoice ${part.invoice.invoiceNumber}`}
+															>
+																{part.invoice.status === "open" || part.invoice.status === "overdue" ? "Pay" : "View"}
+															</Button>
+														</div>
+													) : (
+														<span class="text-xs text-neutral-500 dark:text-neutral-400 sm:text-right">No invoice yet</span>
+													)}
+												</li>
+											))}
+										</ol>
+									) : (
+										<p class="text-sm text-neutral-600 dark:text-neutral-400">
+											No chargeable parts · {formatAmount(phase.cost, phase.currency)}
+										</p>
+									)}
+								</section>
+							</div>
+						</li>
+					))}
+				</ul>
+			</div>
+		</>
+	) : (
+		<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+			No phases have been added yet.
+		</p>
+	)}
+</phase-overview>
+
+<script>
+	// Compact shows one line per phase; Detailed opens every payment schedule.
+	// Single phases still toggle on their own, and the chosen view is a
+	// per-viewer convenience that survives reloads when storage is available.
+	const viewStorageKey = "phase-overview-view";
+
+	// Exact phase evidence target: worklist and invoice links point at the
+	// stable `phase-<publicId>` fragment. The targeted phase opens its details
+	// and is marked with a background tint plus a non-color outline cue,
+	// without motion. Runs on landing and on every fragment change.
+	const highlightClasses = [
+		"outline-2",
+		"-outline-offset-2",
+		"outline-dashed",
+		"outline-sky-500/70",
+		"bg-sky-100/60",
+		"dark:outline-sky-400/70",
+		"dark:bg-sky-950/50",
+	];
+
+	class PhaseOverview extends HTMLElement {
+		currentTarget: HTMLElement | null = null;
+
+		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
+			for (const button of this.querySelectorAll<HTMLButtonElement>(
+				"[data-phase-view]",
+			)) {
+				button.addEventListener("click", () => {
+					const view = button.dataset.phaseView ?? "compact";
+					try {
+						localStorage.setItem(viewStorageKey, view);
+					} catch {}
+					this.setView(view);
+				});
+			}
+
+			for (const toggle of this.querySelectorAll<HTMLButtonElement>(
+				"[data-phase-toggle]",
+			)) {
+				toggle.addEventListener("click", () => {
+					this.setExpanded(
+						toggle,
+						toggle.getAttribute("aria-expanded") !== "true",
+					);
+				});
+			}
+
+			let view = "compact";
+			try {
+				view = localStorage.getItem(viewStorageKey) ?? "compact";
+			} catch {}
+			this.setView(view);
+
+			this.applyTarget();
+			window.addEventListener("hashchange", () => this.applyTarget());
+		}
+
+		setExpanded(toggle: HTMLButtonElement, expanded: boolean) {
+			toggle.setAttribute("aria-expanded", String(expanded));
+			const panel = document.getElementById(
+				toggle.getAttribute("aria-controls") ?? "",
+			);
+			if (panel) panel.hidden = !expanded;
+		}
+
+		setView(view: string) {
+			for (const button of this.querySelectorAll<HTMLButtonElement>(
+				"[data-phase-view]",
+			)) {
+				button.setAttribute(
+					"aria-pressed",
+					String(button.dataset.phaseView === view),
+				);
+			}
+			for (const toggle of this.querySelectorAll<HTMLButtonElement>(
+				"[data-phase-toggle]",
+			)) {
+				this.setExpanded(toggle, view === "detailed");
+			}
+			if (this.currentTarget) this.openTarget(this.currentTarget);
+		}
+
+		openTarget(target: HTMLElement) {
+			const toggle = target.querySelector<HTMLButtonElement>(
+				"[data-phase-toggle]",
+			);
+			if (toggle) this.setExpanded(toggle, true);
+		}
+
+		applyTarget() {
+			this.currentTarget?.classList.remove(...highlightClasses);
+			this.currentTarget = null;
+
+			const target = document.getElementById(location.hash.slice(1));
+			if (!(target instanceof HTMLElement) || !this.contains(target)) return;
+			if (!target.matches("[data-phase]")) return;
+
+			target.classList.add(...highlightClasses);
+			this.currentTarget = target;
+			this.openTarget(target);
+		}
+	}
+
+	customElements.define("phase-overview", PhaseOverview);
+</script>
+
+<script>
+	document.addEventListener("submit", (event) => {
+		if (
+			!(event.target instanceof HTMLFormElement) ||
+			!event.target.checkValidity()
+		) {
+			return;
+		}
+
+		for (const button of event.target.querySelectorAll<HTMLButtonElement>(
+			'button[type="submit"]',
+		)) {
+			button.disabled = true;
+		}
+	});
+</script>
