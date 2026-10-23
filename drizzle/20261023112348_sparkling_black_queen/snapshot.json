@@ -1,0 +1,207 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "49e202bb-53d6-48cd-b485-92694ce96885",
+  "prevIds": [
+    "f5f3e7da-ecf2-4291-a187-a317395d6bbf"
+  ],
+  "footprints": [
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "apikey",
+        "config_id"
+      ],
+      "writes": [
+        "s|colprop|public.apikey.config_id.default"
+      ],
+      "reads": [
+        "n|tbl|public.apikey",
+        "n|sch|public",
+        "n|col|public.apikey.config_id"
+      ],
+      "sqlHash": "4077c590d0bb3bd6"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "apikey",
+        "enabled"
+      ],
+      "writes": [
+        "s|colprop|public.apikey.enabled.default"
+      ],
+      "reads": [
+        "n|tbl|public.apikey",
+        "n|sch|public",
+        "n|col|public.apikey.enabled"
+      ],
+      "sqlHash": "ab9a8927615d4e91"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "apikey",
+        "rate_limit_enabled"
+      ],
+      "writes": [
+        "s|colprop|public.apikey.rate_limit_enabled.default"
+      ],
+      "reads": [
+        "n|tbl|public.apikey",
+        "n|sch|public",
+        "n|col|public.apikey.rate_limit_enabled"
+      ],
+      "sqlHash": "3330971a795776c1"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "apikey",
+        "rate_limit_time_window"
+      ],
+      "writes": [
+        "s|colprop|public.apikey.rate_limit_time_window.default"
+      ],
+      "reads": [
+        "n|tbl|public.apikey",
+        "n|sch|public",
+        "n|col|public.apikey.rate_limit_time_window"
+      ],
+      "sqlHash": "dae23f999e5718d5"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "apikey",
+        "rate_limit_max"
+      ],
+      "writes": [
+        "s|colprop|public.apikey.rate_limit_max.default"
+      ],
+      "reads": [
+        "n|tbl|public.apikey",
+        "n|sch|public",
+        "n|col|public.apikey.rate_limit_max"
+      ],
+      "sqlHash": "b86a23bddc56a1c1"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "apikey",
+        "request_count"
+      ],
+      "writes": [
+        "s|colprop|public.apikey.request_count.default"
+      ],
+      "reads": [
+        "n|tbl|public.apikey",
+        "n|sch|public",
+        "n|col|public.apikey.request_count"
+      ],
+      "sqlHash": "ba036c34257fe78d"
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "apikey",
+        "apikey_config_id_index"
+      ],
+      "writes": [
+        "s|idx|public.apikey_config_id_index",
+        "n|idx|public.apikey_config_id_index",
+        "e|idx|public.apikey_config_id_index",
+        "n|rel|public.apikey_config_id_index"
+      ],
+      "reads": [
+        "n|tbl|public.apikey",
+        "n|sch|public",
+        "n|col|public.apikey.config_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "apikey",
+        "name": "apikey_config_id_index",
+        "nameExplicit": false,
+        "columns": [
+          {
+            "value": "config_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"apikey\",\"config_id\"]",
+      "set": {
+        "default": "'default'"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"apikey\",\"enabled\"]",
+      "set": {
+        "default": "true"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"apikey\",\"rate_limit_enabled\"]",
+      "set": {
+        "default": "true"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"apikey\",\"rate_limit_time_window\"]",
+      "set": {
+        "default": "86400000"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"apikey\",\"rate_limit_max\"]",
+      "set": {
+        "default": "10"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"apikey\",\"request_count\"]",
+      "set": {
+        "default": "0"
+      }
+    }
+  ]
+}
