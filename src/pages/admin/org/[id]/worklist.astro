@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import { actions } from "astro:actions";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import CostSplit from "../../../../components/CostSplit.astro";
@@ -11,17 +12,16 @@ import {
 	buildPhaseComponents,
 	componentBillingStatus,
 } from "../../../../lib/phase-billing";
+import {
+	events,
+	phases,
+	projects as projectsTable,
+} from "../../../../lib/schema.ts";
 import { getUuidV7Date } from "../../../../lib/uuid.ts";
 
 const { id } = Astro.params;
 
 if (!id) {
-	return Astro.redirect("/admin");
-}
-
-const organization = await getAdminOrganizationCore(Astro.locals.db, id);
-
-if (!organization) {
 	return Astro.redirect("/admin");
 }
 
@@ -32,87 +32,97 @@ const actionResults = [
 const actionError = actionResults.find((result) => result?.error)?.error;
 const actionSucceeded = actionResults.some((result) => result && !result.error);
 
-const projects = await Astro.locals.db.query.projects.findMany({
-	columns: {
-		id: true,
-		publicId: true,
-		name: true,
-	},
-	with: {
-		phases: {
-			columns: {
-				id: true,
-				title: true,
-				cost: true,
-				upfrontAmount: true,
-				deliveryAmount: true,
-				acceptanceAmount: true,
-				currency: true,
-				state: true,
-				version: true,
-			},
-			with: {
-				invoices: {
-					columns: {
-						id: true,
-						component: true,
-						total: true,
-						stripeStatus: true,
-						stripeDueAt: true,
+const [organization, projects, latestPhaseEvents] = await Promise.all([
+	getAdminOrganizationCore(Astro.locals.db, id),
+	Astro.locals.db.query.projects.findMany({
+		columns: {
+			id: true,
+			publicId: true,
+			name: true,
+		},
+		with: {
+			phases: {
+				columns: {
+					id: true,
+					title: true,
+					cost: true,
+					upfrontAmount: true,
+					deliveryAmount: true,
+					acceptanceAmount: true,
+					currency: true,
+					state: true,
+					version: true,
+				},
+				with: {
+					invoices: {
+						columns: {
+							id: true,
+							component: true,
+							total: true,
+							stripeStatus: true,
+							stripeDueAt: true,
+						},
 					},
 				},
-			},
-			orderBy: {
-				id: "asc",
+				orderBy: {
+					id: "asc",
+				},
 			},
 		},
-	},
-	where: {
-		organizationId: id,
-	},
-	orderBy: {
-		name: "asc",
-	},
-});
+		where: {
+			organizationId: id,
+		},
+		orderBy: {
+			name: "asc",
+		},
+	}),
+	// Latest state-change event per phase of this organization; uuidv7 ids sort
+	// by time, so the text max is the newest. Amount and delivery edits do not
+	// reset the age.
+	Astro.locals.db
+		.select({
+			phaseId: events.aggregateId,
+			eventId: sql<string>`max(${events.id}::text)`,
+		})
+		.from(events)
+		.where(
+			and(
+				eq(events.aggregateType, "phase"),
+				inArray(
+					events.aggregateId,
+					Astro.locals.db
+						.select({ id: sql`${phases.id}::text` })
+						.from(phases)
+						.innerJoin(projectsTable, eq(phases.projectId, projectsTable.id))
+						.where(eq(projectsTable.organizationId, id)),
+				),
+				inArray(events.event, [
+					"created",
+					"planned",
+					"approved",
+					"approved_on_behalf",
+					"declined",
+					"cancelled",
+					"started",
+					"delivered",
+					"accepted",
+					"accepted_on_behalf",
+				]),
+			),
+		)
+		.groupBy(events.aggregateId),
+]);
+
+if (!organization) {
+	return Astro.redirect("/admin");
+}
+
+const latestPhaseEventIds = new Map(
+	latestPhaseEvents.map((row) => [row.phaseId, row.eventId]),
+);
 const allPhases = projects.flatMap((project) =>
 	project.phases.map((phase) => ({ ...phase, project })),
 );
-const phaseIds = allPhases.map((phase) => phase.id);
-const phaseEvents =
-	phaseIds.length > 0
-		? await Astro.locals.db.query.events.findMany({
-				columns: { id: true, aggregateId: true },
-				where: {
-					aggregateType: "phase",
-					aggregateId: { in: phaseIds },
-					// Only state changes reset the age; amount and delivery edits do not.
-					event: {
-						in: [
-							"created",
-							"planned",
-							"approved",
-							"approved_on_behalf",
-							"declined",
-							"cancelled",
-							"started",
-							"delivered",
-							"accepted",
-							"accepted_on_behalf",
-						],
-					},
-				},
-			})
-		: [];
-const latestPhaseEventIds = new Map<string, string>();
-
-for (const event of phaseEvents) {
-	const current = latestPhaseEventIds.get(event.aggregateId);
-
-	if (!current || event.id > current) {
-		latestPhaseEventIds.set(event.aggregateId, event.id);
-	}
-}
-
 const now = new Date();
 const daysInPhaseState = (phaseId: string) => {
 	const date = getUuidV7Date(latestPhaseEventIds.get(phaseId) ?? phaseId);
