@@ -781,6 +781,22 @@ export const recordInvoice = async (
 			deliveryAmount: true,
 			acceptanceAmount: true,
 		},
+		with: {
+			invoices: {
+				columns: {
+					id: true,
+					publicId: true,
+					phaseId: true,
+					component: true,
+					invoiceNumber: true,
+					stripeId: true,
+					stripePaymentPage: true,
+					currency: true,
+					total: true,
+				},
+				where: { component: input.component },
+			},
+		},
 		where: { id: input.phaseId },
 	});
 
@@ -792,20 +808,7 @@ export const recordInvoice = async (
 		throw new DomainError("Validation", "This component is not priced.");
 	}
 
-	const invoice = await db.query.invoices.findFirst({
-		columns: {
-			id: true,
-			publicId: true,
-			phaseId: true,
-			component: true,
-			invoiceNumber: true,
-			stripeId: true,
-			stripePaymentPage: true,
-			currency: true,
-			total: true,
-		},
-		where: { phaseId: phase.id, component: input.component },
-	});
+	const [invoice] = phase.invoices;
 
 	const invoiceMatches = (
 		phaseRow: { id: string; currency: string },
@@ -859,7 +862,7 @@ export const recordInvoice = async (
 		const [lockedPhase] = await tx
 			.select({
 				id: phases.id,
-				projectId: phases.projectId,
+				organizationId: projects.organizationId,
 				currency: phases.currency,
 				state: phases.state,
 				version: phases.version,
@@ -868,8 +871,9 @@ export const recordInvoice = async (
 				acceptanceAmount: phases.acceptanceAmount,
 			})
 			.from(phases)
+			.innerJoin(projects, eq(phases.projectId, projects.id))
 			.where(eq(phases.id, input.phaseId))
-			.for("update");
+			.for("update", { of: phases });
 
 		if (!lockedPhase) {
 			throw new DomainError("NotFound", "Phase not found.");
@@ -925,20 +929,11 @@ export const recordInvoice = async (
 			);
 		}
 
-		const project = await tx.query.projects.findFirst({
-			columns: { organizationId: true },
-			where: { id: lockedPhase.projectId },
-		});
-
-		if (!project) {
-			throw new DomainError("NotFound", "Project not found.");
-		}
-
 		const rows = await tx
 			.insert(invoices)
 			.values({
 				publicId: crypto.randomUUID(),
-				organizationId: project.organizationId,
+				organizationId: lockedPhase.organizationId,
 				phaseId: lockedPhase.id,
 				component: input.component,
 				invoiceNumber: input.invoiceNumber.trim(),
@@ -982,7 +977,7 @@ export const attachInvoiceToPhase = async (
 		const [phase] = await tx
 			.select({
 				id: phases.id,
-				projectId: phases.projectId,
+				organizationId: projects.organizationId,
 				currency: phases.currency,
 				state: phases.state,
 				version: phases.version,
@@ -991,8 +986,9 @@ export const attachInvoiceToPhase = async (
 				acceptanceAmount: phases.acceptanceAmount,
 			})
 			.from(phases)
+			.innerJoin(projects, eq(phases.projectId, projects.id))
 			.where(eq(phases.id, input.phaseId))
-			.for("update");
+			.for("update", { of: phases });
 
 		if (!phase) {
 			throw new DomainError("NotFound", "Phase not found.");
@@ -1050,16 +1046,7 @@ export const attachInvoiceToPhase = async (
 			);
 		}
 
-		const project = await tx.query.projects.findFirst({
-			columns: { organizationId: true },
-			where: { id: phase.projectId },
-		});
-
-		if (!project) {
-			throw new DomainError("NotFound", "Project not found.");
-		}
-
-		if (project.organizationId !== invoice.organizationId) {
+		if (phase.organizationId !== invoice.organizationId) {
 			throw new DomainError(
 				"Validation",
 				"Phase belongs to a different organization.",
