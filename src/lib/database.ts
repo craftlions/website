@@ -2,7 +2,10 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { relations } from "./relations.ts";
 
 export function createDb(env: Cloudflare.Env) {
-	return drizzle(env.HYPERDRIVE.connectionString, {
+	return drizzle({
+		// Workers allow six concurrent outbound sockets; one shared pool of five
+		// leaves headroom for fetch() while page reads run in parallel.
+		connection: { connectionString: env.HYPERDRIVE.connectionString, max: 5 },
 		relations: relations,
 	});
 }

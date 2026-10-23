@@ -1,12 +1,12 @@
+import type { Db } from "./database.ts";
 import { apiKey } from "@better-auth/api-key";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { dash } from "@better-auth/infra";
 import { betterAuth } from "better-auth/minimal";
 import { admin, oAuthProxy, organization } from "better-auth/plugins";
-import { createDb } from "./database.ts";
 import * as schema from "./schema.ts";
 
-export function createAuth(env: Cloudflare.Env) {
+export function createAuth(env: Cloudflare.Env, db: Db) {
 	return betterAuth({
 		socialProviders: {
 			github: {
@@ -38,7 +38,7 @@ export function createAuth(env: Cloudflare.Env) {
 			allowedHosts: ["craftlions.com", "*.craftlions.com", "localhost:*"],
 			protocol: "auto",
 		},
-		database: drizzleAdapter(createDb(env), {
+		database: drizzleAdapter(db, {
 			provider: "pg",
 			schema,
 			transaction: true,

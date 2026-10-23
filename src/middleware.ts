@@ -8,7 +8,7 @@ const actionResultSessionKey = "action-result";
 
 export const onRequest = defineMiddleware(async (context, next) => {
 	context.locals.db = createDb(env);
-	context.locals.auth = createAuth(env);
+	context.locals.auth = createAuth(env, context.locals.db);
 
 	const pathname = context.url.pathname;
 	const matches = (path: string) =>
