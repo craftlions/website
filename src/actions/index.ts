@@ -1,4 +1,3 @@
-import type { Auth } from "../lib/auth.ts";
 import { ActionError, defineAction } from "astro:actions";
 import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
@@ -30,8 +29,19 @@ import {
 import { DomainError } from "../lib/domain.ts";
 import { importStripeInvoices, refreshStripeInvoice } from "../lib/stripe.ts";
 
-const assertAdmin = async (headers: Headers, auth: Auth) => {
-	const session = await auth.api.getSession({ headers });
+type ActionContext = Parameters<
+	Parameters<typeof defineAction>[0]["handler"]
+>[1];
+
+// Form actions run inside the middleware, which already loaded the session for
+// /admin and /dash pages; only RPC calls need their own session read.
+const getSession = async (context: ActionContext) =>
+	context.locals.session === undefined
+		? context.locals.auth.api.getSession({ headers: context.request.headers })
+		: context.locals.session;
+
+const assertAdmin = async (context: ActionContext) => {
+	const session = await getSession(context);
 
 	if (!session) {
 		throw new ActionError({
@@ -82,18 +92,12 @@ const adminHandler =
 	<TInput, TResult>(
 		handler: (
 			input: TInput,
-			context: Parameters<Parameters<typeof defineAction>[0]["handler"]>[1],
+			context: ActionContext,
 			actorId: string,
 		) => Promise<TResult>,
 	) =>
-	async (
-		input: TInput,
-		context: Parameters<Parameters<typeof defineAction>[0]["handler"]>[1],
-	) => {
-		const session = await assertAdmin(
-			context.request.headers,
-			context.locals.auth,
-		);
+	async (input: TInput, context: ActionContext) => {
+		const session = await assertAdmin(context);
 
 		try {
 			return await handler(input, context, session.user.id);
@@ -106,11 +110,9 @@ const clientPhaseHandler = async (
 	phasePublicId: string,
 	event: "approved" | "declined" | "accepted",
 	expectedVersion: number,
-	context: Parameters<Parameters<typeof defineAction>[0]["handler"]>[1],
+	context: ActionContext,
 ) => {
-	const session = await context.locals.auth.api.getSession({
-		headers: context.request.headers,
-	});
+	const session = await getSession(context);
 
 	if (!session) {
 		throw new ActionError({
