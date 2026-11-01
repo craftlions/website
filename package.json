@@ -7,15 +7,14 @@
     "biome": "biome",
     "build": "astro build",
     "check": "tsc --noEmit --runExternalCode",
-    "deploy": "astro build && wrangler deploy",
+    "deploy": "astro build && cf deploy --prebuilt",
     "dev": "astro dev",
     "preview": "astro build && astro preview",
-    "preview:wrangler": "astro build && wrangler dev",
-    "types": "wrangler types --include-runtime --include-env --strict-vars",
-    "cf-check": "wrangler types --include-runtime --include-env --strict-vars --check"
+    "types": "cf workers types --include-runtime",
+    "cf-check": "cf workers types --include-runtime && git diff --exit-code -- .cloudflare/types"
   },
   "devDependencies": {
-    "@astrojs/cloudflare": "14.4.3",
+    "@astrojs/cloudflare": "15.0.0-beta.4",
     "@astrojs/compiler-rs": "0.5.2",
     "@astrojs/markdown-satteri": "0.4.6",
     "@astrojs/sitemap": "3.7.4",
@@ -24,7 +23,7 @@
     "@better-auth/drizzle-adapter": "1.7.15",
     "@better-auth/infra": "0.4.25",
     "@biomejs/biome": "2.6.4",
-    "@cloudflare/vite-plugin": "1.66.0",
+    "@cloudflare/vite-plugin": "2.0.0-beta.v.8",
     "@drizzle-team/minipg": "0.4.2",
     "@octokit/request": "10.0.16",
     "@octokit/rest": "22.0.1",
@@ -36,14 +35,14 @@
     "auth": "1.7.15",
     "better-auth": "1.7.15",
     "browserslist": "4.29.5",
+    "cf": "1.0.0-beta.26",
     "drizzle-kit": "1.0.0-rc.5",
     "drizzle-orm": "1.0.0-rc.5",
     "lightningcss": "1.33.0",
     "tailwindcss": "4.3.3",
     "typescript": "7.1.0-beta",
     "update-browserslist-db": "1.3.4",
-    "vite": "8.3.5",
-    "wrangler": "4.155.0"
+    "vite": "8.3.5"
   },
   "overrides": {
     "@better-auth/utils": "0.5.1",

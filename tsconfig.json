@@ -1,11 +1,11 @@
 {
   "extends": "astro/tsconfigs/strictest",
   "compilerOptions": {
-    "types": ["./worker-configuration.d.ts", "node"],
+    "types": ["./.cloudflare/types/index.d.ts", "node"],
     "allowImportingTsExtensions": true
   },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", ".wrangler"],
+  "exclude": ["dist", ".cloudflare/output", ".cloudflare/state", ".wrangler"],
   "contentMappers": [
     {
       "package": "@astrojs/ts-content-mapper",
