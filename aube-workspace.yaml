@@ -10,12 +10,16 @@ jailBuilds: true
 trustPolicy: no-downgrade
 minimumReleaseAgeStrict: true
 minimumReleaseAgeExclude:
+  - "@astrojs/cloudflare"
   - "@better-auth/*"
+  - "@cloudflare/*"
   - "@drizzle-team/minipg"
   - auth
   - better-auth
+  - cf
   - drizzle-kit
   - drizzle-orm
+  - miniflare
 strictStoreIntegrity: true
 advisoryCheck: required
 advisoryCheckOnInstall: required
