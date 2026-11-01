@@ -9,7 +9,7 @@
   "files": {
     "includes": [
       "**",
-      "!**/worker-configuration.d.ts",
+      "!**/.cloudflare",
       "!**/drizzle",
       "!**/.agents",
       "!**/.claude"

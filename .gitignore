@@ -16,6 +16,8 @@ node_modules/
 .DS_Store
 
 # cloudflare
+.cloudflare/*
+!.cloudflare/types/
 .wrangler
 
 auth-schema.ts
