@@ -5,5 +5,11 @@
     "allowImportingTsExtensions": true
   },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", ".wrangler"]
+  "exclude": ["dist", ".wrangler"],
+  "contentMappers": [
+    {
+      "package": "@astrojs/ts-content-mapper",
+      "extensions": [".astro"]
+    }
+  ]
 }
