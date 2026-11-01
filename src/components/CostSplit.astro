@@ -91,7 +91,9 @@ const accessibleSummary =
 			))}
 		</ul>
 		{caption && (
-			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">{caption}</p>
+			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
+				{caption}
+			</p>
 		)}
 		{items.length === 1 && !caption && (
 			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
@@ -120,7 +122,8 @@ const accessibleSummary =
 						<span class="text-xs tabular-nums text-neutral-700 dark:text-neutral-300">
 							{formatter.format(item.amount)}
 							<span class="text-neutral-500 dark:text-neutral-400">
-								{" "}· {share(item.amount)}
+								{" "}
+								· {share(item.amount)}
 							</span>
 						</span>
 					</span>
@@ -135,7 +138,9 @@ const accessibleSummary =
 			))}
 		</ul>
 		{caption ? (
-			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">{caption}</p>
+			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
+				{caption}
+			</p>
 		) : items.length === 1 ? (
 			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
 				Single payment {dueHint[items[0]?.component ?? "acceptance"]} ·{" "}

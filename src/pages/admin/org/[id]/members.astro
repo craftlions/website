@@ -58,7 +58,11 @@ if (!organization) {
 	activePage="members"
 	showSuccess={actionSucceeded}
 >
-	{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
+	{actionError && (
+		<p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">
+			{actionError.message}
+		</p>
+	)}
 	<section class="grid gap-6" aria-labelledby="members-heading">
 		<div class="grid gap-3">
 			<h2
@@ -105,28 +109,50 @@ if (!organization) {
 		<div
 			class="grid border border-dashed border-neutral-300 dark:border-neutral-700"
 		>
-			{members.length > 0 ? members.map((member) => (
-				<article class="grid gap-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[1fr_auto] md:items-center">
-					<div class="grid gap-1">
-						<h3 class="font-medium">{member.user.name}</h3>
-						<p class="text-sm text-neutral-600 wrap-break-word dark:text-neutral-400">{member.user.email} · {member.role}</p>
-					</div>
-					<div class="grid justify-start gap-2 sm:grid-flow-col">
-						{member.user.lastActiveAt && (
-							<impersonate-user
-								data-user-id={member.userId}
-								data-organization-slug={organization.slug}
-							>
-								<Button type="button">Impersonate</Button>
-							</impersonate-user>
-						)}
-						<form method="POST" action={actions.resendWelcomeMail}><input type="hidden" name="email" value={member.user.email} /><Button type="submit">Resend</Button></form>
-						<form method="POST" action={actions.removeOrganizationMember}><input type="hidden" name="organizationId" value={organization.id} /><input type="hidden" name="memberId" value={member.id} /><Button type="submit">Remove member</Button></form>
-						{!member.user.lastActiveAt && <form method="POST" action={actions.removeNeverLoggedInUser}><input type="hidden" name="userId" value={member.userId} /><Button type="submit">Remove user</Button></form>}
-					</div>
-				</article>
-			)) : (
-				<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400">No members.</p>
+			{members.length > 0 ? (
+				members.map((member) => (
+					<article class="grid gap-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[1fr_auto] md:items-center">
+						<div class="grid gap-1">
+							<h3 class="font-medium">{member.user.name}</h3>
+							<p class="text-sm text-neutral-600 wrap-break-word dark:text-neutral-400">
+								{member.user.email} · {member.role}
+							</p>
+						</div>
+						<div class="grid justify-start gap-2 sm:grid-flow-col">
+							{member.user.lastActiveAt && (
+								<impersonate-user
+									data-user-id={member.userId}
+									data-organization-slug={organization.slug}
+								>
+									<Button type="button">Impersonate</Button>
+								</impersonate-user>
+							)}
+							<form method="POST" action={actions.resendWelcomeMail}>
+								<input type="hidden" name="email" value={member.user.email} />
+								<Button type="submit">Resend</Button>
+							</form>
+							<form method="POST" action={actions.removeOrganizationMember}>
+								<input
+									type="hidden"
+									name="organizationId"
+									value={organization.id}
+								/>
+								<input type="hidden" name="memberId" value={member.id} />
+								<Button type="submit">Remove member</Button>
+							</form>
+							{!member.user.lastActiveAt && (
+								<form method="POST" action={actions.removeNeverLoggedInUser}>
+									<input type="hidden" name="userId" value={member.userId} />
+									<Button type="submit">Remove user</Button>
+								</form>
+							)}
+						</div>
+					</article>
+				))
+			) : (
+				<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400">
+					No members.
+				</p>
 			)}
 		</div>
 	</section>

@@ -92,17 +92,17 @@ const entries: {
 
 				<ol class="grid" aria-label="Website update timeline">
 					{entries.map((entry, index) => (
-							<ChangelogEntry
-								date={entry.date}
-								datetime={entry.datetime}
-								title={entry.title}
-								kind={entry.kind}
-								summary={entry.summary}
-								points={entry.points ?? []}
-								first={index === 0}
-								last={index === entries.length - 1}
-							/>
-						))}
+						<ChangelogEntry
+							date={entry.date}
+							datetime={entry.datetime}
+							title={entry.title}
+							kind={entry.kind}
+							summary={entry.summary}
+							points={entry.points ?? []}
+							first={index === 0}
+							last={index === entries.length - 1}
+						/>
+					))}
 				</ol>
 			</main>
 			<Footer />

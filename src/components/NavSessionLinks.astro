@@ -13,41 +13,31 @@ const session =
 <li>
 	<ul class="grid grid-flow-col auto-cols-max items-center gap-2">
 		{session ? (
-				<>
-					<li>
-						<Button href="/dash">
-							Dashboard
-						</Button>
-					</li>
-					<li>
-						<Button href="/settings/profile">
-							Profile
-						</Button>
-					</li>
-					<li>
-						<Button href="/settings/api">
-							API Keys
-						</Button>
-					</li>
-					{session.user.role === "admin" && (
-							<li>
-								<Button href="/admin">
-									Admin
-								</Button>
-							</li>
-					)}
-					{!session.session.impersonatedBy && (
-							<li>
-								<LogoutButton />
-							</li>
-					)}
-				</>
-			) : (
+			<>
 				<li>
-					<Button href="/login">
-						Login
-					</Button>
+					<Button href="/dash">Dashboard</Button>
 				</li>
-			)}
+				<li>
+					<Button href="/settings/profile">Profile</Button>
+				</li>
+				<li>
+					<Button href="/settings/api">API Keys</Button>
+				</li>
+				{session.user.role === "admin" && (
+					<li>
+						<Button href="/admin">Admin</Button>
+					</li>
+				)}
+				{!session.session.impersonatedBy && (
+					<li>
+						<LogoutButton />
+					</li>
+				)}
+			</>
+		) : (
+			<li>
+				<Button href="/login">Login</Button>
+			</li>
+		)}
 	</ul>
 </li>

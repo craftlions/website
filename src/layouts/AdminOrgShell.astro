@@ -93,7 +93,9 @@ const pages = [
 							]}
 							href={page.href}
 							aria-current={activePage === page.id ? "page" : undefined}
-						>{page.label}</a>
+						>
+							{page.label}
+						</a>
 					))}
 				</nav>
 			</header>
@@ -102,7 +104,9 @@ const pages = [
 					data-success-toast
 					role="status"
 					class="border border-dashed border-neutral-300 p-3 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
-				>Saved.</p>
+				>
+					Saved.
+				</p>
 			)}
 			<slot />
 		</main>

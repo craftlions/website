@@ -18,11 +18,11 @@ Lifecycle and events:
 5. `phase_state`: submitted → planned → approved → in_progress → delivered → accepted, plus cancelled; `invoiced`/`paid` removed.
 6. Due triggers:
 
-| Component | Due when |
-|---|---|
-| upfront | phase reaches `approved` |
-| delivery | delivery recorded (`url` or `none`) — transitions to `delivered` |
-| acceptance | acceptance recorded — transitions to `accepted` |
+| Component  | Due when                                                         |
+| ---------- | ---------------------------------------------------------------- |
+| upfront    | phase reaches `approved`                                         |
+| delivery   | delivery recorded (`url` or `none`) — transitions to `delivered` |
+| acceptance | acceptance recorded — transitions to `accepted`                  |
 
 7. Delivery recording requires no invoice — its own mutation, split out of invoice recording.
 8. Acceptance recordable by the client in the portal and by an admin on their behalf.
@@ -56,19 +56,19 @@ Migration:
 
 **Acceptance criteria**
 
-| # | Proves | Verification | Check |
-|---|---|---|---|
-| 1 | R2 | test | components summing ≠ cost rejected at DB |
-| 2 | R3 | test | amount edit rejected on approved phase, accepted on planned |
-| 3 | R5, R6 | test | invalid tail transitions rejected; delivery → `delivered`, acceptance → `accepted` |
-| 4 | R7 | manual | delivery recorded with no invoice fields; phase `delivered`, no invoice exists |
-| 5 | R8 | manual | portal accept and admin accept both yield `accepted` |
-| 6 | R9 | test | second invoice for same (phase, component) rejected |
-| 7 | R10 | test | invoice for un-due component rejected |
-| 8 | R11 | test | component reads due → invoiced → paid across event, tagging, Stripe paid fetch |
-| 9 | R12 | manual | divergent total shows warning, recording still succeeds |
-| 10 | R4 | manual | entering 30% fills 30% of `cost` as the amount |
-| 11 | R15 | manual | in-progress phase with unpaid upfront flagged on worklist |
-| 12 | R16, R13 | manual | no mail at delivery; reminder after 7 pending days; none after acceptance or cancellation |
-| 13 | R17 | test | legacy paid phase reads `accepted`, cost on acceptance, invoice tagged acceptance |
-| 14 | R14 | manual | portal phase shows breakdown with per-component statuses |
+| #   | Proves   | Verification | Check                                                                                     |
+| --- | -------- | ------------ | ----------------------------------------------------------------------------------------- |
+| 1   | R2       | test         | components summing ≠ cost rejected at DB                                                  |
+| 2   | R3       | test         | amount edit rejected on approved phase, accepted on planned                               |
+| 3   | R5, R6   | test         | invalid tail transitions rejected; delivery → `delivered`, acceptance → `accepted`        |
+| 4   | R7       | manual       | delivery recorded with no invoice fields; phase `delivered`, no invoice exists            |
+| 5   | R8       | manual       | portal accept and admin accept both yield `accepted`                                      |
+| 6   | R9       | test         | second invoice for same (phase, component) rejected                                       |
+| 7   | R10      | test         | invoice for un-due component rejected                                                     |
+| 8   | R11      | test         | component reads due → invoiced → paid across event, tagging, Stripe paid fetch            |
+| 9   | R12      | manual       | divergent total shows warning, recording still succeeds                                   |
+| 10  | R4       | manual       | entering 30% fills 30% of `cost` as the amount                                            |
+| 11  | R15      | manual       | in-progress phase with unpaid upfront flagged on worklist                                 |
+| 12  | R16, R13 | manual       | no mail at delivery; reminder after 7 pending days; none after acceptance or cancellation |
+| 13  | R17      | test         | legacy paid phase reads `accepted`, cost on acceptance, invoice tagged acceptance         |
+| 14  | R14      | manual       | portal phase shows breakdown with per-component statuses                                  |

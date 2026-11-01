@@ -84,7 +84,11 @@ if (!organization) {
 	activePage="settings"
 	showSuccess={actionSucceeded}
 >
-	{actionError && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionError.message}</p>}
+	{actionError && (
+		<p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">
+			{actionError.message}
+		</p>
+	)}
 	<section class="grid gap-6" aria-labelledby="settings-heading">
 		<div class="grid gap-3">
 			<h2
@@ -155,7 +159,8 @@ if (!organization) {
 			<h3 class="font-semibold">Offboarding</h3>
 			<p class="text-sm text-neutral-600 dark:text-neutral-400"
 				>{organization.unarchivedProjectCount}
-				projects not yet archived, {organization.memberCount} members remaining.</p
+				projects not yet archived, {organization.memberCount} members
+				remaining.</p
 			>
 			<div class="grid grid-flow-col justify-start gap-2">
 				<Button href={`/admin/org/${organization.id}/projects`}
@@ -165,9 +170,20 @@ if (!organization) {
 			</div>
 		</section>
 		{organization.projectCount === 0 && (
-			<form method="POST" action={actions.hardDeleteOrganization} class="grid gap-3 border border-dashed border-red-300 p-4 dark:border-red-700">
+			<form
+				method="POST"
+				action={actions.hardDeleteOrganization}
+				class="grid gap-3 border border-dashed border-red-300 p-4 dark:border-red-700"
+			>
 				<input type="hidden" name="organizationId" value={organization.id} />
-				<label class="grid gap-1 text-sm"><span class="font-medium">Type {organization.name} to delete</span><input class="border border-dashed border-red-300 bg-transparent px-3 py-2 dark:border-red-700" name="confirmation" required /></label>
+				<label class="grid gap-1 text-sm">
+					<span class="font-medium">Type {organization.name} to delete</span>
+					<input
+						class="border border-dashed border-red-300 bg-transparent px-3 py-2 dark:border-red-700"
+						name="confirmation"
+						required
+					/>
+				</label>
 				<Button type="submit">Delete organization</Button>
 			</form>
 		)}

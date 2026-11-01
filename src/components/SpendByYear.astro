@@ -117,33 +117,25 @@ const hasNegativeSpend = bars.some((bar) =>
 	</h2>
 
 	{rows.length === 0 ? (
-		<p
-			class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
-		>
+		<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
 			No invoices yet.
 		</p>
 	) : validRows.length === 0 ? (
-		<p
-			class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300"
-		>
+		<p class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300">
 			Invoice spend could not be summarized. Please reload the page and try
 			again.
 		</p>
 	) : (
 		<>
 			{validRows.length < rows.length && (
-				<p
-					class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300"
-				>
+				<p class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300">
 					Some invoice amounts could not be included. Please reload the page; if
 					the problem persists, contact craftlions.
 				</p>
 			)}
 
 			{hasNegativeSpend ? (
-				<p
-					class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
-				>
+				<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
 					The chart cannot represent negative invoice adjustments. See the
 					invoice list for the complete breakdown.
 				</p>
@@ -152,100 +144,97 @@ const hasNegativeSpend = bars.some((bar) =>
 					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
 					data-spend-chart
 				>
-				<div class="grid gap-1 overflow-x-auto" dir="rtl">
-					<div
-						class="grid w-full min-w-max gap-2"
-						dir="ltr"
-						style={`grid-template-columns: repeat(${bars.length}, minmax(6.5rem, 1fr))`}
-					>
-						{bars.map((bar) => {
-							const reversed = bar.segments
-								.filter((segment) => segment.total > 0)
-								.reverse();
-							return (
-								<div class="grid min-w-0">
-									<div
-										class="grid h-36 items-end border-b border-dashed border-neutral-300 dark:border-neutral-700"
-									>
-										<div
-											class="grid gap-px"
-											style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total / bar.total}fr`).join(" ")}`}
-											aria-hidden="true"
-										>
-											{reversed.map((segment) => (
-												<div
-													class:list={[
-														"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[transform,filter,opacity] duration-150 hover:scale-y-105",
-														segment.mark,
-													]}
-													data-project={segment.id}
-													data-amount={currencyFormatter.format(segment.total)}
-													data-year={bar.year}
-												/>
-											))}
+					<div class="grid gap-1 overflow-x-auto" dir="rtl">
+						<div
+							class="grid w-full min-w-max gap-2"
+							dir="ltr"
+							style={`grid-template-columns: repeat(${bars.length}, minmax(6.5rem, 1fr))`}
+						>
+							{bars.map((bar) => {
+								const reversed = bar.segments
+									.filter((segment) => segment.total > 0)
+									.reverse();
+								return (
+									<div class="grid min-w-0">
+										<div class="grid h-36 items-end border-b border-dashed border-neutral-300 dark:border-neutral-700">
+											<div
+												class="grid gap-px"
+												style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total / bar.total}fr`).join(" ")}`}
+												aria-hidden="true"
+											>
+												{reversed.map((segment) => (
+													<div
+														class:list={[
+															"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[transform,filter,opacity] duration-150 hover:scale-y-105",
+															segment.mark,
+														]}
+														data-project={segment.id}
+														data-amount={currencyFormatter.format(
+															segment.total,
+														)}
+														data-year={bar.year}
+													/>
+												))}
+											</div>
+										</div>
+										<div class="grid gap-0.5 pt-1 text-center">
+											<span
+												class:list={[
+													"whitespace-nowrap text-sm font-medium tabular-nums",
+													bar.year === currentYear &&
+														"underline decoration-dashed decoration-neutral-400 underline-offset-4 dark:decoration-neutral-600",
+												]}
+											>
+												{currencyFormatter.format(bar.total)}
+											</span>
+											<span class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+												{bar.year}
+												{bar.year === currentYear && (
+													<span class="sr-only"> (current year)</span>
+												)}
+											</span>
 										</div>
 									</div>
-									<div class="grid gap-0.5 pt-1 text-center">
-										<span
-										class:list={[
-											"whitespace-nowrap text-sm font-medium tabular-nums",
-											bar.year === currentYear &&
-												"underline decoration-dashed decoration-neutral-400 underline-offset-4 dark:decoration-neutral-600",
-										]}
-										>
-											{currencyFormatter.format(bar.total)}
-										</span>
-										<span
-											class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-										>
-											{bar.year}
-											{bar.year === currentYear && (
-												<span class="sr-only"> (current year)</span>
-											)}
-										</span>
-									</div>
-								</div>
-							);
-						})}
+								);
+							})}
+						</div>
 					</div>
-				</div>
 
-				<ul
-					aria-label="Spend by project"
-					class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,9rem),1fr))] gap-x-4 gap-y-2 text-sm"
-				>
-					{projectKeys.map((project) => (
-						<li
-							class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-sm px-1 py-0.5 transition-[background-color,opacity] duration-150 hover:bg-neutral-100 dark:hover:bg-neutral-900"
-							data-project={project.id}
-							data-amount={currencyFormatter.format(project.total)}
-						>
-							<span
-								aria-hidden="true"
-								class:list={[
-									"size-3 border border-dashed border-current bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-transform duration-150 group-hover:scale-110",
-									project.mark,
-								]}
-							/>
-							<span class="min-w-0 wrap-break-word" dir="auto"
-								>{project.name}</span
+					<ul
+						aria-label="Spend by project"
+						class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,9rem),1fr))] gap-x-4 gap-y-2 text-sm"
+					>
+						{projectKeys.map((project) => (
+							<li
+								class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-sm px-1 py-0.5 transition-[background-color,opacity] duration-150 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+								data-project={project.id}
+								data-amount={currencyFormatter.format(project.total)}
 							>
-							<span
-								class="whitespace-nowrap text-xs tabular-nums text-neutral-500 dark:text-neutral-400"
-								data-legend-amount
-								hidden
-							/>
-						</li>
-					))}
-				</ul>
-				{hasCondensedYears && (
-					<p class="text-xs text-neutral-500 dark:text-neutral-400">
-						Long gaps between invoice years are condensed.
-					</p>
-				)}
+								<span
+									aria-hidden="true"
+									class:list={[
+										"size-3 border border-dashed border-current bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-transform duration-150 group-hover:scale-110",
+										project.mark,
+									]}
+								/>
+								<span class="min-w-0 wrap-break-word" dir="auto">
+									{project.name}
+								</span>
+								<span
+									class="whitespace-nowrap text-xs tabular-nums text-neutral-500 dark:text-neutral-400"
+									data-legend-amount
+									hidden
+								/>
+							</li>
+						))}
+					</ul>
+					{hasCondensedYears && (
+						<p class="text-xs text-neutral-500 dark:text-neutral-400">
+							Long gaps between invoice years are condensed.
+						</p>
+					)}
 				</div>
 			)}
-
 		</>
 	)}
 </section>

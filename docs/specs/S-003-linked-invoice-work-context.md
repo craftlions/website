@@ -10,19 +10,19 @@ Build inline Work and Delivery links across client invoice rows, backed by phase
 
 1. **Phase-owned Delivery.** Each phase holds exactly one Delivery state, separate from its existing client-tracker Epic link.
 
-   | State | Meaning | Client label |
-   | --- | --- | --- |
-   | HTTPS URL | One canonical delivery PR or MR | `Open` link |
-   | No delivery | The absence of a PR or MR was explicitly confirmed | `No delivery` |
-   | Not recorded | No choice exists for legacy data | `Not recorded` |
+   | State        | Meaning                                            | Client label   |
+   | ------------ | -------------------------------------------------- | -------------- |
+   | HTTPS URL    | One canonical delivery PR or MR                    | `Open` link    |
+   | No delivery  | The absence of a PR or MR was explicitly confirmed | `No delivery`  |
+   | Not recorded | No choice exists for legacy data                   | `Not recorded` |
 
 2. **Derived invoice context.** An attached invoice derives its project, phase, and Delivery from its one phase; the invoice holds no copied work or Delivery reference.
 3. **Inline invoice links.** Every client invoice table, including the organization dashboard and project page, contains one `Work` column and one `Delivery` column.
 
-   | Invoice state | Work | Delivery |
-   | --- | --- | --- |
-   | Attached | Linked project name and linked phase title | Phase Delivery state from R1 |
-   | Unattached | `Unassigned` | `Unavailable` |
+   | Invoice state | Work                                       | Delivery                     |
+   | ------------- | ------------------------------------------ | ---------------------------- |
+   | Attached      | Linked project name and linked phase title | Phase Delivery state from R1 |
+   | Unattached    | `Unassigned`                               | `Unavailable`                |
 
 4. **Exact work navigation.** The project link opens the existing project page; the phase link opens that page at a stable fragment for the exact phase row; the targeted row is visibly highlighted in light and dark modes without motion or color-only meaning.
 5. **Phase evidence.** Every client phase row labels its existing client-tracker destination `Epic` when present and separately exposes Delivery using the states from R1.
@@ -41,14 +41,14 @@ Build inline Work and Delivery links across client invoice rows, backed by phase
 
 ## Acceptance criteria
 
-| AC | Requirement | Verification | Observable check |
-| --- | --- | --- | --- |
-| 1 | R1–R2 | Data integration test | URL, explicit no-delivery, and legacy not-recorded states round-trip on a phase; its attached invoice resolves the same project, phase, and Delivery without invoice-owned copies. |
-| 2 | R3 | Render test on both client routes | Organization and project invoice tables each show `Work` and `Delivery`; attached rows show the correct project, phase, and Delivery. |
-| 3 | R3, R9 | Render test | Unattached invoices remain visible with `Unassigned` and `Unavailable`; attached legacy invoices show `Not recorded`; payment actions remain available. |
-| 4 | R4 | Browser test | Following a phase link loads the correct project URL and fragment, places the exact phase row in view, and leaves that row visibly targeted in light and dark modes. |
-| 5 | R5, R10 | Browser test | A phase with both destinations shows distinct `Epic` and `Delivery` links; each is keyboard reachable, clearly named, and opens the correct external URL. |
-| 6 | R6, R8 | Action integration tests | Record and attach flows accept either a valid HTTPS Delivery URL or explicit no-delivery; blank, malformed, and non-HTTPS link choices show an error and create no partial invoice or phase change. |
-| 7 | R7 | Action integration test | Updating Delivery from an attached invoice admin row updates every derived client display while invoice relationship, payment fields, and lifecycle states remain unchanged. |
-| 8 | R9 | Migration test | Existing invoice-phase associations survive unchanged and every pre-existing phase without a choice resolves to `Not recorded`. |
-| 9 | R10 | Browser test | Work links navigate internally; external links expose descriptive accessible names and use safe new-context behavior. |
+| AC  | Requirement | Verification                      | Observable check                                                                                                                                                                                    |
+| --- | ----------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | R1–R2       | Data integration test             | URL, explicit no-delivery, and legacy not-recorded states round-trip on a phase; its attached invoice resolves the same project, phase, and Delivery without invoice-owned copies.                  |
+| 2   | R3          | Render test on both client routes | Organization and project invoice tables each show `Work` and `Delivery`; attached rows show the correct project, phase, and Delivery.                                                               |
+| 3   | R3, R9      | Render test                       | Unattached invoices remain visible with `Unassigned` and `Unavailable`; attached legacy invoices show `Not recorded`; payment actions remain available.                                             |
+| 4   | R4          | Browser test                      | Following a phase link loads the correct project URL and fragment, places the exact phase row in view, and leaves that row visibly targeted in light and dark modes.                                |
+| 5   | R5, R10     | Browser test                      | A phase with both destinations shows distinct `Epic` and `Delivery` links; each is keyboard reachable, clearly named, and opens the correct external URL.                                           |
+| 6   | R6, R8      | Action integration tests          | Record and attach flows accept either a valid HTTPS Delivery URL or explicit no-delivery; blank, malformed, and non-HTTPS link choices show an error and create no partial invoice or phase change. |
+| 7   | R7          | Action integration test           | Updating Delivery from an attached invoice admin row updates every derived client display while invoice relationship, payment fields, and lifecycle states remain unchanged.                        |
+| 8   | R9          | Migration test                    | Existing invoice-phase associations survive unchanged and every pre-existing phase without a choice resolves to `Not recorded`.                                                                     |
+| 9   | R10         | Browser test                      | Work links navigate internally; external links expose descriptive accessible names and use safe new-context behavior.                                                                               |
