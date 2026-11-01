@@ -35,15 +35,15 @@ const {
 		class="grid grid-flow-col auto-cols-max items-center gap-2 max-w-full overflow-x-auto justify-self-center text-sm sm:justify-self-end"
 	>
 		{deferSessionLinks ? (
-				<NavSessionLinks organizationSlug={organizationSlug} server:defer>
-					<li slot="fallback">
-						<span class="inline-grid w-max border border-dashed border-neutral-300 px-3 py-1 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
-							Loading...
-						</span>
-					</li>
-				</NavSessionLinks>
-			) : (
-				<NavSessionLinks organizationSlug={organizationSlug} />
-			)}
+			<NavSessionLinks organizationSlug={organizationSlug} server:defer>
+				<li slot="fallback">
+					<span class="inline-grid w-max border border-dashed border-neutral-300 px-3 py-1 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+						Loading...
+					</span>
+				</li>
+			</NavSessionLinks>
+		) : (
+			<NavSessionLinks organizationSlug={organizationSlug} />
+		)}
 	</ul>
 </nav>

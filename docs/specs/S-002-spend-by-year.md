@@ -27,13 +27,13 @@
 
 ## Acceptance criteria
 
-| # | Proves | Verification | Check |
-| - | ------ | ------------ | ----- |
-| 1 | R2 | manual | Record a phase invoice whose Stripe `created` is last year → `invoicedAt` = Stripe's date, id timestamp ≈ now |
-| 2 | R3, R4 | manual | Re-run import on an org with backfilled dates → every imported invoice's `invoicedAt` matches Stripe `created` |
-| 3 | R7 | manual | Void invoice → absent from its year's total, project lines, and Overview stat |
-| 4 | R6 | manual | Imported phase-less invoice counts under Unassigned in its year; phase-linked under its project |
-| 5 | R8 | manual | Org with phase-linked + imported invoices this year → Overview stat equals current-year row |
-| 6 | R5 | manual | Invoices only in 2023 and 2025 → 2024 keeps its axis slot at zero; org without invoices → empty-state line |
-| 7 | R9 | manual | Invoice list order and shown dates follow `invoicedAt`, not id time |
-| 8 | R2 (failure) | manual | Stripe unreachable during recording → StripeUnavailable error, no invoice row written |
+| #   | Proves       | Verification | Check                                                                                                          |
+| --- | ------------ | ------------ | -------------------------------------------------------------------------------------------------------------- |
+| 1   | R2           | manual       | Record a phase invoice whose Stripe `created` is last year → `invoicedAt` = Stripe's date, id timestamp ≈ now  |
+| 2   | R3, R4       | manual       | Re-run import on an org with backfilled dates → every imported invoice's `invoicedAt` matches Stripe `created` |
+| 3   | R7           | manual       | Void invoice → absent from its year's total, project lines, and Overview stat                                  |
+| 4   | R6           | manual       | Imported phase-less invoice counts under Unassigned in its year; phase-linked under its project                |
+| 5   | R8           | manual       | Org with phase-linked + imported invoices this year → Overview stat equals current-year row                    |
+| 6   | R5           | manual       | Invoices only in 2023 and 2025 → 2024 keeps its axis slot at zero; org without invoices → empty-state line     |
+| 7   | R9           | manual       | Invoice list order and shown dates follow `invoicedAt`, not id time                                            |
+| 8   | R2 (failure) | manual       | Stripe unreachable during recording → StripeUnavailable error, no invoice row written                          |

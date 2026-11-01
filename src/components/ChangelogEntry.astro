@@ -75,17 +75,17 @@ const slug = `${datetime}-${title
 		</header>
 		<p class="text-neutral-700 dark:text-neutral-300">{summary}</p>
 		{points.length > 0 && (
-				<ul class="grid gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-					{points.map((point) => (
-						<li class="grid grid-cols-[auto_1fr] items-start gap-2">
-							<span
-								class="mt-2 h-1 w-1 bg-neutral-400 dark:bg-neutral-500"
-								aria-hidden="true"
-							></span>
-							<span>{point}</span>
-						</li>
-					))}
-				</ul>
-			)}
+			<ul class="grid gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+				{points.map((point) => (
+					<li class="grid grid-cols-[auto_1fr] items-start gap-2">
+						<span
+							class="mt-2 h-1 w-1 bg-neutral-400 dark:bg-neutral-500"
+							aria-hidden="true"
+						></span>
+						<span>{point}</span>
+					</li>
+				))}
+			</ul>
+		)}
 	</article>
 </li>

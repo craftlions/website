@@ -112,7 +112,11 @@ const archivedProjects = projects.filter(
 	activePage="projects"
 	showSuccess={Boolean(actionResult && !actionResult.error)}
 >
-	{actionResult?.error && <p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">{actionResult.error.message}</p>}
+	{actionResult?.error && (
+		<p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">
+			{actionResult.error.message}
+		</p>
+	)}
 	<section class="grid gap-4" aria-labelledby="projects-heading">
 		<div class="grid grid-cols-[1fr_auto] items-center gap-3">
 			<h2
@@ -154,46 +158,76 @@ const archivedProjects = projects.filter(
 								class="grid content-start gap-3 border border-dashed border-neutral-300 p-4 transition-colors hover:border-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900"
 							>
 								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-									<h3 class="text-lg font-semibold wrap-break-word">{project.name}</h3>
-									<Badge type={project.state === "completed" ? "success" : "info"}>{project.state}</Badge>
+									<h3 class="text-lg font-semibold wrap-break-word">
+										{project.name}
+									</h3>
+									<Badge
+										type={project.state === "completed" ? "success" : "info"}
+									>
+										{project.state}
+									</Badge>
 								</div>
 								<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
 									<dt class="text-neutral-500 dark:text-neutral-400">Phases</dt>
-									<dd class="tabular-nums">{project.phases.filter((phase) => phase.state !== "cancelled").length}</dd>
+									<dd class="tabular-nums">
+										{
+											project.phases.filter(
+												(phase) => phase.state !== "cancelled",
+											).length
+										}
+									</dd>
 									<dt class="text-neutral-500 dark:text-neutral-400">Total</dt>
 									<dd class="grid gap-2">
-										{summary.splits.length > 0 ? summary.splits.map((split) => (
-											<div class="grid gap-1">
-												<p class="tabular-nums">{new Intl.NumberFormat("de-DE", { style: "currency", currency: split.currency }).format(split.total)}</p>
-												{split.items.length > 0 && (
-													<CostSplit
-														items={split.items}
-														currency={split.currency}
-														total={split.total}
-														variant="compact"
-														showStatus={false}
-													/>
-												)}
-											</div>
-										)) : "—"}
+										{summary.splits.length > 0
+											? summary.splits.map((split) => (
+													<div class="grid gap-1">
+														<p class="tabular-nums">
+															{new Intl.NumberFormat("de-DE", {
+																style: "currency",
+																currency: split.currency,
+															}).format(split.total)}
+														</p>
+														{split.items.length > 0 && (
+															<CostSplit
+																items={split.items}
+																currency={split.currency}
+																total={split.total}
+																variant="compact"
+																showStatus={false}
+															/>
+														)}
+													</div>
+												))
+											: "—"}
 									</dd>
 								</dl>
-								<p class="text-sm text-neutral-600 dark:text-neutral-400">{summary.attention || "Nothing needs attention."}</p>
+								<p class="text-sm text-neutral-600 dark:text-neutral-400">
+									{summary.attention || "Nothing needs attention."}
+								</p>
 							</a>
 						</li>
 					);
 				})}
 			</ul>
 		) : (
-			<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">No projects yet.</p>
+			<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+				No projects yet.
+			</p>
 		)}
 		{archivedProjects.length > 0 && (
 			<details class="grid gap-2">
-				<summary class="w-max cursor-pointer list-none text-sm text-neutral-500 underline decoration-dashed underline-offset-4 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100">Archived ({archivedProjects.length})</summary>
+				<summary class="w-max cursor-pointer list-none text-sm text-neutral-500 underline decoration-dashed underline-offset-4 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100">
+					Archived ({archivedProjects.length})
+				</summary>
 				<ul class="grid gap-1 text-sm">
 					{archivedProjects.map((project) => (
 						<li>
-							<a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}/projects/${project.publicId}`}>{project.name}</a>
+							<a
+								class="underline decoration-dashed underline-offset-4"
+								href={`/admin/org/${organization.id}/projects/${project.publicId}`}
+							>
+								{project.name}
+							</a>
 						</li>
 					))}
 				</ul>

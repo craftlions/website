@@ -350,7 +350,10 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 							>Overdue</dt
 						>
 						<dd
-							class:list={["tabular-nums", overdueCount > 0 && "text-red-700 dark:text-red-300"]}
+							class:list={[
+								"tabular-nums",
+								overdueCount > 0 && "text-red-700 dark:text-red-300",
+							]}
 							>{overdueCount}</dd
 						>
 					</div>
@@ -373,18 +376,35 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 				<div
 					class="grid border border-dashed border-neutral-300 dark:border-neutral-700 sm:grid-cols-[auto_1fr_max-content_max-content] sm:gap-x-6"
 				>
-					{queue.length > 0 ? queue.map((item) => (
+					{queue.length > 0 ? (
+						queue.map((item) => (
 							<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
-								<Badge type={item.priority === 0 ? "error" : item.priority === 1 ? "info" : "gray"}>{item.kind}</Badge>
+								<Badge
+									type={
+										item.priority === 0
+											? "error"
+											: item.priority === 1
+												? "info"
+												: "gray"
+									}
+								>
+									{item.kind}
+								</Badge>
 								<div class="grid gap-1">
 									<h3 class="font-medium">{item.client}</h3>
-									<p class="text-sm text-neutral-600 dark:text-neutral-400">{item.label}</p>
+									<p class="text-sm text-neutral-600 dark:text-neutral-400">
+										{item.label}
+									</p>
 								</div>
 								<div class="grid min-w-48 gap-1.5 sm:justify-items-end">
 									<div class="grid grid-flow-col items-center justify-start gap-2 sm:justify-end">
-										<p class="text-sm font-medium tabular-nums">{formatAmount(item.amount, item.currency)}</p>
+										<p class="text-sm font-medium tabular-nums">
+											{formatAmount(item.amount, item.currency)}
+										</p>
 										{item.component && componentLabel[item.component] && (
-											<Badge type="info">{componentLabel[item.component]}</Badge>
+											<Badge type="info">
+												{componentLabel[item.component]}
+											</Badge>
 										)}
 									</div>
 									{item.components.length > 0 && (
@@ -399,20 +419,25 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 													item.component === "delivery" ||
 													item.component === "acceptance"
 														? item.component
-													: null
+														: null
 												}
 											/>
 										</div>
 									)}
 								</div>
 								<div class="grid grid-flow-col items-center gap-3 sm:justify-self-end">
-									<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{item.days}d</p>
+									<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">
+										{item.days}d
+									</p>
 									<Button href={item.link}>Open</Button>
 								</div>
 							</article>
-						)) : (
-							<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-4">Nothing needs action.</p>
-						)}
+						))
+					) : (
+						<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400 sm:col-span-4">
+							Nothing needs action.
+						</p>
+					)}
 				</div>
 			</section>
 
@@ -438,60 +463,118 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 							</tr>
 						</thead>
 						<tbody>
-							{ledger.length > 0 ? ledger.map((organization) => (
-									<tr class:list={["border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700", organization.openInvoices === 0 && organization.planned === 0 && organization.submitted === 0 && "opacity-60"]}>
-										<td class="px-4 py-3 font-medium"><a class="underline decoration-dashed underline-offset-4" href={`/admin/org/${organization.id}`}>{organization.name}</a></td>
+							{ledger.length > 0 ? (
+								ledger.map((organization) => (
+									<tr
+										class:list={[
+											"border-b border-dashed border-neutral-300 last:border-b-0 dark:border-neutral-700",
+											organization.openInvoices === 0 &&
+												organization.planned === 0 &&
+												organization.submitted === 0 &&
+												"opacity-60",
+										]}
+									>
+										<td class="px-4 py-3 font-medium">
+											<a
+												class="underline decoration-dashed underline-offset-4"
+												href={`/admin/org/${organization.id}`}
+											>
+												{organization.name}
+											</a>
+										</td>
 										<td class="px-4 py-3">
 											<div class="grid grid-flow-col justify-start gap-2">
-												{organization.overdue > 0 && <Badge type="error">Overdue</Badge>}
-												{organization.submitted > 0 && <Badge type="info">To plan</Badge>}
-												{organization.planned > 0 && <Badge type="gray">Awaiting client</Badge>}
-												{organization.overdue === 0 && organization.submitted === 0 && organization.planned === 0 && <span class="text-neutral-500 dark:text-neutral-400">Quiet</span>}
+												{organization.overdue > 0 && (
+													<Badge type="error">Overdue</Badge>
+												)}
+												{organization.submitted > 0 && (
+													<Badge type="info">To plan</Badge>
+												)}
+												{organization.planned > 0 && (
+													<Badge type="gray">Awaiting client</Badge>
+												)}
+												{organization.overdue === 0 &&
+													organization.submitted === 0 &&
+													organization.planned === 0 && (
+														<span class="text-neutral-500 dark:text-neutral-400">
+															Quiet
+														</span>
+													)}
 											</div>
 										</td>
-										<td class="px-4 py-3 tabular-nums">{organization.activeProjects}/{organization.totalProjects}</td>
+										<td class="px-4 py-3 tabular-nums">
+											{organization.activeProjects}/{organization.totalProjects}
+										</td>
 										<td class="px-4 py-3">
 											{organization.budgetUsage === null ? (
-												<span class="text-neutral-500 dark:text-neutral-400">No budget</span>
+												<span class="text-neutral-500 dark:text-neutral-400">
+													No budget
+												</span>
 											) : (
 												<div class="grid gap-1">
-													<progress class:list={["h-2 w-24 appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100", organization.budgetUsage > 100 && "[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400"]} max="100" value={Math.min(organization.budgetUsage, 100)} />
-													<span class:list={["text-xs tabular-nums", organization.budgetUsage > 100 && "text-red-700 dark:text-red-300"]}>{organization.budgetUsage.toFixed(1)}%</span>
+													<progress
+														class:list={[
+															"h-2 w-24 appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
+															organization.budgetUsage > 100 &&
+																"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
+														]}
+														max="100"
+														value={Math.min(organization.budgetUsage, 100)}
+													/>
+													<span
+														class:list={[
+															"text-xs tabular-nums",
+															organization.budgetUsage > 100 &&
+																"text-red-700 dark:text-red-300",
+														]}
+													>
+														{organization.budgetUsage.toFixed(1)}%
+													</span>
 												</div>
 											)}
 										</td>
 										<td class="px-4 py-3">
 											<div class="grid justify-items-end gap-1.5">
-													<p class="tabular-nums">{currencyFormatter.format(organization.openInvoices)}</p>
-													{organization.openByPart.length > 0 && (
-														<div class="w-full min-w-40 max-w-52">
-															<CostSplit
-																items={organization.openByPart}
-																currency="EUR"
-																total={organization.openInvoices}
-																variant="compact"
-																showStatus={false}
-															/>
-														</div>
-													)}
-												</div>
-											</td>
+												<p class="tabular-nums">
+													{currencyFormatter.format(organization.openInvoices)}
+												</p>
+												{organization.openByPart.length > 0 && (
+													<div class="w-full min-w-40 max-w-52">
+														<CostSplit
+															items={organization.openByPart}
+															currency="EUR"
+															total={organization.openInvoices}
+															variant="compact"
+															showStatus={false}
+														/>
+													</div>
+												)}
+											</div>
+										</td>
 									</tr>
-								)) : (
-									<tr>
-										<td class="px-4 py-3 text-neutral-600 dark:text-neutral-400" colspan="5">No clients yet.</td>
-									</tr>
-								)}
+								))
+							) : (
+								<tr>
+									<td
+										class="px-4 py-3 text-neutral-600 dark:text-neutral-400"
+										colspan="5"
+									>
+										No clients yet.
+									</td>
+								</tr>
+							)}
 						</tbody>
 						{ledger.length > 0 && (
 							<tfoot>
-								<tr
-									class="border-t border-dashed border-neutral-300 font-semibold dark:border-neutral-700"
-								>
-									<td class="px-4 py-3" colspan="4">Outstanding</td>
+								<tr class="border-t border-dashed border-neutral-300 font-semibold dark:border-neutral-700">
+									<td class="px-4 py-3" colspan="4">
+										Outstanding
+									</td>
 									<td class="px-4 py-3">
 										<div class="grid justify-items-end gap-1.5">
-											<p class="tabular-nums">{currencyFormatter.format(outstandingTotal)}</p>
+											<p class="tabular-nums">
+												{currencyFormatter.format(outstandingTotal)}
+											</p>
 											{outstandingPartItems.length > 0 && (
 												<div class="w-full min-w-40 max-w-52">
 													<CostSplit
@@ -572,7 +655,11 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 								min="1"
 							>
 						</label>
-						{onboardResult?.error && <p class="text-sm text-red-700 dark:text-red-300 md:col-span-2">{onboardResult.error.message}</p>}
+						{onboardResult?.error && (
+							<p class="text-sm text-red-700 dark:text-red-300 md:col-span-2">
+								{onboardResult.error.message}
+							</p>
+						)}
 						<div class="grid md:col-span-2">
 							<Button type="submit">Onboard client</Button>
 						</div>

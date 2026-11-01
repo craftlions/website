@@ -371,123 +371,177 @@ const worklist: WorklistItem[] = [
 				<div
 					class="grid border border-dashed border-neutral-300 dark:border-neutral-700 md:grid-cols-[auto_1fr_max-content_max-content] md:gap-x-6"
 				>
-					{worklist.length > 0 ? worklist.map((item) => (
-						<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-4 md:grid-cols-subgrid md:items-center">
-							<Badge type={item.kind === "Overdue" ? "error" : "info"}>
-								{item.kind}
-							</Badge>
-							<div class="grid gap-1 md:place-items-start">
-								{item.phase && item.project && (
-									<h3 class="font-medium">
-										<a
-											href={`/dash/org/${slug}/project/${item.project.publicId}#phase-${item.phase.publicId}`}
-											class="underline decoration-dashed underline-offset-4"
-										>
-											{item.project.name} · {item.phase.title}
-										</a>
-									</h3>
-								)}
-								{item.invoice && (
-									<>
-										<h3 class="font-medium">Invoice {item.invoice.invoiceNumber}</h3>
-										{item.invoice.phase?.project && (
+					{worklist.length > 0 ? (
+						worklist.map((item) => (
+							<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-4 md:grid-cols-subgrid md:items-center">
+								<Badge type={item.kind === "Overdue" ? "error" : "info"}>
+									{item.kind}
+								</Badge>
+								<div class="grid gap-1 md:place-items-start">
+									{item.phase && item.project && (
+										<h3 class="font-medium">
 											<a
-												href={`/dash/org/${slug}/project/${item.invoice.phase.project.publicId}#phase-${item.invoice.phase.publicId}`}
-												class="text-sm underline decoration-dashed underline-offset-4"
+												href={`/dash/org/${slug}/project/${item.project.publicId}#phase-${item.phase.publicId}`}
+												class="underline decoration-dashed underline-offset-4"
 											>
-												{item.invoice.phase.project.name} · {item.invoice.phase.title}
+												{item.project.name} · {item.phase.title}
 											</a>
-										)}
-									</>
-								)}
-								{item.dueAt && (
-									<p class="text-sm text-neutral-600 dark:text-neutral-400">
-										Due {dateFormatter.format(item.dueAt)}
-									</p>
-								)}
-							</div>
-							<div class="grid min-w-48 gap-1.5 md:justify-items-end">
-								{item.phase && item.components ? (
-									<>
-										<p class="text-sm font-medium tabular-nums md:text-right">
-											{formatAmount(item.phase.cost, item.phase.currency)}
+										</h3>
+									)}
+									{item.invoice && (
+										<>
+											<h3 class="font-medium">
+												Invoice {item.invoice.invoiceNumber}
+											</h3>
+											{item.invoice.phase?.project && (
+												<a
+													href={`/dash/org/${slug}/project/${item.invoice.phase.project.publicId}#phase-${item.invoice.phase.publicId}`}
+													class="text-sm underline decoration-dashed underline-offset-4"
+												>
+													{item.invoice.phase.project.name} ·{" "}
+													{item.invoice.phase.title}
+												</a>
+											)}
+										</>
+									)}
+									{item.dueAt && (
+										<p class="text-sm text-neutral-600 dark:text-neutral-400">
+											Due {dateFormatter.format(item.dueAt)}
 										</p>
-										{item.components.length > 0 && (
-											<div class="w-full max-w-56">
-												<CostSplit
-													items={item.components}
-													currency={item.phase.currency}
-													total={item.phase.cost}
-													variant="compact"
-												/>
-											</div>
-											)}
-									</>
-								) : item.invoice ? (
-									<>
-										<div class="grid grid-flow-col items-center justify-start gap-2 md:justify-end">
+									)}
+								</div>
+								<div class="grid min-w-48 gap-1.5 md:justify-items-end">
+									{item.phase && item.components ? (
+										<>
 											<p class="text-sm font-medium tabular-nums md:text-right">
-												{formatAmount(item.invoice.total, item.invoice.currency)}
+												{formatAmount(item.phase.cost, item.phase.currency)}
 											</p>
-											{item.invoice.component && componentLabel[item.invoice.component] && (
-												<Badge type="info">{componentLabel[item.invoice.component]}</Badge>
+											{item.components.length > 0 && (
+												<div class="w-full max-w-56">
+													<CostSplit
+														items={item.components}
+														currency={item.phase.currency}
+														total={item.phase.cost}
+														variant="compact"
+													/>
+												</div>
 											)}
-										</div>
-										{item.invoice.phase && item.invoiceComponents && item.invoiceComponents.length > 0 && (
-											<div class="w-full max-w-56">
-												<CostSplit
-													items={item.invoiceComponents}
-													currency={item.invoice.phase.currency}
-													total={item.invoice.phase.cost}
-													variant="compact"
-													highlight={
-													item.invoice.component === "upfront" ||
-													item.invoice.component === "delivery" ||
-													item.invoice.component === "acceptance"
-														? item.invoice.component
-													: null
-												}
-												/>
+										</>
+									) : item.invoice ? (
+										<>
+											<div class="grid grid-flow-col items-center justify-start gap-2 md:justify-end">
+												<p class="text-sm font-medium tabular-nums md:text-right">
+													{formatAmount(
+														item.invoice.total,
+														item.invoice.currency,
+													)}
+												</p>
+												{item.invoice.component &&
+													componentLabel[item.invoice.component] && (
+														<Badge type="info">
+															{componentLabel[item.invoice.component]}
+														</Badge>
+													)}
 											</div>
-											)}
-									</>
-								) : null}
-							</div>
-							<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
-								{item.phase && item.project && canManagePhases && item.phase.state === "planned" && (
-									<>
-										<form method="POST" action={actions.approvePhase} data-disable-on-submit>
-											<input type="hidden" name="phaseId" value={item.phase.publicId} />
-											<input type="hidden" name="expectedVersion" value={item.phase.version} />
-											<Button type="submit">Approve</Button>
-										</form>
-										<form method="POST" action={actions.declinePhase} data-disable-on-submit>
-											<input type="hidden" name="phaseId" value={item.phase.publicId} />
-											<input type="hidden" name="expectedVersion" value={item.phase.version} />
-											<Button type="submit">Decline</Button>
-										</form>
-									</>
-								)}
-								{item.phase && canManagePhases && item.phase.state === "delivered" && (
-									<form method="POST" action={actions.acceptPhase} data-disable-on-submit>
-										<input type="hidden" name="phaseId" value={item.phase.publicId} />
-										<input type="hidden" name="expectedVersion" value={item.phase.version} />
-										<Button type="submit">Accept</Button>
-									</form>
-								)}
-								{item.invoice && (
-									<Button
-										href={item.invoice.stripePaymentPage}
-										target="_blank"
-										rel="noopener noreferrer"
-										aria-label={`Pay invoice ${item.invoice.invoiceNumber}`}
-									>
-										Pay
-									</Button>
-								)}
-							</div>
-						</article>
-					)) : (
+											{item.invoice.phase &&
+												item.invoiceComponents &&
+												item.invoiceComponents.length > 0 && (
+													<div class="w-full max-w-56">
+														<CostSplit
+															items={item.invoiceComponents}
+															currency={item.invoice.phase.currency}
+															total={item.invoice.phase.cost}
+															variant="compact"
+															highlight={
+																item.invoice.component === "upfront" ||
+																item.invoice.component === "delivery" ||
+																item.invoice.component === "acceptance"
+																	? item.invoice.component
+																	: null
+															}
+														/>
+													</div>
+												)}
+										</>
+									) : null}
+								</div>
+								<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
+									{item.phase &&
+										item.project &&
+										canManagePhases &&
+										item.phase.state === "planned" && (
+											<>
+												<form
+													method="POST"
+													action={actions.approvePhase}
+													data-disable-on-submit
+												>
+													<input
+														type="hidden"
+														name="phaseId"
+														value={item.phase.publicId}
+													/>
+													<input
+														type="hidden"
+														name="expectedVersion"
+														value={item.phase.version}
+													/>
+													<Button type="submit">Approve</Button>
+												</form>
+												<form
+													method="POST"
+													action={actions.declinePhase}
+													data-disable-on-submit
+												>
+													<input
+														type="hidden"
+														name="phaseId"
+														value={item.phase.publicId}
+													/>
+													<input
+														type="hidden"
+														name="expectedVersion"
+														value={item.phase.version}
+													/>
+													<Button type="submit">Decline</Button>
+												</form>
+											</>
+										)}
+									{item.phase &&
+										canManagePhases &&
+										item.phase.state === "delivered" && (
+											<form
+												method="POST"
+												action={actions.acceptPhase}
+												data-disable-on-submit
+											>
+												<input
+													type="hidden"
+													name="phaseId"
+													value={item.phase.publicId}
+												/>
+												<input
+													type="hidden"
+													name="expectedVersion"
+													value={item.phase.version}
+												/>
+												<Button type="submit">Accept</Button>
+											</form>
+										)}
+									{item.invoice && (
+										<Button
+											href={item.invoice.stripePaymentPage}
+											target="_blank"
+											rel="noopener noreferrer"
+											aria-label={`Pay invoice ${item.invoice.invoiceNumber}`}
+										>
+											Pay
+										</Button>
+									)}
+								</div>
+							</article>
+						))
+					) : (
 						<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400 md:col-span-4">
 							Nothing needs your attention.
 						</p>
@@ -524,7 +578,9 @@ const worklist: WorklistItem[] = [
 								>Yearly budget</dt
 							>
 							<dd class="text-xl font-semibold tabular-nums">
-								{yearlyBudget > 0 ? currencyFormatter.format(yearlyBudget) : "—"}
+								{yearlyBudget > 0
+									? currencyFormatter.format(yearlyBudget)
+									: "—"}
 							</dd>
 						</div>
 						<div
@@ -615,7 +671,9 @@ const worklist: WorklistItem[] = [
 										"text-red-700 dark:text-red-300",
 								]}
 							>
-								{yearlyBudget > 0 ? `${usagePercentage.toFixed(1)}%` : "No budget"}
+								{yearlyBudget > 0
+									? `${usagePercentage.toFixed(1)}%`
+									: "No budget"}
 							</p>
 						</div>
 						{yearlyBudget > 0 && (
@@ -664,9 +722,7 @@ const worklist: WorklistItem[] = [
 							Projects
 						</h2>
 						{completedProjectCount > 0 && (
-							<label
-								class="grid cursor-pointer grid-flow-col items-center gap-2 text-sm font-medium text-neutral-700 select-none dark:text-neutral-300"
-							>
+							<label class="grid cursor-pointer grid-flow-col items-center gap-2 text-sm font-medium text-neutral-700 select-none dark:text-neutral-300">
 								<input
 									type="checkbox"
 									class="size-4 cursor-pointer appearance-none border border-dashed border-neutral-400 bg-transparent checked:bg-neutral-900 checked:bg-[length:0.75rem] checked:bg-center checked:bg-no-repeat focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')] dark:border-neutral-600 dark:checked:bg-neutral-100 dark:focus-visible:outline-neutral-300 dark:checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')]"
@@ -728,12 +784,17 @@ const worklist: WorklistItem[] = [
 														"text-neutral-500 dark:text-neutral-400",
 												]}
 											>
-												<a href={`/dash/org/${slug}/project/${project.publicId}`} class="underline decoration-dashed underline-offset-4">{project.name}</a>
+												<a
+													href={`/dash/org/${slug}/project/${project.publicId}`}
+													class="underline decoration-dashed underline-offset-4"
+												>
+													{project.name}
+												</a>
 											</th>
 											<td class="px-4 py-3">
 												<Badge type={projectStateToBadgeType(project.state)}>
-										{project.state ?? "—"}
-									</Badge>
+													{project.state ?? "—"}
+												</Badge>
 											</td>
 											<td
 												class:list={[
@@ -758,19 +819,19 @@ const worklist: WorklistItem[] = [
 																		variant="compact"
 																		showStatus={false}
 																	/>
-																	)}
-																</div>
-															))}
+																)}
+															</div>
+														))}
 													</div>
 												) : (
 													"—"
 												)}
 											</td>
-												<td class="px-4 py-3">
-													<Button
-														href={`/dash/org/${slug}/project/${project.publicId}`}
+											<td class="px-4 py-3">
+												<Button
+													href={`/dash/org/${slug}/project/${project.publicId}`}
 													aria-label={`Details for ${project.name}`}
-													>
+												>
 													Details
 												</Button>
 											</td>
@@ -786,16 +847,17 @@ const worklist: WorklistItem[] = [
 										</td>
 									</tr>
 								)}
-								{projects.length > 0 && completedProjectCount === projects.length && (
-									<tr class="hidden group-has-[:checked]:table-row">
-										<td
-											colspan="4"
-											class="px-4 py-6 text-center text-neutral-600 dark:text-neutral-400"
-										>
-											All projects are completed and currently hidden.
-										</td>
-									</tr>
-								)}
+								{projects.length > 0 &&
+									completedProjectCount === projects.length && (
+										<tr class="hidden group-has-[:checked]:table-row">
+											<td
+												colspan="4"
+												class="px-4 py-6 text-center text-neutral-600 dark:text-neutral-400"
+											>
+												All projects are completed and currently hidden.
+											</td>
+										</tr>
+									)}
 							</tbody>
 						</table>
 					</div>

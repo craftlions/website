@@ -131,7 +131,9 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 			<div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
 				<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Est. Cost</dt>
+						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+							Est. Cost
+						</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(
 								rows
@@ -141,28 +143,63 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 						</dd>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Paid</dt>
-						<dd class="tabular-nums">{sumByCurrency(invoicesWhere(["paid"]))}</dd>
+						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+							Paid
+						</dt>
+						<dd class="tabular-nums">
+							{sumByCurrency(invoicesWhere(["paid"]))}
+						</dd>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Outstanding</dt>
-						<dd class="tabular-nums">{sumByCurrency(invoicesWhere(["open", "overdue"]))}</dd>
+						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+							Outstanding
+						</dt>
+						<dd class="tabular-nums">
+							{sumByCurrency(invoicesWhere(["open", "overdue"]))}
+						</dd>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Overdue</dt>
-						<dd class:list={["tabular-nums", hasOverdue && "text-red-700 dark:text-red-300"]}>
+						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+							Overdue
+						</dt>
+						<dd
+							class:list={[
+								"tabular-nums",
+								hasOverdue && "text-red-700 dark:text-red-300",
+							]}
+						>
 							{sumByCurrency(invoicesWhere(["overdue"]))}
 						</dd>
 					</div>
 				</dl>
-				<nav aria-label="Phase view" class="grid grid-flow-col justify-start gap-2">
-					<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-phase-view="compact" aria-pressed="true">Compact</Button>
-					<Button type="button" class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900" data-phase-view="detailed" aria-pressed="false">Detailed</Button>
+				<nav
+					aria-label="Phase view"
+					class="grid grid-flow-col justify-start gap-2"
+				>
+					<Button
+						type="button"
+						class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+						data-phase-view="compact"
+						aria-pressed="true"
+					>
+						Compact
+					</Button>
+					<Button
+						type="button"
+						class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+						data-phase-view="detailed"
+						aria-pressed="false"
+					>
+						Detailed
+					</Button>
 				</nav>
 			</div>
 
 			<div class="grid border border-dashed border-neutral-300 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] md:gap-x-6">
-				<div aria-hidden="true" class="hidden border-b border-dashed border-neutral-300 px-4 py-3 text-xs font-semibold uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400 md:col-span-5 md:grid md:grid-cols-subgrid">
+				<div
+					aria-hidden="true"
+					class="hidden border-b border-dashed border-neutral-300 px-4 py-3 text-xs font-semibold uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400 md:col-span-5 md:grid md:grid-cols-subgrid"
+				>
 					<span>Phase</span>
 					<span>State</span>
 					<span class="text-right">Billing</span>
@@ -176,11 +213,19 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							data-phase
 						>
 							<div class="grid gap-1">
-								<h3 class:list={["font-medium", phase.state === "cancelled" && "text-neutral-500 line-through dark:text-neutral-400"]}>
+								<h3
+									class:list={[
+										"font-medium",
+										phase.state === "cancelled" &&
+											"text-neutral-500 line-through dark:text-neutral-400",
+									]}
+								>
 									{phase.title}
 								</h3>
 								<p class="text-sm text-neutral-600 dark:text-neutral-400">
-									{phase.dueAt ? `Due ${dateFormatter.format(phase.dueAt)}` : "Not scheduled"}
+									{phase.dueAt
+										? `Due ${dateFormatter.format(phase.dueAt)}`
+										: "Not scheduled"}
 								</p>
 							</div>
 							<Badge type={phaseStateToBadgeType(phase.state)}>
@@ -188,10 +233,15 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							</Badge>
 							<div class="grid w-full gap-1.5 md:w-44 md:justify-items-end">
 								<p class="text-sm tabular-nums md:text-right">
-									<span class="font-medium">{formatAmount(phase.cost, phase.currency)}</span>
+									<span class="font-medium">
+										{formatAmount(phase.cost, phase.currency)}
+									</span>
 								</p>
 								{phase.parts.length > 0 && (
-									<ol aria-label="Payment progress" class="grid w-full max-w-44 auto-cols-fr grid-flow-col gap-1">
+									<ol
+										aria-label="Payment progress"
+										class="grid w-full max-w-44 auto-cols-fr grid-flow-col gap-1"
+									>
 										{phase.parts.map((part) => (
 											<li
 												title={`${part.component}: ${part.invoice?.status ?? part.status.replaceAll("_", " ")}`}
@@ -207,7 +257,9 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 												]}
 											>
 												<span class="sr-only">
-													{part.component} {part.invoice?.status ?? part.status.replaceAll("_", " ")}
+													{part.component}{" "}
+													{part.invoice?.status ??
+														part.status.replaceAll("_", " ")}
 												</span>
 											</li>
 										))}
@@ -237,22 +289,58 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							<div class="grid grid-flow-col justify-start gap-2 max-md:empty:hidden">
 								{canApprovePhases && phase.state === "planned" && (
 									<>
-										<form method="POST" action={actions.approvePhase} data-disable-on-submit>
-											<input type="hidden" name="phaseId" value={phase.publicId} />
-											<input type="hidden" name="expectedVersion" value={phase.version} />
+										<form
+											method="POST"
+											action={actions.approvePhase}
+											data-disable-on-submit
+										>
+											<input
+												type="hidden"
+												name="phaseId"
+												value={phase.publicId}
+											/>
+											<input
+												type="hidden"
+												name="expectedVersion"
+												value={phase.version}
+											/>
 											<Button type="submit">Approve</Button>
 										</form>
-										<form method="POST" action={actions.declinePhase} data-disable-on-submit>
-											<input type="hidden" name="phaseId" value={phase.publicId} />
-											<input type="hidden" name="expectedVersion" value={phase.version} />
+										<form
+											method="POST"
+											action={actions.declinePhase}
+											data-disable-on-submit
+										>
+											<input
+												type="hidden"
+												name="phaseId"
+												value={phase.publicId}
+											/>
+											<input
+												type="hidden"
+												name="expectedVersion"
+												value={phase.version}
+											/>
 											<Button type="submit">Decline</Button>
 										</form>
 									</>
 								)}
 								{canAcceptPhases && phase.state === "delivered" && (
-									<form method="POST" action={actions.acceptPhase} data-disable-on-submit>
-										<input type="hidden" name="phaseId" value={phase.publicId} />
-										<input type="hidden" name="expectedVersion" value={phase.version} />
+									<form
+										method="POST"
+										action={actions.acceptPhase}
+										data-disable-on-submit
+									>
+										<input
+											type="hidden"
+											name="phaseId"
+											value={phase.publicId}
+										/>
+										<input
+											type="hidden"
+											name="expectedVersion"
+											value={phase.version}
+										/>
 										<Button type="submit">Accept</Button>
 									</form>
 								)}
@@ -265,8 +353,17 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 								data-phase-toggle
 							>
 								Details
-								<svg aria-hidden="true" viewBox="0 0 12 12" class="size-3 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none">
-									<path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+								<svg
+									aria-hidden="true"
+									viewBox="0 0 12 12"
+									class="size-3 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
+								>
+									<path
+										d="M2.5 4.5 6 8l3.5-3.5"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="1.5"
+									/>
 								</svg>
 							</Button>
 
@@ -277,31 +374,63 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							>
 								<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
 									<div class="grid gap-1">
-										<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Epic</dt>
+										<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+											Epic
+										</dt>
 										<dd>
 											{phase.externalUrl ? (
-												<a href={phase.externalUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open Epic for ${phase.title}`} class="underline decoration-dashed underline-offset-4">Open</a>
+												<a
+													href={phase.externalUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													aria-label={`Open Epic for ${phase.title}`}
+													class="underline decoration-dashed underline-offset-4"
+												>
+													Open
+												</a>
 											) : (
-												<span class="text-neutral-500 dark:text-neutral-400">None</span>
+												<span class="text-neutral-500 dark:text-neutral-400">
+													None
+												</span>
 											)}
 										</dd>
 									</div>
 									<div class="grid gap-1">
-										<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">Delivery</dt>
+										<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+											Delivery
+										</dt>
 										<dd>
 											{phase.deliveryState === "url" && phase.deliveryUrl ? (
-												<a href={phase.deliveryUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open Delivery for ${phase.title}`} class="underline decoration-dashed underline-offset-4">Open</a>
+												<a
+													href={phase.deliveryUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													aria-label={`Open Delivery for ${phase.title}`}
+													class="underline decoration-dashed underline-offset-4"
+												>
+													Open
+												</a>
 											) : phase.deliveryState === "none" ? (
-												<span class="text-neutral-600 dark:text-neutral-400">No delivery</span>
+												<span class="text-neutral-600 dark:text-neutral-400">
+													No delivery
+												</span>
 											) : (
-												<span class="text-neutral-500 dark:text-neutral-400">Not recorded</span>
+												<span class="text-neutral-500 dark:text-neutral-400">
+													Not recorded
+												</span>
 											)}
 										</dd>
 									</div>
 								</dl>
 
-								<section class="grid gap-2" aria-labelledby={`phase-${phase.publicId}-schedule`}>
-									<h4 id={`phase-${phase.publicId}-schedule`} class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+								<section
+									class="grid gap-2"
+									aria-labelledby={`phase-${phase.publicId}-schedule`}
+								>
+									<h4
+										id={`phase-${phase.publicId}-schedule`}
+										class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+									>
 										Payment Schedule
 									</h4>
 									{phase.parts.length > 0 ? (
@@ -309,27 +438,55 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 											{phase.parts.map((part) => (
 												<li class="grid gap-y-2 border-b border-dashed border-neutral-300 p-3 text-sm last:border-b-0 dark:border-neutral-700 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
 													<div class="grid gap-0.5">
-														<p class="font-medium capitalize">{part.component}</p>
-														<p class="text-xs text-neutral-500 dark:text-neutral-400">{billedOn[part.component]}</p>
+														<p class="font-medium capitalize">
+															{part.component}
+														</p>
+														<p class="text-xs text-neutral-500 dark:text-neutral-400">
+															{billedOn[part.component]}
+														</p>
 													</div>
 													<p class="tabular-nums">
 														{formatAmount(part.amount, phase.currency)}
 														<span class="text-neutral-500 dark:text-neutral-400">
-															{" "}· {phase.cost > 0 ? percentFormatter.format(part.amount / phase.cost) : "—"}
+															{" "}
+															·{" "}
+															{phase.cost > 0
+																? percentFormatter.format(
+																		part.amount / phase.cost,
+																	)
+																: "—"}
 														</span>
 													</p>
 													<div class="grid grid-flow-col items-center justify-start gap-2">
-														{part.invoice?.status === "overdue" ? <Badge type="error">Overdue</Badge>
-															: part.invoice?.status === "open" ? <Badge type="info">Open</Badge>
-															: part.invoice?.status === "paid" ? <Badge type="success">Paid</Badge>
-															: part.invoice?.status ? <Badge type="gray">{part.invoice.status}</Badge>
-															: part.invoice ? <Badge type="info">Invoiced</Badge>
-															: part.status === "due" ? <Badge type="gray">Invoice pending</Badge>
-															: <Badge type="gray">Not due</Badge>}
-														<span class:list={["text-xs", part.invoice?.status === "overdue" ? "text-red-700 dark:text-red-300" : "text-neutral-500 dark:text-neutral-400"]}>
-															{part.invoice?.status === "paid" && part.invoice.stripePaidAt
+														{part.invoice?.status === "overdue" ? (
+															<Badge type="error">Overdue</Badge>
+														) : part.invoice?.status === "open" ? (
+															<Badge type="info">Open</Badge>
+														) : part.invoice?.status === "paid" ? (
+															<Badge type="success">Paid</Badge>
+														) : part.invoice?.status ? (
+															<Badge type="gray">{part.invoice.status}</Badge>
+														) : part.invoice ? (
+															<Badge type="info">Invoiced</Badge>
+														) : part.status === "due" ? (
+															<Badge type="gray">Invoice pending</Badge>
+														) : (
+															<Badge type="gray">Not due</Badge>
+														)}
+														<span
+															class:list={[
+																"text-xs",
+																part.invoice?.status === "overdue"
+																	? "text-red-700 dark:text-red-300"
+																	: "text-neutral-500 dark:text-neutral-400",
+															]}
+														>
+															{part.invoice?.status === "paid" &&
+															part.invoice.stripePaidAt
 																? `on ${dateFormatter.format(part.invoice.stripePaidAt)}`
-																: part.invoice?.stripeDueAt && (part.invoice.status === "open" || part.invoice.status === "overdue")
+																: part.invoice?.stripeDueAt &&
+																		(part.invoice.status === "open" ||
+																			part.invoice.status === "overdue")
 																	? `due ${dateFormatter.format(part.invoice.stripeDueAt)}`
 																	: null}
 														</span>
@@ -337,7 +494,11 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 													{part.invoice ? (
 														<div class="grid grid-flow-col items-center justify-start gap-3 sm:justify-end">
 															<span class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
-																Invoice {part.invoice.invoiceNumber} · {formatAmount(part.invoice.total, part.invoice.currency)}
+																Invoice {part.invoice.invoiceNumber} ·{" "}
+																{formatAmount(
+																	part.invoice.total,
+																	part.invoice.currency,
+																)}
 															</span>
 															<Button
 																href={part.invoice.stripePaymentPage}
@@ -345,18 +506,24 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 																rel="noopener noreferrer"
 																aria-label={`${part.invoice.status === "open" || part.invoice.status === "overdue" ? "Pay" : "View"} invoice ${part.invoice.invoiceNumber}`}
 															>
-																{part.invoice.status === "open" || part.invoice.status === "overdue" ? "Pay" : "View"}
+																{part.invoice.status === "open" ||
+																part.invoice.status === "overdue"
+																	? "Pay"
+																	: "View"}
 															</Button>
 														</div>
 													) : (
-														<span class="text-xs text-neutral-500 dark:text-neutral-400 sm:text-right">No invoice yet</span>
+														<span class="text-xs text-neutral-500 dark:text-neutral-400 sm:text-right">
+															No invoice yet
+														</span>
 													)}
 												</li>
 											))}
 										</ol>
 									) : (
 										<p class="text-sm text-neutral-600 dark:text-neutral-400">
-											No chargeable parts · {formatAmount(phase.cost, phase.currency)}
+											No chargeable parts ·{" "}
+											{formatAmount(phase.cost, phase.currency)}
 										</p>
 									)}
 								</section>

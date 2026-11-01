@@ -203,7 +203,12 @@ const sections = [
 					>Budget used</dt
 				>
 				<dd
-					class:list={["text-xl font-semibold tabular-nums", hasBudget && usagePercentage > 100 && "text-red-700 dark:text-red-300"]}
+					class:list={[
+						"text-xl font-semibold tabular-nums",
+						hasBudget &&
+							usagePercentage > 100 &&
+							"text-red-700 dark:text-red-300",
+					]}
 					>{hasBudget ? `${usagePercentage.toFixed(1)}%` : "No budget"}</dd
 				>
 			</div>
@@ -239,9 +244,16 @@ const sections = [
 		</dl>
 		<div class="grid gap-3 md:grid-cols-2">
 			{sections.map((section) => (
-				<a class="grid gap-1 border border-dashed border-neutral-300 p-4 transition-colors hover:border-neutral-500 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900 dark:focus-visible:outline-neutral-300" href={section.href}>
+				<a
+					class="grid gap-1 border border-dashed border-neutral-300 p-4 transition-colors hover:border-neutral-500 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900 dark:focus-visible:outline-neutral-300"
+					href={section.href}
+				>
 					<h3 class="font-semibold">{section.label}</h3>
-					{section.detail && <p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">{section.detail}</p>}
+					{section.detail && (
+						<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">
+							{section.detail}
+						</p>
+					)}
 				</a>
 			))}
 		</div>

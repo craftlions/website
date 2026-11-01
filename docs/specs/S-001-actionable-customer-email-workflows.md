@@ -10,11 +10,10 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
 
 1. **Dispatch** — direct, deterministic, post-commit.
 
-   | Domain change | Instance ID | When |
-   |---|---|---|
-   | Phase → `planned` | `phase-approval-<phaseId>` | immediately after commit |
+   | Domain change                                                                                           | Instance ID                   | When                            |
+   | ------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------- |
+   | Phase → `planned`                                                                                       | `phase-approval-<phaseId>`    | immediately after commit        |
    | Stripe fetch (refresh or import) stores an `open`, past-due invoice with no `overdue_notice_sent` event | `invoice-overdue-<invoiceId>` | after the stored update commits |
-
    - Dispatch failure → one structured log line; the committed change stands (D-003).
    - Instance-ID uniqueness + the sent-event check absorb duplicate dispatch.
    - No activation configuration; pre-enablement overdue invoices per the contract.
@@ -37,12 +36,11 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
 
 5. **Destinations and login return**
 
-   | Notice | Destination |
-   |---|---|
-   | Phase approval | project `#phases` |
-   | Overdue invoice, attached to a phase | project `#invoices` |
-   | Overdue invoice, unattached | organization dashboard invoices |
-
+   | Notice                               | Destination                     |
+   | ------------------------------------ | ------------------------------- |
+   | Phase approval                       | project `#phases`               |
+   | Overdue invoice, attached to a phase | project `#invoices`             |
+   | Overdue invoice, unattached          | organization dashboard invoices |
    - Signed-out → login → exact same-origin path + query + fragment; invalid, malformed, or external → `/dash`.
    - Authorization enforced after login; stale links show current state, no notification-specific page.
 
@@ -62,16 +60,16 @@ Build Cloudflare Workflow email delivery started directly by qualifying domain c
 
 ## Acceptance criteria
 
-| # | Proves | Verify | Check |
-|---|---|---|---|
-| 1 | R1 | preview | planned → exactly one `phase-approval-<id>`; idempotent repeat → no second instance; forced dispatch failure → transition committed + one log line |
-| 2 | R1, R4 | preview | one plain-text email ≤ 5 min; To/CC per the contract, no members/banned/unverified; required context + one portal link |
-| 3 | R2, R4 | preview | day-2/day-5 at the same Berlin local time; stable subject + thread headers; one instance with checkpointed step results |
-| 4 | R2 | preview | approve/decline/cancel stops all later email; ineligible checkpoint skipped + logged; restored eligibility gets only later checkpoints; recovery never bunches |
-| 5 | R1, R3 | preview | only `open` past-due invoices without a sent event dispatch; repeats → no duplicate; N invoices → N emails; pre-enablement invoice notices once |
-| 6 | R3–R5 | preview | invoice email ≤ 5 min after fetch; correct destination per table; resolved-before-send skipped |
-| 7 | R2, R3 | preview | recipient-free notice → skip logged, no email; a later fetch may re-notice a still-open invoice |
-| 8 | R5 | preview | signed-out link → login → exact section; malformed/external → `/dash`, no data leak |
-| 9 | R6 | preview | induced mail failure: five retries, committed transition, errored instance, no recipient data in logs; replay resends nothing; sent event row present |
+| #   | Proves | Verify  | Check                                                                                                                                                          |
+| --- | ------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | R1     | preview | planned → exactly one `phase-approval-<id>`; idempotent repeat → no second instance; forced dispatch failure → transition committed + one log line             |
+| 2   | R1, R4 | preview | one plain-text email ≤ 5 min; To/CC per the contract, no members/banned/unverified; required context + one portal link                                         |
+| 3   | R2, R4 | preview | day-2/day-5 at the same Berlin local time; stable subject + thread headers; one instance with checkpointed step results                                        |
+| 4   | R2     | preview | approve/decline/cancel stops all later email; ineligible checkpoint skipped + logged; restored eligibility gets only later checkpoints; recovery never bunches |
+| 5   | R1, R3 | preview | only `open` past-due invoices without a sent event dispatch; repeats → no duplicate; N invoices → N emails; pre-enablement invoice notices once                |
+| 6   | R3–R5  | preview | invoice email ≤ 5 min after fetch; correct destination per table; resolved-before-send skipped                                                                 |
+| 7   | R2, R3 | preview | recipient-free notice → skip logged, no email; a later fetch may re-notice a still-open invoice                                                                |
+| 8   | R5     | preview | signed-out link → login → exact section; malformed/external → `/dash`, no data leak                                                                            |
+| 9   | R6     | preview | induced mail failure: five retries, committed transition, errored instance, no recipient data in logs; replay resends nothing; sent event row present          |
 
 Static validation is inherited from the repository contract; Success lives in [O-001](../outcomes/O-001-actionable-customer-notifications.md) and is judged from R7's event rows.
