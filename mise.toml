@@ -1,6 +1,7 @@
 [tools]
 "github:endevco/aube" = "v2.8.1"
 "npm:sfw" = "2.0.6"
+"aqua:jdx/hk" = "2.10.0"
 "aqua:jdx/jactionlint" = "2.4.0"
 "aqua:koalaman/shellcheck" = "0.11.0"
 node = "26.12.1"

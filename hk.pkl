@@ -1,0 +1,38 @@
+amends "package://github.com/jdx/hk/releases/download/v2.10.0/hk@2.10.0#/Config.pkl"
+
+local workflows = List(".github/workflows/*.yaml", ".github/workflows/*.yml", ".github/dependabot.y*ml")
+
+local linters = new Mapping<String, Step> {
+	["jactionlint"] {
+		glob = workflows
+		batch = true
+		diagnostic_format = "sarif"
+		check = "jactionlint --no-online --strict-exit --format sarif {{files}}"
+		check_diff = "hk util sarif-diff -- jactionlint --no-online --strict-exit --format sarif {{files}}"
+		fix = "jactionlint --no-online --strict-exit --fix {{files}}"
+	}
+}
+
+local online = new Mapping<String, Step> {
+	["jactionlint"] {
+		glob = workflows
+		batch = true
+		diagnostic_format = "sarif"
+		check = "jactionlint --strict-exit --format sarif {{files}}"
+	}
+}
+
+hooks {
+	["pre-commit"] {
+		fix = true
+		stash = "git"
+		steps = linters
+	}
+	["check"] {
+		steps = online
+	}
+	["fix"] {
+		fix = true
+		steps = linters
+	}
+}

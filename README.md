@@ -15,6 +15,11 @@ mise upgrade --interactive --bump --local
 mise i
 ```
 
+Install git hooks
+```shell
+hk install
+```
+
 Install all deps if not done by `mise` add `sfw` beforehand
 ```shell
 pn i
@@ -88,6 +93,7 @@ git branch -d $1
 ```
 
 ```shell
+hk check --all
 jactionlint
 aubx ci-doctor
 aubx gha-budget
