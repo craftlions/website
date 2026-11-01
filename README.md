@@ -88,8 +88,7 @@ git branch -d $1
 ```
 
 ```shell
-zizmor .
-actionlint
+jactionlint
 aubx ci-doctor
 aubx gha-budget
 ```
