@@ -1,5 +1,5 @@
 [tools]
-"github:endevco/aube" = "v2.8.1"
+"github:endevco/aube" = "v2.8.4"
 "npm:sfw" = "2.0.6"
 "aqua:zizmorcore/zizmor" = "1.31.1"
 "aqua:rhysd/actionlint" = "1.7.12"
