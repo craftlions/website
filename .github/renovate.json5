@@ -25,7 +25,7 @@
       "groupName": "Drizzle"
     },
 		{
-      "matchPackageNames": ["wrangler", "@cloudflare/**"],
+      "matchPackageNames": ["cf", "miniflare", "@cloudflare/**"],
       "groupName": "Cloudflare"
     }
   ],
