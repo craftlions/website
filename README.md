@@ -10,17 +10,20 @@
 ## commands
 
 Install all dev tools
+
 ```shell
 mise upgrade --interactive --bump --local
 mise i
 ```
 
 Install git hooks
+
 ```shell
 hk install
 ```
 
 Install all deps if not done by `mise` add `sfw` beforehand
+
 ```shell
 pn i
 sfw aube ci
@@ -28,36 +31,42 @@ sfw aube i
 ```
 
 Update browserlist
+
 ```shell
 pn update-browserslist-db latest
 aubx update-browserslist-db latest
 ```
 
 Generate types
+
 ```shell
 pn run types
 aubr types
 ```
 
 sync astro
+
 ```shell
 pn astro sync
 aubx astro sync
 ```
 
 Biome
+
 ```shell
 pn biome check --write
 aubx biome check --write
 ```
 
 Types
+
 ```shell
 pn run check
 aubr check
 ```
 
 Deploy to cloudflare
+
 ```shell
 pn run deploy
 aubr deploy
@@ -245,7 +254,6 @@ const data = await auth.api.addMember({
 ```
 
 https://better-auth.com/docs/plugins/organization#access-control
-
 
 window.addEventListener('pageshow', (event) => {
 if (event.persisted && !document.cookie.match(/my-cookie)) {
