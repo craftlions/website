@@ -631,8 +631,10 @@ const worklist: WorklistItem[] = [
 							</div>
 							<p
 								class:list={[
-									"tabular-nums text-fg-muted",
-									yearlyBudget > 0 && usagePercentage > 100 && "text-fg-danger",
+									"tabular-nums",
+									yearlyBudget > 0 && usagePercentage > 100
+										? "text-fg-danger"
+										: "text-fg-muted",
 								]}
 							>
 								{yearlyBudget > 0
