@@ -349,7 +349,7 @@ const worklist: WorklistItem[] = [
 		>
 			<section class="grid gap-4 sm:col-span-2">
 				<h1
-					class="border-l border-dashed border-line-strong pl-3 text-3xl font-semibold leading-tight wrap-break-word"
+					class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
 				>
 					{organization.name}’s Dashboard
 				</h1>
@@ -359,10 +359,7 @@ const worklist: WorklistItem[] = [
 				aria-labelledby="worklist-heading"
 				class="grid gap-3 sm:col-span-2"
 			>
-				<h2
-					id="worklist-heading"
-					class="text-sm font-semibold uppercase text-fg-muted"
-				>
+				<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
 					Worklist
 				</h2>
 				<p class="max-w-prose text-sm text-fg-muted">
@@ -557,7 +554,7 @@ const worklist: WorklistItem[] = [
 					<div class="grid gap-1">
 						<h2
 							id="overview-heading"
-							class="text-sm font-semibold uppercase text-fg-muted"
+							class="text-label uppercase text-fg-muted"
 						>
 							Overview
 						</h2>
@@ -567,30 +564,24 @@ const worklist: WorklistItem[] = [
 					</div>
 					<dl class="grid border-t border-dashed border-line">
 						<div class="grid gap-1 border-b border-dashed border-line p-4">
-							<dt class="text-xs font-semibold uppercase text-fg-muted"
-								>Yearly budget</dt
-							>
-							<dd class="text-xl font-semibold tabular-nums">
+							<dt class="eyebrow">Yearly budget</dt>
+							<dd class="text-title tabular-nums">
 								{yearlyBudget > 0
 									? currencyFormatter.format(yearlyBudget)
 									: "—"}
 							</dd>
 						</div>
 						<div class="grid gap-1 border-b border-dashed border-line p-4">
-							<dt class="text-xs font-semibold uppercase text-fg-muted"
-								>Invoiced this year</dt
-							>
-							<dd class="text-xl font-semibold tabular-nums">
+							<dt class="eyebrow">Invoiced this year</dt>
+							<dd class="text-title tabular-nums">
 								{currencyFormatter.format(currentYearTotal)}
 							</dd>
 						</div>
 						<div class="grid gap-1 border-b border-dashed border-line p-4">
-							<dt class="text-xs font-semibold uppercase text-fg-muted"
-								>Budget used</dt
-							>
+							<dt class="eyebrow">Budget used</dt>
 							<dd
 								class:list={[
-									"text-xl font-semibold tabular-nums",
+									"text-title tabular-nums",
 									yearlyBudget > 0 && usagePercentage > 100 && "text-fg-danger",
 								]}
 							>
@@ -600,12 +591,10 @@ const worklist: WorklistItem[] = [
 							</dd>
 						</div>
 						<div class="grid gap-1 border-b border-dashed border-line p-4">
-							<dt class="text-xs font-semibold uppercase text-fg-muted"
-								>Remaining</dt
-							>
+							<dt class="eyebrow">Remaining</dt>
 							<dd
 								class:list={[
-									"text-xl font-semibold tabular-nums",
+									"text-title tabular-nums",
 									yearlyBudget > 0 && remainingBudget < 0 && "text-fg-danger",
 								]}
 							>
@@ -618,17 +607,14 @@ const worklist: WorklistItem[] = [
 					<div class="grid gap-2 px-4">
 						<div class="grid grid-cols-[1fr_auto] items-baseline gap-3 text-sm">
 							<div class="grid grid-flow-col justify-start gap-2">
-								<label
-									for="budget-progress"
-									class="text-xs font-semibold uppercase text-fg-muted"
-								>
+								<label for="budget-progress" class="eyebrow">
 									Budget used
 								</label>
 								<span class="group relative grid place-items-center">
 									<button
 										type="button"
 										aria-describedby="budget-pace-tooltip"
-										class="grid size-4 place-items-center border border-dashed border-line-strong text-[10px] leading-none text-fg-muted outline-none focus-visible:border-line-active focus-visible:text-fg"
+										class="grid size-4 place-items-center border border-dashed border-line-strong text-xs leading-none text-fg-muted outline-none focus-visible:border-line-active focus-visible:text-fg"
 									>
 										i
 									</button>
@@ -695,7 +681,7 @@ const worklist: WorklistItem[] = [
 					<div class="grid grid-cols-[1fr_auto] items-center gap-3">
 						<h2
 							id="projects-list-heading"
-							class="text-sm font-semibold uppercase text-fg-muted"
+							class="text-label uppercase text-fg-muted"
 						>
 							Projects
 						</h2>
@@ -713,28 +699,16 @@ const worklist: WorklistItem[] = [
 						<table class="w-full min-w-xl text-sm">
 							<thead>
 								<tr class="border-b border-dashed border-line text-fg-muted">
-									<th
-										scope="col"
-										class="px-4 py-3 text-left text-xs font-semibold uppercase"
-									>
+									<th scope="col" class="px-4 py-3 text-left eyebrow">
 										Name
 									</th>
-									<th
-										scope="col"
-										class="px-4 py-3 text-left text-xs font-semibold uppercase"
-									>
+									<th scope="col" class="px-4 py-3 text-left eyebrow">
 										Status
 									</th>
-									<th
-										scope="col"
-										class="px-4 py-3 text-right text-xs font-semibold uppercase"
-									>
+									<th scope="col" class="px-4 py-3 text-right eyebrow">
 										Total Cost
 									</th>
-									<th
-										scope="col"
-										class="px-4 py-3 text-left text-xs font-semibold uppercase"
-									>
+									<th scope="col" class="px-4 py-3 text-left eyebrow">
 										Actions
 									</th>
 								</tr>
@@ -834,10 +808,7 @@ const worklist: WorklistItem[] = [
 					aria-labelledby="invoices-heading"
 					class="grid content-start gap-3"
 				>
-					<h2
-						id="invoices-heading"
-						class="text-sm font-semibold uppercase text-fg-muted"
-					>
+					<h2 id="invoices-heading" class="text-label uppercase text-fg-muted">
 						Invoices
 					</h2>
 					<InvoiceTable {invoices} {slug} />

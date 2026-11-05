@@ -59,13 +59,13 @@ const slug = `${datetime}-${title
 		<header class="grid gap-2">
 			<div class="grid grid-cols-[1fr_auto] items-center gap-2">
 				<a href={`#${slug}`} class="w-max underline-offset-2 hover:underline">
-					<time datetime={datetime} class="text-sm font-semibold text-fg-muted">
+					<time datetime={datetime} class="text-label text-fg-muted">
 						{date}
 					</time>
 				</a>
 				<Badge type={badgeType[kind]}>{kind}</Badge>
 			</div>
-			<h2 class="text-2xl font-semibold text-balance">{title}</h2>
+			<h2 class="text-headline text-balance">{title}</h2>
 		</header>
 		<p class="text-fg-muted">{summary}</p>
 		{points.length > 0 && (
