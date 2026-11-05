@@ -66,7 +66,7 @@
 }
 
 @layer components {
-	.eyebrow {
+	.label-caps {
 		color: var(--fg-muted);
 		font-size: 0.75rem;
 		font-weight: 600;

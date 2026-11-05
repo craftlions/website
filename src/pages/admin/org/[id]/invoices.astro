@@ -427,15 +427,15 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 			aria-label="Invoicing summary"
 		>
 			<div class="grid gap-1">
-				<dt class="eyebrow">Total Invoiced</dt>
+				<dt class="label-caps">Total Invoiced</dt>
 				<dd class="text-title tabular-nums">{totalInvoiced}</dd>
 			</div>
 			<div class="grid gap-1">
-				<dt class="eyebrow">Outstanding</dt>
+				<dt class="label-caps">Outstanding</dt>
 				<dd class="text-title tabular-nums">{totalOutstanding}</dd>
 			</div>
 			<div class="grid gap-1">
-				<dt class="eyebrow">Overdue</dt>
+				<dt class="label-caps">Overdue</dt>
 				<dd
 					class:list={[
 						"text-title tabular-nums",
@@ -445,11 +445,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 				>
 			</div>
 			<div class="grid gap-1">
-				<dt class="eyebrow">Due to Bill</dt>
+				<dt class="label-caps">Due to Bill</dt>
 				<dd class="text-title tabular-nums">{totalDueToBill}</dd>
 			</div>
 			<div class="grid gap-1">
-				<dt class="eyebrow">Paid</dt>
+				<dt class="label-caps">Paid</dt>
 				<dd class="text-title tabular-nums text-fg-success">{totalPaid}</dd>
 			</div>
 		</dl>
@@ -458,7 +458,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 			<div class="grid gap-3 border border-dashed border-line p-4 sm:grid-cols-2">
 				{invoicedByPart.length > 0 && (
 					<div class="grid content-start gap-2">
-						<p class="eyebrow">Invoiced by cost part</p>
+						<p class="label-caps">Invoiced by cost part</p>
 						{invoicedByPart.map((split) => (
 							<CostSplit
 								items={split.items}
@@ -472,7 +472,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 				)}
 				{dueByPart.length > 0 && (
 					<div class="grid content-start gap-2">
-						<p class="eyebrow">Due to bill by cost part</p>
+						<p class="label-caps">Due to bill by cost part</p>
 						{dueByPart.map((split) => (
 							<CostSplit
 								items={split.items}

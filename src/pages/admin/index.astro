@@ -323,7 +323,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 				</div>
 				<dl class="grid grid-flow-col justify-start gap-8 text-sm">
 					<div class="grid content-start gap-1">
-						<dt class="eyebrow">Outstanding</dt>
+						<dt class="label-caps">Outstanding</dt>
 						<dd class="tabular-nums"
 							>{currencyFormatter.format(outstandingTotal)}</dd
 						>
@@ -340,7 +340,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 						)}
 					</div>
 					<div class="grid gap-1">
-						<dt class="eyebrow">Overdue</dt>
+						<dt class="label-caps">Overdue</dt>
 						<dd
 							class:list={[
 								"tabular-nums",
@@ -350,7 +350,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 						>
 					</div>
 					<div class="grid gap-1">
-						<dt class="eyebrow">In queue</dt>
+						<dt class="label-caps">In queue</dt>
 						<dd class="tabular-nums">{queue.length}</dd>
 					</div>
 				</dl>

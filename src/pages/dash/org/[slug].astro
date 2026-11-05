@@ -564,7 +564,7 @@ const worklist: WorklistItem[] = [
 					</div>
 					<dl class="grid border-t border-dashed border-line">
 						<div class="grid gap-1 border-b border-dashed border-line p-4">
-							<dt class="eyebrow">Yearly budget</dt>
+							<dt class="label-caps">Yearly budget</dt>
 							<dd class="text-title tabular-nums">
 								{yearlyBudget > 0
 									? currencyFormatter.format(yearlyBudget)
@@ -572,13 +572,13 @@ const worklist: WorklistItem[] = [
 							</dd>
 						</div>
 						<div class="grid gap-1 border-b border-dashed border-line p-4">
-							<dt class="eyebrow">Invoiced this year</dt>
+							<dt class="label-caps">Invoiced this year</dt>
 							<dd class="text-title tabular-nums">
 								{currencyFormatter.format(currentYearTotal)}
 							</dd>
 						</div>
 						<div class="grid gap-1 border-b border-dashed border-line p-4">
-							<dt class="eyebrow">Budget used</dt>
+							<dt class="label-caps">Budget used</dt>
 							<dd
 								class:list={[
 									"text-title tabular-nums",
@@ -591,7 +591,7 @@ const worklist: WorklistItem[] = [
 							</dd>
 						</div>
 						<div class="grid gap-1 border-b border-dashed border-line p-4">
-							<dt class="eyebrow">Remaining</dt>
+							<dt class="label-caps">Remaining</dt>
 							<dd
 								class:list={[
 									"text-title tabular-nums",
@@ -607,7 +607,7 @@ const worklist: WorklistItem[] = [
 					<div class="grid gap-2 px-4">
 						<div class="grid grid-cols-[1fr_auto] items-baseline gap-3 text-sm">
 							<div class="grid grid-flow-col justify-start gap-2">
-								<label for="budget-progress" class="eyebrow">
+								<label for="budget-progress" class="label-caps">
 									Budget used
 								</label>
 								<span class="group relative grid place-items-center">
@@ -697,16 +697,16 @@ const worklist: WorklistItem[] = [
 						<table class="w-full min-w-xl text-sm">
 							<thead>
 								<tr class="border-b border-dashed border-line text-fg-muted">
-									<th scope="col" class="px-4 py-3 text-left eyebrow">
+									<th scope="col" class="px-4 py-3 text-left label-caps">
 										Name
 									</th>
-									<th scope="col" class="px-4 py-3 text-left eyebrow">
+									<th scope="col" class="px-4 py-3 text-left label-caps">
 										Status
 									</th>
-									<th scope="col" class="px-4 py-3 text-right eyebrow">
+									<th scope="col" class="px-4 py-3 text-right label-caps">
 										Total Cost
 									</th>
-									<th scope="col" class="px-4 py-3 text-left eyebrow">
+									<th scope="col" class="px-4 py-3 text-left label-caps">
 										Actions
 									</th>
 								</tr>
