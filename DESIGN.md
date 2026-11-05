@@ -220,7 +220,7 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 - **Body** (400, 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.
 - **Label** (`text-label` at 0.875rem, or `label-caps` for 0.75rem uppercase table and metric labels; 600): section labels, table headers, form labels, badges, and buttons.
 
-Each role carries its size, weight, and line height together, so do not add `font-*` or `leading-*` to it. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
+Each role carries its size, weight, and line height together, so do not add `font-*` to it. The one `leading-*` exception is `leading-none` in tight metric rows. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
 
 ### Named Rules
 
