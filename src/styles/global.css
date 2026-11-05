@@ -42,3 +42,10 @@
 	--outline-color-fill-info: var(--fill-info);
 	--text-decoration-color-line-strong: var(--line-strong);
 }
+
+@layer base {
+	:focus-visible {
+		outline: 2px solid var(--focus);
+		outline-offset: 2px;
+	}
+}

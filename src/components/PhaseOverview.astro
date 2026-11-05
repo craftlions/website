@@ -131,7 +131,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 			<div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
 				<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+						<dt class="text-xs font-semibold uppercase text-fg-muted">
 							Est. Cost
 						</dt>
 						<dd class="tabular-nums">
@@ -143,15 +143,13 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 						</dd>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
-							Paid
-						</dt>
+						<dt class="text-xs font-semibold uppercase text-fg-muted">Paid</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(invoicesWhere(["paid"]))}
 						</dd>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+						<dt class="text-xs font-semibold uppercase text-fg-muted">
 							Outstanding
 						</dt>
 						<dd class="tabular-nums">
@@ -159,15 +157,10 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 						</dd>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+						<dt class="text-xs font-semibold uppercase text-fg-muted">
 							Overdue
 						</dt>
-						<dd
-							class:list={[
-								"tabular-nums",
-								hasOverdue && "text-red-700 dark:text-red-300",
-							]}
-						>
+						<dd class:list={["tabular-nums", hasOverdue && "text-fg-danger"]}>
 							{sumByCurrency(invoicesWhere(["overdue"]))}
 						</dd>
 					</div>
@@ -178,7 +171,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 				>
 					<Button
 						type="button"
-						class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+						class="aria-pressed:border-line-active aria-pressed:bg-panel"
 						data-phase-view="compact"
 						aria-pressed="true"
 					>
@@ -186,7 +179,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 					</Button>
 					<Button
 						type="button"
-						class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+						class="aria-pressed:border-line-active aria-pressed:bg-panel"
 						data-phase-view="detailed"
 						aria-pressed="false"
 					>
@@ -195,10 +188,10 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 				</nav>
 			</div>
 
-			<div class="grid border border-dashed border-neutral-300 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] md:gap-x-6">
+			<div class="grid border border-dashed border-line md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] md:gap-x-6">
 				<div
 					aria-hidden="true"
-					class="hidden border-b border-dashed border-neutral-300 px-4 py-3 text-xs font-semibold uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400 md:col-span-5 md:grid md:grid-cols-subgrid"
+					class="hidden border-b border-dashed border-line px-4 py-3 text-xs font-semibold uppercase text-fg-muted md:col-span-5 md:grid md:grid-cols-subgrid"
 				>
 					<span>Phase</span>
 					<span>State</span>
@@ -209,20 +202,19 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 					{rows.map((phase) => (
 						<li
 							id={`phase-${phase.publicId}`}
-							class="grid scroll-mt-20 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-5 md:grid-cols-subgrid md:items-center"
+							class="grid scroll-mt-20 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:col-span-5 md:grid-cols-subgrid md:items-center"
 							data-phase
 						>
 							<div class="grid gap-1">
 								<h3
 									class:list={[
 										"font-medium",
-										phase.state === "cancelled" &&
-											"text-neutral-500 line-through dark:text-neutral-400",
+										phase.state === "cancelled" && "text-fg-muted line-through",
 									]}
 								>
 									{phase.title}
 								</h3>
-								<p class="text-sm text-neutral-600 dark:text-neutral-400">
+								<p class="text-sm text-fg-muted">
 									{phase.dueAt
 										? `Due ${dateFormatter.format(phase.dueAt)}`
 										: "Not scheduled"}
@@ -248,12 +240,12 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 												class:list={[
 													"h-1.5 border border-dashed",
 													part.invoice?.status === "overdue"
-														? "border-red-500 bg-red-500/70 dark:border-red-400 dark:bg-red-400/70"
+														? "border-fill-danger bg-fill-danger/70"
 														: part.status === "paid"
-															? "border-emerald-500 bg-emerald-500/70 dark:border-emerald-400 dark:bg-emerald-400/70"
+															? "border-fill-success bg-fill-success/70"
 															: part.invoice
-																? "border-sky-500 bg-sky-500/30 dark:border-sky-400 dark:bg-sky-400/30"
-																: "border-neutral-400 dark:border-neutral-600",
+																? "border-fill-info bg-fill-info/30"
+																: "border-line-strong",
 												]}
 											>
 												<span class="sr-only">
@@ -269,8 +261,8 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 									class:list={[
 										"text-xs md:text-right",
 										phase.overdueCount > 0
-											? "font-medium text-red-700 dark:text-red-300"
-											: "text-neutral-500 dark:text-neutral-400",
+											? "font-medium text-fg-danger"
+											: "text-fg-muted",
 									]}
 								>
 									{phase.overdueCount > 0
@@ -369,12 +361,12 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 
 							<div
 								id={`phase-${phase.publicId}-details`}
-								class="grid gap-4 border-t border-dashed border-neutral-300 pt-4 dark:border-neutral-700 md:col-span-5"
+								class="grid gap-4 border-t border-dashed border-line pt-4 md:col-span-5"
 								hidden
 							>
 								<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
 									<div class="grid gap-1">
-										<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+										<dt class="text-xs font-semibold uppercase text-fg-muted">
 											Epic
 										</dt>
 										<dd>
@@ -389,14 +381,12 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 													Open
 												</a>
 											) : (
-												<span class="text-neutral-500 dark:text-neutral-400">
-													None
-												</span>
+												<span class="text-fg-muted">None</span>
 											)}
 										</dd>
 									</div>
 									<div class="grid gap-1">
-										<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+										<dt class="text-xs font-semibold uppercase text-fg-muted">
 											Delivery
 										</dt>
 										<dd>
@@ -411,13 +401,9 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 													Open
 												</a>
 											) : phase.deliveryState === "none" ? (
-												<span class="text-neutral-600 dark:text-neutral-400">
-													No delivery
-												</span>
+												<span class="text-fg-muted">No delivery</span>
 											) : (
-												<span class="text-neutral-500 dark:text-neutral-400">
-													Not recorded
-												</span>
+												<span class="text-fg-muted">Not recorded</span>
 											)}
 										</dd>
 									</div>
@@ -429,25 +415,25 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 								>
 									<h4
 										id={`phase-${phase.publicId}-schedule`}
-										class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+										class="text-xs font-semibold uppercase text-fg-muted"
 									>
 										Payment Schedule
 									</h4>
 									{phase.parts.length > 0 ? (
-										<ol class="grid border border-dashed border-neutral-300 dark:border-neutral-700 sm:grid-cols-[9rem_10rem_minmax(0,1fr)_auto] sm:gap-x-6">
+										<ol class="grid border border-dashed border-line sm:grid-cols-[9rem_10rem_minmax(0,1fr)_auto] sm:gap-x-6">
 											{phase.parts.map((part) => (
-												<li class="grid gap-y-2 border-b border-dashed border-neutral-300 p-3 text-sm last:border-b-0 dark:border-neutral-700 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
+												<li class="grid gap-y-2 border-b border-dashed border-line p-3 text-sm last:border-b-0 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
 													<div class="grid gap-0.5">
 														<p class="font-medium capitalize">
 															{part.component}
 														</p>
-														<p class="text-xs text-neutral-500 dark:text-neutral-400">
+														<p class="text-xs text-fg-muted">
 															{billedOn[part.component]}
 														</p>
 													</div>
 													<p class="tabular-nums">
 														{formatAmount(part.amount, phase.currency)}
-														<span class="text-neutral-500 dark:text-neutral-400">
+														<span class="text-fg-muted">
 															{" "}
 															·{" "}
 															{phase.cost > 0
@@ -477,8 +463,8 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 															class:list={[
 																"text-xs",
 																part.invoice?.status === "overdue"
-																	? "text-red-700 dark:text-red-300"
-																	: "text-neutral-500 dark:text-neutral-400",
+																	? "text-fg-danger"
+																	: "text-fg-muted",
 															]}
 														>
 															{part.invoice?.status === "paid" &&
@@ -493,7 +479,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 													</div>
 													{part.invoice ? (
 														<div class="grid grid-flow-col items-center justify-start gap-3 sm:justify-end">
-															<span class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+															<span class="text-xs tabular-nums text-fg-muted">
 																Invoice {part.invoice.invoiceNumber} ·{" "}
 																{formatAmount(
 																	part.invoice.total,
@@ -513,7 +499,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 															</Button>
 														</div>
 													) : (
-														<span class="text-xs text-neutral-500 dark:text-neutral-400 sm:text-right">
+														<span class="text-xs text-fg-muted sm:text-right">
 															No invoice yet
 														</span>
 													)}
@@ -521,7 +507,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 											))}
 										</ol>
 									) : (
-										<p class="text-sm text-neutral-600 dark:text-neutral-400">
+										<p class="text-sm text-fg-muted">
 											No chargeable parts ·{" "}
 											{formatAmount(phase.cost, phase.currency)}
 										</p>
@@ -534,7 +520,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 			</div>
 		</>
 	) : (
-		<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+		<p class="border border-dashed border-line bg-transparent p-4 text-sm text-fg-muted">
 			No phases have been added yet.
 		</p>
 	)}
@@ -554,10 +540,8 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 		"outline-2",
 		"-outline-offset-2",
 		"outline-dashed",
-		"outline-sky-500/70",
-		"bg-sky-100/60",
-		"dark:outline-sky-400/70",
-		"dark:bg-sky-950/50",
+		"outline-fill-info/70",
+		"bg-info-subtle",
 	];
 
 	class PhaseOverview extends HTMLElement {

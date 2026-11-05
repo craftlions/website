@@ -91,11 +91,11 @@ const phases = project.phases.map((phase) => ({
 
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 const inputClass =
-	"border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300";
+	"border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active";
 const quietButtonClass =
-	"w-max cursor-pointer text-sm text-neutral-500 underline decoration-dashed underline-offset-4 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100";
+	"w-max cursor-pointer text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
 const summaryClass =
-	"w-max cursor-pointer list-none text-sm text-neutral-500 underline decoration-dashed underline-offset-4 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100";
+	"w-max cursor-pointer list-none text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
 ---
 
 <AdminOrgShell
@@ -104,7 +104,7 @@ const summaryClass =
 	showSuccess={actionSucceeded}
 >
 	{actionError && (
-		<p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">
+		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
 			{actionError.message}
 		</p>
 	)}
@@ -196,19 +196,14 @@ const summaryClass =
 		</div>
 
 		<div class="grid gap-3">
-			<h3
-				class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-				>Phases</h3
-			>
-			<ol
-				class="grid border border-dashed border-neutral-300 dark:border-neutral-700"
-			>
+			<h3 class="text-sm font-semibold uppercase text-fg-muted">Phases</h3>
+			<ol class="grid border border-dashed border-line">
 				{phases.length > 0 ? (
 					phases.map((phase) => (
-						<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start">
+						<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start">
 							<div class="grid gap-1">
 								<p class="font-medium wrap-break-word">{phase.title}</p>
-								<p class="text-sm text-neutral-500 dark:text-neutral-400">
+								<p class="text-sm text-fg-muted">
 									{phase.dueAt
 										? `Due ${dateFormatter.format(phase.dueAt)}`
 										: "No due date"}
@@ -234,9 +229,7 @@ const summaryClass =
 									</a>
 								)}
 								{phase.deliveryState === "none" && (
-									<p class="text-sm text-neutral-500 dark:text-neutral-400">
-										Delivered without PR/MR
-									</p>
+									<p class="text-sm text-fg-muted">Delivered without PR/MR</p>
 								)}
 							</div>
 							<Badge
@@ -337,7 +330,7 @@ const summaryClass =
 									<form
 										method="POST"
 										action={actions.recordDelivery}
-										class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-end"
+										class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-end"
 										data-record-delivery
 									>
 										<input type="hidden" name="phaseId" value={phase.id} />
@@ -381,7 +374,7 @@ const summaryClass =
 									<form
 										method="POST"
 										action={actions.updatePhaseAmounts}
-										class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+										class="grid gap-3 border border-dashed border-line p-4"
 										data-phase-amount-form
 									>
 										<input type="hidden" name="phaseId" value={phase.id} />
@@ -408,20 +401,18 @@ const summaryClass =
 						</li>
 					))
 				) : (
-					<li class="p-4 text-sm text-neutral-600 dark:text-neutral-400">
-						No phases yet.
-					</li>
+					<li class="p-4 text-sm text-fg-muted">No phases yet.</li>
 				)}
 			</ol>
 			<details class="grid gap-3">
 				<summary
-					class="cursor-pointer list-none border border-dashed border-neutral-300 p-3 text-center text-sm font-medium transition-colors hover:border-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900"
+					class="cursor-pointer list-none border border-dashed border-line p-3 text-center text-sm font-medium transition-colors hover:border-line-active hover:bg-panel"
 					>Add phase</summary
 				>
 				<form
 					method="POST"
 					action={actions.createPhase}
-					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-3 md:items-end"
+					class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-3 md:items-end"
 					data-phase-amount-form
 				>
 					<input type="hidden" name="projectId" value={project.id}>
@@ -455,8 +446,7 @@ const summaryClass =
 						><span class="font-medium">Due</span>
 						<input class={inputClass} name="dueAt" type="date"></label
 					>
-					<div
-						class="border-t border-dashed border-neutral-300 pt-3 dark:border-neutral-700 md:col-span-full"
+					<div class="border-t border-dashed border-line pt-3 md:col-span-full"
 						><PhaseAmountCalculator cost={0} acceptanceAmount={0} /></div
 					>
 					<Button type="submit" class="md:col-span-full">Add phase</Button>

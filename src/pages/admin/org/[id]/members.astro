@@ -59,7 +59,7 @@ if (!organization) {
 	showSuccess={actionSucceeded}
 >
 	{actionError && (
-		<p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">
+		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
 			{actionError.message}
 		</p>
 	)}
@@ -67,19 +67,19 @@ if (!organization) {
 		<div class="grid gap-3">
 			<h2
 				id="members-heading"
-				class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				class="text-sm font-semibold uppercase text-fg-muted"
 				>Members</h2
 			>
 			<form
 				method="POST"
 				action={actions.addOrganizationMember}
-				class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_max-content_max-content] md:items-end"
+				class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_max-content_max-content] md:items-end"
 			>
 				<input type="hidden" name="organizationId" value={organization.id}>
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Email</span>
 					<input
-						class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
 						name="email"
 						type="email"
 						required
@@ -88,7 +88,7 @@ if (!organization) {
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Name</span>
 					<input
-						class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
 						name="name"
 						required
 					></label
@@ -96,7 +96,7 @@ if (!organization) {
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Role</span
 					><select
-						class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
 						name="role"
 					>
 						<option value="member" selected>Member</option>
@@ -106,15 +106,13 @@ if (!organization) {
 				<Button type="submit">Add user</Button>
 			</form>
 		</div>
-		<div
-			class="grid border border-dashed border-neutral-300 dark:border-neutral-700"
-		>
+		<div class="grid border border-dashed border-line">
 			{members.length > 0 ? (
 				members.map((member) => (
-					<article class="grid gap-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[1fr_auto] md:items-center">
+					<article class="grid gap-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[1fr_auto] md:items-center">
 						<div class="grid gap-1">
 							<h3 class="font-medium">{member.user.name}</h3>
-							<p class="text-sm text-neutral-600 wrap-break-word dark:text-neutral-400">
+							<p class="text-sm text-fg-muted wrap-break-word">
 								{member.user.email} · {member.role}
 							</p>
 						</div>
@@ -150,9 +148,7 @@ if (!organization) {
 					</article>
 				))
 			) : (
-				<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400">
-					No members.
-				</p>
+				<p class="p-4 text-sm text-fg-muted">No members.</p>
 			)}
 		</div>
 	</section>

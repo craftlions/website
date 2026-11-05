@@ -116,7 +116,7 @@ const canApprovePhases =
 ---
 
 <Shell
-	bodyClass="min-h-dvh grid bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+	bodyClass="min-h-dvh grid bg-canvas text-fg antialiased gap-6 p-4 text-pretty"
 >
 	<Fragment slot="head"> <title>craftlions | {project.name}</title> </Fragment>
 	<Fragment slot="body">
@@ -130,23 +130,18 @@ const canApprovePhases =
 			<Button href={`/dash/org/${slug}`}>Back to Dashboard</Button>
 
 			<section class="grid gap-4">
-				<p
-					class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-				>
+				<p class="text-sm font-semibold uppercase text-fg-muted">
 					Project Overview
 				</p>
 				<h1
-					class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+					class="border-l border-dashed border-line-strong pl-3 text-3xl font-semibold leading-tight"
 				>
 					{project.name}
 				</h1>
 			</section>
 
 			<section class="grid gap-3" aria-labelledby="phases">
-				<h2
-					id="phases"
-					class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-				>
+				<h2 id="phases" class="text-sm font-semibold uppercase text-fg-muted">
 					Phases &amp; Billing
 				</h2>
 				<PhaseOverview

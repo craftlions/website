@@ -31,8 +31,7 @@ const percentageFor = (amount: number | null, index: number) => {
 ---
 
 <fieldset class="grid gap-2" data-phase-amount-fields>
-	<legend
-		class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+	<legend class="text-xs font-semibold uppercase text-fg-muted"
 		>Cost split</legend
 	>
 	<div
@@ -42,7 +41,7 @@ const percentageFor = (amount: number | null, index: number) => {
 			<>
 				<label class="contents">
 					<span class="font-medium">{label}</span>
-					<span class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-neutral-300 px-3 py-2 transition-colors focus-within:border-neutral-600 dark:border-neutral-700 dark:focus-within:border-neutral-300">
+					<span class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-line px-3 py-2 transition-colors focus-within:border-line-active">
 						<input
 							class="min-w-0 bg-transparent tabular-nums outline-none"
 							data-phase-amount-percent
@@ -53,11 +52,11 @@ const percentageFor = (amount: number | null, index: number) => {
 							value={percentageFor(amounts[index] ?? null, index)}
 							inputmode="decimal"
 						/>
-						<span class="text-neutral-500 dark:text-neutral-400">%</span>
+						<span class="text-fg-muted">%</span>
 					</span>
 				</label>
 				<input
-					class="min-w-0 bg-transparent text-right tabular-nums text-neutral-600 outline-none dark:text-neutral-400"
+					class="min-w-0 bg-transparent text-right tabular-nums text-fg-muted outline-none"
 					data-phase-amount-value
 					name={`${label.toLowerCase()}Amount`}
 					readonly
@@ -69,17 +68,17 @@ const percentageFor = (amount: number | null, index: number) => {
 			</>
 		))}
 		<span
-			class="border-t border-dashed border-neutral-300 pt-2 text-xs font-medium uppercase text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
+			class="border-t border-dashed border-line pt-2 text-xs font-medium uppercase text-fg-muted"
 			>Total</span
 		>
 		<p
-			class="col-span-2 border-t border-dashed border-neutral-300 pt-2 text-right text-xs tabular-nums text-neutral-600 dark:border-neutral-700 dark:text-neutral-400"
+			class="col-span-2 border-t border-dashed border-line pt-2 text-right text-xs tabular-nums text-fg-muted"
 			data-phase-amount-total
 			role="status"
 		></p>
 	</div>
 	<p
-		class="text-sm text-red-700 dark:text-red-300"
+		class="text-sm text-fg-danger"
 		data-phase-amount-error
 		role="alert"
 		hidden

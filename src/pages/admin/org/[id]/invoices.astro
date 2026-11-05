@@ -374,13 +374,12 @@ const getAttachmentGuidance = (
 };
 
 const inputClass =
-	"border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300";
+	"border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active";
 const quietButtonClass =
-	"w-max cursor-pointer text-sm text-neutral-500 underline decoration-dashed underline-offset-4 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100";
+	"w-max cursor-pointer text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
 const summaryClass =
-	"w-max cursor-pointer list-none text-sm text-neutral-500 underline decoration-dashed underline-offset-4 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100";
-const sectionLabelClass =
-	"text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400";
+	"w-max cursor-pointer list-none text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
+const sectionLabelClass = "text-sm font-semibold uppercase text-fg-muted";
 ---
 
 <AdminOrgShell
@@ -389,7 +388,7 @@ const sectionLabelClass =
 	showSuccess={actionSucceeded}
 >
 	{actionError && (
-		<p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">
+		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
 			{actionError.message}
 		</p>
 	)}
@@ -398,10 +397,10 @@ const sectionLabelClass =
 			<div class="grid gap-1">
 				<h2 id="invoices-heading" class={sectionLabelClass}>Invoices</h2>
 				{organizationData?.stripeCustomerId ? (
-					<p class="text-xs text-neutral-500 dark:text-neutral-400">
+					<p class="text-xs text-fg-muted">
 						<span>Customer </span>
 						<a
-							class="underline decoration-dashed underline-offset-4 hover:text-neutral-900 dark:hover:text-neutral-100"
+							class="underline decoration-dashed underline-offset-4 hover:text-fg"
 							href={`https://dashboard.stripe.com/customers/${organizationData.stripeCustomerId}`}
 							target="_blank"
 							rel="noreferrer"
@@ -413,9 +412,7 @@ const sectionLabelClass =
 						)}
 					</p>
 				) : (
-					<p class="text-xs text-neutral-500 dark:text-neutral-400">
-						No Stripe customer linked
-					</p>
+					<p class="text-xs text-fg-muted">No Stripe customer linked</p>
 				)}
 			</div>
 			{organizationData?.stripeCustomerId ? (
@@ -431,60 +428,50 @@ const sectionLabelClass =
 		</div>
 
 		<dl
-			class="grid grid-cols-2 gap-4 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:grid-cols-3 lg:grid-cols-5"
+			class="grid grid-cols-2 gap-4 border border-dashed border-line p-4 sm:grid-cols-3 lg:grid-cols-5"
 			aria-label="Invoicing summary"
 		>
 			<div class="grid gap-1">
-				<dt
-					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				<dt class="text-xs font-semibold uppercase text-fg-muted"
 					>Total Invoiced</dt
 				>
 				<dd class="text-lg font-semibold tabular-nums">{totalInvoiced}</dd>
 			</div>
 			<div class="grid gap-1">
-				<dt
-					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				<dt class="text-xs font-semibold uppercase text-fg-muted"
 					>Outstanding</dt
 				>
 				<dd class="text-lg font-semibold tabular-nums">{totalOutstanding}</dd>
 			</div>
 			<div class="grid gap-1">
-				<dt
-					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>Overdue</dt
-				>
+				<dt class="text-xs font-semibold uppercase text-fg-muted">Overdue</dt>
 				<dd
 					class:list={[
 						"text-lg font-semibold tabular-nums",
-						overdueTargets.length > 0 && "text-red-700 dark:text-red-300",
+						overdueTargets.length > 0 && "text-fg-danger",
 					]}
 					>{totalOverdue}</dd
 				>
 			</div>
 			<div class="grid gap-1">
-				<dt
-					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				<dt class="text-xs font-semibold uppercase text-fg-muted"
 					>Due to Bill</dt
 				>
 				<dd class="text-lg font-semibold tabular-nums">{totalDueToBill}</dd>
 			</div>
 			<div class="grid gap-1">
-				<dt
-					class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-					>Paid</dt
-				>
-				<dd
-					class="text-lg font-semibold tabular-nums text-emerald-700 dark:text-emerald-300"
+				<dt class="text-xs font-semibold uppercase text-fg-muted">Paid</dt>
+				<dd class="text-lg font-semibold tabular-nums text-fg-success"
 					>{totalPaid}</dd
 				>
 			</div>
 		</dl>
 
 		{(invoicedByPart.length > 0 || dueByPart.length > 0) && (
-			<div class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:grid-cols-2">
+			<div class="grid gap-3 border border-dashed border-line p-4 sm:grid-cols-2">
 				{invoicedByPart.length > 0 && (
 					<div class="grid content-start gap-2">
-						<p class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+						<p class="text-xs font-semibold uppercase text-fg-muted">
 							Invoiced by cost part
 						</p>
 						{invoicedByPart.map((split) => (
@@ -500,7 +487,7 @@ const sectionLabelClass =
 				)}
 				{dueByPart.length > 0 && (
 					<div class="grid content-start gap-2">
-						<p class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+						<p class="text-xs font-semibold uppercase text-fg-muted">
 							Due to bill by cost part
 						</p>
 						{dueByPart.map((split) => (
@@ -520,12 +507,12 @@ const sectionLabelClass =
 		{unattachedInvoices.length > 0 && (
 			<div class="grid gap-3">
 				<h3 class={sectionLabelClass}>Unattached from Stripe</h3>
-				<ul class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
+				<ul class="grid border border-dashed border-line">
 					{unattachedInvoices.map((invoice) => {
 						const guidance = getAttachmentGuidance(invoice);
 						const suggested = suggestedTargetValue(invoice);
 						return (
-							<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.5fr)] md:items-center">
+							<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.5fr)] md:items-center">
 								<div class="grid gap-1">
 									<a
 										class="w-max font-medium underline decoration-dashed underline-offset-4"
@@ -533,7 +520,7 @@ const sectionLabelClass =
 									>
 										{invoice.invoiceNumber}
 									</a>
-									<p class="text-xs text-neutral-500 dark:text-neutral-400">
+									<p class="text-xs text-fg-muted">
 										<span>Stripe {invoice.stripeStatus ?? "not fetched"}</span>
 										{invoice.stripeDueAt && (
 											<>
@@ -542,7 +529,7 @@ const sectionLabelClass =
 													class:list={[
 														invoice.stripeStatus === "open" &&
 															invoice.stripeDueAt < now &&
-															"font-semibold text-red-700 dark:text-red-300",
+															"font-semibold text-fg-danger",
 													]}
 												>
 													due {dateFormatter.format(invoice.stripeDueAt)}
@@ -604,12 +591,8 @@ const sectionLabelClass =
 									</form>
 								) : (
 									<div class="grid gap-0.5 text-xs">
-										<p class="font-medium text-amber-700 dark:text-amber-400">
-											Cannot attach
-										</p>
-										<p class="text-neutral-600 dark:text-neutral-400">
-											{guidance.reason}
-										</p>
+										<p class="font-medium text-fg-warning">Cannot attach</p>
+										<p class="text-fg-muted">{guidance.reason}</p>
 									</div>
 								)}
 							</li>
@@ -622,9 +605,9 @@ const sectionLabelClass =
 		{attachableTargets.length > 0 && (
 			<div class="grid gap-3">
 				<h3 class={sectionLabelClass}>Due, not invoiced</h3>
-				<ul class="grid border border-dashed border-neutral-300 dark:border-neutral-700">
+				<ul class="grid border border-dashed border-line">
 					{attachableTargets.map((target) => (
-						<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-start">
+						<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-start">
 							<div class="grid gap-2">
 								<p class="font-medium">
 									<a
@@ -659,7 +642,7 @@ const sectionLabelClass =
 								<form
 									method="POST"
 									action={actions.recordInvoice}
-									class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 sm:grid-cols-2 lg:grid-cols-4 items-start"
+									class="grid gap-3 border border-dashed border-line p-4 sm:grid-cols-2 lg:grid-cols-4 items-start"
 								>
 									<input type="hidden" name="phaseId" value={target.id} />
 									<input
@@ -714,7 +697,7 @@ const sectionLabelClass =
 											required
 										/>
 										<span
-											class="text-xs text-amber-700 dark:text-amber-300"
+											class="text-xs text-fg-warning"
 											data-amount-warning
 											hidden
 										>
@@ -744,7 +727,7 @@ const sectionLabelClass =
 					>
 						<Button
 							type="button"
-							class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+							class="aria-pressed:border-line-active aria-pressed:bg-panel"
 							data-invoice-filter="all"
 							aria-pressed="true"
 						>
@@ -752,7 +735,7 @@ const sectionLabelClass =
 						</Button>
 						<Button
 							type="button"
-							class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+							class="aria-pressed:border-line-active aria-pressed:bg-panel"
 							data-invoice-filter="open"
 							aria-pressed="false"
 						>
@@ -760,7 +743,7 @@ const sectionLabelClass =
 						</Button>
 						<Button
 							type="button"
-							class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+							class="aria-pressed:border-line-active aria-pressed:bg-panel"
 							data-invoice-filter="paid"
 							aria-pressed="false"
 						>
@@ -769,9 +752,7 @@ const sectionLabelClass =
 					</nav>
 				)}
 			</div>
-			<ul
-				class="grid border border-dashed border-neutral-300 dark:border-neutral-700"
-			>
+			<ul class="grid border border-dashed border-line">
 				{recordedTargets.length > 0 ? (
 					recordedTargets.map((target) => {
 						const status = getInvoiceStatus(target.invoice);
@@ -779,7 +760,7 @@ const sectionLabelClass =
 							target.invoice.stripeStatus === "paid" ? "paid" : "open";
 						return (
 							<li
-								class="grid gap-x-6 gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start"
+								class="grid gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start"
 								data-recorded-row
 								data-row-category={rowCategory}
 							>
@@ -813,7 +794,7 @@ const sectionLabelClass =
 											highlight={target.component}
 										/>
 									</div>
-									<p class="text-xs text-neutral-500 dark:text-neutral-400">
+									<p class="text-xs text-fg-muted">
 										<span>
 											Stripe {target.invoice.stripeStatus ?? "not fetched"}
 										</span>
@@ -822,8 +803,7 @@ const sectionLabelClass =
 												<span> · </span>
 												<span
 													class:list={[
-														status.isOverdue &&
-															"font-semibold text-red-700 dark:text-red-300",
+														status.isOverdue && "font-semibold text-fg-danger",
 													]}
 												>
 													due {dateFormatter.format(target.invoice.stripeDueAt)}
@@ -861,7 +841,7 @@ const sectionLabelClass =
 												Delivery PR/MR
 											</a>
 										) : (
-											<p class="text-xs text-neutral-500 dark:text-neutral-400">
+											<p class="text-xs text-fg-muted">
 												{target.deliveryState === "none"
 													? "Delivered without PR/MR"
 													: "Delivery not recorded"}
@@ -874,7 +854,7 @@ const sectionLabelClass =
 										{formatCurrency(target.invoice.total, target.currency)}
 									</p>
 									{target.invoice.total !== target.amount && (
-										<p class="text-xs text-amber-700 dark:text-amber-300">
+										<p class="text-xs text-fg-warning">
 											Expected {formatCurrency(target.amount, target.currency)}
 										</p>
 									)}
@@ -901,7 +881,7 @@ const sectionLabelClass =
 											<form
 												method="POST"
 												action={actions.updatePhaseDelivery}
-												class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-end"
+												class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-end"
 											>
 												<input type="hidden" name="phaseId" value={target.id} />
 												<input
@@ -954,10 +934,8 @@ const sectionLabelClass =
 						);
 					})
 				) : (
-					<li class="grid gap-2 p-6 text-sm text-neutral-600 dark:text-neutral-400">
-						<p class="font-medium text-neutral-900 dark:text-neutral-100">
-							No invoices recorded yet
-						</p>
+					<li class="grid gap-2 p-6 text-sm text-fg-muted">
+						<p class="font-medium text-fg">No invoices recorded yet</p>
 						<p class="text-xs">
 							{allPhases.length === 0
 								? "No project phases found. Create a project and add priced phases to begin billing."
