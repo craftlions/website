@@ -3,6 +3,7 @@ export const prerender = false;
 
 import Button from "../components/Button.astro";
 import Footer from "../components/Footer.astro";
+import Input from "../components/Input.astro";
 import Nav from "../components/Nav.astro";
 import Shell from "../layouts/Shell.astro";
 import { parseReturnTo } from "../lib/return-to.ts";
@@ -43,30 +44,28 @@ if (session) {
 							<label for="email" class="text-label text-fg-muted">
 								Email address
 							</label>
-							<input
+							<Input
 								type="email"
 								id="email"
 								name="email"
 								autocomplete="email"
 								required
 								placeholder="you@example.com"
-								class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-fg-muted focus:border-line-active"
-							>
+							/>
 						</div>
 
 						<div class="grid gap-1.5">
 							<label for="password" class="text-label text-fg-muted">
 								Password
 							</label>
-							<input
+							<Input
 								type="password"
 								id="password"
 								name="password"
 								autocomplete="current-password"
 								required
 								placeholder="••••••••"
-								class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-fg-muted focus:border-line-active"
-							>
+							/>
 							<a
 								href="/forgot-password"
 								class="justify-self-end text-sm text-fg-info underline decoration-dashed underline-offset-4"

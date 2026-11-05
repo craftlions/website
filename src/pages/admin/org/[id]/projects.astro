@@ -5,6 +5,7 @@ import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import CostSplit from "../../../../components/CostSplit.astro";
+import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 
@@ -136,11 +137,7 @@ const archivedProjects = projects.filter(
 				<input type="hidden" name="organizationId" value={organization.id}>
 				<label class="grid gap-1 text-sm">
 					<span class="font-medium">Project name</span>
-					<input
-						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-						name="name"
-						required
-					>
+					<Input name="name" required />
 				</label>
 				<Button type="submit">Create project</Button>
 			</form>

@@ -3,6 +3,7 @@ export const prerender = false;
 
 import { actions } from "astro:actions";
 import Button from "../../../../components/Button.astro";
+import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 
@@ -76,30 +77,18 @@ if (!organization) {
 				<input type="hidden" name="organizationId" value={organization.id}>
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Email</span>
-					<input
-						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-						name="email"
-						type="email"
-						required
-					></label
+					<Input name="email" type="email" required /></label
 				>
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Name</span>
-					<input
-						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-						name="name"
-						required
-					></label
+					<Input name="name" required /></label
 				>
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Role</span
-					><select
-						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-						name="role"
-					>
+					><Input as="select" name="role">
 						<option value="member" selected>Member</option>
 						<option value="owner">Owner</option>
-					</select></label
+					</Input></label
 				>
 				<Button type="submit">Add user</Button>
 			</form>

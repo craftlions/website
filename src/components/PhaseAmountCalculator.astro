@@ -41,7 +41,7 @@ const percentageFor = (amount: number | null, index: number) => {
 					<span class="font-medium">{label}</span>
 					<span class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-line px-3 py-2 transition-colors focus-within:border-line-active">
 						<input
-							class="min-w-0 bg-transparent tabular-nums outline-none"
+							class="min-w-0 bg-transparent tabular-nums"
 							data-phase-amount-percent
 							min="0"
 							max="100"
@@ -54,7 +54,7 @@ const percentageFor = (amount: number | null, index: number) => {
 					</span>
 				</label>
 				<input
-					class="min-w-0 bg-transparent text-right tabular-nums text-fg-muted outline-none"
+					class="min-w-0 bg-transparent text-right tabular-nums text-fg-muted"
 					data-phase-amount-value
 					name={`${label.toLowerCase()}Amount`}
 					readonly
