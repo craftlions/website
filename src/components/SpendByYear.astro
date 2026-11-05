@@ -203,7 +203,7 @@ const hasNegativeSpend = bars.some((bar) =>
 					>
 						{projectKeys.map((project) => (
 							<li
-								class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-sm px-1 py-0.5 transition-[background-color,opacity] duration-150 hover:bg-panel"
+								class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-1 py-0.5 transition-[background-color,opacity] duration-150 hover:bg-panel"
 								data-project={project.id}
 								data-amount={currencyFormatter.format(project.total)}
 							>

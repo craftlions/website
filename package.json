@@ -11,6 +11,7 @@
     "dev": "astro dev",
     "preview": "astro build && astro preview",
     "types": "cf workers types --include-runtime",
+    "design:lint": "node scripts/design-lint.js",
     "cf-check": "cf workers types --include-runtime && git diff --exit-code -- .cloudflare/types"
   },
   "devDependencies": {

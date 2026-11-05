@@ -3,6 +3,8 @@
 
 /* Each role exists only on the utility it belongs to: `text-fg` works, `bg-fg` does not. */
 @theme inline {
+	--color-*: initial;
+
 	--text-color-fg: var(--fg);
 	--text-color-fg-muted: var(--fg-muted);
 	--text-color-fg-danger: var(--fg-danger);
