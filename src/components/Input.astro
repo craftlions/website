@@ -1,0 +1,24 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"input"> {
+	as?: "input" | "select";
+	danger?: boolean;
+}
+
+const { as = "input", class: className, danger, ...attrs } = Astro.props;
+
+const inputClass = [
+	"border border-dashed bg-transparent px-3 py-2 text-sm transition-colors placeholder:text-fg-muted focus:border-line-active",
+	danger ? "border-line-danger" : "border-line",
+	className,
+];
+---
+
+{as === "select" ? (
+	<select class:list={inputClass} {...attrs}>
+		<slot />
+	</select>
+) : (
+	<input class:list={inputClass} {...attrs} />
+)}

@@ -5,6 +5,7 @@ import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import CostSplit from "../../../../components/CostSplit.astro";
+import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import {
@@ -373,8 +374,6 @@ const getAttachmentGuidance = (
 	};
 };
 
-const inputClass =
-	"border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active";
 const quietButtonClass =
 	"w-max cursor-pointer text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
 const summaryClass =
@@ -555,11 +554,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 										class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
 									>
 										<input type="hidden" name="invoiceId" value={invoice.id} />
-										<select
+										<Input
+											as="select"
 											name="target"
 											aria-label="Phase component"
 											required
-											class={inputClass}
 										>
 											{guidance.targets.map((target) => (
 												<option
@@ -574,7 +573,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 														: ""}
 												</option>
 											))}
-										</select>
+										</Input>
 										<Button type="submit">Attach</Button>
 									</form>
 								) : (
@@ -645,17 +644,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 									/>
 									<label class="grid gap-1 text-sm">
 										<span class="font-medium">Invoice number</span>
-										<input
-											class={inputClass}
-											name="invoiceNumber"
-											autocomplete="off"
-											required
-										/>
+										<Input name="invoiceNumber" autocomplete="off" required />
 									</label>
 									<label class="grid gap-1 text-sm">
 										<span class="font-medium">Stripe id</span>
-										<input
-											class={inputClass}
+										<Input
 											name="stripeId"
 											autocomplete="off"
 											placeholder="in_..."
@@ -664,8 +657,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 									</label>
 									<label class="grid gap-1 text-sm">
 										<span class="font-medium">Payment URL</span>
-										<input
-											class={inputClass}
+										<Input
 											name="stripePaymentPage"
 											type="url"
 											placeholder="https://invoice.stripe.com/..."
@@ -674,8 +666,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 									</label>
 									<label class="grid gap-1 text-sm">
 										<span class="font-medium">Total ({target.currency})</span>
-										<input
-											class={inputClass}
+										<Input
 											name="total"
 											type="number"
 											min="0"
@@ -879,11 +870,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 												/>
 												<label class="grid gap-1 text-sm">
 													<span class="font-medium">Delivery</span>
-													<select
+													<Input
+														as="select"
 														name="deliveryChoice"
 														data-delivery-choice
 														required
-														class={inputClass}
 													>
 														<option
 															value="url"
@@ -897,15 +888,14 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 														>
 															No delivery PR/MR
 														</option>
-													</select>
+													</Input>
 												</label>
 												<label
 													data-delivery-url-field
 													class="grid gap-1 text-sm"
 												>
 													<span class="font-medium">Delivery URL</span>
-													<input
-														class={inputClass}
+													<Input
 														name="deliveryUrl"
 														type="url"
 														inputmode="url"

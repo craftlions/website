@@ -5,6 +5,7 @@ import { actions } from "astro:actions";
 import Badge from "../../../../../components/Badge.astro";
 import Button from "../../../../../components/Button.astro";
 import CostSplit from "../../../../../components/CostSplit.astro";
+import Input from "../../../../../components/Input.astro";
 import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculator.astro";
 import AdminOrgShell from "../../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../../lib/admin-org.ts";
@@ -90,8 +91,6 @@ const phases = project.phases.map((phase) => ({
 }));
 
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
-const inputClass =
-	"border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active";
 const quietButtonClass =
 	"w-max cursor-pointer text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
 const summaryClass =
@@ -339,22 +338,21 @@ const summaryClass =
 										/>
 										<label class="grid gap-1 text-sm">
 											<span class="font-medium">Delivery</span>
-											<select
+											<Input
+												as="select"
 												name="deliveryChoice"
 												data-delivery-choice
 												required
-												class={inputClass}
 											>
 												<option value="url" selected>
 													Delivery link
 												</option>
 												<option value="none">No delivery PR/MR</option>
-											</select>
+											</Input>
 										</label>
 										<label data-delivery-url-field class="grid gap-1 text-sm">
 											<span class="font-medium">Delivery URL</span>
-											<input
-												class={inputClass}
+											<Input
 												name="deliveryUrl"
 												type="url"
 												inputmode="url"
@@ -416,33 +414,26 @@ const summaryClass =
 					<input type="hidden" name="projectId" value={project.id}>
 					<label class="grid gap-1 text-sm md:col-span-full"
 						><span class="font-medium">Phase title</span>
-						<input class={inputClass} name="title" required></label
+						<Input name="title" required /></label
 					>
 					<label class="grid gap-1 text-sm"
 						><span class="font-medium">Cost</span>
-						<input
-							class={inputClass}
+						<Input
 							name="cost"
 							data-phase-cost-input
 							type="number"
 							min="0"
 							step="0.0001"
 							required
-						></label
+						/></label
 					>
 					<label class="grid gap-1 text-sm"
 						><span class="font-medium">Currency</span>
-						<input
-							class={inputClass}
-							name="currency"
-							value="EUR"
-							maxlength="3"
-							required
-						></label
+						<Input name="currency" value="EUR" maxlength="3" required /></label
 					>
 					<label class="grid gap-1 text-sm"
 						><span class="font-medium">Due</span>
-						<input class={inputClass} name="dueAt" type="date"></label
+						<Input name="dueAt" type="date" /></label
 					>
 					<div class="border-t border-dashed border-line pt-3 md:col-span-full"
 						><PhaseAmountCalculator cost={0} acceptanceAmount={0} /></div

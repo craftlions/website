@@ -6,6 +6,7 @@ import Badge from "../../components/Badge.astro";
 import Button from "../../components/Button.astro";
 import CostSplit from "../../components/CostSplit.astro";
 import Footer from "../../components/Footer.astro";
+import Input from "../../components/Input.astro";
 import Nav from "../../components/Nav.astro";
 import Shell from "../../layouts/Shell.astro";
 import {
@@ -584,47 +585,23 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 					>
 						<label class="grid gap-1 text-sm">
 							<span class="font-medium">Contact email</span>
-							<input
-								class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-								name="email"
-								type="email"
-								required
-							>
+							<Input name="email" type="email" required />
 						</label>
 						<label class="grid gap-1 text-sm">
 							<span class="font-medium">Contact name</span>
-							<input
-								class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-								name="name"
-								required
-							>
+							<Input name="name" required />
 						</label>
 						<label class="grid gap-1 text-sm">
 							<span class="font-medium">Organization</span>
-							<input
-								id="organization-name"
-								class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-								name="organizationName"
-								required
-							>
+							<Input id="organization-name" name="organizationName" required />
 						</label>
 						<label class="grid gap-1 text-sm">
 							<span class="font-medium">Slug</span>
-							<input
-								id="organization-slug"
-								class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-								name="slug"
-								required
-							>
+							<Input id="organization-slug" name="slug" required />
 						</label>
 						<label class="grid gap-1 text-sm md:col-span-2">
 							<span class="font-medium">Yearly budget</span>
-							<input
-								class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-								name="yearlyBudget"
-								type="number"
-								min="1"
-							>
+							<Input name="yearlyBudget" type="number" min="1" />
 						</label>
 						{onboardResult?.error && (
 							<p class="text-sm text-fg-danger md:col-span-2">

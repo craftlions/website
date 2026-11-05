@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import { and, count, eq, ne } from "drizzle-orm";
 import Button from "../../../../components/Button.astro";
+import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { member, projects } from "../../../../lib/schema.ts";
 
@@ -102,49 +103,36 @@ if (!organization) {
 				<input type="hidden" name="organizationId" value={organization.id}>
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Name</span>
-					<input
-						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-						name="name"
-						value={organization.name}
-						required
-					></label
+					<Input name="name" value={organization.name} required /></label
 				>
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Slug</span>
-					<input
-						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
-						name="slug"
-						value={organization.slug}
-						required
-					></label
+					<Input name="slug" value={organization.slug} required /></label
 				>
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Logo URL</span>
-					<input
-						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
+					<Input
 						name="logo"
 						value={organization.logo ?? ""}
 						type="url"
-					></label
+					/></label
 				>
 				<label class="grid gap-1 text-sm"
 					><span class="font-medium">Yearly budget</span>
-					<input
-						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
+					<Input
 						name="yearlyBudget"
 						value={organization.data?.yearlyBudget ?? ""}
 						type="number"
 						min="1"
-					></label
+					/></label
 				>
 				<label class="grid gap-1 text-sm md:col-span-2"
 					><span class="font-medium">Stripe customer id</span>
-					<input
-						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
+					<Input
 						name="stripeCustomerId"
 						value={organization.data?.stripeCustomerId ?? ""}
 						placeholder="cus_…"
-					></label
+					/></label
 				>
 				<div class="grid md:col-span-2"
 					><Button type="submit">Save settings</Button></div
@@ -174,11 +162,7 @@ if (!organization) {
 				<input type="hidden" name="organizationId" value={organization.id} />
 				<label class="grid gap-1 text-sm">
 					<span class="font-medium">Type {organization.name} to delete</span>
-					<input
-						class="border border-dashed border-line-danger bg-transparent px-3 py-2"
-						name="confirmation"
-						required
-					/>
+					<Input danger name="confirmation" required />
 				</label>
 				<Button type="submit">Delete organization</Button>
 			</form>
