@@ -8,6 +8,8 @@ const hues =
 	"slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
 const colorUtilities =
 	"text|bg|border|divide|outline|ring|decoration|fill|stroke|accent|caret|from|via|to";
+const colorFunctions =
+	"rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|light-dark";
 
 const rules = [
 	{
@@ -21,43 +23,55 @@ const rules = [
 	},
 	{
 		id: "arbitrary-color",
-		pattern: /-\[(?:#|rgba?\(|hsla?\(|oklch\()/g,
+		pattern: new RegExp(
+			`-\\[(?:#|color:|(?:${colorFunctions})\\()|(?<![\\w-])(?:${colorUtilities})(?:-[trblxyse])?-(?:\\[(?:var\\(|[a-z]+\\])|\\(--)`,
+			"g",
+		),
 		use: "a role token, or add one to src/styles/tokens.css",
 		doc: "DESIGN.md#role-tokens",
 	},
 	{
 		id: "interpolated-class",
-		pattern: /(?<![\w-])(?:text|bg|border|outline)-\$\{/g,
+		pattern: new RegExp(`(?<![\\w-])(?:${colorUtilities})-\\$\\{`, "g"),
 		use: "complete class names, because Tailwind cannot see interpolated ones",
 		doc: "DESIGN.md#role-tokens",
 	},
 	{
 		id: "font-size",
-		pattern: /(?<![\w-])text-(?:base|lg|[2-9]?xl|\[[\d.]+(?:px|rem|em)\])/g,
+		pattern: new RegExp(
+			`(?<![\\w-])text-(?:(?:base|lg|[2-9]?xl)(?![\\w-])|\\(length:|\\[(?!#|color:|var\\(|[a-z]+\\]|(?:${colorFunctions})\\())`,
+			"g",
+		),
 		use: "text-display, text-headline, text-title, text-label, label-caps, text-sm or text-xs",
 		doc: "DESIGN.md#3-typography",
 	},
 	{
 		id: "outline-removed",
-		pattern: /(?<![\w-])outline-(?:none|hidden)(?![\w-])/g,
+		pattern: /(?<![\w-])outline-(?:none|hidden|0)(?![\w-])/g,
 		use: "the global :focus-visible outline; adjust only outline-offset",
 		doc: "DESIGN.md#role-tokens",
 	},
 	{
 		id: "shadow",
-		pattern: /(?<![\w-])(?:inset-|drop-)?shadow(?:-[a-z0-9]+)?(?![\w-])/g,
+		pattern:
+			/(?<![\w-])(?:inset-|drop-)?shadow(?!-none(?![\w-]))(?:-[a-z0-9]+)*(?:-\[[^\]]*\]|-\([^)]*\))?(?![\w-])/g,
+		classOnly: true,
 		use: "a dashed border, because surfaces are flat",
 		doc: "DESIGN.md#4-elevation",
 	},
 	{
 		id: "radius",
-		pattern: /(?<![\w-])rounded(?:-[a-z0-9]+)*(?![\w-])/g,
+		pattern:
+			/(?<![\w-])rounded(?!-none(?![\w-]))(?:-[a-z0-9]+)*(?:-\[[^\]]*\]|-\([^)]*\))?(?![\w-])/g,
+		classOnly: true,
 		use: "square corners",
 		doc: "DESIGN.md#5-components",
 	},
 	{
 		id: "flexbox",
-		pattern: /(?<![\w-])(?:inline-)?flex(?![\w-])/g,
+		pattern:
+			/(?<![\w-])(?:inline-)?flex(?:-[a-z0-9/]+)*(?:-\[[^\]]*\])?(?![\w-])/g,
+		classOnly: true,
 		use: "grid or inline-grid",
 		doc: "AGENTS.md",
 	},
@@ -70,6 +84,10 @@ const rules = [
 	},
 ];
 
+// Shadow, rounded and flex are also ordinary words, so those rules skip free text.
+const classText = (line) =>
+	(line.match(/"[^"]*"|'[^']*'|`[^`]*`|@apply .*/g) ?? []).join(" ");
+
 const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
 	readFileSync(file, "utf8")
 		.split("\n")
@@ -78,8 +96,8 @@ const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
 				? []
 				: rules
 						.filter(({ ignore }) => ignore !== file)
-						.flatMap(({ pattern, use, doc }) =>
-							[...line.matchAll(pattern)].map(
+						.flatMap(({ pattern, use, doc, classOnly }) =>
+							[...(classOnly ? classText(line) : line).matchAll(pattern)].map(
 								([match]) =>
 									`${file}:${index + 1}  ${match} → use ${use}  (${doc})`,
 							),
