@@ -1,0 +1,36 @@
+/* Role tokens: values live here as plain CSS, so they outlast Tailwind. */
+:root {
+	color-scheme: light dark;
+
+	--fg: light-dark(#0a0a0a, #fafafa);
+	--fg-muted: light-dark(#525252, #a3a3a3);
+	--fg-danger: light-dark(#b91c1c, #fca5a5);
+	--fg-success: light-dark(#047857, #6ee7b7);
+	--fg-info: light-dark(#0369a1, #7dd3fc);
+	--fg-warning: light-dark(#b45309, #fcd34d);
+
+	--canvas: light-dark(#fafafa, #0a0a0a);
+	--panel: light-dark(#f5f5f5, #171717);
+
+	--line: light-dark(#d4d4d4, #404040);
+	--line-strong: light-dark(#a3a3a3, #525252);
+	--line-active: light-dark(#525252, #d4d4d4);
+	--line-danger: light-dark(#fca5a5, #b91c1c);
+	--line-success: light-dark(#34d399, #047857);
+	--line-info: light-dark(#7dd3fc, #0369a1);
+
+	--fill-danger: light-dark(#b91c1c, #f87171);
+	--fill-success: light-dark(#10b981, #34d399);
+	--fill-info: light-dark(#0ea5e9, #38bdf8);
+	--info-subtle: light-dark(#e0f2fe99, #082f4980);
+
+	--focus: light-dark(#404040, #d4d4d4);
+
+	--chart-1: light-dark(#1d4ed8b3, #93c5fdcc);
+	--chart-2: light-dark(#0e7490b3, #67e8f9cc);
+	--chart-3: light-dark(#c2410cb3, #fdba74cc);
+	--chart-4: light-dark(#be185db3, #f9a8d4cc);
+	--chart-5: light-dark(#6d28d9b3, #c4b5fdcc);
+	--chart-6: light-dark(#047857b3, #6ee7b7cc);
+	--chart-unassigned: light-dark(#7373738c, #a3a3a38c);
+}

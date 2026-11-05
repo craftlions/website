@@ -1,1 +1,44 @@
 @import "tailwindcss";
+@import "./tokens.css";
+
+/* Each role exists only on the utility it belongs to: `text-fg` works, `bg-fg` does not. */
+@theme inline {
+	--text-color-fg: var(--fg);
+	--text-color-fg-muted: var(--fg-muted);
+	--text-color-fg-danger: var(--fg-danger);
+	--text-color-fg-success: var(--fg-success);
+	--text-color-fg-info: var(--fg-info);
+	--text-color-fg-warning: var(--fg-warning);
+	--text-color-chart-1: var(--chart-1);
+	--text-color-chart-2: var(--chart-2);
+	--text-color-chart-3: var(--chart-3);
+	--text-color-chart-4: var(--chart-4);
+	--text-color-chart-5: var(--chart-5);
+	--text-color-chart-6: var(--chart-6);
+	--text-color-chart-unassigned: var(--chart-unassigned);
+
+	--background-color-canvas: var(--canvas);
+	--background-color-panel: var(--panel);
+	--background-color-ink: var(--fg);
+	--background-color-line-strong: var(--line-strong);
+	--background-color-fill-danger: var(--fill-danger);
+	--background-color-fill-success: var(--fill-success);
+	--background-color-fill-info: var(--fill-info);
+	--background-color-info-subtle: var(--info-subtle);
+
+	--border-color-line: var(--line);
+	--border-color-line-strong: var(--line-strong);
+	--border-color-line-active: var(--line-active);
+	--border-color-line-danger: var(--line-danger);
+	--border-color-line-success: var(--line-success);
+	--border-color-line-info: var(--line-info);
+	--border-color-fill-danger: var(--fill-danger);
+	--border-color-fill-success: var(--fill-success);
+	--border-color-fill-info: var(--fill-info);
+	--border-color-ink: var(--fg);
+	--border-color-canvas: var(--canvas);
+
+	--divide-color-line: var(--line);
+	--outline-color-fill-info: var(--fill-info);
+	--text-decoration-color-line-strong: var(--line-strong);
+}
