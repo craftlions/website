@@ -645,9 +645,10 @@ const worklist: WorklistItem[] = [
 									max="100"
 									value={Math.min(usagePercentage, 100)}
 									class:list={[
-										"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
-										usagePercentage > 100 &&
-											"[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger",
+										"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+										usagePercentage > 100
+											? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
+											: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
 									]}
 								>
 									{`${usagePercentage.toFixed(1)}% used`}
@@ -744,7 +745,7 @@ const worklist: WorklistItem[] = [
 													"px-4 py-3 text-right tabular-nums",
 													project.state === "completed"
 														? "text-fg-muted"
-														: "text-fg-muted",
+														: "text-fg",
 												]}
 											>
 												{project.splits.length > 0 ? (

@@ -84,8 +84,9 @@ const accessibleSummary =
 						{item.component}
 						<span class="normal-case"> · {dueHint[item.component]}</span>
 					</span>
-					<span class="whitespace-nowrap tabular-nums text-fg-muted">
-						{formatter.format(item.amount)} · {share(item.amount)}
+					<span class="whitespace-nowrap tabular-nums text-fg">
+						{formatter.format(item.amount)}
+						<span class="text-fg-muted"> · {share(item.amount)}</span>
 					</span>
 				</li>
 			))}
@@ -115,7 +116,7 @@ const accessibleSummary =
 								{dueHint[item.component]}
 							</span>
 						</span>
-						<span class="text-xs tabular-nums text-fg-muted">
+						<span class="text-xs tabular-nums text-fg">
 							{formatter.format(item.amount)}
 							<span class="text-fg-muted"> · {share(item.amount)}</span>
 						</span>
