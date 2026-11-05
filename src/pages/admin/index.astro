@@ -489,9 +489,10 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 												<div class="grid gap-1">
 													<progress
 														class:list={[
-															"h-2 w-24 appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
-															organization.budgetUsage > 100 &&
-																"[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger",
+															"h-2 w-24 appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+															organization.budgetUsage > 100
+																? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
+																: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
 														]}
 														max="100"
 														value={Math.min(organization.budgetUsage, 100)}
