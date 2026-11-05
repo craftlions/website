@@ -1,95 +1,113 @@
 ---
-
 name: craftlions website
 description: A plain technical client portal with line-drawn controls, neutral surfaces, and exact project data.
 colors:
-paper-neutral: "#fafafa"
-ink-neutral: "#0a0a0a"
-panel-neutral: "#f5f5f5"
-dashed-line: "#d4d4d4"
-dashed-line-strong: "#a3a3a3"
-muted-text: "#525252"
-inverse-paper: "#0a0a0a"
-inverse-ink: "#fafafa"
-inverse-panel: "#171717"
-inverse-line: "#404040"
-link-blue: "#0369a1"
-link-blue-dark: "#7dd3fc"
-status-info: "#0369a1"
-status-success: "#047857"
-status-error: "#b91c1c"
-status-warning: "#b45309"
-chart-categorical: ["#1d4ed8", "#0e7490", "#c2410c", "#be185d", "#6d28d9", "#047857"]
-chart-categorical-dark: ["#93c5fd", "#67e8f9", "#fdba74", "#f9a8d4", "#c4b5fd", "#6ee7b7"]
-chart-unassigned: "#737373"
-chart-unassigned-dark: "#a3a3a3"
+  paper-neutral: "#fafafa"
+  ink-neutral: "#0a0a0a"
+  panel-neutral: "#f5f5f5"
+  dashed-line: "#d4d4d4"
+  dashed-line-strong: "#a3a3a3"
+  muted-text: "#525252"
+  inverse-paper: "#0a0a0a"
+  inverse-ink: "#fafafa"
+  inverse-panel: "#171717"
+  inverse-line: "#404040"
+  link-blue: "#0369a1"
+  link-blue-dark: "#7dd3fc"
+  status-info: "#0369a1"
+  status-info-dark: "#7dd3fc"
+  status-success: "#047857"
+  status-success-dark: "#6ee7b7"
+  status-error: "#b91c1c"
+  status-error-dark: "#fca5a5"
+  status-warning: "#b45309"
+  status-warning-dark: "#fcd34d"
+  status-line-error: "#fca5a5"
+  status-line-success: "#34d399"
+  status-line-info: "#7dd3fc"
+  fill-error: "#b91c1c"
+  fill-error-dark: "#f87171"
+  fill-success: "#10b981"
+  fill-success-dark: "#34d399"
+  fill-info: "#0ea5e9"
+  fill-info-dark: "#38bdf8"
+  info-subtle: "#e0f2fe99"
+  info-subtle-dark: "#082f4980"
+  chart-categorical: ["#1d4ed8", "#0e7490", "#c2410c", "#be185d", "#6d28d9", "#047857"]
+  chart-categorical-dark: ["#93c5fd", "#67e8f9", "#fdba74", "#f9a8d4", "#c4b5fd", "#6ee7b7"]
+  chart-unassigned: "#737373"
+  chart-unassigned-dark: "#a3a3a3"
 typography:
-display:
-fontFamily: "ui-sans-serif, system-ui, sans-serif"
-fontSize: "1.875rem"
-fontWeight: 600
-lineHeight: 1.25
-letterSpacing: "0"
-headline:
-fontFamily: "ui-sans-serif, system-ui, sans-serif"
-fontSize: "1.5rem"
-fontWeight: 600
-lineHeight: 1.333
-letterSpacing: "0"
-title:
-fontFamily: "ui-sans-serif, system-ui, sans-serif"
-fontSize: "1.25rem"
-fontWeight: 600
-lineHeight: 1.4
-letterSpacing: "0"
-body:
-fontFamily: "ui-sans-serif, system-ui, sans-serif"
-fontSize: "1rem"
-fontWeight: 400
-lineHeight: 1.5
-letterSpacing: "0"
-label:
-fontFamily: "ui-sans-serif, system-ui, sans-serif"
-fontSize: "0.875rem"
-fontWeight: 600
-lineHeight: 1.429
-letterSpacing: "0"
+  display:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.875rem"
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: "0"
+  headline:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 600
+    lineHeight: 1.333
+    letterSpacing: "0"
+  title:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 600
+    lineHeight: 1.4
+    letterSpacing: "0"
+  body:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: "0"
+  label:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 600
+    lineHeight: 1.429
+    letterSpacing: "0"
+  caption:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.75rem"
+    fontWeight: 600
+    lineHeight: 1.333
+    letterSpacing: "0"
 rounded:
-none: "0px"
-sm: "4px"
-md: "6px"
+  none: "0px"
 spacing:
-xs: "4px"
-sm: "6px"
-md: "12px"
-lg: "16px"
-xl: "24px"
-page: "48px"
+  xs: "4px"
+  sm: "6px"
+  md: "12px"
+  lg: "16px"
+  xl: "24px"
+  page: "48px"
 components:
-button-default:
-backgroundColor: "transparent"
-textColor: "{colors.ink-neutral}"
-rounded: "{rounded.none}"
-padding: "4px 12px"
-typography: "{typography.label}"
-button-hover:
-backgroundColor: "{colors.panel-neutral}"
-textColor: "{colors.ink-neutral}"
-rounded: "{rounded.none}"
-padding: "4px 12px"
-typography: "{typography.label}"
-input-default:
-backgroundColor: "transparent"
-textColor: "{colors.ink-neutral}"
-rounded: "{rounded.none}"
-padding: "8px 12px"
-typography: "{typography.label}"
-badge-info:
-backgroundColor: "transparent"
-textColor: "{colors.status-info}"
-rounded: "{rounded.none}"
-padding: "4px 10px"
-typography: "{typography.label}"
+  button-default:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-neutral}"
+    rounded: "{rounded.none}"
+    padding: "4px 12px"
+    typography: "{typography.label}"
+  button-hover:
+    backgroundColor: "{colors.panel-neutral}"
+    textColor: "{colors.ink-neutral}"
+    rounded: "{rounded.none}"
+    padding: "4px 12px"
+    typography: "{typography.label}"
+  input-default:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-neutral}"
+    rounded: "{rounded.none}"
+    padding: "8px 12px"
+    typography: "{typography.label}"
+  badge-info:
+    backgroundColor: "transparent"
+    textColor: "{colors.status-info}"
+    rounded: "{rounded.none}"
+    padding: "4px 10px"
+    typography: "{typography.label}"
 ---
 
 # Design System: craftlions website
@@ -198,7 +216,7 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 - **Headline** (`text-headline`; 600, 1.5rem, 1.333): major public-page section headings.
 - **Title** (`text-title`; 600, 1.25rem, 1.4): article titles, card headings, and compact section titles.
 - **Body** (400, 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.
-- **Label** (`text-label` at 0.875rem, or `eyebrow` for 0.75rem uppercase table and metric labels; 600): section labels, table headers, form labels, badges, and buttons.
+- **Label** (`text-label` at 0.875rem, or `label-caps` for 0.75rem uppercase table and metric labels; 600): section labels, table headers, form labels, badges, and buttons.
 
 Each role carries its size, weight, and line height together, so do not add `font-*` or `leading-*` to it. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
 
@@ -270,7 +288,7 @@ Tables are the main product surface for project, phase, invoice, and budget data
 
 - **Structure:** full-width tables with dashed outer borders and dashed row dividers.
 - **Density:** compact but readable cells (12-16px vertical rhythm).
-- **Headers:** semibold uppercase labels using the `eyebrow` class.
+- **Headers:** semibold uppercase labels using the `label-caps` class.
 - **Rows:** hover fills are neutral and subtle; status is shown through badges.
 - **Overflow:** horizontal overflow is acceptable for dense data; do not crush columns until labels become ambiguous.
 

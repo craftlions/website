@@ -12,7 +12,8 @@
       "!**/.cloudflare",
       "!**/drizzle",
       "!**/.agents",
-      "!**/.claude"
+      "!**/.claude",
+      "!DESIGN.md"
     ]
   },
   "formatter": {
