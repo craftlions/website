@@ -119,9 +119,7 @@ const archivedProjects = projects.filter(
 	)}
 	<section class="grid gap-4" aria-labelledby="projects-heading">
 		<div class="grid grid-cols-[1fr_auto] items-center gap-3">
-			<h2
-				id="projects-heading"
-				class="text-sm font-semibold uppercase text-fg-muted"
+			<h2 id="projects-heading" class="text-label uppercase text-fg-muted"
 				>Projects</h2
 			>
 		</div>
@@ -158,9 +156,7 @@ const archivedProjects = projects.filter(
 								class="grid content-start gap-3 border border-dashed border-line p-4 transition-colors hover:border-line-active hover:bg-panel"
 							>
 								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-									<h3 class="text-lg font-semibold wrap-break-word">
-										{project.name}
-									</h3>
+									<h3 class="text-title wrap-break-word">{project.name}</h3>
 									<Badge
 										type={project.state === "completed" ? "success" : "info"}
 									>

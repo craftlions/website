@@ -314,17 +314,15 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 		<main class="grid w-full max-w-5xl content-start gap-8 mx-auto">
 			<section class="grid gap-4">
 				<div class="grid gap-1">
-					<p class="text-sm font-semibold uppercase text-fg-muted">Admin</p>
+					<p class="text-label uppercase text-fg-muted">Admin</p>
 					<h1
-						class="border-l border-dashed border-line-strong pl-3 text-3xl font-semibold leading-tight"
+						class="border-l border-dashed border-line-strong pl-3 text-display"
 						>Client workbench</h1
 					>
 				</div>
 				<dl class="grid grid-flow-col justify-start gap-8 text-sm">
 					<div class="grid content-start gap-1">
-						<dt class="text-xs font-semibold uppercase text-fg-muted"
-							>Outstanding</dt
-						>
+						<dt class="eyebrow">Outstanding</dt>
 						<dd class="tabular-nums"
 							>{currencyFormatter.format(outstandingTotal)}</dd
 						>
@@ -341,9 +339,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 						)}
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-fg-muted"
-							>Overdue</dt
-						>
+						<dt class="eyebrow">Overdue</dt>
 						<dd
 							class:list={[
 								"tabular-nums",
@@ -353,18 +349,14 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 						>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-fg-muted"
-							>In queue</dt
-						>
+						<dt class="eyebrow">In queue</dt>
 						<dd class="tabular-nums">{queue.length}</dd>
 					</div>
 				</dl>
 			</section>
 
 			<section class="grid gap-3" aria-labelledby="queue-heading">
-				<h2
-					id="queue-heading"
-					class="text-sm font-semibold uppercase text-fg-muted"
+				<h2 id="queue-heading" class="text-label uppercase text-fg-muted"
 					>Needs action</h2
 				>
 				<div
@@ -432,9 +424,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 			</section>
 
 			<section class="grid gap-3" aria-labelledby="ledger-heading">
-				<h2
-					id="ledger-heading"
-					class="text-sm font-semibold uppercase text-fg-muted"
+				<h2 id="ledger-heading" class="text-label uppercase text-fg-muted"
 					>Client ledger</h2
 				>
 				<div class="overflow-x-auto border border-dashed border-line">
@@ -584,7 +574,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 				>
 					<summary
 						id="onboard-heading"
-						class="w-max cursor-pointer text-sm font-semibold uppercase text-fg-muted transition-colors hover:text-fg"
+						class="w-max cursor-pointer text-label uppercase text-fg-muted transition-colors hover:text-fg"
 						>Onboard client</summary
 					>
 					<form

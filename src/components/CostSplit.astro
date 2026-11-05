@@ -90,9 +90,9 @@ const accessibleSummary =
 				</li>
 			))}
 		</ul>
-		{caption && <p class="text-[11px] text-fg-muted">{caption}</p>}
+		{caption && <p class="text-xs text-fg-muted">{caption}</p>}
 		{items.length === 1 && !caption && (
-			<p class="text-[11px] text-fg-muted">
+			<p class="text-xs text-fg-muted">
 				Single payment {dueHint[items[0]?.component ?? "acceptance"]}
 			</p>
 		)}
@@ -131,14 +131,14 @@ const accessibleSummary =
 			))}
 		</ul>
 		{caption ? (
-			<p class="text-[11px] text-fg-muted">{caption}</p>
+			<p class="text-xs text-fg-muted">{caption}</p>
 		) : items.length === 1 ? (
-			<p class="text-[11px] text-fg-muted">
+			<p class="text-xs text-fg-muted">
 				Single payment {dueHint[items[0]?.component ?? "acceptance"]} ·{" "}
 				{formatter.format(total)} total
 			</p>
 		) : (
-			<p class="text-[11px] tabular-nums text-fg-muted">
+			<p class="text-xs tabular-nums text-fg-muted">
 				{formatter.format(total)} total in {items.length} parts
 			</p>
 		)}

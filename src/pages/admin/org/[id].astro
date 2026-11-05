@@ -198,22 +198,18 @@ const sections = [
 		<h2 id="overview-heading" class="sr-only">Overview</h2>
 		<dl class="grid gap-3 md:grid-cols-3">
 			<div class="grid gap-1">
-				<dt class="text-xs font-semibold uppercase text-fg-muted"
-					>Budget used</dt
-				>
+				<dt class="eyebrow">Budget used</dt>
 				<dd
 					class:list={[
-						"text-xl font-semibold tabular-nums",
+						"text-title tabular-nums",
 						hasBudget && usagePercentage > 100 && "text-fg-danger",
 					]}
 					>{hasBudget ? `${usagePercentage.toFixed(1)}%` : "No budget"}</dd
 				>
 			</div>
 			<div class="grid content-start gap-1">
-				<dt class="text-xs font-semibold uppercase text-fg-muted"
-					>Open invoices</dt
-				>
-				<dd class="text-xl font-semibold tabular-nums"
+				<dt class="eyebrow">Open invoices</dt>
+				<dd class="text-title tabular-nums"
 					>{currencyFormatter.format(organization.openInvoiceTotal)}</dd
 				>
 				{openByPart.length > 0 && (
@@ -229,10 +225,8 @@ const sections = [
 				)}
 			</div>
 			<div class="grid gap-1">
-				<dt class="text-xs font-semibold uppercase text-fg-muted"
-					>Active projects</dt
-				>
-				<dd class="text-xl font-semibold tabular-nums"
+				<dt class="eyebrow">Active projects</dt>
+				<dd class="text-title tabular-nums"
 					>{organization.activeProjectCount}</dd
 				>
 			</div>

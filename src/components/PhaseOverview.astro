@@ -131,9 +131,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 			<div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
 				<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-fg-muted">
-							Est. Cost
-						</dt>
+						<dt class="eyebrow">Est. Cost</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(
 								rows
@@ -143,23 +141,19 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 						</dd>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-fg-muted">Paid</dt>
+						<dt class="eyebrow">Paid</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(invoicesWhere(["paid"]))}
 						</dd>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-fg-muted">
-							Outstanding
-						</dt>
+						<dt class="eyebrow">Outstanding</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(invoicesWhere(["open", "overdue"]))}
 						</dd>
 					</div>
 					<div class="grid gap-1">
-						<dt class="text-xs font-semibold uppercase text-fg-muted">
-							Overdue
-						</dt>
+						<dt class="eyebrow">Overdue</dt>
 						<dd class:list={["tabular-nums", hasOverdue && "text-fg-danger"]}>
 							{sumByCurrency(invoicesWhere(["overdue"]))}
 						</dd>
@@ -191,7 +185,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 			<div class="grid border border-dashed border-line md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] md:gap-x-6">
 				<div
 					aria-hidden="true"
-					class="hidden border-b border-dashed border-line px-4 py-3 text-xs font-semibold uppercase text-fg-muted md:col-span-5 md:grid md:grid-cols-subgrid"
+					class="hidden border-b border-dashed border-line px-4 py-3 eyebrow md:col-span-5 md:grid md:grid-cols-subgrid"
 				>
 					<span>Phase</span>
 					<span>State</span>
@@ -366,9 +360,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							>
 								<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
 									<div class="grid gap-1">
-										<dt class="text-xs font-semibold uppercase text-fg-muted">
-											Epic
-										</dt>
+										<dt class="eyebrow">Epic</dt>
 										<dd>
 											{phase.externalUrl ? (
 												<a
@@ -386,9 +378,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 										</dd>
 									</div>
 									<div class="grid gap-1">
-										<dt class="text-xs font-semibold uppercase text-fg-muted">
-											Delivery
-										</dt>
+										<dt class="eyebrow">Delivery</dt>
 										<dd>
 											{phase.deliveryState === "url" && phase.deliveryUrl ? (
 												<a
@@ -413,10 +403,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 									class="grid gap-2"
 									aria-labelledby={`phase-${phase.publicId}-schedule`}
 								>
-									<h4
-										id={`phase-${phase.publicId}-schedule`}
-										class="text-xs font-semibold uppercase text-fg-muted"
-									>
+									<h4 id={`phase-${phase.publicId}-schedule`} class="eyebrow">
 										Payment Schedule
 									</h4>
 									{phase.parts.length > 0 ? (

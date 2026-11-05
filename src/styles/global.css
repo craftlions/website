@@ -41,11 +41,34 @@
 	--divide-color-line: var(--line);
 	--outline-color-fill-info: var(--fill-info);
 	--text-decoration-color-line-strong: var(--line-strong);
+
+	--text-display: 1.875rem;
+	--text-display--line-height: 1.25;
+	--text-display--font-weight: 600;
+	--text-headline: 1.5rem;
+	--text-headline--line-height: calc(2 / 1.5);
+	--text-headline--font-weight: 600;
+	--text-title: 1.25rem;
+	--text-title--line-height: 1.4;
+	--text-title--font-weight: 600;
+	--text-label: 0.875rem;
+	--text-label--line-height: calc(1.25 / 0.875);
+	--text-label--font-weight: 600;
 }
 
 @layer base {
 	:focus-visible {
 		outline: 2px solid var(--focus);
 		outline-offset: 2px;
+	}
+}
+
+@layer components {
+	.eyebrow {
+		color: var(--fg-muted);
+		font-size: 0.75rem;
+		font-weight: 600;
+		line-height: calc(1 / 0.75);
+		text-transform: uppercase;
 	}
 }

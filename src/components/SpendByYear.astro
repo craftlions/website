@@ -109,7 +109,7 @@ const hasNegativeSpend = bars.some((bar) =>
 ---
 
 <section aria-labelledby="spend-heading" class="grid content-start gap-3">
-	<h2 id="spend-heading" class="text-sm font-semibold uppercase text-fg-muted">
+	<h2 id="spend-heading" class="text-label uppercase text-fg-muted">
 		Spend by year
 	</h2>
 
@@ -184,7 +184,7 @@ const hasNegativeSpend = bars.some((bar) =>
 											>
 												{currencyFormatter.format(bar.total)}
 											</span>
-											<span class="text-xs font-semibold uppercase text-fg-muted">
+											<span class="eyebrow">
 												{bar.year}
 												{bar.year === currentYear && (
 													<span class="sr-only"> (current year)</span>
