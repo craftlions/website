@@ -38,6 +38,7 @@ aubr types
 aubr cf-check
 aubx astro sync
 aubr check
+aubr design:lint
 aubx biome check --write
 ```
 
