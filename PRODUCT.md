@@ -28,7 +28,7 @@ The differentiator is the engineering and advisory work itself: careful, durable
 
 ## Capabilities and Constraints
 
-- Confirmed functionality: email/password auth with password reset, organizations with members and invitations, projects with phases, milestones, invoices, budget tracking, an event history, a changelog page, an admin area (organization, user, project, phase, and invoice management plus welcome-mail onboarding), API keys, and rate limiting.
+- Confirmed functionality: email/password auth with password reset, organizations with members and invitations, projects with phases, milestones, invoices, budget tracking, an event history, an admin area (organization, user, project, phase, and invoice management plus welcome-mail onboarding), API keys, and rate limiting.
 - Terminology: organization, project, phase, milestone, invoice, budget, event, transition. Use these words; do not introduce parallel terms for the same concepts.
 - Explicitly undecided: notification channels (mail, Slack, webhook) and the exact shape of the self-service API are roadmap items, not commitments.
 
