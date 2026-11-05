@@ -32,7 +32,7 @@ const rules = [
 	{
 		id: "font-size",
 		pattern: /(?<![\w-])text-(?:base|lg|[2-9]?xl|\[[\d.]+(?:px|rem|em)\])/g,
-		use: "text-display, text-headline, text-title, text-label, eyebrow, text-sm or text-xs",
+		use: "text-display, text-headline, text-title, text-label, label-caps, text-sm or text-xs",
 		doc: "DESIGN.md#3-typography",
 	},
 	{
@@ -84,6 +84,23 @@ const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
 						),
 		),
 );
+
+// DESIGN.md frontmatter is what Impeccable reads, so it must keep up with tokens.css.
+const frontmatter = readFileSync("DESIGN.md", "utf8").split("---\n")[1] ?? "";
+if (!/^colors:\n {2}\S/m.test(frontmatter)) {
+	violations.push(
+		"DESIGN.md  frontmatter is not nested YAML → restore its indentation",
+	);
+}
+for (const [hex] of readFileSync("src/styles/tokens.css", "utf8").matchAll(
+	/#[\da-f]{6,8}/g,
+)) {
+	if (!frontmatter.includes(hex.slice(0, 7))) {
+		violations.push(
+			`src/styles/tokens.css  ${hex} → add it to the DESIGN.md frontmatter`,
+		);
+	}
+}
 
 if (violations.length > 0) {
 	console.error(violations.join("\n"));
