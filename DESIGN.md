@@ -8,8 +8,7 @@ ink-neutral: "#0a0a0a"
 panel-neutral: "#f5f5f5"
 dashed-line: "#d4d4d4"
 dashed-line-strong: "#a3a3a3"
-muted-text: "#404040"
-soft-text: "#737373"
+muted-text: "#525252"
 inverse-paper: "#0a0a0a"
 inverse-ink: "#fafafa"
 inverse-panel: "#171717"
@@ -19,8 +18,9 @@ link-blue-dark: "#7dd3fc"
 status-info: "#0369a1"
 status-success: "#047857"
 status-error: "#b91c1c"
-chart-categorical: ["#4f46e5", "#0f766e", "#b45309", "#be123c", "#6d28d9", "#047857"]
-chart-categorical-dark: ["#a5b4fc", "#5eead4", "#fcd34d", "#fda4af", "#c4b5fd", "#6ee7b7"]
+status-warning: "#b45309"
+chart-categorical: ["#1d4ed8", "#0e7490", "#c2410c", "#be185d", "#6d28d9", "#047857"]
+chart-categorical-dark: ["#93c5fd", "#67e8f9", "#fdba74", "#f9a8d4", "#c4b5fd", "#6ee7b7"]
 chart-unassigned: "#737373"
 chart-unassigned-dark: "#a3a3a3"
 typography:
@@ -52,7 +52,7 @@ label:
 fontFamily: "ui-sans-serif, system-ui, sans-serif"
 fontSize: "0.875rem"
 fontWeight: 600
-lineHeight: 1.25
+lineHeight: 1.429
 letterSpacing: "0"
 rounded:
 none: "0px"
@@ -138,8 +138,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 - **Panel Neutral**: low-emphasis hover and grouped-surface color.
 - **Dashed Line**: the default line color for borders, dividers, tables, inputs, and empty states.
 - **Dashed Line Strong**: the headline rule and stronger structural line color.
-- **Muted Text**: secondary body text and table values.
-- **Soft Text**: labels, metadata, placeholders, pagination status, and helper text.
+- **Muted Text**: secondary text of every kind: body copy, table values, labels, metadata, placeholders, and helper text. There is one muted tier; express further hierarchy with size or weight.
 - **Inverse Paper / Inverse Ink / Inverse Panel / Inverse Line**: dark-mode equivalents used with the same hierarchy.
 
 ### Named Rules
@@ -148,11 +147,36 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 
 **The State Color Rule.** Blue, green, and red must map to information, success, and error/risk. Do not use state colors as decoration. The one exception is the spend chart's categorical hatch marks, which use the chart palette and encode data, not state (see Data Visualization).
 
+### Role Tokens
+
+Classes say what something is, never how it looks. Values live in `src/styles/tokens.css` as plain custom properties with `light-dark()`, so one class covers both color schemes; `src/styles/global.css` maps them to Tailwind utilities. Each role exists only on its own utility, so `text-fg` works and `bg-fg` does not. The Tailwind color palette is removed: a class such as `text-neutral-500` renders nothing, and `aubr design:lint` rejects it.
+
+| Utility                                           | Use for                                                                      |
+| ------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `text-fg`                                         | Primary text and values                                                      |
+| `text-fg-muted`                                   | All secondary text, including placeholders                                   |
+| `text-fg-danger`, `-success`, `-info`, `-warning` | Status text and text links (`-info`)                                         |
+| `bg-canvas`                                       | The page, and anything that must cover it                                    |
+| `bg-panel`                                        | Hover and grouped fills                                                      |
+| `bg-ink`                                          | Solid marks: progress fill, checked controls, pace marker                    |
+| `bg-fill-danger`, `-success`, `-info`             | Status fills; also on `border-`                                              |
+| `bg-info-subtle`                                  | Tinted highlight of a linked target                                          |
+| `border-line`                                     | Default structure, also `divide-line`                                        |
+| `border-line-strong`                              | Headline rules, gray badges, checkbox outlines, also `bg-` and `decoration-` |
+| `border-line-active`                              | Hover, focus, and pressed borders                                            |
+| `border-line-danger`, `-success`, `-info`         | Status outlines                                                              |
+| `border-ink`, `border-canvas`                     | Active tab, pace marker edge                                                 |
+| `text-chart-1`…`6`, `text-chart-unassigned`       | Spend chart only                                                             |
+
+A new token is a design decision: add it to `tokens.css`, `global.css`, and this table together.
+
+Focus is global. Every focusable element gets the `:focus-visible` outline in `--focus` from the base layer; do not remove it or restyle it per component.
+
 ### Data Visualization
 
 The spend chart is the portal's single colored data surface. It stays a chart, not a dashboard carnival: one categorical palette, assigned in stable order, with meaning carried by pattern plus the legend and the exact-amounts table.
 
-- **Categorical series** (`chart-categorical`, dark `chart-categorical-dark`): project segments render as **diagonal hatching** (a 135° repeating linear gradient) in muted ink colors at reduced opacity (55–60%), cycled in stable order; repeat when a year holds more projects than the palette. The hatch pattern, not a solid fill, separates one project from another.
+- **Categorical series** (`chart-categorical`, dark `chart-categorical-dark`): project segments render as **diagonal hatching** (a 135° repeating linear gradient) in muted ink colors at reduced opacity (70% light, 80% dark), cycled in stable order; repeat when a year holds more projects than the palette. The hatch pattern, not a solid fill, separates one project from another.
 - **Unassigned** (`chart-unassigned`): phase-less spend stays a neutral gray so it reads as "not a project" and is drawn open (no fill).
 - **State colors keep their meaning everywhere, including the chart**: never use status hues for segments or fills.
 - **Color is never the only code**: bars carry their exact year total as text, each bar labels its year, the legend maps a hatch swatch to its project name, and the exact-amounts table holds the numbers.
@@ -168,11 +192,13 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 
 ### Hierarchy
 
-- **Display** (600, 1.875rem, 1.25): page h1 headings with a dashed left rule.
-- **Headline** (600, 1.5rem, 1.333): major public-page section headings.
-- **Title** (600, 1.25rem, 1.4): article titles, card headings, and compact section titles.
+- **Display** (`text-display`; 600, 1.875rem, 1.25): page h1 headings with a dashed left rule.
+- **Headline** (`text-headline`; 600, 1.5rem, 1.333): major public-page section headings.
+- **Title** (`text-title`; 600, 1.25rem, 1.4): article titles, card headings, and compact section titles.
 - **Body** (400, 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.
-- **Label** (600, 0.875rem or 0.75rem, uppercase only for table and metric labels): section labels, table headers, form labels, badges, and buttons.
+- **Label** (`text-label` at 0.875rem, or `eyebrow` for 0.75rem uppercase table and metric labels; 600): section labels, table headers, form labels, badges, and buttons.
+
+Each role carries its size, weight, and line height together, so do not add `font-*` or `leading-*` to it. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
 
 ### Named Rules
 
@@ -223,7 +249,8 @@ Containers are simple line planes.
 Inputs follow the same line vocabulary as buttons.
 
 - **Style:** transparent background, 1px dashed neutral border, 8px 12px padding, small text.
-- **Focus:** border shifts to stronger neutral; outline is avoided on the input only where the border state is clear.
+- **Component:** use `src/components/Input.astro`, with `as="select"` for selects and `danger` for destructive confirmations.
+- **Focus:** border shifts to stronger neutral, in addition to the global focus outline.
 - **Placeholder / Disabled:** placeholder text is muted but must remain readable against the active surface.
 - **Error:** error text uses status red and should be placed near the field it explains.
 
@@ -237,7 +264,7 @@ Tables are the main product surface for project, phase, invoice, and budget data
 
 - **Structure:** full-width tables with dashed outer borders and dashed row dividers.
 - **Density:** compact but readable cells (12-16px vertical rhythm).
-- **Headers:** semibold labels, often uppercase at text-xs.
+- **Headers:** semibold uppercase labels using the `eyebrow` class.
 - **Rows:** hover fills are neutral and subtle; status is shown through badges.
 - **Overflow:** horizontal overflow is acceptable for dense data; do not crush columns until labels become ambiguous.
 
@@ -253,7 +280,7 @@ Progress is used for budget state and remains literal.
 
 ### Do:
 
-- **Do** use inline Tailwind utilities and grid layouts to match the existing project conventions.
+- **Do** use inline Tailwind utilities built on role tokens, and grid layouts, to match the existing project conventions.
 - **Do** use 1px dashed neutral borders for structure, panels, tables, inputs, empty states, and buttons.
 - **Do** keep product data exact, scannable, and close to its label.
 - **Do** use neutral hover fills and visible focus outlines on interactive controls.
