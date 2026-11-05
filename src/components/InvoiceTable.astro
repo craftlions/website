@@ -128,23 +128,23 @@ const componentLabel: Record<string, string> = {
 		<div class="grid gap-3">
 			<dl class="grid grid-flow-col justify-start gap-8 text-sm">
 				<div class="grid gap-1">
-					<dt class="eyebrow">Outstanding</dt>
+					<dt class="label-caps">Outstanding</dt>
 					<dd class="tabular-nums">{totalWhere(["open", "overdue"])}</dd>
 				</div>
 				<div class="grid gap-1">
-					<dt class="eyebrow">Overdue</dt>
+					<dt class="label-caps">Overdue</dt>
 					<dd class:list={["tabular-nums", hasOverdue && "text-fg-danger"]}>
 						{totalWhere(["overdue"])}
 					</dd>
 				</div>
 				<div class="grid gap-1">
-					<dt class="eyebrow">Paid</dt>
+					<dt class="label-caps">Paid</dt>
 					<dd class="tabular-nums">{totalWhere(["paid"])}</dd>
 				</div>
 			</dl>
 			{partSummaryItems.length > 0 && (
 				<div class="grid gap-2 border border-dashed border-line p-3">
-					<p class="eyebrow">Invoiced by cost part</p>
+					<p class="label-caps">Invoiced by cost part</p>
 					<div class="max-w-md">
 						<CostSplit
 							items={partSummaryItems}
@@ -196,7 +196,7 @@ const componentLabel: Record<string, string> = {
 					<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
 						<div class="grid gap-2">
 							<div class="grid gap-1">
-								<p class="eyebrow leading-none">
+								<p class="label-caps leading-none">
 									Invoice {invoice.invoiceNumber}
 								</p>
 								<div class="grid grid-flow-col items-center justify-start gap-2">
@@ -231,7 +231,7 @@ const componentLabel: Record<string, string> = {
 							</div>
 							<dl class="grid gap-x-6 gap-y-3 text-sm leading-snug sm:grid-cols-[minmax(0,1fr)_auto]">
 								<div class="grid gap-1">
-									<dt class="eyebrow leading-none">Due</dt>
+									<dt class="label-caps leading-none">Due</dt>
 									<dd
 										class:list={[
 											invoice.status === "overdue" && "text-fg-danger",
@@ -243,7 +243,7 @@ const componentLabel: Record<string, string> = {
 									</dd>
 								</div>
 								<div class="grid gap-1">
-									<dt class="eyebrow leading-none">Status</dt>
+									<dt class="label-caps leading-none">Status</dt>
 									<dd>
 										<div class="grid grid-flow-col items-center justify-start gap-2 whitespace-nowrap">
 											{invoice.status === "overdue" ? (
@@ -266,7 +266,7 @@ const componentLabel: Record<string, string> = {
 									</dd>
 								</div>
 								<div class="grid gap-1">
-									<dt class="eyebrow leading-none">Work</dt>
+									<dt class="label-caps leading-none">Work</dt>
 									<dd>
 										{invoice.phase?.project ? (
 											<a
@@ -281,7 +281,7 @@ const componentLabel: Record<string, string> = {
 									</dd>
 								</div>
 								<div class="grid gap-1">
-									<dt class="eyebrow leading-none">Delivery</dt>
+									<dt class="label-caps leading-none">Delivery</dt>
 									<dd>
 										{invoice.phase?.deliveryState === "url" &&
 										invoice.phase.deliveryUrl ? (
