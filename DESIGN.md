@@ -168,7 +168,9 @@ Classes say what something is, never how it looks. Values live in `src/styles/to
 | `border-ink`, `border-canvas`                     | Active tab, pace marker edge                                                 |
 | `text-chart-1`…`6`, `text-chart-unassigned`       | Spend chart only                                                             |
 
-A new token is a design decision: add it to `tokens.css`, `global.css`, and this table together.
+A new token is a design decision: add it to `tokens.css`, `global.css`, and this table together. The dev-only `/design` page reads `tokens.css`, so it shows the new token with its contrast ratios automatically; add new primitives to it by hand.
+
+Give an element one role per property, and choose between roles with a ternary. Tailwind orders utilities itself, not by class order, so stacking `text-fg-muted` with a conditional `text-fg-danger` lets the wrong one win.
 
 Focus is global. Every focusable element gets the `:focus-visible` outline in `--focus` from the base layer; do not remove it or restyle it per component.
 
@@ -225,7 +227,11 @@ Buttons are compact, transparent, and line-drawn.
 - **Shape:** square corners by default (0px radius).
 - **Default:** transparent background, 1px dashed neutral border, neutral text, compact padding (4px 12px), inline-grid alignment.
 - **Hover / Focus:** hover darkens the border and adds a neutral fill; focus uses a visible 2px outline with offset.
-- **Disabled:** disabled buttons keep their shape and drop to 50% opacity with a not-allowed cursor.
+- **Pressed:** set `aria-pressed` and the button styles itself, like hover.
+- **Disabled:** disabled buttons keep their shape, drop to 50% opacity with a not-allowed cursor, and do not react to hover.
+- **Component:** every action is `src/components/Button.astro`; `aubr design:lint` rejects a raw `<button>`. It renders `<a>` with `href` and `<summary>` with `as="summary"`.
+- **Quiet:** `variant="quiet"` is a dashed underline for secondary actions in dense admin rows.
+- **Hint:** `variant="hint"` is the 1rem square that opens a tooltip.
 
 ### Chips
 
