@@ -22,7 +22,7 @@ if (session) {
 	<Fragment slot="head"> <title>craftlions | Login</title> </Fragment>
 	<Fragment slot="body">
 		<body
-			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-12 p-4 text-pretty"
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-canvas text-fg antialiased gap-12 p-4 text-pretty"
 		>
 			<header class="grid gap-6 justify-items-center max-w-3xl mx-auto">
 				<Nav variant="marketing" />
@@ -30,7 +30,7 @@ if (session) {
 
 			<main class="w-full grid content-start min-h-0 max-w-lg mx-auto gap-6">
 				<h1
-					class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+					class="border-l border-dashed border-line-strong pl-3 text-3xl font-semibold leading-tight"
 				>
 					Sign in
 				</h1>
@@ -42,10 +42,7 @@ if (session) {
 				>
 					<fieldset class="grid gap-4 border-none p-0 m-0">
 						<div class="grid gap-1.5">
-							<label
-								for="email"
-								class="text-sm font-semibold text-neutral-700 dark:text-neutral-300"
-							>
+							<label for="email" class="text-sm font-semibold text-fg-muted">
 								Email address
 							</label>
 							<input
@@ -55,15 +52,12 @@ if (session) {
 								autocomplete="email"
 								required
 								placeholder="you@example.com"
-								class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-600 dark:border-neutral-700 dark:placeholder:text-neutral-600 dark:focus:border-neutral-300"
+								class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-fg-muted focus:border-line-active"
 							>
 						</div>
 
 						<div class="grid gap-1.5">
-							<label
-								for="password"
-								class="text-sm font-semibold text-neutral-700 dark:text-neutral-300"
-							>
+							<label for="password" class="text-sm font-semibold text-fg-muted">
 								Password
 							</label>
 							<input
@@ -73,11 +67,11 @@ if (session) {
 								autocomplete="current-password"
 								required
 								placeholder="••••••••"
-								class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-600 dark:border-neutral-700 dark:placeholder:text-neutral-600 dark:focus:border-neutral-300"
+								class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors placeholder:text-fg-muted focus:border-line-active"
 							>
 							<a
 								href="/forgot-password"
-								class="justify-self-end text-sm text-sky-700 underline decoration-dashed underline-offset-4 dark:text-sky-300"
+								class="justify-self-end text-sm text-fg-info underline decoration-dashed underline-offset-4"
 							>
 								Forgot password?
 							</a>

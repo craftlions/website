@@ -128,34 +128,25 @@ const componentLabel: Record<string, string> = {
 		<div class="grid gap-3">
 			<dl class="grid grid-flow-col justify-start gap-8 text-sm">
 				<div class="grid gap-1">
-					<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+					<dt class="text-xs font-semibold uppercase text-fg-muted">
 						Outstanding
 					</dt>
 					<dd class="tabular-nums">{totalWhere(["open", "overdue"])}</dd>
 				</div>
 				<div class="grid gap-1">
-					<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
-						Overdue
-					</dt>
-					<dd
-						class:list={[
-							"tabular-nums",
-							hasOverdue && "text-red-700 dark:text-red-300",
-						]}
-					>
+					<dt class="text-xs font-semibold uppercase text-fg-muted">Overdue</dt>
+					<dd class:list={["tabular-nums", hasOverdue && "text-fg-danger"]}>
 						{totalWhere(["overdue"])}
 					</dd>
 				</div>
 				<div class="grid gap-1">
-					<dt class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
-						Paid
-					</dt>
+					<dt class="text-xs font-semibold uppercase text-fg-muted">Paid</dt>
 					<dd class="tabular-nums">{totalWhere(["paid"])}</dd>
 				</div>
 			</dl>
 			{partSummaryItems.length > 0 && (
-				<div class="grid gap-2 border border-dashed border-neutral-300 p-3 dark:border-neutral-700">
-					<p class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+				<div class="grid gap-2 border border-dashed border-line p-3">
+					<p class="text-xs font-semibold uppercase text-fg-muted">
 						Invoiced by cost part
 					</p>
 					<div class="max-w-md">
@@ -183,7 +174,7 @@ const componentLabel: Record<string, string> = {
 		>
 			<Button
 				type="button"
-				class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+				class="aria-pressed:border-line-active aria-pressed:bg-panel"
 				data-invoice-filter="all"
 				aria-pressed="true"
 			>
@@ -191,7 +182,7 @@ const componentLabel: Record<string, string> = {
 			</Button>
 			<Button
 				type="button"
-				class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+				class="aria-pressed:border-line-active aria-pressed:bg-panel"
 				data-invoice-filter="open"
 				aria-pressed="false"
 			>
@@ -199,7 +190,7 @@ const componentLabel: Record<string, string> = {
 			</Button>
 			<Button
 				type="button"
-				class="aria-pressed:border-neutral-500 aria-pressed:bg-neutral-100 dark:aria-pressed:bg-neutral-900"
+				class="aria-pressed:border-line-active aria-pressed:bg-panel"
 				data-invoice-filter="paid"
 				aria-pressed="false"
 			>
@@ -211,7 +202,7 @@ const componentLabel: Record<string, string> = {
 		<ul class="grid gap-3">
 			{rows.map((invoice) => (
 				<li
-					class="grid gap-2 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+					class="grid gap-2 border border-dashed border-line p-4"
 					data-invoice-item
 					data-category={
 						invoice.status === "paid"
@@ -224,7 +215,7 @@ const componentLabel: Record<string, string> = {
 					<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
 						<div class="grid gap-2">
 							<div class="grid gap-1">
-								<p class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+								<p class="text-xs/none font-semibold uppercase text-fg-muted">
 									Invoice {invoice.invoiceNumber}
 								</p>
 								<div class="grid grid-flow-col items-center justify-start gap-2">
@@ -259,13 +250,12 @@ const componentLabel: Record<string, string> = {
 							</div>
 							<dl class="grid gap-x-6 gap-y-3 text-sm leading-snug sm:grid-cols-[minmax(0,1fr)_auto]">
 								<div class="grid gap-1">
-									<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+									<dt class="text-xs/none font-semibold uppercase text-fg-muted">
 										Due
 									</dt>
 									<dd
 										class:list={[
-											invoice.status === "overdue" &&
-												"text-red-700 dark:text-red-300",
+											invoice.status === "overdue" && "text-fg-danger",
 										]}
 									>
 										{invoice.stripeDueAt
@@ -274,7 +264,7 @@ const componentLabel: Record<string, string> = {
 									</dd>
 								</div>
 								<div class="grid gap-1">
-									<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+									<dt class="text-xs/none font-semibold uppercase text-fg-muted">
 										Status
 									</dt>
 									<dd>
@@ -288,12 +278,10 @@ const componentLabel: Record<string, string> = {
 											) : invoice.status ? (
 												<Badge type="gray">{invoice.status}</Badge>
 											) : (
-												<span class="text-neutral-500 dark:text-neutral-400">
-													—
-												</span>
+												<span class="text-fg-muted">—</span>
 											)}
 											{invoice.status === "paid" && invoice.stripePaidAt && (
-												<span class="text-xs text-neutral-500 dark:text-neutral-400">
+												<span class="text-xs text-fg-muted">
 													{dateFormatter.format(invoice.stripePaidAt)}
 												</span>
 											)}
@@ -301,7 +289,7 @@ const componentLabel: Record<string, string> = {
 									</dd>
 								</div>
 								<div class="grid gap-1">
-									<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+									<dt class="text-xs/none font-semibold uppercase text-fg-muted">
 										Work
 									</dt>
 									<dd>
@@ -313,14 +301,12 @@ const componentLabel: Record<string, string> = {
 												{invoice.phase.project.name} · {invoice.phase.title}
 											</a>
 										) : (
-											<span class="text-neutral-500 dark:text-neutral-400">
-												Unassigned
-											</span>
+											<span class="text-fg-muted">Unassigned</span>
 										)}
 									</dd>
 								</div>
 								<div class="grid gap-1">
-									<dt class="text-xs/none font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+									<dt class="text-xs/none font-semibold uppercase text-fg-muted">
 										Delivery
 									</dt>
 									<dd>
@@ -336,17 +322,11 @@ const componentLabel: Record<string, string> = {
 												Open
 											</a>
 										) : invoice.phase?.deliveryState === "none" ? (
-											<span class="text-neutral-600 dark:text-neutral-400">
-												No delivery
-											</span>
+											<span class="text-fg-muted">No delivery</span>
 										) : invoice.phase?.deliveryState === "not_recorded" ? (
-											<span class="text-neutral-500 dark:text-neutral-400">
-												Not recorded
-											</span>
+											<span class="text-fg-muted">Not recorded</span>
 										) : (
-											<span class="text-neutral-500 dark:text-neutral-400">
-												Unavailable
-											</span>
+											<span class="text-fg-muted">Unavailable</span>
 										)}
 									</dd>
 								</div>
@@ -369,7 +349,7 @@ const componentLabel: Record<string, string> = {
 			))}
 		</ul>
 	) : (
-		<p class="border border-dashed border-neutral-300 bg-transparent p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+		<p class="border border-dashed border-line bg-transparent p-4 text-sm text-fg-muted">
 			No invoices yet.
 		</p>
 	)}

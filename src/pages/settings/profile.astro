@@ -16,7 +16,7 @@ if (!session) {
 ---
 
 <Shell
-	bodyClass="min-h-dvh grid bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+	bodyClass="min-h-dvh grid bg-canvas text-fg antialiased gap-6 p-4 text-pretty"
 >
 	<Fragment slot="head"> <title>craftlions | Profile</title> </Fragment>
 	<Fragment slot="body">
@@ -26,7 +26,7 @@ if (!session) {
 			class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
 		>
 			<h1
-				class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+				class="border-l border-dashed border-line-strong pl-3 text-3xl font-semibold leading-tight"
 			>
 				{session.user.name}'s Profile
 			</h1>

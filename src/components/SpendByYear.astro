@@ -21,12 +21,12 @@ const currentYear = new Date().getUTCFullYear();
 
 // Distinct ink colors keep projects easy to separate at a glance.
 const segmentMarks = [
-	"text-blue-700/70 dark:text-blue-300/80",
-	"text-cyan-700/70 dark:text-cyan-300/80",
-	"text-orange-700/70 dark:text-orange-300/80",
-	"text-pink-700/70 dark:text-pink-300/80",
-	"text-violet-700/70 dark:text-violet-300/80",
-	"text-emerald-700/70 dark:text-emerald-300/80",
+	"text-chart-1",
+	"text-chart-2",
+	"text-chart-3",
+	"text-chart-4",
+	"text-chart-5",
+	"text-chart-6",
 ];
 
 const validRows = rows.filter(
@@ -70,7 +70,7 @@ const projectKeys = [...projectsByKey.values()]
 		...project,
 		mark:
 			project.id === "unassigned"
-				? "text-neutral-500/55 dark:text-neutral-400/55"
+				? "text-chart-unassigned"
 				: (segmentMarks[index % segmentMarks.length] ?? segmentMarks[0]),
 		total: [...totalsByYear.values()].reduce(
 			(sum, totalsForYear) => sum + (totalsForYear.get(project.id) ?? 0),
@@ -109,39 +109,36 @@ const hasNegativeSpend = bars.some((bar) =>
 ---
 
 <section aria-labelledby="spend-heading" class="grid content-start gap-3">
-	<h2
-		id="spend-heading"
-		class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
-	>
+	<h2 id="spend-heading" class="text-sm font-semibold uppercase text-fg-muted">
 		Spend by year
 	</h2>
 
 	{rows.length === 0 ? (
-		<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+		<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
 			No invoices yet.
 		</p>
 	) : validRows.length === 0 ? (
-		<p class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300">
+		<p class="border border-dashed border-line-danger p-4 text-sm text-fg-danger">
 			Invoice spend could not be summarized. Please reload the page and try
 			again.
 		</p>
 	) : (
 		<>
 			{validRows.length < rows.length && (
-				<p class="border border-dashed border-red-300 p-4 text-sm text-red-700 dark:border-red-800 dark:text-red-300">
+				<p class="border border-dashed border-line-danger p-4 text-sm text-fg-danger">
 					Some invoice amounts could not be included. Please reload the page; if
 					the problem persists, contact craftlions.
 				</p>
 			)}
 
 			{hasNegativeSpend ? (
-				<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+				<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
 					The chart cannot represent negative invoice adjustments. See the
 					invoice list for the complete breakdown.
 				</p>
 			) : (
 				<div
-					class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
+					class="grid gap-3 border border-dashed border-line p-4"
 					data-spend-chart
 				>
 					<div class="grid gap-1 overflow-x-auto" dir="rtl">
@@ -156,7 +153,7 @@ const hasNegativeSpend = bars.some((bar) =>
 									.reverse();
 								return (
 									<div class="grid min-w-0">
-										<div class="grid h-36 items-end border-b border-dashed border-neutral-300 dark:border-neutral-700">
+										<div class="grid h-36 items-end border-b border-dashed border-line">
 											<div
 												class="grid gap-px"
 												style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total / bar.total}fr`).join(" ")}`}
@@ -182,12 +179,12 @@ const hasNegativeSpend = bars.some((bar) =>
 												class:list={[
 													"whitespace-nowrap text-sm font-medium tabular-nums",
 													bar.year === currentYear &&
-														"underline decoration-dashed decoration-neutral-400 underline-offset-4 dark:decoration-neutral-600",
+														"underline decoration-dashed decoration-line-strong underline-offset-4",
 												]}
 											>
 												{currencyFormatter.format(bar.total)}
 											</span>
-											<span class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+											<span class="text-xs font-semibold uppercase text-fg-muted">
 												{bar.year}
 												{bar.year === currentYear && (
 													<span class="sr-only"> (current year)</span>
@@ -206,7 +203,7 @@ const hasNegativeSpend = bars.some((bar) =>
 					>
 						{projectKeys.map((project) => (
 							<li
-								class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-sm px-1 py-0.5 transition-[background-color,opacity] duration-150 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+								class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-sm px-1 py-0.5 transition-[background-color,opacity] duration-150 hover:bg-panel"
 								data-project={project.id}
 								data-amount={currencyFormatter.format(project.total)}
 							>
@@ -221,7 +218,7 @@ const hasNegativeSpend = bars.some((bar) =>
 									{project.name}
 								</span>
 								<span
-									class="whitespace-nowrap text-xs tabular-nums text-neutral-500 dark:text-neutral-400"
+									class="whitespace-nowrap text-xs tabular-nums text-fg-muted"
 									data-legend-amount
 									hidden
 								/>
@@ -229,7 +226,7 @@ const hasNegativeSpend = bars.some((bar) =>
 						))}
 					</ul>
 					{hasCondensedYears && (
-						<p class="text-xs text-neutral-500 dark:text-neutral-400">
+						<p class="text-xs text-fg-muted">
 							Long gaps between invoice years are condensed.
 						</p>
 					)}
@@ -251,14 +248,7 @@ const hasNegativeSpend = bars.some((bar) =>
 					"brightness-125",
 					match && "year" in item.dataset,
 				);
-				item.classList.toggle(
-					"bg-neutral-100",
-					match && !("year" in item.dataset),
-				);
-				item.classList.toggle(
-					"dark:bg-neutral-900",
-					match && !("year" in item.dataset),
-				);
+				item.classList.toggle("bg-panel", match && !("year" in item.dataset));
 
 				const amount = item.querySelector<HTMLElement>("[data-legend-amount]");
 				if (!amount) continue;

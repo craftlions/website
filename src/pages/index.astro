@@ -33,23 +33,23 @@ import Shell from "../layouts/Shell.astro";
 	</Fragment>
 	<Fragment slot="body">
 		<body
-			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-12 p-4 text-pretty"
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-canvas text-fg antialiased gap-12 p-4 text-pretty"
 		>
 			<header class="grid gap-6 justify-items-center max-w-3xl mx-auto">
 				<Nav deferSessionLinks variant="marketing" />
 				<section class="grid gap-4">
 					<h1
-						class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+						class="border-l border-dashed border-line-strong pl-3 text-3xl font-semibold leading-tight"
 					>
 						Modern IT services drawn with care
 					</h1>
-					<p class="pl-3 text-neutral-700 dark:text-neutral-300">
+					<p class="pl-3 text-fg-muted">
 						craftlions helps teams plan, build, and maintain software with a
 						practical engineering mindset. The work is modern, but the process
 						stays legible: clear lines, useful decisions, and outcomes that can
 						be explained without decoration.
 					</p>
-					<p class="pl-3 text-neutral-700 dark:text-neutral-300">
+					<p class="pl-3 text-fg-muted">
 						From product development and technical strategy to workshops and
 						hands-on delivery, craftlions brings focused external expertise into
 						your existing process. The standard is simple:
@@ -71,45 +71,37 @@ import Shell from "../layouts/Shell.astro";
 					<h2 class="text-2xl font-semibold">
 						Services for steady technical progress
 					</h2>
-					<article
-						class="grid gap-3 border-l border-dashed border-neutral-300 pl-3 dark:border-neutral-700"
-					>
+					<article class="grid gap-3 border-l border-dashed border-line pl-3">
 						<h3 class="text-xl font-semibold">Software development</h3>
-						<p class="text-neutral-700 dark:text-neutral-300">
+						<p class="text-fg-muted">
 							craftlions builds with modern technologies when they serve the
 							product, not because they are fashionable. The goal is software
 							that is scalable, maintainable, and still understandable after the
 							first release.
 						</p>
 					</article>
-					<article
-						class="grid gap-3 border-l border-dashed border-neutral-300 pl-3 dark:border-neutral-700"
-					>
+					<article class="grid gap-3 border-l border-dashed border-line pl-3">
 						<h3 class="text-xl font-semibold">Flexible and asynchronous</h3>
-						<p class="text-neutral-700 dark:text-neutral-300">
+						<p class="text-fg-muted">
 							Work can move without filling the calendar. craftlions supports
 							async-first collaboration, clear written updates, and real-time
 							conversation when it helps unblock decisions.
 						</p>
 					</article>
-					<article
-						class="grid gap-3 border-l border-dashed border-neutral-300 pl-3 dark:border-neutral-700"
-					>
+					<article class="grid gap-3 border-l border-dashed border-line pl-3">
 						<h3 class="text-xl font-semibold">
 							Technical advisory and strategy
 						</h3>
-						<p class="text-neutral-700 dark:text-neutral-300">
+						<p class="text-fg-muted">
 							Strong products need decisions that survive contact with real
 							constraints. craftlions helps evaluate options, define
 							implementation paths, and reduce risk before complexity becomes
 							expensive.
 						</p>
 					</article>
-					<article
-						class="grid gap-3 border-l border-dashed border-neutral-300 pl-3 dark:border-neutral-700"
-					>
+					<article class="grid gap-3 border-l border-dashed border-line pl-3">
 						<h3 class="text-xl font-semibold">Workshops and learning</h3>
-						<p class="text-neutral-700 dark:text-neutral-300">
+						<p class="text-fg-muted">
 							Workshops are shaped around the team and the work in front of it:
 							architecture choices, implementation patterns, delivery process,
 							or practical skills that make better decisions easier.
@@ -121,17 +113,15 @@ import Shell from "../layouts/Shell.astro";
 						</Button>
 					</section>
 				</section>
-				<section
-					class="grid gap-6 border-t border-dashed border-neutral-300 pt-6 dark:border-neutral-700"
-				>
+				<section class="grid gap-6 border-t border-dashed border-line pt-6">
 					<h2 class="text-2xl font-semibold">Why choose craftlions?</h2>
-					<p class="text-neutral-700 dark:text-neutral-300">
+					<p class="text-fg-muted">
 						Quality is not a finish-line activity. It starts with choosing the
 						right scope, naming tradeoffs clearly, and balancing
 						maintainability, performance, and business value from the beginning.
 					</p>
 					<ul
-						class="grid gap-2 pl-5 text-neutral-700 list-disc marker:text-neutral-400 dark:text-neutral-300 dark:marker:text-neutral-600"
+						class="grid gap-2 pl-5 text-fg-muted list-disc marker:text-fg-muted"
 					>
 						<li>Experience with modern technology across multiple sectors.</li>
 						<li>Reliable delivery with practical technical depth.</li>
@@ -145,25 +135,23 @@ import Shell from "../layouts/Shell.astro";
 						>
 					</ul>
 				</section>
-				<section
-					class="grid gap-6 border-t border-dashed border-neutral-300 pt-6 dark:border-neutral-700"
-				>
+				<section class="grid gap-6 border-t border-dashed border-line pt-6">
 					<h2 class="text-2xl font-semibold">
 						Let's build something better together
 					</h2>
-					<p class="text-neutral-700 dark:text-neutral-300">
+					<p class="text-fg-muted">
 						craftlions helps businesses build smarter with modern IT services,
 						technical advisory, and hands-on product development support.
 						Whether you need a reliable technology partner, software
 						architecture expertise, or strategic technical guidance, we create
 						practical, scalable solutions built for long-term success.
 					</p>
-					<p class="text-neutral-700 dark:text-neutral-300">
+					<p class="text-fg-muted">
 						The work goes beyond writing code. It strengthens the technical
 						foundation, reduces unnecessary complexity, and keeps architecture
 						aligned with the business it supports.
 					</p>
-					<p class="text-neutral-700 dark:text-neutral-300">
+					<p class="text-fg-muted">
 						If you are looking for a technical partner that brings external
 						expertise, strategic clarity, creative problem-solving, and a
 						commitment to careful delivery, craftlions is ready to help.

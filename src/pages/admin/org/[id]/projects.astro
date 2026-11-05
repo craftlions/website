@@ -113,7 +113,7 @@ const archivedProjects = projects.filter(
 	showSuccess={Boolean(actionResult && !actionResult.error)}
 >
 	{actionResult?.error && (
-		<p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">
+		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
 			{actionResult.error.message}
 		</p>
 	)}
@@ -121,25 +121,25 @@ const archivedProjects = projects.filter(
 		<div class="grid grid-cols-[1fr_auto] items-center gap-3">
 			<h2
 				id="projects-heading"
-				class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+				class="text-sm font-semibold uppercase text-fg-muted"
 				>Projects</h2
 			>
 		</div>
 		<details class="grid gap-3">
 			<summary
-				class="inline-grid w-max cursor-pointer list-none border border-dashed border-neutral-300 px-3 py-1 text-sm font-medium text-neutral-900 transition-colors hover:border-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-100 dark:hover:border-neutral-500 dark:hover:bg-neutral-900"
+				class="inline-grid w-max cursor-pointer list-none border border-dashed border-line px-3 py-1 text-sm font-medium text-fg transition-colors hover:border-line-active hover:bg-panel"
 				>New project</summary
 			>
 			<form
 				method="POST"
 				action={actions.createProject}
-				class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700 md:grid-cols-[minmax(0,1fr)_auto] md:items-end"
+				class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end"
 			>
 				<input type="hidden" name="organizationId" value={organization.id}>
 				<label class="grid gap-1 text-sm">
 					<span class="font-medium">Project name</span>
 					<input
-						class="border border-dashed border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-neutral-600 dark:border-neutral-700 dark:focus:border-neutral-300"
+						class="border border-dashed border-line bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-line-active"
 						name="name"
 						required
 					>
@@ -155,7 +155,7 @@ const archivedProjects = projects.filter(
 						<li class="grid">
 							<a
 								href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-								class="grid content-start gap-3 border border-dashed border-neutral-300 p-4 transition-colors hover:border-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:border-neutral-500 dark:hover:bg-neutral-900"
+								class="grid content-start gap-3 border border-dashed border-line p-4 transition-colors hover:border-line-active hover:bg-panel"
 							>
 								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
 									<h3 class="text-lg font-semibold wrap-break-word">
@@ -168,7 +168,7 @@ const archivedProjects = projects.filter(
 									</Badge>
 								</div>
 								<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
-									<dt class="text-neutral-500 dark:text-neutral-400">Phases</dt>
+									<dt class="text-fg-muted">Phases</dt>
 									<dd class="tabular-nums">
 										{
 											project.phases.filter(
@@ -176,7 +176,7 @@ const archivedProjects = projects.filter(
 											).length
 										}
 									</dd>
-									<dt class="text-neutral-500 dark:text-neutral-400">Total</dt>
+									<dt class="text-fg-muted">Total</dt>
 									<dd class="grid gap-2">
 										{summary.splits.length > 0
 											? summary.splits.map((split) => (
@@ -201,7 +201,7 @@ const archivedProjects = projects.filter(
 											: "—"}
 									</dd>
 								</dl>
-								<p class="text-sm text-neutral-600 dark:text-neutral-400">
+								<p class="text-sm text-fg-muted">
 									{summary.attention || "Nothing needs attention."}
 								</p>
 							</a>
@@ -210,13 +210,13 @@ const archivedProjects = projects.filter(
 				})}
 			</ul>
 		) : (
-			<p class="border border-dashed border-neutral-300 p-4 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+			<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
 				No projects yet.
 			</p>
 		)}
 		{archivedProjects.length > 0 && (
 			<details class="grid gap-2">
-				<summary class="w-max cursor-pointer list-none text-sm text-neutral-500 underline decoration-dashed underline-offset-4 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100">
+				<summary class="w-max cursor-pointer list-none text-sm text-fg-muted underline decoration-dashed underline-offset-4 hover:text-fg">
 					Archived ({archivedProjects.length})
 				</summary>
 				<ul class="grid gap-1 text-sm">

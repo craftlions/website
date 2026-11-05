@@ -10,7 +10,7 @@ import Shell from "../layouts/Shell.astro";
 	<Fragment slot="head"> <title>craftlions | Impressum</title> </Fragment>
 	<Fragment slot="body">
 		<body
-			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-canvas text-fg antialiased gap-6 p-4 text-pretty"
 		>
 			<header class="grid gap-6 max-w-3xl mx-auto w-full">
 				<Nav deferSessionLinks />
@@ -21,25 +21,21 @@ import Shell from "../layouts/Shell.astro";
 			>
 				<div class="grid gap-4">
 					<h1
-						class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight dark:border-neutral-600"
+						class="border-l border-dashed border-line-strong pl-3 text-3xl font-semibold leading-tight"
 					>
 						Impressum
 					</h1>
-					<p
-						class="max-w-[65ch] text-sm leading-6 text-neutral-700 dark:text-neutral-300"
-					>
+					<p class="max-w-[65ch] text-sm leading-6 text-fg-muted">
 						Diese Seite enthält die gesetzlich vorgeschriebenen Angaben zur
 						Betreiberin der Website und die wichtigsten Kontaktinformationen.
 					</p>
-					<div
-						class="grid gap-2 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
-					>
+					<div class="grid gap-2 border border-dashed border-line p-4">
 						<p class="text-sm font-semibold">Fragen zur Website?</p>
-						<p class="text-sm leading-6 text-neutral-700 dark:text-neutral-300">
+						<p class="text-sm leading-6 text-fg-muted">
 							Schreiben Sie mir direkt an&nbsp;
 							<a
 								href="mailto:alexander@craftlions.com"
-								class="text-sky-700 underline decoration-dashed underline-offset-4 dark:text-sky-300"
+								class="text-fg-info underline decoration-dashed underline-offset-4"
 							>
 								alexander@craftlions.com
 							</a>
@@ -47,22 +43,16 @@ import Shell from "../layouts/Shell.astro";
 					</div>
 				</div>
 				<section class="grid gap-4">
-					<article
-						class="grid gap-4 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
-					>
+					<article class="grid gap-4 border border-dashed border-line p-4">
 						<div class="grid gap-1">
 							<h2 class="text-xl font-semibold">Angaben gemäß § 5 TMG</h2>
-							<p class="text-sm text-neutral-700 dark:text-neutral-300">
+							<p class="text-sm text-fg-muted">
 								craftlions UG (haftungsbeschränkt)
 							</p>
 						</div>
-						<dl
-							class="grid gap-3 text-sm text-neutral-700 dark:text-neutral-300"
-						>
+						<dl class="grid gap-3 text-sm text-fg-muted">
 							<div class="grid gap-1">
-								<dt class="font-semibold text-neutral-950 dark:text-neutral-50">
-									Postanschrift
-								</dt>
+								<dt class="font-semibold text-fg"> Postanschrift </dt>
 								<dd class="not-italic">
 									<address class="not-italic">
 										Amandus-Voigt-Str. 8<br>
@@ -71,61 +61,51 @@ import Shell from "../layouts/Shell.astro";
 								</dd>
 							</div>
 							<div class="grid gap-1">
-								<dt class="font-semibold text-neutral-950 dark:text-neutral-50">
-									Kontakt
-								</dt>
+								<dt class="font-semibold text-fg"> Kontakt </dt>
 								<dd class="grid gap-1 not-italic">
 									<span>Telefon: auf Anfrage</span>
 									<a
 										href="mailto:alexander@craftlions.com"
-										class="text-sky-700 underline decoration-dashed underline-offset-4 dark:text-sky-300"
+										class="text-fg-info underline decoration-dashed underline-offset-4"
 									>
 										alexander@craftlions.com
 									</a>
 								</dd>
 							</div>
 							<div class="grid gap-1">
-								<dt class="font-semibold text-neutral-950 dark:text-neutral-50">
-									Vertreten durch
-								</dt>
+								<dt class="font-semibold text-fg"> Vertreten durch </dt>
 								<dd class="not-italic">Geschäftsführer: Alexander Niebuhr</dd>
 							</div>
 						</dl>
 					</article>
-					<article
-						class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
-					>
+					<article class="grid gap-3 border border-dashed border-line p-4">
 						<h2 class="text-xl font-semibold">
 							Verantwortlich für journalistisch-redaktionelle Inhalte
 						</h2>
-						<p class="text-sm leading-6 text-neutral-700 dark:text-neutral-300">
+						<p class="text-sm leading-6 text-fg-muted">
 							Alexander Niebuhr, Amandus-Voigt-Str. 8, 23617 Stockelsdorf
 						</p>
 					</article>
-					<article
-						class="grid gap-3 border border-dashed border-neutral-300 p-4 dark:border-neutral-700"
-					>
+					<article class="grid gap-3 border border-dashed border-line p-4">
 						<h2 class="text-xl font-semibold">Information gemäß § 36 VSBG</h2>
-						<p class="text-sm leading-6 text-neutral-700 dark:text-neutral-300">
+						<p class="text-sm leading-6 text-fg-muted">
 							Gemäß § 36 VSBG (Verbraucherstreitbeilegungsgesetz – Gesetz über
 							die alternative Streitbeilegung in Verbrauchersachen) erklärt der
 							Betreiber dieser Website:
 						</p>
-						<p class="text-sm leading-6 text-neutral-700 dark:text-neutral-300">
+						<p class="text-sm leading-6 text-fg-muted">
 							Wir sind bereit, an Streitbeilegungsverfahren bei der folgenden
 							Verbraucherschlichtungsstelle teilzunehmen.
 						</p>
 						<div class="grid gap-2">
 							<h3 class="font-semibold">EU-Streitbeilegung</h3>
-							<p
-								class="text-sm leading-6 text-neutral-700 dark:text-neutral-300"
-							>
+							<p class="text-sm leading-6 text-fg-muted">
 								Die Plattform der EU zur außergerichtlichen Streitbeilegung
 								finden Sie online unter:
 							</p>
 							<a
 								href="https://ec.europa.eu/consumers/odr/"
-								class="text-sm text-sky-700 underline decoration-dashed underline-offset-4 dark:text-sky-300"
+								class="text-sm text-fg-info underline decoration-dashed underline-offset-4"
 							>
 								https://ec.europa.eu/consumers/odr/
 							</a>

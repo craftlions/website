@@ -237,22 +237,22 @@ const componentLabel: Record<string, string> = {
 	showSuccess={actionSucceeded}
 >
 	{actionError && (
-		<p class="border border-dashed border-red-300 p-3 text-sm text-red-700 dark:border-red-700 dark:text-red-300">
+		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
 			{actionError.message}
 		</p>
 	)}
 	<section class="grid gap-3" aria-labelledby="worklist-heading">
 		<h2
 			id="worklist-heading"
-			class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+			class="text-sm font-semibold uppercase text-fg-muted"
 			>Worklist</h2
 		>
 		<div
-			class="grid border border-dashed border-neutral-300 dark:border-neutral-700 md:grid-cols-[auto_1fr_max-content_max-content] md:gap-x-6"
+			class="grid border border-dashed border-line md:grid-cols-[auto_1fr_max-content_max-content] md:gap-x-6"
 		>
 			{worklist.length > 0 ? (
 				worklist.map((item) => (
-					<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-4 md:grid-cols-subgrid md:items-center">
+					<article class="grid gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:col-span-4 md:grid-cols-subgrid md:items-center">
 						<Badge type={item.priority === 0 ? "error" : "info"}>
 							{item.kind}
 						</Badge>
@@ -327,7 +327,7 @@ const componentLabel: Record<string, string> = {
 							)}
 						</div>
 						<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
-							<p class="text-sm tabular-nums text-neutral-600 dark:text-neutral-400">
+							<p class="text-sm tabular-nums text-fg-muted">
 								{daysInPhaseState(item.phase.id)}d
 							</p>
 							{item.phase.state === "submitted" && (
@@ -403,7 +403,7 @@ const componentLabel: Record<string, string> = {
 					</article>
 				))
 			) : (
-				<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400 md:col-span-4">
+				<p class="p-4 text-sm text-fg-muted md:col-span-4">
 					Nothing needs action.
 				</p>
 			)}

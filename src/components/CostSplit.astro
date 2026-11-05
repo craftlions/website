@@ -65,7 +65,7 @@ const accessibleSummary =
 ---
 
 {items.length === 0 ? (
-	<p class="text-xs text-neutral-500 dark:text-neutral-400">
+	<p class="text-xs text-fg-muted">
 		No chargeable parts · {formatter.format(total)}
 	</p>
 ) : variant === "compact" ? (
@@ -80,23 +80,19 @@ const accessibleSummary =
 					]}
 					title={`${dueHint[item.component]}${showStatus ? ` · ${item.status.replaceAll("_", " ")}` : ""}`}
 				>
-					<span class="min-w-0 truncate capitalize text-neutral-600 dark:text-neutral-400">
+					<span class="min-w-0 truncate capitalize text-fg-muted">
 						{item.component}
 						<span class="normal-case"> · {dueHint[item.component]}</span>
 					</span>
-					<span class="whitespace-nowrap tabular-nums text-neutral-700 dark:text-neutral-300">
+					<span class="whitespace-nowrap tabular-nums text-fg-muted">
 						{formatter.format(item.amount)} · {share(item.amount)}
 					</span>
 				</li>
 			))}
 		</ul>
-		{caption && (
-			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
-				{caption}
-			</p>
-		)}
+		{caption && <p class="text-[11px] text-fg-muted">{caption}</p>}
 		{items.length === 1 && !caption && (
-			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
+			<p class="text-[11px] text-fg-muted">
 				Single payment {dueHint[items[0]?.component ?? "acceptance"]}
 			</p>
 		)}
@@ -115,16 +111,13 @@ const accessibleSummary =
 					<span class="grid min-w-0 gap-0.5">
 						<span class="grid grid-flow-col items-baseline justify-start gap-x-1.5 text-xs">
 							<span class="font-medium capitalize">{item.component}</span>
-							<span class="truncate text-neutral-500 dark:text-neutral-400">
+							<span class="truncate text-fg-muted">
 								{dueHint[item.component]}
 							</span>
 						</span>
-						<span class="text-xs tabular-nums text-neutral-700 dark:text-neutral-300">
+						<span class="text-xs tabular-nums text-fg-muted">
 							{formatter.format(item.amount)}
-							<span class="text-neutral-500 dark:text-neutral-400">
-								{" "}
-								· {share(item.amount)}
-							</span>
+							<span class="text-fg-muted"> · {share(item.amount)}</span>
 						</span>
 					</span>
 					{showStatus ? (
@@ -138,16 +131,14 @@ const accessibleSummary =
 			))}
 		</ul>
 		{caption ? (
-			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
-				{caption}
-			</p>
+			<p class="text-[11px] text-fg-muted">{caption}</p>
 		) : items.length === 1 ? (
-			<p class="text-[11px] text-neutral-500 dark:text-neutral-400">
+			<p class="text-[11px] text-fg-muted">
 				Single payment {dueHint[items[0]?.component ?? "acceptance"]} ·{" "}
 				{formatter.format(total)} total
 			</p>
 		) : (
-			<p class="text-[11px] tabular-nums text-neutral-500 dark:text-neutral-400">
+			<p class="text-[11px] tabular-nums text-fg-muted">
 				{formatter.format(total)} total in {items.length} parts
 			</p>
 		)}

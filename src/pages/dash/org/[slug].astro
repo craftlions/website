@@ -334,7 +334,7 @@ const worklist: WorklistItem[] = [
 ---
 
 <Shell
-	bodyClass="min-h-dvh grid bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 text-neutral-950 antialiased gap-6 p-4 text-pretty"
+	bodyClass="min-h-dvh grid bg-canvas text-fg antialiased gap-6 p-4 text-pretty"
 >
 	<Fragment slot="head">
 		<title>craftlions | {organization.name}’s Dashboard</title>
@@ -349,7 +349,7 @@ const worklist: WorklistItem[] = [
 		>
 			<section class="grid gap-4 sm:col-span-2">
 				<h1
-					class="border-l border-dashed border-neutral-400 pl-3 text-3xl font-semibold leading-tight wrap-break-word dark:border-neutral-600"
+					class="border-l border-dashed border-line-strong pl-3 text-3xl font-semibold leading-tight wrap-break-word"
 				>
 					{organization.name}’s Dashboard
 				</h1>
@@ -361,19 +361,19 @@ const worklist: WorklistItem[] = [
 			>
 				<h2
 					id="worklist-heading"
-					class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					class="text-sm font-semibold uppercase text-fg-muted"
 				>
 					Worklist
 				</h2>
-				<p class="max-w-prose text-sm text-neutral-600 dark:text-neutral-400">
+				<p class="max-w-prose text-sm text-fg-muted">
 					Phases waiting for your decision and invoices waiting for payment.
 				</p>
 				<div
-					class="grid border border-dashed border-neutral-300 dark:border-neutral-700 md:grid-cols-[auto_1fr_max-content_max-content] md:gap-x-6"
+					class="grid border border-dashed border-line md:grid-cols-[auto_1fr_max-content_max-content] md:gap-x-6"
 				>
 					{worklist.length > 0 ? (
 						worklist.map((item) => (
-							<article class="grid gap-y-3 border-b border-dashed border-neutral-300 p-4 last:border-b-0 dark:border-neutral-700 md:col-span-4 md:grid-cols-subgrid md:items-center">
+							<article class="grid gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:col-span-4 md:grid-cols-subgrid md:items-center">
 								<Badge type={item.kind === "Overdue" ? "error" : "info"}>
 									{item.kind}
 								</Badge>
@@ -405,7 +405,7 @@ const worklist: WorklistItem[] = [
 										</>
 									)}
 									{item.dueAt && (
-										<p class="text-sm text-neutral-600 dark:text-neutral-400">
+										<p class="text-sm text-fg-muted">
 											Due {dateFormatter.format(item.dueAt)}
 										</p>
 									)}
@@ -542,7 +542,7 @@ const worklist: WorklistItem[] = [
 							</article>
 						))
 					) : (
-						<p class="p-4 text-sm text-neutral-600 dark:text-neutral-400 md:col-span-4">
+						<p class="p-4 text-sm text-fg-muted md:col-span-4">
 							Nothing needs your attention.
 						</p>
 					)}
@@ -557,24 +557,17 @@ const worklist: WorklistItem[] = [
 					<div class="grid gap-1">
 						<h2
 							id="overview-heading"
-							class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+							class="text-sm font-semibold uppercase text-fg-muted"
 						>
 							Overview
 						</h2>
-						<p
-							class="max-w-prose text-sm text-neutral-600 dark:text-neutral-400"
-						>
+						<p class="max-w-prose text-sm text-fg-muted">
 							Budget and project state for the current calendar year.
 						</p>
 					</div>
-					<dl
-						class="grid border-t border-dashed border-neutral-300 dark:border-neutral-700"
-					>
-						<div
-							class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700"
-						>
-							<dt
-								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+					<dl class="grid border-t border-dashed border-line">
+						<div class="grid gap-1 border-b border-dashed border-line p-4">
+							<dt class="text-xs font-semibold uppercase text-fg-muted"
 								>Yearly budget</dt
 							>
 							<dd class="text-xl font-semibold tabular-nums">
@@ -583,30 +576,22 @@ const worklist: WorklistItem[] = [
 									: "—"}
 							</dd>
 						</div>
-						<div
-							class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700"
-						>
-							<dt
-								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+						<div class="grid gap-1 border-b border-dashed border-line p-4">
+							<dt class="text-xs font-semibold uppercase text-fg-muted"
 								>Invoiced this year</dt
 							>
 							<dd class="text-xl font-semibold tabular-nums">
 								{currencyFormatter.format(currentYearTotal)}
 							</dd>
 						</div>
-						<div
-							class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700"
-						>
-							<dt
-								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+						<div class="grid gap-1 border-b border-dashed border-line p-4">
+							<dt class="text-xs font-semibold uppercase text-fg-muted"
 								>Budget used</dt
 							>
 							<dd
 								class:list={[
 									"text-xl font-semibold tabular-nums",
-									yearlyBudget > 0 &&
-										usagePercentage > 100 &&
-										"text-red-700 dark:text-red-300",
+									yearlyBudget > 0 && usagePercentage > 100 && "text-fg-danger",
 								]}
 							>
 								{yearlyBudget > 0
@@ -614,19 +599,14 @@ const worklist: WorklistItem[] = [
 									: "No budget"}
 							</dd>
 						</div>
-						<div
-							class="grid gap-1 border-b border-dashed border-neutral-300 p-4 dark:border-neutral-700"
-						>
-							<dt
-								class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+						<div class="grid gap-1 border-b border-dashed border-line p-4">
+							<dt class="text-xs font-semibold uppercase text-fg-muted"
 								>Remaining</dt
 							>
 							<dd
 								class:list={[
 									"text-xl font-semibold tabular-nums",
-									yearlyBudget > 0 &&
-										remainingBudget < 0 &&
-										"text-red-700 dark:text-red-300",
+									yearlyBudget > 0 && remainingBudget < 0 && "text-fg-danger",
 								]}
 							>
 								{yearlyBudget > 0
@@ -640,7 +620,7 @@ const worklist: WorklistItem[] = [
 							<div class="grid grid-flow-col justify-start gap-2">
 								<label
 									for="budget-progress"
-									class="text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+									class="text-xs font-semibold uppercase text-fg-muted"
 								>
 									Budget used
 								</label>
@@ -648,14 +628,14 @@ const worklist: WorklistItem[] = [
 									<button
 										type="button"
 										aria-describedby="budget-pace-tooltip"
-										class="grid size-4 place-items-center border border-dashed border-neutral-400 text-[10px] leading-none text-neutral-600 outline-none focus-visible:border-neutral-700 focus-visible:text-neutral-900 dark:border-neutral-600 dark:text-neutral-300 dark:focus-visible:border-neutral-300 dark:focus-visible:text-neutral-100"
+										class="grid size-4 place-items-center border border-dashed border-line-strong text-[10px] leading-none text-fg-muted outline-none focus-visible:border-line-active focus-visible:text-fg"
 									>
 										i
 									</button>
 									<span
 										id="budget-pace-tooltip"
 										role="tooltip"
-										class="pointer-events-none absolute top-full left-0 z-10 mt-2 hidden w-64 border border-dashed border-neutral-300 bg-neutral-50 p-2 text-xs leading-relaxed text-neutral-700 group-hover:grid group-focus-within:grid dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
+										class="pointer-events-none absolute top-full left-0 z-10 mt-2 hidden w-64 border border-dashed border-line bg-canvas p-2 text-xs leading-relaxed text-fg-muted group-hover:grid group-focus-within:grid"
 									>
 										{yearlyBudget > 0
 											? `Based on invoices created this calendar year. The marker shows ${budgetPacePercentage.toFixed(1)}% calendar pace.`
@@ -665,10 +645,8 @@ const worklist: WorklistItem[] = [
 							</div>
 							<p
 								class:list={[
-									"tabular-nums text-neutral-700 dark:text-neutral-300",
-									yearlyBudget > 0 &&
-										usagePercentage > 100 &&
-										"text-red-700 dark:text-red-300",
+									"tabular-nums text-fg-muted",
+									yearlyBudget > 0 && usagePercentage > 100 && "text-fg-danger",
 								]}
 							>
 								{yearlyBudget > 0
@@ -683,9 +661,9 @@ const worklist: WorklistItem[] = [
 									max="100"
 									value={Math.min(usagePercentage, 100)}
 									class:list={[
-										"h-2 w-full appearance-none border border-dashed border-neutral-300 bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-neutral-900 [&::-moz-progress-bar]:bg-neutral-900 dark:border-neutral-700 dark:[&::-webkit-progress-value]:bg-neutral-100 dark:[&::-moz-progress-bar]:bg-neutral-100",
+										"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
 										usagePercentage > 100 &&
-											"[&::-webkit-progress-value]:bg-red-700 [&::-moz-progress-bar]:bg-red-700 dark:[&::-webkit-progress-value]:bg-red-400 dark:[&::-moz-progress-bar]:bg-red-400",
+											"[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger",
 									]}
 								>
 									{`${usagePercentage.toFixed(1)}% used`}
@@ -696,7 +674,7 @@ const worklist: WorklistItem[] = [
 								>
 									<span
 										class:list={[
-											"h-full w-0.75 justify-self-start border-x border-neutral-50 bg-neutral-950 dark:border-neutral-950 dark:bg-neutral-50",
+											"h-full w-0.75 justify-self-start border-x border-canvas bg-ink",
 											budgetPaceGridLineClass,
 										]}
 									/>
@@ -717,28 +695,24 @@ const worklist: WorklistItem[] = [
 					<div class="grid grid-cols-[1fr_auto] items-center gap-3">
 						<h2
 							id="projects-list-heading"
-							class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+							class="text-sm font-semibold uppercase text-fg-muted"
 						>
 							Projects
 						</h2>
 						{completedProjectCount > 0 && (
-							<label class="grid cursor-pointer grid-flow-col items-center gap-2 text-sm font-medium text-neutral-700 select-none dark:text-neutral-300">
+							<label class="grid cursor-pointer grid-flow-col items-center gap-2 text-sm font-medium text-fg-muted select-none">
 								<input
 									type="checkbox"
-									class="size-4 cursor-pointer appearance-none border border-dashed border-neutral-400 bg-transparent checked:bg-neutral-900 checked:bg-[length:0.75rem] checked:bg-center checked:bg-no-repeat focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')] dark:border-neutral-600 dark:checked:bg-neutral-100 dark:focus-visible:outline-neutral-300 dark:checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')]"
+									class="size-4 cursor-pointer appearance-none border border-dashed border-line-strong bg-transparent checked:bg-ink checked:bg-[length:0.75rem] checked:bg-center checked:bg-no-repeat checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')] dark:checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')]"
 								/>
 								<span>Hide completed</span>
 							</label>
 						)}
 					</div>
-					<div
-						class="overflow-x-auto border border-dashed border-neutral-300 dark:border-neutral-700"
-					>
+					<div class="overflow-x-auto border border-dashed border-line">
 						<table class="w-full min-w-xl text-sm">
 							<thead>
-								<tr
-									class="border-b border-dashed border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
-								>
+								<tr class="border-b border-dashed border-line text-fg-muted">
 									<th
 										scope="col"
 										class="px-4 py-3 text-left text-xs font-semibold uppercase"
@@ -765,9 +739,7 @@ const worklist: WorklistItem[] = [
 									</th>
 								</tr>
 							</thead>
-							<tbody
-								class="divide-y divide-dashed divide-neutral-300 dark:divide-neutral-700"
-							>
+							<tbody class="divide-y divide-dashed divide-line">
 								{projects.length > 0 ? (
 									projects.map((project) => (
 										<tr
@@ -780,8 +752,7 @@ const worklist: WorklistItem[] = [
 												scope="row"
 												class:list={[
 													"px-4 py-3 text-left font-medium",
-													project.state === "completed" &&
-														"text-neutral-500 dark:text-neutral-400",
+													project.state === "completed" && "text-fg-muted",
 												]}
 											>
 												<a
@@ -800,8 +771,8 @@ const worklist: WorklistItem[] = [
 												class:list={[
 													"px-4 py-3 text-right tabular-nums",
 													project.state === "completed"
-														? "text-neutral-500 dark:text-neutral-400"
-														: "text-neutral-700 dark:text-neutral-300",
+														? "text-fg-muted"
+														: "text-fg-muted",
 												]}
 											>
 												{project.splits.length > 0 ? (
@@ -839,10 +810,7 @@ const worklist: WorklistItem[] = [
 									))
 								) : (
 									<tr>
-										<td
-											colspan="4"
-											class="px-4 py-6 text-center text-neutral-600 dark:text-neutral-400"
-										>
+										<td colspan="4" class="px-4 py-6 text-center text-fg-muted">
 											No projects yet.
 										</td>
 									</tr>
@@ -852,7 +820,7 @@ const worklist: WorklistItem[] = [
 										<tr class="hidden group-has-[:checked]:table-row">
 											<td
 												colspan="4"
-												class="px-4 py-6 text-center text-neutral-600 dark:text-neutral-400"
+												class="px-4 py-6 text-center text-fg-muted"
 											>
 												All projects are completed and currently hidden.
 											</td>
@@ -868,7 +836,7 @@ const worklist: WorklistItem[] = [
 				>
 					<h2
 						id="invoices-heading"
-						class="text-sm font-semibold uppercase text-neutral-500 dark:text-neutral-400"
+						class="text-sm font-semibold uppercase text-fg-muted"
 					>
 						Invoices
 					</h2>
