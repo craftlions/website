@@ -15,7 +15,7 @@ aubx astro sync
 
 - Never run a dev server; assume one is already running.
 - For analysis-only requests, do not modify files, branches, staging, or commits.
-- Use inline Tailwind utility classes only; avoid standalone CSS rules or style blocks.
+- Style with inline Tailwind utility classes built on the role tokens in `DESIGN.md`. Standalone CSS is allowed in `src/styles/` for tokens and global rules; avoid `<style>` blocks in components.
 - Use CSS grid, never flexbox.
 - Keep markup minimal and semantic.
 - Prefer accessing values directly where they are used instead of creating one-off aliases or derived variables. Add variables only when reused, needed for type narrowing, or when they remove real complexity.
