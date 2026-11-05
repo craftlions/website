@@ -163,20 +163,10 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 					aria-label="Phase view"
 					class="grid grid-flow-col justify-start gap-2"
 				>
-					<Button
-						type="button"
-						class="aria-pressed:border-line-active aria-pressed:bg-panel"
-						data-phase-view="compact"
-						aria-pressed="true"
-					>
+					<Button type="button" data-phase-view="compact" aria-pressed="true">
 						Compact
 					</Button>
-					<Button
-						type="button"
-						class="aria-pressed:border-line-active aria-pressed:bg-panel"
-						data-phase-view="detailed"
-						aria-pressed="false"
-					>
+					<Button type="button" data-phase-view="detailed" aria-pressed="false">
 						Detailed
 					</Button>
 				</nav>

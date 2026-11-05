@@ -91,10 +91,6 @@ const phases = project.phases.map((phase) => ({
 }));
 
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
-const quietButtonClass =
-	"w-max cursor-pointer text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
-const summaryClass =
-	"w-max cursor-pointer list-none text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
 ---
 
 <AdminOrgShell
@@ -183,9 +179,9 @@ const summaryClass =
 								name="expectedVersion"
 								value={project.version}
 							/>
-							<button type="submit" class={quietButtonClass}>
+							<Button type="submit" variant="quiet">
 								Archive
-							</button>
+							</Button>
 						</form>
 					)}
 				</div>
@@ -315,15 +311,17 @@ const summaryClass =
 											name="expectedVersion"
 											value={phase.version}
 										/>
-										<button type="submit" class={quietButtonClass}>
+										<Button type="submit" variant="quiet">
 											Cancel
-										</button>
+										</Button>
 									</form>
 								)}
 							</div>
 							{phase.state === "in_progress" && (
 								<details class="grid gap-3 md:col-span-4">
-									<summary class={summaryClass}>Record delivery</summary>
+									<Button as="summary" variant="quiet">
+										Record delivery
+									</Button>
 									<form
 										method="POST"
 										action={actions.recordDelivery}
@@ -366,7 +364,9 @@ const summaryClass =
 							)}
 							{!phase.locked && phase.state !== "cancelled" && (
 								<details class="grid gap-3 md:col-span-4">
-									<summary class={summaryClass}>Edit cost split</summary>
+									<Button as="summary" variant="quiet">
+										Edit cost split
+									</Button>
 									<form
 										method="POST"
 										action={actions.updatePhaseAmounts}
@@ -401,10 +401,7 @@ const summaryClass =
 				)}
 			</ol>
 			<details class="grid gap-3">
-				<summary
-					class="cursor-pointer list-none border border-dashed border-line p-3 text-center text-sm font-medium transition-colors hover:border-line-active hover:bg-panel"
-					>Add phase</summary
-				>
+				<Button as="summary">Add phase</Button>
 				<form
 					method="POST"
 					action={actions.createPhase}

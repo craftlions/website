@@ -374,10 +374,6 @@ const getAttachmentGuidance = (
 	};
 };
 
-const quietButtonClass =
-	"w-max cursor-pointer text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
-const summaryClass =
-	"w-max cursor-pointer list-none text-sm text-fg-muted underline decoration-dashed underline-offset-4 transition-colors hover:text-fg";
 const sectionLabelClass = "text-label uppercase text-fg-muted";
 ---
 
@@ -625,7 +621,9 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 							</div>
 							<Badge type="info">due</Badge>
 							<details class="grid gap-3 md:col-span-3">
-								<summary class={summaryClass}>Record invoice</summary>
+								<Button as="summary" variant="quiet">
+									Record invoice
+								</Button>
 								<form
 									method="POST"
 									action={actions.recordInvoice}
@@ -704,17 +702,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 						class="grid grid-flow-col justify-start gap-2"
 						data-invoice-filter-nav
 					>
-						<Button
-							type="button"
-							class="aria-pressed:border-line-active aria-pressed:bg-panel"
-							data-invoice-filter="all"
-							aria-pressed="true"
-						>
+						<Button type="button" data-invoice-filter="all" aria-pressed="true">
 							All ({recordedTargets.length})
 						</Button>
 						<Button
 							type="button"
-							class="aria-pressed:border-line-active aria-pressed:bg-panel"
 							data-invoice-filter="open"
 							aria-pressed="false"
 						>
@@ -722,7 +714,6 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 						</Button>
 						<Button
 							type="button"
-							class="aria-pressed:border-line-active aria-pressed:bg-panel"
 							data-invoice-filter="paid"
 							aria-pressed="false"
 						>
@@ -848,15 +839,17 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 										name="invoiceId"
 										value={target.invoice.id}
 									/>
-									<button type="submit" class={quietButtonClass}>
+									<Button type="submit" variant="quiet">
 										Refresh
-									</button>
+									</Button>
 								</form>
 								{target.component === "delivery" &&
 									(target.state === "delivered" ||
 										target.state === "accepted") && (
 										<details class="grid gap-3 md:col-span-4">
-											<summary class={summaryClass}>Edit delivery</summary>
+											<Button as="summary" variant="quiet">
+												Edit delivery
+											</Button>
 											<form
 												method="POST"
 												action={actions.updatePhaseDelivery}

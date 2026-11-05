@@ -125,10 +125,7 @@ const archivedProjects = projects.filter(
 			>
 		</div>
 		<details class="grid gap-3">
-			<summary
-				class="inline-grid w-max cursor-pointer list-none border border-dashed border-line px-3 py-1 text-sm font-medium text-fg transition-colors hover:border-line-active hover:bg-panel"
-				>New project</summary
-			>
+			<Button as="summary">New project</Button>
 			<form
 				method="POST"
 				action={actions.createProject}
@@ -209,9 +206,9 @@ const archivedProjects = projects.filter(
 		)}
 		{archivedProjects.length > 0 && (
 			<details class="grid gap-2">
-				<summary class="w-max cursor-pointer list-none text-sm text-fg-muted underline decoration-dashed underline-offset-4 hover:text-fg">
+				<Button as="summary" variant="quiet">
 					Archived ({archivedProjects.length})
-				</summary>
+				</Button>
 				<ul class="grid gap-1 text-sm">
 					{archivedProjects.map((project) => (
 						<li>

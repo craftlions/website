@@ -59,6 +59,13 @@ const rules = [
 		use: "grid or inline-grid",
 		doc: "AGENTS.md",
 	},
+	{
+		id: "raw-button",
+		pattern: /<button\b/g,
+		use: '<Button>, with variant="quiet" or variant="hint" for smaller actions',
+		doc: "DESIGN.md#buttons",
+		ignore: "src/components/Button.astro",
+	},
 ];
 
 const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
@@ -67,12 +74,14 @@ const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
 		.flatMap((line, index) =>
 			/^\s*(?:\/\/|\/\*|\*)/.test(line)
 				? []
-				: rules.flatMap(({ pattern, use, doc }) =>
-						[...line.matchAll(pattern)].map(
-							([match]) =>
-								`${file}:${index + 1}  ${match} → use ${use}  (${doc})`,
+				: rules
+						.filter(({ ignore }) => ignore !== file)
+						.flatMap(({ pattern, use, doc }) =>
+							[...line.matchAll(pattern)].map(
+								([match]) =>
+									`${file}:${index + 1}  ${match} → use ${use}  (${doc})`,
+							),
 						),
-					),
 		),
 );
 

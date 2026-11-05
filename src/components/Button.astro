@@ -2,23 +2,45 @@
 import type { HTMLAttributes } from "astro/types";
 
 interface Props extends HTMLAttributes<"button"> {
+	as?: "summary";
 	href?: string;
 	rel?: string;
 	target?: string;
+	variant?: "default" | "quiet" | "hint";
 }
 
-const { type = "button", class: className, href, ...attrs } = Astro.props;
+const {
+	as,
+	type = "button",
+	class: className,
+	href,
+	variant = "default",
+	...attrs
+} = Astro.props;
 
-const baseClass =
-	"inline-grid w-max cursor-pointer grid-flow-col items-center justify-center gap-2 border border-dashed border-line bg-transparent px-3 py-1 text-sm font-medium text-fg transition-colors hover:border-line-active hover:bg-panel disabled:cursor-not-allowed disabled:opacity-50";
+const buttonClass = [
+	"cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+	{
+		default:
+			"inline-grid w-max grid-flow-col items-center justify-center gap-2 border border-dashed border-line bg-transparent px-3 py-1 text-sm font-medium text-fg not-disabled:hover:border-line-active not-disabled:hover:bg-panel aria-pressed:border-line-active aria-pressed:bg-panel",
+		quiet:
+			"w-max text-sm text-fg-muted underline decoration-dashed underline-offset-4 not-disabled:hover:text-fg",
+		hint: "grid size-4 place-items-center border border-dashed border-line-strong text-xs leading-none text-fg-muted focus-visible:border-line-active focus-visible:text-fg",
+	}[variant],
+	className,
+];
 ---
 
 {href ? (
-	<a href={href} class:list={[baseClass, className]} {...attrs}>
+	<a href={href} class:list={buttonClass} {...attrs}>
 		<slot />
 	</a>
+) : as === "summary" ? (
+	<summary class:list={["list-none", buttonClass]} {...attrs}>
+		<slot />
+	</summary>
 ) : (
-	<button class:list={[baseClass, className]} type={type} {...attrs}>
+	<button class:list={buttonClass} type={type} {...attrs}>
 		<slot />
 	</button>
 )}

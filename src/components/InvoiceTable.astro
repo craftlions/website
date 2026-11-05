@@ -168,28 +168,13 @@ const componentLabel: Record<string, string> = {
 			aria-label="Filter invoices"
 			class="grid grid-flow-col justify-start gap-2"
 		>
-			<Button
-				type="button"
-				class="aria-pressed:border-line-active aria-pressed:bg-panel"
-				data-invoice-filter="all"
-				aria-pressed="true"
-			>
+			<Button type="button" data-invoice-filter="all" aria-pressed="true">
 				All
 			</Button>
-			<Button
-				type="button"
-				class="aria-pressed:border-line-active aria-pressed:bg-panel"
-				data-invoice-filter="open"
-				aria-pressed="false"
-			>
+			<Button type="button" data-invoice-filter="open" aria-pressed="false">
 				Open
 			</Button>
-			<Button
-				type="button"
-				class="aria-pressed:border-line-active aria-pressed:bg-panel"
-				data-invoice-filter="paid"
-				aria-pressed="false"
-			>
+			<Button type="button" data-invoice-filter="paid" aria-pressed="false">
 				Paid
 			</Button>
 		</nav>
