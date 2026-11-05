@@ -24,7 +24,23 @@ export default defineConfig({
 	prefetch: {
 		defaultStrategy: "hover",
 	},
-	integrations: [sitemap()],
+	integrations: [
+		sitemap(),
+		{
+			// Registered only in dev so production never contains the page.
+			name: "design-page",
+			hooks: {
+				"astro:config:setup": ({ command, injectRoute }) => {
+					if (command === "dev") {
+						injectRoute({
+							pattern: "/design",
+							entrypoint: "./src/pages/_design.astro",
+						});
+					}
+				},
+			},
+		},
+	],
 	devToolbar: {
 		enabled: false,
 	},

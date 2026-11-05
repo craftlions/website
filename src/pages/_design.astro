@@ -1,0 +1,232 @@
+---
+import Badge from "../components/Badge.astro";
+import Button from "../components/Button.astro";
+import Input from "../components/Input.astro";
+import Shell from "../layouts/Shell.astro";
+import tokensCss from "../styles/tokens.css?raw";
+
+const tokens = [
+	...tokensCss.matchAll(/--([\w-]+): light-dark\((#\w+), (#\w+)\)/g),
+].map(([, name = "", light = "", dark = ""]) => ({ name, light, dark }));
+
+const channels = (hex: string) =>
+	[1, 3, 5, 7].map((start) =>
+		Number.parseInt(hex.slice(start, start + 2) || "ff", 16),
+	) as [number, number, number, number];
+
+// Translucent tokens are measured as they appear on their background.
+const blend = (hex: string, background: string) => {
+	const [red, green, blue, alpha] = channels(hex);
+	const base = channels(background);
+	return [red, green, blue].map((channel, index) => {
+		const opacity = alpha / 255;
+		return channel * opacity + (base[index] ?? 0) * (1 - opacity);
+	});
+};
+
+const luminance = (rgb: number[]) => {
+	const [red = 0, green = 0, blue = 0] = rgb.map((channel) => {
+		const value = channel / 255;
+		return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+	});
+	return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+};
+
+const contrast = (hex: string, background: string) => {
+	const [lighter = 0, darker = 0] = [
+		luminance(blend(hex, background)),
+		luminance(blend(background, background)),
+	].sort((a, b) => b - a);
+	return (lighter + 0.05) / (darker + 0.05);
+};
+
+const minimumContrast = (name: string) =>
+	name === "focus" ? 3 : name.startsWith("fg") ? 4.5 : undefined;
+
+const schemes = (["light", "dark"] as const).map((scheme) => {
+	const values = tokens.map((token) => ({
+		name: token.name,
+		value: token[scheme],
+		minimum: minimumContrast(token.name),
+	}));
+	const background = (name: string) =>
+		values.find((token) => token.name === name)?.value ?? "#000000";
+	return {
+		scheme,
+		style: `color-scheme: ${scheme}; ${values.map(({ name, value }) => `--${name}: ${value}`).join("; ")}`,
+		swatches: values.map((token) => ({
+			...token,
+			checks: token.minimum
+				? ["canvas", "panel"].map((surface) => ({
+						surface,
+						ratio: contrast(token.value, background(surface)),
+					}))
+				: [],
+		})),
+	};
+});
+
+const typeRoles = [
+	["text-display", "Display"],
+	["text-headline", "Headline"],
+	["text-title", "Title"],
+	["text-label", "Label"],
+	["text-sm", "Small body"],
+	["text-xs", "Extra small body"],
+	["eyebrow", "Eyebrow"],
+];
+---
+
+<Shell>
+	<Fragment slot="head"> <title>craftlions | Design</title> </Fragment>
+	<Fragment slot="body">
+		<body class="grid gap-6 bg-canvas p-4 text-pretty text-fg antialiased">
+			<header class="mx-auto grid w-full max-w-6xl gap-2">
+				<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
+					Design
+				</h1>
+				<p class="pl-3 text-sm text-fg-muted">
+					Dev only. Every token and primitive in both color schemes; hover and
+					tab through the controls to see their states.
+				</p>
+			</header>
+			<main class="mx-auto grid w-full max-w-6xl gap-4 md:grid-cols-2">
+				{schemes.map(({ scheme, style, swatches }) => (
+					<section
+						aria-labelledby={`scheme-${scheme}`}
+						class="grid min-w-0 content-start gap-8 border border-dashed border-line bg-canvas p-4 text-fg"
+						style={style}
+					>
+						<h2 id={`scheme-${scheme}`} class="text-headline capitalize">
+							{scheme}
+						</h2>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Tokens</h3>
+							<ul class="grid gap-2 text-sm">
+								{swatches.map(({ name, value, minimum, checks }) => (
+									<li class="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-2">
+										<span
+											class="size-6 border border-dashed border-line"
+											style={`background-color: ${value}`}
+										/>
+										<code class="truncate">--{name}</code>
+										<span class="grid grid-flow-col gap-3 text-xs tabular-nums">
+											{checks.map(({ surface, ratio }) => (
+												<span
+													class:list={[
+														minimum && ratio < minimum
+															? "font-semibold text-fg-danger"
+															: "text-fg-muted",
+													]}
+												>
+													{surface} {ratio.toFixed(2)}
+												</span>
+											))}
+										</span>
+									</li>
+								))}
+							</ul>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Type</h3>
+							{typeRoles.map(([role, label]) => (
+								<p class={role}>{label}</p>
+							))}
+							<p class="text-fg-muted">Body, muted</p>
+							<p class="text-fg-danger">Danger</p>
+							<p class="text-fg-success">Success</p>
+							<p class="text-fg-info">Info</p>
+							<p class="text-fg-warning">Warning</p>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Buttons</h3>
+							<div class="grid grid-flow-col justify-start gap-2">
+								<Button>Default</Button>
+								<Button aria-pressed="true">Pressed</Button>
+								<Button disabled>Disabled</Button>
+								<Button href="/design">Link</Button>
+							</div>
+							<details class="grid gap-2">
+								<Button as="summary">Summary</Button>
+								<p class="text-sm text-fg-muted">Disclosure content.</p>
+							</details>
+							<div class="grid grid-flow-col items-center justify-start gap-4">
+								<Button variant="quiet">Quiet</Button>
+								<Button variant="quiet" disabled>
+									Quiet disabled
+								</Button>
+								<Button variant="hint" aria-label="Hint">
+									i
+								</Button>
+							</div>
+							<details class="grid gap-2">
+								<Button as="summary" variant="quiet">
+									Quiet summary
+								</Button>
+								<p class="text-sm text-fg-muted">Disclosure content.</p>
+							</details>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Inputs</h3>
+							<label class="grid gap-1 text-sm">
+								<span class="font-medium">Text</span>
+								<Input placeholder="Placeholder" />
+							</label>
+							<label class="grid gap-1 text-sm">
+								<span class="font-medium">Danger</span>
+								<Input danger value="Type to confirm" />
+							</label>
+							<label class="grid gap-1 text-sm">
+								<span class="font-medium">Select</span>
+								<Input as="select">
+									<option>First option</option>
+									<option>Second option</option>
+								</Input>
+							</label>
+							<label class="grid gap-1 text-sm">
+								<span class="font-medium">Disabled</span>
+								<Input disabled value="Disabled" />
+							</label>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Badges</h3>
+							<div class="grid grid-flow-col justify-start gap-2">
+								<Badge type="info">Info</Badge>
+								<Badge type="success">Success</Badge>
+								<Badge type="error">Error</Badge>
+								<Badge type="gray">Gray</Badge>
+							</div>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Surfaces</h3>
+							<p class="border border-dashed border-line p-4 text-sm">
+								Dashed plane
+							</p>
+							<p class="border border-dashed border-line bg-panel p-4 text-sm">
+								Panel fill
+							</p>
+							<p class="border border-dashed border-line bg-info-subtle p-4 text-sm">
+								Info highlight
+							</p>
+							<p class="border border-dashed border-line-danger p-4 text-sm text-fg-danger">
+								Danger outline
+							</p>
+							<a
+								href="/design"
+								class="w-max text-sm text-fg-info underline decoration-dashed underline-offset-4"
+							>
+								Text link
+							</a>
+						</section>
+					</section>
+				))}
+			</main>
+		</body>
+	</Fragment>
+</Shell>
