@@ -12,7 +12,7 @@ local linters = new Mapping<String, Step> {
 		fix = "jactionlint --no-online --strict-exit --fix {{files}}"
 	}
 	["design-lint"] {
-		glob = List("src/**/*.astro", "src/**/*.ts", "src/**/*.css")
+		glob = List("src/**/*.astro", "src/**/*.ts", "src/**/*.css", "DESIGN.md")
 		check = "aubr design:lint"
 	}
 }

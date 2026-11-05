@@ -393,7 +393,10 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 									class="grid gap-2"
 									aria-labelledby={`phase-${phase.publicId}-schedule`}
 								>
-									<h4 id={`phase-${phase.publicId}-schedule`} class="label-caps">
+									<h4
+										id={`phase-${phase.publicId}-schedule`}
+										class="label-caps"
+									>
 										Payment Schedule
 									</h4>
 									{phase.parts.length > 0 ? (
