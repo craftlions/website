@@ -11,6 +11,10 @@ local linters = new Mapping<String, Step> {
 		check_diff = "hk util sarif-diff -- jactionlint --no-online --strict-exit --format sarif {{files}}"
 		fix = "jactionlint --no-online --strict-exit --fix {{files}}"
 	}
+	["design-lint"] {
+		glob = List("src/**/*.astro", "src/**/*.ts", "src/**/*.css")
+		check = "aubr design:lint"
+	}
 }
 
 local online = new Mapping<String, Step> {
