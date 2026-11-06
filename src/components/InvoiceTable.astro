@@ -6,12 +6,12 @@ import CostSplit from "./CostSplit.astro";
 
 interface Invoice {
 	component: string | null;
-	invoiceNumber: string;
-	stripePaymentPage: string;
+	number: string;
+	paymentPage: string;
 	invoicedAt: Date;
-	stripeStatus: string | null;
-	stripePaidAt: Date | null;
-	stripeDueAt: Date | null;
+	status: string;
+	paidAt: Date | null;
+	dueAt: Date | null;
 	total: number;
 	currency: string;
 	phase: {
@@ -36,7 +36,7 @@ interface Invoice {
 			publicId: string;
 			name: string;
 		} | null;
-		invoices: { component: string | null; stripeStatus: string | null }[];
+		invoices: { component: string; stripe: { status: string } }[];
 	} | null;
 }
 
@@ -53,11 +53,9 @@ const formatAmount = (total: number, currency: string) =>
 const rows = invoices.map((invoice) => ({
 	...invoice,
 	status:
-		invoice.stripeStatus === "open" &&
-		invoice.stripeDueAt &&
-		invoice.stripeDueAt < now
+		invoice.status === "open" && invoice.dueAt && invoice.dueAt < now
 			? "overdue"
-			: invoice.stripeStatus,
+			: invoice.status,
 	components: invoice.phase
 		? buildPhaseComponents({
 				upfrontAmount: invoice.phase.upfrontAmount,
@@ -196,9 +194,7 @@ const componentLabel: Record<string, string> = {
 					<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
 						<div class="grid gap-2">
 							<div class="grid gap-1">
-								<p class="label-caps leading-none">
-									Invoice {invoice.invoiceNumber}
-								</p>
+								<p class="label-caps leading-none">Invoice {invoice.number}</p>
 								<div class="grid grid-flow-col items-center justify-start gap-2">
 									<p class="text-title tabular-nums leading-none">
 										{formatAmount(invoice.total, invoice.currency)}
@@ -237,9 +233,7 @@ const componentLabel: Record<string, string> = {
 											invoice.status === "overdue" && "text-fg-danger",
 										]}
 									>
-										{invoice.stripeDueAt
-											? dateFormatter.format(invoice.stripeDueAt)
-											: "—"}
+										{invoice.dueAt ? dateFormatter.format(invoice.dueAt) : "—"}
 									</dd>
 								</div>
 								<div class="grid gap-1">
@@ -257,9 +251,9 @@ const componentLabel: Record<string, string> = {
 											) : (
 												<span class="text-fg-muted">—</span>
 											)}
-											{invoice.status === "paid" && invoice.stripePaidAt && (
+											{invoice.status === "paid" && invoice.paidAt && (
 												<span class="text-xs text-fg-muted">
-													{dateFormatter.format(invoice.stripePaidAt)}
+													{dateFormatter.format(invoice.paidAt)}
 												</span>
 											)}
 										</div>
@@ -307,10 +301,10 @@ const componentLabel: Record<string, string> = {
 						</div>
 						<div class="grid justify-start sm:justify-self-end">
 							<Button
-								href={invoice.stripePaymentPage}
+								href={invoice.paymentPage}
 								target="_blank"
 								rel="noopener noreferrer"
-								aria-label={`${invoice.status === "open" || invoice.status === "overdue" ? "Pay" : "Details"} invoice ${invoice.invoiceNumber}`}
+								aria-label={`${invoice.status === "open" || invoice.status === "overdue" ? "Pay" : "Details"} invoice ${invoice.number}`}
 							>
 								{invoice.status === "open" || invoice.status === "overdue"
 									? "Pay"

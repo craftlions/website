@@ -363,32 +363,17 @@ export const phases = t.pgTable(
 	],
 );
 
+// Links a Stripe invoice to the phase component it bills. Everything else about
+// the invoice is read live from stripeInvoices.
 export const invoices = t.pgTable(
 	"invoices",
 	{
 		id: t.uuid("id").default(sql`uuidv7()`).notNull(),
 		publicId: t.text("public_id").notNull(),
 		organizationId: t.text("organization_id").notNull(),
-		phaseId: t.uuid("phase_id"),
-		component: invoiceComponent("component"),
-		invoiceNumber: t.text("invoice_number").notNull(),
+		phaseId: t.uuid("phase_id").notNull(),
+		component: invoiceComponent("component").notNull(),
 		stripeId: t.text("stripe_id").notNull(),
-		stripePaymentPage: t.text("stripe_payment_page").notNull(),
-		currency: t.char("currency", { length: 3 }).notNull(),
-		total: t
-			.numeric("total", { precision: 19, scale: 4, mode: "number" })
-			.notNull(),
-		invoicedAt: t
-			.timestamp("invoiced_at", { withTimezone: true })
-			.defaultNow()
-			.notNull(),
-		updatedAt: t
-			.timestamp("updated_at", { withTimezone: true })
-			.$onUpdate(() => new Date()),
-		stripeStatus: t.text("stripe_status"),
-		stripePaidAt: t.timestamp("stripe_paid_at", { withTimezone: true }),
-		stripeDueAt: t.timestamp("stripe_due_at", { withTimezone: true }),
-		fetchedAt: t.timestamp("fetched_at", { withTimezone: true }),
 	},
 	(table) => [
 		t.primaryKey({
@@ -400,10 +385,6 @@ export const invoices = t.pgTable(
 			.on(table.phaseId, table.component),
 		t.uniqueIndex("invoices_stripe_id_uidx").on(table.stripeId),
 		t.index("invoices_organization_id_idx").on(table.organizationId),
-		t.check(
-			"invoices_phase_component_consistency",
-			sql`(${table.phaseId} IS NULL) = (${table.component} IS NULL)`,
-		),
 		t
 			.foreignKey({
 				columns: [table.phaseId],
@@ -526,5 +507,4 @@ export const organizationMetadataUpdateSchema =
 
 export type projectSelectType = typeof projects.$inferSelect;
 export type phaseSelectType = typeof phases.$inferSelect;
-export type invoiceSelectType = typeof invoices.$inferSelect;
 export type eventSelectType = typeof events.$inferSelect;

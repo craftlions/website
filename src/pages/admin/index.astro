@@ -14,6 +14,7 @@ import {
 	getSpendByYear,
 } from "../../lib/budget-consumption.ts";
 import { buildPhaseComponents } from "../../lib/phase-billing.ts";
+import { stripeInvoiceFields } from "../../lib/stripe.ts";
 import { getUuidV7Date } from "../../lib/uuid.ts";
 
 const onboardResult = Astro.getActionResult(actions.onboardOrganization);
@@ -54,11 +55,9 @@ const organizations = await Astro.locals.db.query.organization.findMany({
 							columns: {
 								id: true,
 								component: true,
-								invoiceNumber: true,
-								total: true,
-								stripeStatus: true,
-								stripeDueAt: true,
-								fetchedAt: true,
+							},
+							with: {
+								stripe: stripeInvoiceFields,
 							},
 						},
 					},
@@ -119,9 +118,9 @@ const queue = organizations
 				});
 				const overdueInvoices = phase.invoices.filter(
 					(invoice) =>
-						invoice.stripeStatus === "open" &&
-						invoice.stripeDueAt &&
-						invoice.stripeDueAt < now,
+						invoice.stripe.status === "open" &&
+						invoice.stripe.dueAt &&
+						invoice.stripe.dueAt < now,
 				);
 
 				if (overdueInvoices.length > 0) {
@@ -129,15 +128,15 @@ const queue = organizations
 						priority: 0,
 						kind: "Overdue",
 						client: organization.name,
-						label: `${project.name} · ${invoice.invoiceNumber}`,
-						amount: invoice.total,
+						label: `${project.name} · ${invoice.stripe.number}`,
+						amount: invoice.stripe.total,
 						currency: phase.currency,
-						component: invoice.component,
+						component: invoice.component as string | null,
 						components,
 						phaseCost: phase.cost,
 						days: Math.floor(
 							(now.getTime() -
-								(invoice.stripeDueAt?.getTime() ?? now.getTime())) /
+								(invoice.stripe.dueAt?.getTime() ?? now.getTime())) /
 								86400000,
 						),
 						link,
@@ -204,15 +203,15 @@ const queue = organizations
 				}
 
 				const openInvoices = phase.invoices.filter(
-					(invoice) => invoice.stripeStatus === "open",
+					(invoice) => invoice.stripe.status === "open",
 				);
 				if (openInvoices.length > 0) {
 					return openInvoices.map((invoice) => ({
 						priority: 3,
 						kind: "Unpaid",
 						client: organization.name,
-						label: `${project.name} · ${invoice.invoiceNumber}`,
-						amount: invoice.total,
+						label: `${project.name} · ${invoice.stripe.number}`,
+						amount: invoice.stripe.total,
 						currency: phase.currency,
 						component: invoice.component,
 						components,
@@ -236,16 +235,16 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 	const openInvoiceRows = organization.projects
 		.flatMap((project) => project.phases)
 		.flatMap((phase) => phase.invoices)
-		.filter((invoice) => invoice.stripeStatus === "open");
+		.filter((invoice) => invoice.stripe.status === "open");
 	const openInvoices = openInvoiceRows.reduce(
-		(total, invoice) => total + invoice.total,
+		(total, invoice) => total + invoice.stripe.total,
 		0,
 	);
 	const openByPart = ["upfront", "delivery", "acceptance"].map((component) => ({
 		component: component as "upfront" | "delivery" | "acceptance",
 		amount: openInvoiceRows
 			.filter((invoice) => invoice.component === component)
-			.reduce((total, invoice) => total + invoice.total, 0),
+			.reduce((total, invoice) => total + invoice.stripe.total, 0),
 	}));
 	const planned = organization.projects
 		.flatMap((project) => project.phases)
@@ -258,9 +257,9 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 		.flatMap((phase) => phase.invoices)
 		.filter(
 			(invoice) =>
-				invoice.stripeStatus === "open" &&
-				invoice.stripeDueAt &&
-				invoice.stripeDueAt < now,
+				invoice.stripe.status === "open" &&
+				invoice.stripe.dueAt &&
+				invoice.stripe.dueAt < now,
 		).length;
 	// S-004 R1/R5: budget usage is the shared module's current-year percentage
 	// (D-budget-consumption-definition, uncapped); null when there is no

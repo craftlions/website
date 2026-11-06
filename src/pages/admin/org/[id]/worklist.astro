@@ -17,6 +17,7 @@ import {
 	phases,
 	projects as projectsTable,
 } from "../../../../lib/schema.ts";
+import { stripeInvoiceFields } from "../../../../lib/stripe.ts";
 import { getUuidV7Date } from "../../../../lib/uuid.ts";
 
 const { id } = Astro.params;
@@ -25,12 +26,9 @@ if (!id) {
 	return Astro.redirect("/admin");
 }
 
-const actionResults = [
-	Astro.getActionResult(actions.transitionPhase),
-	Astro.getActionResult(actions.refreshStripeInvoice),
-];
-const actionError = actionResults.find((result) => result?.error)?.error;
-const actionSucceeded = actionResults.some((result) => result && !result.error);
+const actionResult = Astro.getActionResult(actions.transitionPhase);
+const actionError = actionResult?.error;
+const actionSucceeded = Boolean(actionResult && !actionResult.error);
 
 const [organization, projects, latestPhaseEvents] = await Promise.all([
 	getAdminOrganizationCore(Astro.locals.db, id),
@@ -58,9 +56,9 @@ const [organization, projects, latestPhaseEvents] = await Promise.all([
 						columns: {
 							id: true,
 							component: true,
-							total: true,
-							stripeStatus: true,
-							stripeDueAt: true,
+						},
+						with: {
+							stripe: stripeInvoiceFields,
 						},
 					},
 				},
@@ -156,9 +154,9 @@ const worklist = allPhases
 		const upfrontUnpaid = isUpfrontUnpaid(phase);
 		const overdueInvoices = phase.invoices.filter(
 			(invoice) =>
-				invoice.stripeStatus === "open" &&
-				invoice.stripeDueAt &&
-				invoice.stripeDueAt < now,
+				invoice.stripe.status === "open" &&
+				invoice.stripe.dueAt &&
+				invoice.stripe.dueAt < now,
 		);
 		if (overdueInvoices.length > 0) {
 			return overdueInvoices.map((invoice) => ({
@@ -206,7 +204,7 @@ const worklist = allPhases
 		}
 
 		return phase.invoices
-			.filter((invoice) => invoice.stripeStatus === "open")
+			.filter((invoice) => invoice.stripe.status === "open")
 			.map((invoice) => ({
 				priority: 6,
 				kind: "Unpaid",
@@ -271,7 +269,10 @@ const componentLabel: Record<string, string> = {
 								<>
 									<div class="grid grid-flow-col items-center justify-start gap-2 md:justify-end">
 										<p class="text-sm font-medium tabular-nums">
-											{formatAmount(item.invoice.total, item.phase.currency)}
+											{formatAmount(
+												item.invoice.stripe.total,
+												item.phase.currency,
+											)}
 										</p>
 										{item.invoice.component &&
 											componentLabel[item.invoice.component] && (
@@ -388,14 +389,6 @@ const componentLabel: Record<string, string> = {
 									/>
 									<Button type="submit">Record acceptance</Button>
 								</form>
-							)}
-							{(item.invoice ? [item.invoice] : item.phase.invoices).map(
-								(invoice) => (
-									<form method="POST" action={actions.refreshStripeInvoice}>
-										<input type="hidden" name="invoiceId" value={invoice.id} />
-										<Button type="submit">Refresh now</Button>
-									</form>
-								),
 							)}
 						</div>
 					</article>
