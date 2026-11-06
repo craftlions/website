@@ -1,0 +1,365 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "685dacaf-9410-4a2c-bf6f-330326bfad9b",
+  "prevIds": [
+    "49e202bb-53d6-48cd-b485-92694ce96885"
+  ],
+  "footprints": [
+    {
+      "statementType": "drop_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "invoices"
+      ],
+      "writes": [
+        "s|ck|public.invoices.invoices_phase_component_consistency",
+        "n|ck|public.invoices.invoices_phase_component_consistency",
+        "e|ck|public.invoices.invoices_phase_component_consistency",
+        "n|con|public.invoices.invoices_phase_component_consistency"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public",
+        "e|col|public.invoices.phase_id",
+        "e|col|public.invoices.component"
+      ]
+    },
+    {
+      "statementType": "rename_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "organization_metadata",
+        "organization_metadata_stripeCustomerId_idx"
+      ],
+      "writes": [
+        "s|idx|public.organization_metadata_stripeCustomerId_idx",
+        "n|idx|public.organization_metadata_stripeCustomerId_idx",
+        "n|rel|public.organization_metadata_stripeCustomerId_idx",
+        "s|idx|public.organization_metadata_stripeCustomerId_uidx",
+        "n|idx|public.organization_metadata_stripeCustomerId_uidx",
+        "n|rel|public.organization_metadata_stripeCustomerId_uidx"
+      ],
+      "reads": [
+        "e|tbl|public.organization_metadata",
+        "n|sch|public",
+        "e|col|public.organization_metadata.stripe_customer_id"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "invoice_number"
+      ],
+      "writes": [
+        "s|col|public.invoices.invoice_number",
+        "n|col|public.invoices.invoice_number",
+        "e|col|public.invoices.invoice_number"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "stripe_payment_page"
+      ],
+      "writes": [
+        "s|col|public.invoices.stripe_payment_page",
+        "n|col|public.invoices.stripe_payment_page",
+        "e|col|public.invoices.stripe_payment_page"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "total"
+      ],
+      "writes": [
+        "s|col|public.invoices.total",
+        "n|col|public.invoices.total",
+        "e|col|public.invoices.total"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "updated_at"
+      ],
+      "writes": [
+        "s|col|public.invoices.updated_at",
+        "n|col|public.invoices.updated_at",
+        "e|col|public.invoices.updated_at"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "stripe_status"
+      ],
+      "writes": [
+        "s|col|public.invoices.stripe_status",
+        "n|col|public.invoices.stripe_status",
+        "e|col|public.invoices.stripe_status"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "stripe_paid_at"
+      ],
+      "writes": [
+        "s|col|public.invoices.stripe_paid_at",
+        "n|col|public.invoices.stripe_paid_at",
+        "e|col|public.invoices.stripe_paid_at"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "fetched_at"
+      ],
+      "writes": [
+        "s|col|public.invoices.fetched_at",
+        "n|col|public.invoices.fetched_at",
+        "e|col|public.invoices.fetched_at"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "currency"
+      ],
+      "writes": [
+        "s|col|public.invoices.currency",
+        "n|col|public.invoices.currency",
+        "e|col|public.invoices.currency"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "stripe_due_at"
+      ],
+      "writes": [
+        "s|col|public.invoices.stripe_due_at",
+        "n|col|public.invoices.stripe_due_at",
+        "e|col|public.invoices.stripe_due_at"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "invoiced_at"
+      ],
+      "writes": [
+        "s|col|public.invoices.invoiced_at",
+        "n|col|public.invoices.invoiced_at",
+        "e|col|public.invoices.invoiced_at"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "phase_id"
+      ],
+      "writes": [
+        "s|colprop|public.invoices.phase_id.notNull"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public",
+        "n|col|public.invoices.phase_id"
+      ],
+      "sqlHash": "9b199f83a0bbe65a"
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "invoices",
+        "component"
+      ],
+      "writes": [
+        "s|colprop|public.invoices.component.notNull"
+      ],
+      "reads": [
+        "n|tbl|public.invoices",
+        "n|sch|public",
+        "n|col|public.invoices.component"
+      ],
+      "sqlHash": "6c3042714130f628"
+    },
+    {
+      "statementType": "recreate_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "organization_metadata",
+        "organization_metadata_stripeCustomerId_uidx"
+      ],
+      "writes": [
+        "s|idx|public.organization_metadata_stripeCustomerId_uidx",
+        "n|idx|public.organization_metadata_stripeCustomerId_uidx",
+        "e|idx|public.organization_metadata_stripeCustomerId_uidx",
+        "n|rel|public.organization_metadata_stripeCustomerId_uidx"
+      ],
+      "reads": [
+        "n|tbl|public.organization_metadata",
+        "n|sch|public",
+        "n|col|public.organization_metadata.stripe_customer_id"
+      ],
+      "sharedWrites": [],
+      "sqlHash": "d08f8c4fea98af54"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "rename",
+      "key": "indexes\u0000[\"public\",\"organization_metadata_stripeCustomerId_idx\"]",
+      "set": {
+        "name": "organization_metadata_stripeCustomerId_uidx"
+      }
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"invoice_number\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"stripe_payment_page\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"total\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"updated_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"stripe_status\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"stripe_paid_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"fetched_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"currency\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"stripe_due_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"invoices\",\"invoiced_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "checks\u0000[\"public\",\"invoices\",\"invoices_phase_component_consistency\"]"
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"invoices\",\"phase_id\"]",
+      "set": {
+        "notNull": true
+      }
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"invoices\",\"component\"]",
+      "set": {
+        "notNull": true
+      }
+    },
+    {
+      "op": "alter",
+      "key": "indexes\u0000[\"public\",\"organization_metadata_stripeCustomerId_uidx\"]",
+      "set": {
+        "isUnique": true
+      }
+    }
+  ]
+}
