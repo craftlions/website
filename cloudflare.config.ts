@@ -37,7 +37,6 @@ export default defineConfig({
 			BETTER_AUTH_SECRETS: bindings.secret(),
 			BETTER_AUTH_API_KEY: bindings.secret(),
 			GITHUB_CLIENT_SECRET: bindings.secret(),
-			STRIPE_SECRET_KEY: bindings.secret(),
 			HYPERDRIVE: bindings.hyperdrive({
 				id: "e78aea8d41fe4c13af446a0bd61f77b2",
 				dev: {
