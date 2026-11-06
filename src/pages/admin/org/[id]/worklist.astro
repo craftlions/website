@@ -17,7 +17,7 @@ import {
 	phases,
 	projects as projectsTable,
 } from "../../../../lib/schema.ts";
-import { stripeInvoiceFields } from "../../../../lib/stripe.ts";
+import { hasStripeRow, stripeInvoiceFields } from "../../../../lib/stripe.ts";
 import { getUuidV7Date } from "../../../../lib/uuid.ts";
 
 const { id } = Astro.params;
@@ -130,7 +130,9 @@ const daysInPhaseState = (phaseId: string) => {
 		: 0;
 };
 type WorklistPhase = (typeof allPhases)[number];
-type WorklistInvoice = WorklistPhase["invoices"][number];
+type WorklistInvoice = WorklistPhase["invoices"][number] & {
+	stripe: NonNullable<WorklistPhase["invoices"][number]["stripe"]>;
+};
 type WorklistItem = {
 	priority: number;
 	kind: string;
@@ -152,7 +154,8 @@ const isUpfrontUnpaid = (phase: WorklistPhase) => {
 const worklist = allPhases
 	.flatMap((phase): WorklistItem[] => {
 		const upfrontUnpaid = isUpfrontUnpaid(phase);
-		const overdueInvoices = phase.invoices.filter(
+		const liveInvoices = phase.invoices.filter(hasStripeRow);
+		const overdueInvoices = liveInvoices.filter(
 			(invoice) =>
 				invoice.stripe.status === "open" &&
 				invoice.stripe.dueAt &&
@@ -203,7 +206,7 @@ const worklist = allPhases
 			];
 		}
 
-		return phase.invoices
+		return liveInvoices
 			.filter((invoice) => invoice.stripe.status === "open")
 			.map((invoice) => ({
 				priority: 6,

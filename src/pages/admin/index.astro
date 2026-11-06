@@ -14,7 +14,7 @@ import {
 	getSpendByYear,
 } from "../../lib/budget-consumption.ts";
 import { buildPhaseComponents } from "../../lib/phase-billing.ts";
-import { stripeInvoiceFields } from "../../lib/stripe.ts";
+import { hasStripeRow, stripeInvoiceFields } from "../../lib/stripe.ts";
 import { getUuidV7Date } from "../../lib/uuid.ts";
 
 const onboardResult = Astro.getActionResult(actions.onboardOrganization);
@@ -116,7 +116,8 @@ const queue = organizations
 					state: phase.state,
 					invoices: phase.invoices,
 				});
-				const overdueInvoices = phase.invoices.filter(
+				const liveInvoices = phase.invoices.filter(hasStripeRow);
+				const overdueInvoices = liveInvoices.filter(
 					(invoice) =>
 						invoice.stripe.status === "open" &&
 						invoice.stripe.dueAt &&
@@ -202,7 +203,7 @@ const queue = organizations
 					];
 				}
 
-				const openInvoices = phase.invoices.filter(
+				const openInvoices = liveInvoices.filter(
 					(invoice) => invoice.stripe.status === "open",
 				);
 				if (openInvoices.length > 0) {
@@ -235,6 +236,7 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 	const openInvoiceRows = organization.projects
 		.flatMap((project) => project.phases)
 		.flatMap((phase) => phase.invoices)
+		.filter(hasStripeRow)
 		.filter((invoice) => invoice.stripe.status === "open");
 	const openInvoices = openInvoiceRows.reduce(
 		(total, invoice) => total + invoice.stripe.total,
@@ -255,6 +257,7 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 	const overdue = organization.projects
 		.flatMap((project) => project.phases)
 		.flatMap((phase) => phase.invoices)
+		.filter(hasStripeRow)
 		.filter(
 			(invoice) =>
 				invoice.stripe.status === "open" &&

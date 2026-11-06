@@ -162,7 +162,7 @@ const openByPart = ["upfront", "delivery", "acceptance"]
 		component: component as "upfront" | "delivery" | "acceptance",
 		amount: openAttachedInvoices
 			.filter((invoice) => invoice.component === component)
-			.reduce((total, invoice) => total + invoice.stripe.total, 0),
+			.reduce((total, invoice) => total + (invoice.stripe?.total ?? 0), 0),
 	}))
 	.filter((part) => part.amount !== 0)
 	.map((part) => ({ ...part, status: "not_due" as const }));

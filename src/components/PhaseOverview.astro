@@ -29,7 +29,7 @@ interface Phase {
 			dueAt: Date | null;
 			total: number;
 			currency: string;
-		};
+		} | null;
 	}[];
 }
 
@@ -80,7 +80,7 @@ const rows = phases.map((phase) => {
 		);
 		return {
 			...part,
-			invoice: invoice && {
+			invoice: invoice?.stripe && {
 				...invoice.stripe,
 				status:
 					invoice.stripe.status === "open" &&
@@ -481,7 +481,9 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 														</div>
 													) : (
 														<span class="text-xs text-fg-muted sm:text-right">
-															No invoice yet
+															{part.status === "invoiced"
+																? "Invoice unavailable"
+																: "No invoice yet"}
 														</span>
 													)}
 												</li>

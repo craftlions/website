@@ -115,12 +115,18 @@ const componentTargets = allPhases.flatMap((phase) =>
 				...phase,
 				component,
 				amount,
-				invoice: invoice && { ...invoice.stripe, id: invoice.id },
+				isAttached: Boolean(invoice),
+				invoice: invoice?.stripe
+					? { ...invoice.stripe, id: invoice.id }
+					: undefined,
 			},
 		];
 	}),
 );
-const unbilledTargets = componentTargets.filter((target) => !target.invoice);
+const unbilledTargets = componentTargets.filter((target) => !target.isAttached);
+const unavailableCount = componentTargets.filter(
+	(target) => target.isAttached && !target.invoice,
+).length;
 const attachableTargets = unbilledTargets.filter((target) =>
 	isInvoiceComponentDue(target.component, target.state),
 );
@@ -381,6 +387,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 					</p>
 				) : (
 					<p class="text-xs text-fg-muted">No Stripe customer linked</p>
+				)}
+				{unavailableCount > 0 && (
+					<p class="text-xs text-fg-warning">
+						Attached invoices unavailable from Stripe: {unavailableCount}
+					</p>
 				)}
 			</div>
 			{!organizationData?.stripeCustomerId && (

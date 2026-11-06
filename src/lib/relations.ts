@@ -97,7 +97,6 @@ export const relations = defineRelations(schema, (r) => ({
 		stripe: r.one.stripeInvoices({
 			from: r.invoices.stripeId,
 			to: r.stripeInvoices.id,
-			optional: false,
 		}),
 	},
 	stripeInvoices: {
