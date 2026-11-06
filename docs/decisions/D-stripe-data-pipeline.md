@@ -1,6 +1,6 @@
 # Stripe Data Pipeline
 
-Invoice data reaches the app through the Stripe Data Pipeline, which writes the `stripe` schema into our database in near real time. The app reads `stripe.invoices` directly and `public.invoices` only records which phase component an invoice bills, because any copied Stripe field drifts per [D-phase-billing-truth](D-phase-billing-truth.md). Invoices belong to an organization through `organization_metadata.stripe_customer_id`, which is unique so no invoice can appear in two organizations.
+Invoice data reaches the app through the Stripe Data Pipeline, which writes the `stripe` schema into our database in near real time. The app reads `stripe.invoices` directly and `public.invoices` only records which phase component an invoice bills, because any copied Stripe field drifts per [D-phase-billing-truth](D-phase-billing-truth.md). Invoices belong to an organization through `organization_metadata.stripe_customer_id`, which is unique so no invoice can appear in two organizations, and cannot change while the organization has attached invoices so a link never points at another customer's invoice.
 
 **Alternatives considered** — Keeping invoice rows and dropping only the status columns: a smaller change, but new invoices would still need a manual import and number, total, and payment page could still drift. Copying pipeline rows into `public.invoices`: keeps every query as it was, but stays a sync.
 
