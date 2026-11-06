@@ -9,7 +9,7 @@ A qualifying domain change starts its Cloudflare Workflow directly after the tra
 
 ## Consequences
 
-The only durable notification records are `approval_notice_sent` / `overdue_notice_sent` rows in the existing events table, written by the workflow after mail acceptance and used both to guard invoice re-dispatch and to judge O-001's Success. A skipped notice leaves no database trace, so a suppressed overdue notice may send once if a later Stripe fetch re-evaluates a still-open invoice after Cloudflare's instance retention expires.
+The only durable notification records are `approval_notice_sent` / `overdue_notice_sent` rows in the existing events table, written by the workflow after mail acceptance and used both to guard invoice re-dispatch and to judge O-001's Success. A skipped notice leaves no database trace, so a suppressed overdue notice may send once if a later evaluation of a still-open invoice runs after Cloudflare's instance retention expires.
 
 ## Revisit when
 
