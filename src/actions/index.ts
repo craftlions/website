@@ -69,8 +69,6 @@ const actionCodeForDomainError = (error: DomainError): ActionError["code"] => {
 		case "InvalidTransition":
 		case "Validation":
 			return "BAD_REQUEST";
-		case "StripeUnavailable":
-			return "INTERNAL_SERVER_ERROR";
 	}
 };
 

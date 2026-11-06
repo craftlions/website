@@ -50,8 +50,6 @@ export const domainProblem = (error: unknown) => {
 			case "InvalidTransition":
 			case "Validation":
 				return problem(400, "Bad Request", error.message);
-			case "StripeUnavailable":
-				return problem(503, "Service Unavailable", error.message);
 		}
 	}
 
