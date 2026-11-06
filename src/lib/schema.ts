@@ -421,6 +421,49 @@ export const invoices = t.pgTable(
 	],
 );
 
+/**
+ * STRIPE DATA PIPELINE
+ * Stripe creates and writes the `stripe` schema. Its tables are declared as
+ * existing views because drizzle-kit still emits tables in an existing schema.
+ */
+
+const stripeDate = t.customType<{ data: Date; driverData: number }>({
+	dataType: () => "bigint",
+	fromDriver: (value) => new Date(Number(value) * 1000),
+});
+
+const stripePaidDate = t.customType<{
+	data: Date | null;
+	driverData: { paid_at?: number | null };
+}>({
+	dataType: () => "jsonb",
+	fromDriver: ({ paid_at }) =>
+		paid_at == null ? null : new Date(paid_at * 1000),
+});
+
+const stripeCurrency = t.customType<{ data: string; driverData: string }>({
+	dataType: () => "text",
+	fromDriver: (value) => value.toUpperCase(),
+});
+
+export const stripeInvoices = t
+	.pgSchema("stripe")
+	.existing()
+	.view("invoices", {
+		id: t.text("id").notNull(),
+		customer: t.text("customer"),
+		number: t.text("number").notNull(),
+		status: t.text("status").notNull(),
+		currency: stripeCurrency("currency").notNull(),
+		minorTotal: t.bigint("total", { mode: "number" }).notNull(),
+		hostedInvoiceUrl: t.text("hosted_invoice_url"),
+		invoicePdf: t.text("invoice_pdf"),
+		invoicedAt: stripeDate("created").notNull(),
+		dueAt: stripeDate("due_date"),
+		paidAt: stripePaidDate("status_transitions"),
+	})
+	.existing();
+
 export const events = t.pgTable(
 	"events",
 	{
