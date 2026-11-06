@@ -46,6 +46,12 @@ export const stripeInvoiceFields = {
 	},
 } as const;
 
+// A link outlives its Stripe row while the pipeline rebuilds or backfills.
+export const hasStripeRow = <T extends { stripe: unknown }>(
+	invoice: T,
+): invoice is T & { stripe: NonNullable<T["stripe"]> } =>
+	invoice.stripe !== null;
+
 // Drafts are unnumbered and not yet sent, so no surface shows them.
 export const organizationStripeInvoices = (organizationId: string) => ({
 	status: { ne: "draft" },
