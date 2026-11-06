@@ -1255,6 +1255,29 @@ export const updateOrganizationSettings = async (
 
 	const stripeCustomerId = input.stripeCustomerId?.trim() || null;
 
+	const [metadata, attachedInvoice] = await Promise.all([
+		db.query.organizationMetadata.findFirst({
+			columns: { stripeCustomerId: true },
+			where: { organizationId: input.organizationId },
+		}),
+		db.query.invoices.findFirst({
+			columns: { id: true },
+			where: { organizationId: input.organizationId },
+		}),
+	]);
+
+	// Attached invoices belong to the current customer; moving it would show
+	// this organization's work on another organization's invoices.
+	if (
+		attachedInvoice &&
+		(metadata?.stripeCustomerId ?? null) !== stripeCustomerId
+	) {
+		throw new DomainError(
+			"Conflict",
+			"This organization has attached invoices, so its Stripe customer cannot change.",
+		);
+	}
+
 	// Invoice visibility follows the customer id, so it can only belong to one
 	// organization.
 	if (stripeCustomerId) {
