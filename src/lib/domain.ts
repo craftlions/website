@@ -8,7 +8,6 @@ export class DomainError extends Error {
 			| "Forbidden"
 			| "InvalidTransition"
 			| "NotFound"
-			| "StripeUnavailable"
 			| "Validation",
 		message: string,
 	) {
