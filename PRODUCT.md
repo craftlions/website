@@ -22,7 +22,7 @@ The differentiator is the engineering and advisory work itself: careful, durable
 
 - Alexander operates the admin side solo: creating organizations, projects, phases, and invoices, moving work through phase and project transitions, and using read-only view-as impersonation to verify what a client sees.
 - Clients are organization members. Today the portal is read-only for them apart from account settings (profile, API keys): they check project state, phases, budget use, and invoice history between meetings and validate cost details.
-- Stripe is the source of truth for invoices; invoice status is synced into the database (per-invoice refresh today, periodic sync planned).
+- Stripe is the source of truth for invoices; the Stripe Data Pipeline writes them to the `stripe` schema and the app reads them live.
 - Client self-service write access is planned: an API over projects, phases, and invoices, plus CSV export. Future work should not assume the client portal stays read-only forever.
 - Runs on Cloudflare Workers with a PlanetScale Postgres database (Drizzle ORM); auth is Better Auth with the organization plugin.
 
