@@ -26,6 +26,7 @@ import {
 	phases,
 	projects,
 } from "../../../lib/schema.ts";
+import { liveInvoices, stripeInvoiceTotal } from "../../../lib/stripe.ts";
 
 const { id } = Astro.params;
 
@@ -47,15 +48,16 @@ const [[organization], openAttachedInvoices, spendRows] = await Promise.all([
 			openInvoiceTotal: scalar(
 				Astro.locals.db
 					.select({
-						value: sum(invoices.total),
+						value: sum(stripeInvoiceTotal(liveInvoices)),
 					})
 					.from(phases)
 					.innerJoin(projects, eq(phases.projectId, projects.id))
 					.innerJoin(invoices, eq(invoices.phaseId, phases.id))
+					.innerJoin(liveInvoices, eq(liveInvoices.id, invoices.stripeId))
 					.where(
 						and(
 							eq(projects.organizationId, organizationTable.id),
-							eq(invoices.stripeStatus, "open"),
+							eq(liveInvoices.status, "open"),
 						),
 					),
 			),
@@ -82,11 +84,12 @@ const [[organization], openAttachedInvoices, spendRows] = await Promise.all([
 					.from(phases)
 					.innerJoin(projects, eq(phases.projectId, projects.id))
 					.leftJoin(invoices, eq(invoices.phaseId, phases.id))
+					.leftJoin(liveInvoices, eq(liveInvoices.id, invoices.stripeId))
 					.where(
 						and(
 							eq(projects.organizationId, organizationTable.id),
 							// Same membership as the worklist page: lifecycle states plus any
-							// outstanding invoice (billing derives from stripeStatus).
+							// outstanding invoice (billing derives from Stripe status).
 							or(
 								inArray(phases.state, [
 									"submitted",
@@ -95,7 +98,7 @@ const [[organization], openAttachedInvoices, spendRows] = await Promise.all([
 									"in_progress",
 									"delivered",
 								]),
-								eq(invoices.stripeStatus, "open"),
+								eq(liveInvoices.status, "open"),
 							),
 						),
 					),
@@ -105,11 +108,15 @@ const [[organization], openAttachedInvoices, spendRows] = await Promise.all([
 					.select({
 						value: count(),
 					})
-					.from(invoices)
+					.from(liveInvoices)
+					.innerJoin(
+						organizationMetadata,
+						eq(organizationMetadata.stripeCustomerId, liveInvoices.customer),
+					)
 					.where(
 						and(
-							eq(invoices.organizationId, organizationTable.id),
-							eq(invoices.stripeStatus, "open"),
+							eq(organizationMetadata.organizationId, organizationTable.id),
+							eq(liveInvoices.status, "open"),
 						),
 					),
 			),
@@ -132,11 +139,16 @@ const [[organization], openAttachedInvoices, spendRows] = await Promise.all([
 	// Open attached invoices grouped by cost part so the overview shows all
 	// three types, matching the openInvoiceTotal scope (attached only).
 	Astro.locals.db.query.invoices.findMany({
-		columns: { component: true, total: true },
+		columns: { component: true },
+		with: {
+			stripe: {
+				columns: { status: true },
+				extras: { total: stripeInvoiceTotal },
+			},
+		},
 		where: {
 			organizationId: id,
-			stripeStatus: "open",
-			phaseId: { isNotNull: true },
+			stripe: { status: "open" },
 		},
 	}),
 	getSpendByYear(Astro.locals.db, id),
@@ -150,7 +162,7 @@ const openByPart = ["upfront", "delivery", "acceptance"]
 		component: component as "upfront" | "delivery" | "acceptance",
 		amount: openAttachedInvoices
 			.filter((invoice) => invoice.component === component)
-			.reduce((total, invoice) => total + invoice.total, 0),
+			.reduce((total, invoice) => total + invoice.stripe.total, 0),
 	}))
 	.filter((part) => part.amount !== 0)
 	.map((part) => ({ ...part, status: "not_due" as const }));

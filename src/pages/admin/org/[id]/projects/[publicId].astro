@@ -48,7 +48,9 @@ const [organization, project] = await Promise.all([
 					invoices: {
 						columns: {
 							component: true,
-							stripeStatus: true,
+						},
+						with: {
+							stripe: { columns: { status: true } },
 						},
 					},
 				},

@@ -13,6 +13,10 @@ import {
 	invoiceComponents,
 	isInvoiceComponentDue,
 } from "../../../../lib/phase-billing.ts";
+import {
+	organizationStripeInvoices,
+	stripeInvoiceFields,
+} from "../../../../lib/stripe.ts";
 
 const { id } = Astro.params;
 
@@ -21,11 +25,8 @@ if (!id) {
 }
 
 const actionResults = [
-	Astro.getActionResult(actions.importStripeInvoices),
 	Astro.getActionResult(actions.attachInvoiceToPhase),
-	Astro.getActionResult(actions.recordInvoice),
 	Astro.getActionResult(actions.updatePhaseDelivery),
-	Astro.getActionResult(actions.refreshStripeInvoice),
 	Astro.getActionResult(actions.transitionPhase),
 ];
 const actionError = actionResults.find((result) => result?.error)?.error;
@@ -68,14 +69,9 @@ const [organization, organizationData, projects, unattachedInvoices] =
 							columns: {
 								id: true,
 								component: true,
-								invoiceNumber: true,
-								stripePaymentPage: true,
-								currency: true,
-								total: true,
-								stripeStatus: true,
-								stripePaidAt: true,
-								stripeDueAt: true,
-								fetchedAt: true,
+							},
+							with: {
+								stripe: stripeInvoiceFields,
 							},
 						},
 					},
@@ -91,26 +87,14 @@ const [organization, organizationData, projects, unattachedInvoices] =
 				name: "asc",
 			},
 		}),
-		Astro.locals.db.query.invoices.findMany({
-			columns: {
-				id: true,
-				invoiceNumber: true,
-				stripePaymentPage: true,
-				currency: true,
-				total: true,
-				stripeStatus: true,
-				stripeDueAt: true,
-				stripePaidAt: true,
-				fetchedAt: true,
-			},
+		Astro.locals.db.query.stripeInvoices.findMany({
+			...stripeInvoiceFields,
 			where: {
-				organizationId: id,
-				phaseId: {
-					isNull: true,
-				},
+				...organizationStripeInvoices(id),
+				NOT: { link: true },
 			},
 			orderBy: {
-				id: "desc",
+				invoicedAt: "desc",
 			},
 		}),
 	]);
@@ -126,7 +110,14 @@ const componentTargets = allPhases.flatMap((phase) =>
 		const amount = phase[`${component}Amount`];
 		if (amount === null || amount === 0) return [];
 		const invoice = phase.invoices.find((row) => row.component === component);
-		return [{ ...phase, component, amount, invoice }];
+		return [
+			{
+				...phase,
+				component,
+				amount,
+				invoice: invoice && { ...invoice.stripe, id: invoice.id },
+			},
+		];
 	}),
 );
 const unbilledTargets = componentTargets.filter((target) => !target.invoice);
@@ -180,35 +171,33 @@ const sumByCurrency = (
 const totalInvoiced = sumByCurrency(
 	recordedTargets.map((t) => ({
 		amount: t.invoice.total,
-		currency: t.invoice.currency ?? t.currency,
+		currency: t.invoice.currency,
 	})),
 );
 const totalOutstanding = sumByCurrency(
 	recordedTargets
-		.filter((t) => t.invoice.stripeStatus === "open")
+		.filter((t) => t.invoice.status === "open")
 		.map((t) => ({
 			amount: t.invoice.total,
-			currency: t.invoice.currency ?? t.currency,
+			currency: t.invoice.currency,
 		})),
 );
 const overdueTargets = recordedTargets.filter(
 	(t) =>
-		t.invoice.stripeStatus === "open" &&
-		t.invoice.stripeDueAt &&
-		t.invoice.stripeDueAt < now,
+		t.invoice.status === "open" && t.invoice.dueAt && t.invoice.dueAt < now,
 );
 const totalOverdue = sumByCurrency(
 	overdueTargets.map((t) => ({
 		amount: t.invoice.total,
-		currency: t.invoice.currency ?? t.currency,
+		currency: t.invoice.currency,
 	})),
 );
 const totalPaid = sumByCurrency(
 	recordedTargets
-		.filter((t) => t.invoice.stripeStatus === "paid")
+		.filter((t) => t.invoice.status === "paid")
 		.map((t) => ({
 			amount: t.invoice.total,
-			currency: t.invoice.currency ?? t.currency,
+			currency: t.invoice.currency,
 		})),
 );
 const totalDueToBill = sumByCurrency(attachableTargets);
@@ -259,7 +248,7 @@ const invoicedByPart = groupByPartAndCurrency(
 	recordedTargets.map((target) => ({
 		component: target.component,
 		amount: target.invoice.total,
-		currency: target.invoice.currency ?? target.currency,
+		currency: target.invoice.currency,
 	})),
 );
 const dueByPart = groupByPartAndCurrency(attachableTargets);
@@ -277,48 +266,35 @@ const phaseSplit = (target: (typeof componentTargets)[number]) =>
 		invoices: target.invoices,
 	});
 const openCount = recordedTargets.filter(
-	(t) => t.invoice.stripeStatus === "open",
+	(t) => t.invoice.status === "open",
 ).length;
 const paidCount = recordedTargets.filter(
-	(t) => t.invoice.stripeStatus === "paid",
+	(t) => t.invoice.status === "paid",
 ).length;
 const showRecordedFilter = openCount > 0 && paidCount > 0;
 
-const latestFetch = [
-	...unattachedInvoices.map((i) => i.fetchedAt),
-	...recordedTargets.map((t) => t.invoice.fetchedAt),
-]
-	.filter((d): d is Date => d instanceof Date)
-	.sort((a, b) => b.getTime() - a.getTime())[0];
-
-const getInvoiceStatus = (invoice: {
-	stripeStatus: string | null;
-	stripeDueAt: Date | null;
-}) => {
-	if (invoice.stripeStatus === "paid") {
+const getInvoiceStatus = (invoice: { status: string; dueAt: Date | null }) => {
+	if (invoice.status === "paid") {
 		return { label: "Paid", type: "success" as const, isOverdue: false };
 	}
-	if (invoice.stripeStatus === "open") {
-		if (invoice.stripeDueAt && invoice.stripeDueAt < now) {
+	if (invoice.status === "open") {
+		if (invoice.dueAt && invoice.dueAt < now) {
 			return { label: "Overdue", type: "error" as const, isOverdue: true };
 		}
 		return { label: "Open", type: "info" as const, isOverdue: false };
 	}
-	if (
-		invoice.stripeStatus === "void" ||
-		invoice.stripeStatus === "uncollectible"
-	) {
+	if (invoice.status === "void" || invoice.status === "uncollectible") {
 		return {
-			label: invoice.stripeStatus,
+			label: invoice.status,
 			type: "error" as const,
 			isOverdue: false,
 		};
 	}
-	if (invoice.stripeStatus === "draft") {
+	if (invoice.status === "draft") {
 		return { label: "Draft", type: "gray" as const, isOverdue: false };
 	}
 	return {
-		label: invoice.stripeStatus ?? "Invoiced",
+		label: invoice.status,
 		type: "info" as const,
 		isOverdue: false,
 	};
@@ -402,20 +378,12 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 						>
 							{organizationData.stripeCustomerId}
 						</a>
-						{latestFetch && (
-							<span> · Synced {dateFormatter.format(latestFetch)}</span>
-						)}
 					</p>
 				) : (
 					<p class="text-xs text-fg-muted">No Stripe customer linked</p>
 				)}
 			</div>
-			{organizationData?.stripeCustomerId ? (
-				<form method="POST" action={actions.importStripeInvoices}>
-					<input type="hidden" name="organizationId" value={organization.id} />
-					<Button type="submit">Fetch from Stripe</Button>
-				</form>
-			) : (
+			{!organizationData?.stripeCustomerId && (
 				<Button href={`/admin/org/${organization.id}/settings`}>
 					Link Stripe customer
 				</Button>
@@ -499,43 +467,33 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 								<div class="grid gap-1">
 									<a
 										class="w-max font-medium underline decoration-dashed underline-offset-4"
-										href={invoice.stripePaymentPage}
+										href={invoice.paymentPage}
 									>
-										{invoice.invoiceNumber}
+										{invoice.number}
 									</a>
 									<p class="text-xs text-fg-muted">
-										<span>Stripe {invoice.stripeStatus ?? "not fetched"}</span>
-										{invoice.stripeDueAt && (
+										<span>Stripe {invoice.status}</span>
+										{invoice.dueAt && (
 											<>
 												<span> · </span>
 												<span
 													class:list={[
-														invoice.stripeStatus === "open" &&
-															invoice.stripeDueAt < now &&
+														invoice.status === "open" &&
+															invoice.dueAt < now &&
 															"font-semibold text-fg-danger",
 													]}
 												>
-													due {dateFormatter.format(invoice.stripeDueAt)}
-													{invoice.stripeStatus === "open" &&
-														invoice.stripeDueAt < now &&
+													due {dateFormatter.format(invoice.dueAt)}
+													{invoice.status === "open" &&
+														invoice.dueAt < now &&
 														" (overdue)"}
 												</span>
 											</>
 										)}
-										{invoice.stripePaidAt && (
+										{invoice.paidAt && (
 											<>
 												<span> · </span>
-												<span>
-													paid {dateFormatter.format(invoice.stripePaidAt)}
-												</span>
-											</>
-										)}
-										{invoice.fetchedAt && (
-											<>
-												<span> · </span>
-												<span>
-													synced {dateFormatter.format(invoice.fetchedAt)}
-												</span>
+												<span>paid {dateFormatter.format(invoice.paidAt)}</span>
 											</>
 										)}
 									</p>
@@ -549,7 +507,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 										action={actions.attachInvoiceToPhase}
 										class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
 									>
-										<input type="hidden" name="invoiceId" value={invoice.id} />
+										<input type="hidden" name="stripeId" value={invoice.id} />
 										<Input
 											as="select"
 											name="target"
@@ -620,73 +578,6 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 								</Badge>
 							</div>
 							<Badge type="info">due</Badge>
-							<details class="grid gap-3 md:col-span-3">
-								<Button as="summary" variant="quiet">
-									Record invoice
-								</Button>
-								<form
-									method="POST"
-									action={actions.recordInvoice}
-									class="grid gap-3 border border-dashed border-line p-4 sm:grid-cols-2 lg:grid-cols-4 items-start"
-								>
-									<input type="hidden" name="phaseId" value={target.id} />
-									<input
-										type="hidden"
-										name="component"
-										value={target.component}
-									/>
-									<input
-										type="hidden"
-										name="expectedVersion"
-										value={target.version}
-									/>
-									<label class="grid gap-1 text-sm">
-										<span class="font-medium">Invoice number</span>
-										<Input name="invoiceNumber" autocomplete="off" required />
-									</label>
-									<label class="grid gap-1 text-sm">
-										<span class="font-medium">Stripe id</span>
-										<Input
-											name="stripeId"
-											autocomplete="off"
-											placeholder="in_..."
-											required
-										/>
-									</label>
-									<label class="grid gap-1 text-sm">
-										<span class="font-medium">Payment URL</span>
-										<Input
-											name="stripePaymentPage"
-											type="url"
-											placeholder="https://invoice.stripe.com/..."
-											required
-										/>
-									</label>
-									<label class="grid gap-1 text-sm">
-										<span class="font-medium">Total ({target.currency})</span>
-										<Input
-											name="total"
-											type="number"
-											min="0"
-											step="0.0001"
-											value={target.amount}
-											data-component-amount={target.amount}
-											required
-										/>
-										<span
-											class="text-xs text-fg-warning"
-											data-amount-warning
-											hidden
-										>
-											Differs from component amount (
-											{formatCurrency(target.amount, target.currency)}).
-										</span>
-									</label>
-									<Button type="submit" class="sm:col-span-2 lg:col-span-4">
-										Record
-									</Button>
-								</form>
-							</details>
 						</li>
 					))}
 				</ul>
@@ -727,10 +618,10 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 					recordedTargets.map((target) => {
 						const status = getInvoiceStatus(target.invoice);
 						const rowCategory =
-							target.invoice.stripeStatus === "paid" ? "paid" : "open";
+							target.invoice.status === "paid" ? "paid" : "open";
 						return (
 							<li
-								class="grid gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start"
+								class="grid gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-start"
 								data-recorded-row
 								data-row-category={rowCategory}
 							>
@@ -738,9 +629,9 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 									<div class="grid grid-flow-col items-center justify-start gap-2">
 										<a
 											class="w-max font-medium underline decoration-dashed underline-offset-4"
-											href={target.invoice.stripePaymentPage}
+											href={target.invoice.paymentPage}
 										>
-											{target.invoice.invoiceNumber}
+											{target.invoice.number}
 										</a>
 										<Badge type="info">
 											{componentLabel[target.component] ?? target.component}
@@ -765,10 +656,8 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 										/>
 									</div>
 									<p class="text-xs text-fg-muted">
-										<span>
-											Stripe {target.invoice.stripeStatus ?? "not fetched"}
-										</span>
-										{target.invoice.stripeDueAt && (
+										<span>Stripe {target.invoice.status}</span>
+										{target.invoice.dueAt && (
 											<>
 												<span> · </span>
 												<span
@@ -776,26 +665,16 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 														status.isOverdue && "font-semibold text-fg-danger",
 													]}
 												>
-													due {dateFormatter.format(target.invoice.stripeDueAt)}
+													due {dateFormatter.format(target.invoice.dueAt)}
 													{status.isOverdue && " (overdue)"}
 												</span>
 											</>
 										)}
-										{target.invoice.stripePaidAt && (
+										{target.invoice.paidAt && (
 											<>
 												<span> · </span>
 												<span>
-													paid{" "}
-													{dateFormatter.format(target.invoice.stripePaidAt)}
-												</span>
-											</>
-										)}
-										{target.invoice.fetchedAt && (
-											<>
-												<span> · </span>
-												<span>
-													synced{" "}
-													{dateFormatter.format(target.invoice.fetchedAt)}
+													paid {dateFormatter.format(target.invoice.paidAt)}
 												</span>
 											</>
 										)}
@@ -829,24 +708,10 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 										</p>
 									)}
 								</div>
-								<form
-									method="POST"
-									action={actions.refreshStripeInvoice}
-									class="md:justify-self-end"
-								>
-									<input
-										type="hidden"
-										name="invoiceId"
-										value={target.invoice.id}
-									/>
-									<Button type="submit" variant="quiet">
-										Refresh
-									</Button>
-								</form>
 								{target.component === "delivery" &&
 									(target.state === "delivered" ||
 										target.state === "accepted") && (
-										<details class="grid gap-3 md:col-span-4">
+										<details class="grid gap-3 md:col-span-3">
 											<Button as="summary" variant="quiet">
 												Edit delivery
 											</Button>
@@ -928,18 +793,6 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 </AdminOrgShell>
 
 <script>
-	for (const input of document.querySelectorAll("[data-component-amount]")) {
-		if (!(input instanceof HTMLInputElement)) continue;
-		const warning = input.parentElement?.querySelector("[data-amount-warning]");
-		if (!(warning instanceof HTMLElement)) continue;
-		const syncWarning = () => {
-			warning.hidden =
-				Number(input.value) === Number(input.dataset.componentAmount);
-		};
-		syncWarning();
-		input.addEventListener("input", syncWarning);
-	}
-
 	for (const select of document.querySelectorAll("[data-delivery-choice]")) {
 		if (!(select instanceof HTMLSelectElement)) {
 			continue;

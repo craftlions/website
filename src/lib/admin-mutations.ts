@@ -1,7 +1,7 @@
 import type { Auth } from "./auth.ts";
 import type { Db } from "./database.ts";
 import { getOrgAdapter } from "better-auth/plugins/organization";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { resolveDelivery } from "./delivery.ts";
 import { assertAdminUser, DomainError } from "./domain.ts";
 import {
@@ -15,7 +15,7 @@ import {
 	phases,
 	projects,
 } from "./schema.ts";
-import { fetchStripeInvoice, stripeInvoiceSnapshot } from "./stripe.ts";
+import { organizationStripeInvoices } from "./stripe.ts";
 
 export const toSlug = (value: string) =>
 	value
@@ -756,218 +756,11 @@ export const recordDelivery = async (
 	});
 };
 
-export const recordInvoice = async (
-	db: Db,
-	actorId: string,
-	input: {
-		phaseId: string;
-		component: InvoiceComponent;
-		invoiceNumber: string;
-		stripeId: string;
-		stripePaymentPage: string;
-		total: number;
-		expectedVersion: number;
-		stripeKey: string;
-	},
-) => {
-	const [, phase] = await Promise.all([
-		assertAdminUser(db, actorId),
-		db.query.phases.findFirst({
-			columns: {
-				id: true,
-				currency: true,
-				state: true,
-				version: true,
-				upfrontAmount: true,
-				deliveryAmount: true,
-				acceptanceAmount: true,
-			},
-			with: {
-				invoices: {
-					columns: {
-						id: true,
-						publicId: true,
-						phaseId: true,
-						component: true,
-						invoiceNumber: true,
-						stripeId: true,
-						stripePaymentPage: true,
-						currency: true,
-						total: true,
-					},
-					where: { component: input.component },
-				},
-			},
-			where: { id: input.phaseId },
-		}),
-	]);
-
-	if (!phase) {
-		throw new DomainError("NotFound", "Phase not found.");
-	}
-
-	if (phase[`${input.component}Amount`] === null) {
-		throw new DomainError("Validation", "This component is not priced.");
-	}
-
-	const [invoice] = phase.invoices;
-
-	const invoiceMatches = (
-		phaseRow: { id: string; currency: string },
-		invoiceRow: typeof invoice,
-	): invoiceRow is NonNullable<typeof invoice> =>
-		invoiceRow?.phaseId === phaseRow.id &&
-		invoiceRow.component === input.component &&
-		invoiceRow.invoiceNumber === input.invoiceNumber.trim() &&
-		invoiceRow.stripeId === input.stripeId.trim() &&
-		invoiceRow.stripePaymentPage === input.stripePaymentPage.trim() &&
-		invoiceRow.currency === phaseRow.currency &&
-		invoiceRow.total === input.total;
-
-	// Invoice recording no longer moves the lifecycle (S-005 R5/R7): the phase
-	// stays in its work state and only the invoice row is written. A retry that
-	// already recorded the same invoice is idempotent.
-	if (invoice && invoiceMatches(phase, invoice)) {
-		return {
-			invoice: { id: invoice.id, publicId: invoice.publicId },
-			created: false,
-		};
-	}
-
-	if (phase.version !== input.expectedVersion) {
-		throw new DomainError(
-			"Conflict",
-			"This phase was changed by another request. Refresh and try again.",
-		);
-	}
-
-	if (!isInvoiceComponentDue(input.component, phase.state)) {
-		throw new DomainError(
-			"InvalidTransition",
-			`The ${input.component} component is not due yet.`,
-		);
-	}
-
-	if (invoice) {
-		throw new DomainError(
-			"AlreadyExists",
-			"This phase already has an invoice.",
-		);
-	}
-
-	const stripeInvoice = await fetchStripeInvoice({
-		stripeId: input.stripeId.trim(),
-		stripeKey: input.stripeKey,
-	});
-
-	return db.transaction(async (tx) => {
-		const [lockedPhase] = await tx
-			.select({
-				id: phases.id,
-				organizationId: projects.organizationId,
-				currency: phases.currency,
-				state: phases.state,
-				version: phases.version,
-				upfrontAmount: phases.upfrontAmount,
-				deliveryAmount: phases.deliveryAmount,
-				acceptanceAmount: phases.acceptanceAmount,
-			})
-			.from(phases)
-			.innerJoin(projects, eq(phases.projectId, projects.id))
-			.where(eq(phases.id, input.phaseId))
-			.for("update", { of: phases });
-
-		if (!lockedPhase) {
-			throw new DomainError("NotFound", "Phase not found.");
-		}
-
-		if (lockedPhase[`${input.component}Amount`] === null) {
-			throw new DomainError("Validation", "This component is not priced.");
-		}
-
-		const lockedInvoice = await tx.query.invoices.findFirst({
-			columns: {
-				id: true,
-				publicId: true,
-				phaseId: true,
-				component: true,
-				invoiceNumber: true,
-				stripeId: true,
-				stripePaymentPage: true,
-				currency: true,
-				total: true,
-			},
-			where: { phaseId: lockedPhase.id, component: input.component },
-		});
-
-		if (lockedInvoice && invoiceMatches(lockedPhase, lockedInvoice)) {
-			return {
-				invoice: {
-					id: lockedInvoice.id,
-					publicId: lockedInvoice.publicId,
-				},
-				created: false,
-			};
-		}
-
-		if (lockedPhase.version !== input.expectedVersion) {
-			throw new DomainError(
-				"Conflict",
-				"This phase was changed by another request. Refresh and try again.",
-			);
-		}
-
-		if (!isInvoiceComponentDue(input.component, lockedPhase.state)) {
-			throw new DomainError(
-				"InvalidTransition",
-				`The ${input.component} component is not due yet.`,
-			);
-		}
-
-		if (lockedInvoice) {
-			throw new DomainError(
-				"AlreadyExists",
-				"This phase already has an invoice.",
-			);
-		}
-
-		const rows = await tx
-			.insert(invoices)
-			.values({
-				publicId: crypto.randomUUID(),
-				organizationId: lockedPhase.organizationId,
-				phaseId: lockedPhase.id,
-				component: input.component,
-				invoiceNumber: input.invoiceNumber.trim(),
-				stripeId: input.stripeId.trim(),
-				stripePaymentPage: input.stripePaymentPage.trim(),
-				currency: lockedPhase.currency,
-				total: input.total,
-				invoicedAt: stripeInvoiceSnapshot(stripeInvoice).invoicedAt,
-			})
-			.onConflictDoNothing()
-			.returning({ id: invoices.id, publicId: invoices.publicId });
-
-		if (!rows[0]) {
-			throw new DomainError(
-				"Conflict",
-				"This invoice was recorded by another request. Refresh and try again.",
-			);
-		}
-
-		return {
-			invoice: rows[0],
-			created: true,
-			amountMismatch: lockedPhase[`${input.component}Amount`] !== input.total,
-		};
-	});
-};
-
 export const attachInvoiceToPhase = async (
 	db: Db,
 	actorId: string,
 	input: {
-		invoiceId: string;
+		stripeId: string;
 		phaseId: string;
 		component: InvoiceComponent;
 		expectedVersion: number;
@@ -1000,26 +793,18 @@ export const attachInvoiceToPhase = async (
 			throw new DomainError("Validation", "This component is not priced.");
 		}
 
-		const [invoice] = await tx
-			.select({
-				id: invoices.id,
-				organizationId: invoices.organizationId,
-				phaseId: invoices.phaseId,
-				component: invoices.component,
-				currency: invoices.currency,
-			})
-			.from(invoices)
-			.where(eq(invoices.id, input.invoiceId))
-			.for("update");
-
-		if (!invoice) {
-			throw new DomainError("NotFound", "Invoice not found.");
-		}
+		const existing = await tx.query.invoices.findFirst({
+			columns: { id: true, publicId: true, stripeId: true },
+			where: { phaseId: phase.id, component: input.component },
+		});
 
 		// Already attached to this phase: idempotent retry. Attachment no longer
 		// moves the lifecycle (S-005 R5/R7), so no Delivery or state is written.
-		if (invoice.phaseId === phase.id && invoice.component === input.component) {
-			return { idempotent: true };
+		if (existing?.stripeId === input.stripeId) {
+			return {
+				invoice: { id: existing.id, publicId: existing.publicId },
+				created: false,
+			};
 		}
 
 		if (phase.version !== input.expectedVersion) {
@@ -1029,29 +814,10 @@ export const attachInvoiceToPhase = async (
 			);
 		}
 
-		if (invoice.phaseId) {
-			throw new DomainError(
-				"Conflict",
-				"This invoice is already attached to a phase.",
-			);
-		}
-
-		const existingPhaseInvoice = await tx.query.invoices.findFirst({
-			columns: { id: true },
-			where: { phaseId: phase.id, component: input.component },
-		});
-
-		if (existingPhaseInvoice) {
+		if (existing) {
 			throw new DomainError(
 				"Conflict",
 				"This component already has an invoice.",
-			);
-		}
-
-		if (phase.organizationId !== invoice.organizationId) {
-			throw new DomainError(
-				"Validation",
-				"Phase belongs to a different organization.",
 			);
 		}
 
@@ -1062,27 +828,48 @@ export const attachInvoiceToPhase = async (
 			);
 		}
 
-		if (phase.currency !== invoice.currency) {
+		const stripeInvoice = await tx.query.stripeInvoices.findFirst({
+			columns: { currency: true },
+			where: {
+				id: input.stripeId,
+				...organizationStripeInvoices(phase.organizationId),
+			},
+		});
+
+		if (!stripeInvoice) {
+			throw new DomainError(
+				"Validation",
+				"Stripe invoice not found for this organization.",
+			);
+		}
+
+		if (phase.currency !== stripeInvoice.currency) {
 			throw new DomainError(
 				"Validation",
 				"Invoice currency does not match the phase currency.",
 			);
 		}
 
-		const attached = await tx
-			.update(invoices)
-			.set({ phaseId: phase.id, component: input.component })
-			.where(and(eq(invoices.id, invoice.id), isNull(invoices.phaseId)))
-			.returning({ id: invoices.id });
+		const rows = await tx
+			.insert(invoices)
+			.values({
+				publicId: crypto.randomUUID(),
+				organizationId: phase.organizationId,
+				phaseId: phase.id,
+				component: input.component,
+				stripeId: input.stripeId,
+			})
+			.onConflictDoNothing()
+			.returning({ id: invoices.id, publicId: invoices.publicId });
 
-		if (!attached[0]) {
+		if (!rows[0]) {
 			throw new DomainError(
 				"Conflict",
 				"This invoice was attached by another request. Refresh and try again.",
 			);
 		}
 
-		return { idempotent: false };
+		return { invoice: rows[0], created: true };
 	});
 };
 

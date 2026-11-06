@@ -7,6 +7,7 @@ import Footer from "../../../../../components/Footer.astro";
 import Nav from "../../../../../components/Nav.astro";
 import PhaseOverview from "../../../../../components/PhaseOverview.astro";
 import Shell from "../../../../../layouts/Shell.astro";
+import { stripeInvoiceFields } from "../../../../../lib/stripe.ts";
 
 const { publicId, slug } = Astro.params;
 
@@ -77,13 +78,9 @@ const project = await Astro.locals.db.query.projects.findFirst({
 				invoices: {
 					columns: {
 						component: true,
-						invoiceNumber: true,
-						stripePaymentPage: true,
-						stripeStatus: true,
-						stripePaidAt: true,
-						stripeDueAt: true,
-						total: true,
-						currency: true,
+					},
+					with: {
+						stripe: stripeInvoiceFields,
 					},
 				},
 			},

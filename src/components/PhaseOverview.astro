@@ -1,5 +1,5 @@
 ---
-import type { invoiceSelectType, phaseSelectType } from "../lib/schema";
+import type { phaseSelectType } from "../lib/schema";
 import { actions } from "astro:actions";
 import { buildPhaseComponents } from "../lib/phase-billing";
 import Badge from "./Badge.astro";
@@ -19,17 +19,18 @@ interface Phase {
 	externalUrl: phaseSelectType["externalUrl"];
 	deliveryState: phaseSelectType["deliveryState"];
 	deliveryUrl: phaseSelectType["deliveryUrl"];
-	invoices: Pick<
-		invoiceSelectType,
-		| "component"
-		| "invoiceNumber"
-		| "stripePaymentPage"
-		| "stripeStatus"
-		| "stripePaidAt"
-		| "stripeDueAt"
-		| "total"
-		| "currency"
-	>[];
+	invoices: {
+		component: string;
+		stripe: {
+			number: string;
+			paymentPage: string;
+			status: string;
+			paidAt: Date | null;
+			dueAt: Date | null;
+			total: number;
+			currency: string;
+		};
+	}[];
 }
 
 interface Props {
@@ -80,13 +81,13 @@ const rows = phases.map((phase) => {
 		return {
 			...part,
 			invoice: invoice && {
-				...invoice,
+				...invoice.stripe,
 				status:
-					invoice.stripeStatus === "open" &&
-					invoice.stripeDueAt &&
-					invoice.stripeDueAt < now
+					invoice.stripe.status === "open" &&
+					invoice.stripe.dueAt &&
+					invoice.stripe.dueAt < now
 						? "overdue"
-						: invoice.stripeStatus,
+						: invoice.stripe.status,
 			},
 		};
 	});
@@ -448,29 +449,29 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 															]}
 														>
 															{part.invoice?.status === "paid" &&
-															part.invoice.stripePaidAt
-																? `on ${dateFormatter.format(part.invoice.stripePaidAt)}`
-																: part.invoice?.stripeDueAt &&
+															part.invoice.paidAt
+																? `on ${dateFormatter.format(part.invoice.paidAt)}`
+																: part.invoice?.dueAt &&
 																		(part.invoice.status === "open" ||
 																			part.invoice.status === "overdue")
-																	? `due ${dateFormatter.format(part.invoice.stripeDueAt)}`
+																	? `due ${dateFormatter.format(part.invoice.dueAt)}`
 																	: null}
 														</span>
 													</div>
 													{part.invoice ? (
 														<div class="grid grid-flow-col items-center justify-start gap-3 sm:justify-end">
 															<span class="text-xs tabular-nums text-fg-muted">
-																Invoice {part.invoice.invoiceNumber} ·{" "}
+																Invoice {part.invoice.number} ·{" "}
 																{formatAmount(
 																	part.invoice.total,
 																	part.invoice.currency,
 																)}
 															</span>
 															<Button
-																href={part.invoice.stripePaymentPage}
+																href={part.invoice.paymentPage}
 																target="_blank"
 																rel="noopener noreferrer"
-																aria-label={`${part.invoice.status === "open" || part.invoice.status === "overdue" ? "Pay" : "View"} invoice ${part.invoice.invoiceNumber}`}
+																aria-label={`${part.invoice.status === "open" || part.invoice.status === "overdue" ? "Pay" : "View"} invoice ${part.invoice.number}`}
 															>
 																{part.invoice.status === "open" ||
 																part.invoice.status === "overdue"

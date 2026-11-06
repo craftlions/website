@@ -1,6 +1,7 @@
 import type { Db } from "./database.ts";
-import { and, eq, isNull, notInArray, or, sql } from "drizzle-orm";
-import { invoices, phases, projects } from "./schema.ts";
+import { and, eq, notInArray, sql } from "drizzle-orm";
+import { invoices, organizationMetadata, phases, projects } from "./schema.ts";
+import { liveInvoices, stripeInvoiceTotal } from "./stripe.ts";
 
 /**
  * S-004 R2 / S-002 R5–R7 row: one organization's complete spend history
@@ -37,25 +38,27 @@ export async function getSpendByYear(
 ): Promise<SpendByYearRow[]> {
 	return db
 		.select({
-			year: sql<number>`EXTRACT(YEAR FROM ${invoices.invoicedAt} AT TIME ZONE 'UTC')::int`,
+			year: sql<number>`EXTRACT(YEAR FROM to_timestamp(${liveInvoices.invoicedAt}) AT TIME ZONE 'UTC')::int`,
 			projectId: projects.id,
 			projectName: sql<string>`COALESCE(${projects.name}, 'Unassigned')`,
-			total: sql<number>`SUM(${invoices.total})::float8`,
+			total: sql<number>`SUM(${stripeInvoiceTotal(liveInvoices)})::float8`,
 		})
-		.from(invoices)
+		.from(liveInvoices)
+		.innerJoin(
+			organizationMetadata,
+			eq(organizationMetadata.stripeCustomerId, liveInvoices.customer),
+		)
+		.leftJoin(invoices, eq(invoices.stripeId, liveInvoices.id))
 		.leftJoin(phases, eq(invoices.phaseId, phases.id))
 		.leftJoin(projects, eq(phases.projectId, projects.id))
 		.where(
 			and(
-				eq(invoices.organizationId, organizationId),
-				or(
-					isNull(invoices.stripeStatus),
-					notInArray(invoices.stripeStatus, ["void", "uncollectible"]),
-				),
+				eq(organizationMetadata.organizationId, organizationId),
+				notInArray(liveInvoices.status, ["draft", "void", "uncollectible"]),
 			),
 		)
 		.groupBy(
-			sql`EXTRACT(YEAR FROM ${invoices.invoicedAt} AT TIME ZONE 'UTC')::int`,
+			sql`EXTRACT(YEAR FROM to_timestamp(${liveInvoices.invoicedAt}) AT TIME ZONE 'UTC')::int`,
 			projects.id,
 			projects.name,
 		);

@@ -1,5 +1,4 @@
 import { ActionError, defineAction } from "astro:actions";
-import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
 import {
 	acceptPhaseAsClient,
@@ -11,7 +10,6 @@ import {
 	hardDeleteOrganization,
 	onboardOrganization,
 	recordDelivery,
-	recordInvoice,
 	removeNeverLoggedInUser,
 	removeOrganizationMember,
 	toSlug,
@@ -27,7 +25,6 @@ import {
 	deliveryUrlSchema,
 } from "../lib/delivery.ts";
 import { DomainError } from "../lib/domain.ts";
-import { importStripeInvoices, refreshStripeInvoice } from "../lib/stripe.ts";
 
 type ActionContext = Parameters<
 	Parameters<typeof defineAction>[0]["handler"]
@@ -302,57 +299,16 @@ export const server = {
 			return { success: true };
 		}),
 	}),
-	recordInvoice: defineAction({
-		accept: "form",
-		input: z.object({
-			phaseId: z.string().trim().min(1),
-			component: z.enum(["upfront", "delivery", "acceptance"]),
-			invoiceNumber: z.string().trim().min(1).max(80),
-			stripeId: z.string().trim().min(1).max(140),
-			stripePaymentPage: z.string().trim().pipe(z.url()),
-			total: z.coerce.number().nonnegative(),
-			expectedVersion: z.coerce.number().int().nonnegative(),
-		}),
-		handler: adminHandler(async (input, context, actorId) => {
-			await recordInvoice(context.locals.db, actorId, {
-				...input,
-				stripeKey: env.STRIPE_SECRET_KEY,
-			});
-			return { success: true };
-		}),
-	}),
-	refreshStripeInvoice: defineAction({
-		accept: "form",
-		input: z.object({ invoiceId: z.string().trim().min(1) }),
-		handler: adminHandler(async (input, context) => {
-			await refreshStripeInvoice(context.locals.db, {
-				invoiceId: input.invoiceId,
-				stripeKey: env.STRIPE_SECRET_KEY,
-			});
-			return { success: true };
-		}),
-	}),
-	importStripeInvoices: defineAction({
-		accept: "form",
-		input: z.object({ organizationId: z.string().trim().min(1) }),
-		handler: adminHandler(async (input, context, actorId) => {
-			await importStripeInvoices(context.locals.db, actorId, {
-				organizationId: input.organizationId,
-				stripeKey: env.STRIPE_SECRET_KEY,
-			});
-			return { success: true };
-		}),
-	}),
 	attachInvoiceToPhase: defineAction({
 		accept: "form",
 		input: z.object({
-			invoiceId: z.string().trim().min(1),
+			stripeId: z.string().trim().min(1).max(140),
 			target: z.string().regex(/^[^:]+:(upfront|delivery|acceptance):\d+$/),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			const [phaseId, component, expectedVersion] = input.target.split(":");
 			await attachInvoiceToPhase(context.locals.db, actorId, {
-				invoiceId: input.invoiceId,
+				stripeId: input.stripeId,
 				phaseId: phaseId ?? "",
 				component: component as "upfront" | "delivery" | "acceptance",
 				expectedVersion: Number(expectedVersion),

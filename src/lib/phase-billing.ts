@@ -30,11 +30,11 @@ export const isInvoiceComponentDue = (
 export const componentBillingStatus = (input: {
 	component: InvoiceComponent;
 	state: phaseSelectType["state"];
-	invoice?: { stripeStatus: string | null } | null;
+	invoice?: { stripe: { status: string } } | null;
 }): ComponentBillingStatus => {
 	// D-phase-billing-truth: the tagged invoice and Stripe outrank the trigger;
 	// billing state is derived here and is never persisted on the component.
-	if (input.invoice?.stripeStatus === "paid") return "paid";
+	if (input.invoice?.stripe.status === "paid") return "paid";
 	if (input.invoice) return "invoiced";
 	return isInvoiceComponentDue(input.component, input.state)
 		? "due"
@@ -47,8 +47,8 @@ export const buildPhaseComponents = (input: {
 	acceptanceAmount: number | null;
 	state: phaseSelectType["state"];
 	invoices: ReadonlyArray<{
-		component: string | null;
-		stripeStatus: string | null;
+		component: string;
+		stripe: { status: string };
 	}>;
 }): PhaseComponentItem[] => {
 	const invoiceByComponent = new Map(

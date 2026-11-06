@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
-import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
-import { recordInvoice } from "../../../../../../lib/admin-mutations.ts";
+import { attachInvoiceToPhase } from "../../../../../../lib/admin-mutations.ts";
 import {
 	domainProblem,
 	problem,
@@ -21,10 +20,7 @@ export const POST: APIRoute = async (context) => {
 	const validation = z
 		.strictObject({
 			component: z.enum(["upfront", "delivery", "acceptance"]),
-			invoiceNumber: z.string().trim().min(1).max(80),
 			stripeId: z.string().trim().min(1).max(140),
-			stripePaymentPage: z.string().trim().pipe(z.url()),
-			total: z.number().nonnegative(),
 			expectedVersion: z.number().int().nonnegative(),
 		})
 		.safeParse(await context.request.json());
@@ -34,13 +30,12 @@ export const POST: APIRoute = async (context) => {
 	}
 
 	try {
-		const result = await recordInvoice(
+		const result = await attachInvoiceToPhase(
 			context.locals.db,
 			verification.actorId,
 			{
 				phaseId: String(context.params.id),
 				...validation.data,
-				stripeKey: env.STRIPE_SECRET_KEY,
 			},
 		);
 		return new Response(JSON.stringify(result.invoice), {

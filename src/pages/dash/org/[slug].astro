@@ -17,6 +17,10 @@ import {
 	getSpendByYear,
 } from "../../../lib/budget-consumption.ts";
 import { buildPhaseComponents } from "../../../lib/phase-billing.ts";
+import {
+	organizationStripeInvoices,
+	stripeInvoiceFields,
+} from "../../../lib/stripe.ts";
 
 const { slug } = Astro.params;
 
@@ -92,7 +96,9 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 						invoices: {
 							columns: {
 								component: true,
-								stripeStatus: true,
+							},
+							with: {
+								stripe: { columns: { status: true } },
 							},
 						},
 					},
@@ -113,65 +119,67 @@ if (!organization || !currentMember) {
 	return Astro.redirect("/dash");
 }
 
-const [spendRows, invoices] = await Promise.all([
+const [spendRows, stripeRows] = await Promise.all([
 	// S-004 R2/R3: one shared-module read returns the full spend history for
 	// this organization; the Spend chart and all budget figures derive from it.
 	getSpendByYear(Astro.locals.db, organization.id),
-	Astro.locals.db.query.invoices.findMany({
-		columns: {
-			component: true,
-			invoiceNumber: true,
-			stripePaymentPage: true,
-			stripeStatus: true,
-			stripePaidAt: true,
-			stripeDueAt: true,
-			total: true,
-			currency: true,
-			invoicedAt: true,
-		},
+	Astro.locals.db.query.stripeInvoices.findMany({
+		...stripeInvoiceFields,
 		// S-003 R2: an attached invoice derives its project, phase, and Delivery
 		// from its one phase — nothing is copied onto the invoice row.
 		with: {
-			phase: {
+			link: {
 				columns: {
-					publicId: true,
-					title: true,
-					cost: true,
-					upfrontAmount: true,
-					deliveryAmount: true,
-					acceptanceAmount: true,
-					currency: true,
-					state: true,
-					deliveryState: true,
-					deliveryUrl: true,
+					component: true,
 				},
 				with: {
-					project: {
+					phase: {
 						columns: {
 							publicId: true,
-							name: true,
+							title: true,
+							cost: true,
+							upfrontAmount: true,
+							deliveryAmount: true,
+							acceptanceAmount: true,
+							currency: true,
+							state: true,
+							deliveryState: true,
+							deliveryUrl: true,
 						},
-					},
-					invoices: {
-						columns: {
-							component: true,
-							stripeStatus: true,
+						with: {
+							project: {
+								columns: {
+									publicId: true,
+									name: true,
+								},
+							},
+							invoices: {
+								columns: {
+									component: true,
+								},
+								with: {
+									stripe: { columns: { status: true } },
+								},
+							},
 						},
 					},
 				},
 			},
 		},
-		where: {
-			organizationId: organization.id,
-		},
+		where: organizationStripeInvoices(organization.id),
 		orderBy: {
 			invoicedAt: "desc",
 		},
 	}),
 ]);
+const invoices = stripeRows.map(({ link, ...invoice }) => ({
+	...invoice,
+	component: link?.component ?? null,
+	phase: link?.phase ?? null,
+}));
 // The worklist lists open invoices oldest first; the table lists all newest first.
 const worklistInvoices = invoices
-	.filter((invoice) => invoice.stripeStatus === "open")
+	.filter((invoice) => invoice.status === "open")
 	.toReversed();
 
 const now = new Date();
@@ -311,12 +319,9 @@ const worklist: WorklistItem[] = [
 	),
 	...worklistInvoices.map(
 		(invoice): WorklistItem => ({
-			priority:
-				invoice.stripeDueAt !== null && invoice.stripeDueAt < now ? 0 : 3,
+			priority: invoice.dueAt !== null && invoice.dueAt < now ? 0 : 3,
 			kind:
-				invoice.stripeDueAt !== null && invoice.stripeDueAt < now
-					? "Overdue"
-					: "Unpaid",
+				invoice.dueAt !== null && invoice.dueAt < now ? "Overdue" : "Unpaid",
 			invoice,
 			invoiceComponents: invoice.phase
 				? buildPhaseComponents({
@@ -327,7 +332,7 @@ const worklist: WorklistItem[] = [
 						invoices: invoice.phase.invoices,
 					})
 				: [],
-			dueAt: invoice.stripeDueAt,
+			dueAt: invoice.dueAt,
 		}),
 	),
 ].toSorted((a, b) => a.priority - b.priority);
@@ -387,9 +392,7 @@ const worklist: WorklistItem[] = [
 									)}
 									{item.invoice && (
 										<>
-											<h3 class="font-medium">
-												Invoice {item.invoice.invoiceNumber}
-											</h3>
+											<h3 class="font-medium">Invoice {item.invoice.number}</h3>
 											{item.invoice.phase?.project && (
 												<a
 													href={`/dash/org/${slug}/project/${item.invoice.phase.project.publicId}#phase-${item.invoice.phase.publicId}`}
@@ -527,10 +530,10 @@ const worklist: WorklistItem[] = [
 										)}
 									{item.invoice && (
 										<Button
-											href={item.invoice.stripePaymentPage}
+											href={item.invoice.paymentPage}
 											target="_blank"
 											rel="noopener noreferrer"
-											aria-label={`Pay invoice ${item.invoice.invoiceNumber}`}
+											aria-label={`Pay invoice ${item.invoice.number}`}
 										>
 											Pay
 										</Button>
