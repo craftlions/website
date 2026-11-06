@@ -1466,6 +1466,27 @@ export const updateOrganizationSettings = async (
 		throw new DomainError("AlreadyExists", "That organization slug is taken.");
 	}
 
+	const stripeCustomerId = input.stripeCustomerId?.trim() || null;
+
+	// Invoice visibility follows the customer id, so it can only belong to one
+	// organization.
+	if (stripeCustomerId) {
+		const customerOwner = await db.query.organizationMetadata.findFirst({
+			columns: { organizationId: true },
+			where: { stripeCustomerId },
+		});
+
+		if (
+			customerOwner &&
+			customerOwner.organizationId !== input.organizationId
+		) {
+			throw new DomainError(
+				"AlreadyExists",
+				"That Stripe customer is linked to another organization.",
+			);
+		}
+	}
+
 	const updatedOrganization = await adapter.updateOrganization(
 		input.organizationId,
 		{
@@ -1485,13 +1506,13 @@ export const updateOrganizationSettings = async (
 			.values({
 				organizationId: input.organizationId,
 				yearlyBudget: input.yearlyBudget ?? null,
-				stripeCustomerId: input.stripeCustomerId?.trim() || null,
+				stripeCustomerId,
 			})
 			.onConflictDoUpdate({
 				target: organizationMetadata.organizationId,
 				set: {
 					yearlyBudget: input.yearlyBudget ?? null,
-					stripeCustomerId: input.stripeCustomerId?.trim() || null,
+					stripeCustomerId,
 				},
 			});
 		await insertEvent(tx, {

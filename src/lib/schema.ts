@@ -471,7 +471,7 @@ export const organizationMetadata = t.pgTable(
 			.uniqueIndex("organization_metadata_organizationId_uidx")
 			.on(table.organizationId),
 		t
-			.index("organization_metadata_stripeCustomerId_idx")
+			.uniqueIndex("organization_metadata_stripeCustomerId_uidx")
 			.on(table.stripeCustomerId),
 	],
 );
