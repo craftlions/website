@@ -22,9 +22,9 @@ export function parseReturnTo(candidate: unknown): string {
 	}
 
 	if (
-		!PORTAL_PREFIXES.some(
+		PORTAL_PREFIXES.every(
 			(prefix) =>
-				url.pathname === prefix || url.pathname.startsWith(`${prefix}/`),
+				url.pathname !== prefix && !url.pathname.startsWith(`${prefix}/`),
 		)
 	) {
 		return FALLBACK;
