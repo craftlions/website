@@ -68,7 +68,7 @@ jobs:
         id: preview
         run: |
           set -o pipefail
-          aubr cf previews deploy "$PREVIEW_NAME" | tee preview.json
+          aubr cf previews deploy --preview-name "$PREVIEW_NAME" | tee preview.json
           preview_url=$(jq -r '.preview_urls[0] // empty' preview.json)
           deployment_url=$(jq -r '.deployment_urls[0] // empty' preview.json)
           {

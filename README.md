@@ -356,15 +356,15 @@ RFC 9457
 "detail": "The request body contains invalid fields",
 "instance": "/habits/123",
 "errors": [{
-      "field": "name",
-      "reason": "Must be between 1 and 100 characters",
-      "value": ""
-    },
-    {
-      "field": "frequency",
-      "reason": "Must be one of: daily, weekly, monthly",
-      "value": "sometimes"
-    }]
+"field": "name",
+"reason": "Must be between 1 and 100 characters",
+"value": ""
+},
+{
+"field": "frequency",
+"reason": "Must be one of: daily, weekly, monthly",
+"value": "sometimes"
+}]
 }
 
 400 Bad Request: You sent garbage
@@ -399,7 +399,7 @@ RFC 9457
 
 {
 "data": [{ "id": "1", "name": "User 1" },
-    { "id": "2", "name": "User 2" }],
+{ "id": "2", "name": "User 2" }],
 "meta": {
 "total": 100,
 "page": 1,
@@ -420,13 +420,13 @@ RFC 9457
 "code": "VALIDATION_ERROR",
 "message": "Invalid request data",
 "details": [{
-        "field": "email",
-        "message": "Invalid email format"
-      },
-      {
-        "field": "age",
-        "message": "Must be at least 18"
-      }]
+"field": "email",
+"message": "Invalid email format"
+},
+{
+"field": "age",
+"message": "Must be at least 18"
+}]
 },
 "meta": {
 "request_id": "abc-123-def",
