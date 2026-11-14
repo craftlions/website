@@ -24,6 +24,11 @@ local online = new Mapping<String, Step> {
 		diagnostic_format = "sarif"
 		check = "jactionlint --strict-exit --format sarif {{files}}"
 	}
+	["jactionlint-update"] {
+		glob = workflows
+		batch = true
+		check = "jactionlint update --check {{files}}"
+	}
 }
 
 hooks {
