@@ -4,7 +4,7 @@ export default defineConfig({
 	accountId: "1dc7f5dfd6f1830ea5b903d051c6d624",
 	worker: {
 		name: "craftlions-website",
-		compatibilityDate: "2026-10-23",
+		compatibilityDate: "2026-11-01",
 		compatibilityFlags: ["nodejs_compat"],
 		entrypoint: "./src/worker.ts",
 		workersDev: false,
