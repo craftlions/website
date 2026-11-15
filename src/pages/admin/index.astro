@@ -169,15 +169,13 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 		class="grid gap-4 border-b border-dashed border-line pb-6"
 	>
 		<div class="grid gap-1">
-			<p class="text-label uppercase text-fg-muted">Admin</p>
+			<p class="label-caps">Admin</p>
 			<PageHeading> Client workbench </PageHeading>
 		</div>
 	</header>
 
 	<section class="grid gap-3" aria-labelledby="summary-heading">
-		<h2 id="summary-heading" class="text-label uppercase text-fg-muted">
-			Summary
-		</h2>
+		<h2 id="summary-heading" class="label-caps"> Summary </h2>
 		<dl
 			class="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-x-8 gap-y-3"
 		>
@@ -210,9 +208,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 	</section>
 
 	<section class="grid gap-3" aria-labelledby="worklist-heading">
-		<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
-			Worklist
-		</h2>
+		<h2 id="worklist-heading" class="label-caps"> Worklist </h2>
 		<p class="max-w-prose text-sm text-fg-muted">
 			Phases that need a step from you or a client, and unpaid invoices across
 			all clients: overdue ones always, open ones only when their phase is not
@@ -224,9 +220,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 	<client-ledger class="grid">
 		<section class="grid gap-3" aria-labelledby="ledger-heading">
 			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-				<h2 id="ledger-heading" class="text-label uppercase text-fg-muted">
-					Client ledger
-				</h2>
+				<h2 id="ledger-heading" class="label-caps"> Client ledger </h2>
 				<DisclosureButton controls="onboard-client" open={isOnboardOpen}>
 					Onboard client
 				</DisclosureButton>

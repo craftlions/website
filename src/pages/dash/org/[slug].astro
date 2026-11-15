@@ -223,9 +223,7 @@ const worklist = deriveClientWorklist({
 >
 	<ClientPhaseBanner />
 	<section aria-labelledby="worklist-heading" class="grid gap-3">
-		<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
-			Worklist
-		</h2>
+		<h2 id="worklist-heading" class="label-caps"> Worklist </h2>
 		<ClientWorklist
 			items={worklist}
 			canDecide={currentMember.role === "owner" ||
@@ -241,9 +239,7 @@ const worklist = deriveClientWorklist({
 			class="group grid min-w-0 content-start gap-3"
 		>
 			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-				<h2 id="projects-heading" class="text-label uppercase text-fg-muted">
-					Projects
-				</h2>
+				<h2 id="projects-heading" class="label-caps"> Projects </h2>
 				{completedProjectCount > 0 && (
 					<label class="grid cursor-pointer grid-flow-col items-center gap-2 text-label text-fg-muted select-none">
 						<input
@@ -351,9 +347,7 @@ const worklist = deriveClientWorklist({
 			aria-labelledby="budget-heading"
 			class="grid min-w-0 content-start gap-3"
 		>
-			<h2 id="budget-heading" class="text-label uppercase text-fg-muted">
-				Budget
-			</h2>
+			<h2 id="budget-heading" class="label-caps"> Budget </h2>
 			<dl
 				class="grid grid-cols-[minmax(0,1fr)_auto] border border-dashed border-line text-sm"
 			>

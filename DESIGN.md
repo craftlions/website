@@ -238,7 +238,8 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 - **Title** (`text-title`; 600, 1.25rem, 1.4): article titles, card headings, and compact section titles.
 - **Body** (400, 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.
 - **Small body** (`text-sm`; 400, 0.875rem): table cells, inputs, metadata, and helper text.
-- **Label** (`text-label` at 0.875rem, or `label-caps` for 0.75rem uppercase table and metric labels; 600): section labels, table headers, form labels, and buttons.
+- **Label** (`text-label` at 0.875rem; 600): form labels, buttons, and inline labels.
+- **Label caps** (`label-caps`; 600, 0.75rem, uppercase, muted): page section headings (h2 and the h3 that heads a section's list), table headers, and metric labels. It already sets the muted color, so do not rebuild it from `text-label uppercase text-fg-muted`.
 - **Caption** (`text-caption`; 600, 0.75rem, 1.333): badges and other single-word state marks.
 
 Each role carries its size, weight, and line height together, so do not add `font-*` to it. The one `leading-*` exception is `leading-none`, in tight metric rows and in boxes sized around a single line: the badge (`text-caption leading-none`) and the hint button. Add it as `leading-none`, never as a `/none` size modifier, which drops the role's weight. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.

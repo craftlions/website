@@ -119,7 +119,7 @@ const stripeRows = await Astro.locals.db.query.stripeInvoices.findMany({
 	activePage="invoices"
 >
 	<section aria-labelledby="invoices" class="grid content-start gap-3">
-		<h2 id="invoices" class="text-label uppercase text-fg-muted">Invoices</h2>
+		<h2 id="invoices" class="label-caps">Invoices</h2>
 		<InvoiceTable
 			invoices={stripeRows.map(({ link, ...invoice }) => ({
 				...invoice,

@@ -126,9 +126,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 	>
 		<input type="hidden" name="organizationId" value={organization.id}>
 		<section aria-labelledby="identity-heading" class="grid gap-3">
-			<h2 id="identity-heading" class="text-label uppercase text-fg-muted">
-				Identity
-			</h2>
+			<h2 id="identity-heading" class="label-caps"> Identity </h2>
 			<p class="max-w-prose text-sm text-fg-muted">
 				How this client is named in the admin area and on their dashboard.
 			</p>
@@ -157,9 +155,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 			</div>
 		</section>
 		<section aria-labelledby="billing-heading" class="grid gap-3">
-			<h2 id="billing-heading" class="text-label uppercase text-fg-muted">
-				Billing
-			</h2>
+			<h2 id="billing-heading" class="label-caps"> Billing </h2>
 			<p class="max-w-prose text-sm text-fg-muted">
 				The budget the client dashboard compares invoices against, and the
 				Stripe customer whose invoices belong to this client.
@@ -218,9 +214,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		<Button type="submit">Save settings</Button>
 	</form>
 	<section aria-labelledby="client-url-heading" class="grid gap-3">
-		<h2 id="client-url-heading" class="text-label uppercase text-fg-muted">
-			Client URL
-		</h2>
+		<h2 id="client-url-heading" class="label-caps"> Client URL </h2>
 		<p class="max-w-prose text-sm text-fg-muted">
 			The address members of this client use to open their dashboard. It is
 			changed on its own, with a confirmation, because existing links and
@@ -274,9 +268,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		aria-labelledby="delete-heading"
 		class="grid gap-3 border-t border-dashed border-line pt-6"
 	>
-		<h2 id="delete-heading" class="text-label uppercase text-fg-muted">
-			Delete client
-		</h2>
+		<h2 id="delete-heading" class="label-caps"> Delete client </h2>
 		<p class="max-w-prose text-sm text-fg-muted">
 			Deleting a client is permanent and cannot be undone.
 		</p>

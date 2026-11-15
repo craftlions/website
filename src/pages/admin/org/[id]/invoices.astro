@@ -220,9 +220,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 	fieldLabels={{ stripeId: "Stripe invoice", target: "Attach to" }}
 >
 	<section aria-labelledby="summary-heading" class="grid gap-3">
-		<h2 id="summary-heading" class="text-label uppercase text-fg-muted">
-			Summary
-		</h2>
+		<h2 id="summary-heading" class="label-caps"> Summary </h2>
 		<dl
 			class="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-x-8 gap-y-3"
 		>
@@ -302,7 +300,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 		aria-labelledby="to-invoice-heading"
 		class="grid scroll-mt-20 gap-3"
 	>
-		<h2 id="to-invoice-heading" class="text-label uppercase text-fg-muted">
+		<h2 id="to-invoice-heading" class="label-caps">
 			To invoice ({dueParts.length})
 		</h2>
 		<p class="max-w-prose text-sm text-fg-muted">
@@ -368,7 +366,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 		aria-labelledby="to-attach-heading"
 		class="grid scroll-mt-20 gap-3"
 	>
-		<h2 id="to-attach-heading" class="text-label uppercase text-fg-muted">
+		<h2 id="to-attach-heading" class="label-caps">
 			To attach ({unattachedInvoices.length})
 		</h2>
 		<p class="max-w-prose text-sm text-fg-muted">
@@ -505,7 +503,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 		aria-labelledby="invoices-heading"
 		class="grid scroll-mt-20 gap-3"
 	>
-		<h2 id="invoices-heading" class="text-label uppercase text-fg-muted">
+		<h2 id="invoices-heading" class="label-caps">
 			Invoices ({recorded.length})
 		</h2>
 		<p class="max-w-prose text-sm text-fg-muted">

@@ -149,7 +149,7 @@ const setupGaps = [
 >
 	{setupGaps.length > 0 && (
 		<section class="grid min-w-0 gap-3" aria-labelledby="setup-heading">
-			<h2 id="setup-heading" class="text-label uppercase text-fg-muted">
+			<h2 id="setup-heading" class="label-caps">
 				Setup
 			</h2>
 			<ul class="grid border border-dashed border-line">
@@ -165,9 +165,7 @@ const setupGaps = [
 		</section>
 	)}
 	<section class="grid min-w-0 gap-3" aria-labelledby="worklist-heading">
-		<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
-			Worklist
-		</h2>
+		<h2 id="worklist-heading" class="label-caps"> Worklist </h2>
 		<p class="max-w-prose text-sm text-fg-muted">
 			Phases that need a step from you or the client, and unpaid invoices:
 			overdue ones always, open ones only when their phase is not listed.
@@ -189,9 +187,7 @@ const setupGaps = [
 	>
 		<div class="grid min-w-0 content-start gap-6">
 			<section class="grid content-start gap-3" aria-labelledby="money-heading">
-				<h2 id="money-heading" class="text-label uppercase text-fg-muted">
-					Money
-				</h2>
+				<h2 id="money-heading" class="label-caps"> Money </h2>
 				<p class="max-w-prose text-sm text-fg-muted">
 					Budget for the current calendar year, and invoices waiting for payment
 					or to be sent.
@@ -307,9 +303,7 @@ const setupGaps = [
 			aria-labelledby="projects-heading"
 		>
 			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-				<h2 id="projects-heading" class="text-label uppercase text-fg-muted">
-					Current projects
-				</h2>
+				<h2 id="projects-heading" class="label-caps"> Current projects </h2>
 				{projects.length > 0 && (
 					<Button
 						href={`/admin/org/${organization.id}/projects`}
