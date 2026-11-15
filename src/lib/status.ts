@@ -80,6 +80,21 @@ export const projectTransitions: Record<
 	archived: [],
 };
 
+const memberRoleLabel: Record<string, string> = {
+	owner: "Owner",
+	admin: "Admin",
+	member: "Member",
+};
+
+// A member's role in an organization; the role column is free text, so any
+// other value reads as Member. Roles are not states, so every badge is gray.
+export const memberRole = (
+	role: string,
+): { label: string; badge: BadgeType } => ({
+	label: memberRoleLabel[role] ?? "Member",
+	badge: "gray",
+});
+
 export const costPartLabel: Record<InvoiceComponent, string> = {
 	upfront: "Upfront",
 	delivery: "Delivery",
