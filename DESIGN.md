@@ -340,7 +340,7 @@ Containers are simple line planes.
 Inputs follow the same line vocabulary as buttons.
 
 - **Style:** transparent background, 1px dashed `line-control` border, 8px 12px padding, small text.
-- **Component:** use `src/components/Field.astro` for every labelled control: a `text-label` label, the `Input`, an optional hint and the error, linked with `aria-describedby`. Pass the action's result as `result`, and the field shows that action's error for its name and, after a failed submit, the value that was typed. `src/components/Input.astro` is the bare control, with `as="select"` for selects and `danger` for destructive confirmations.
+- **Component:** use `src/components/Field.astro` for every labelled control: a `text-label` label, the `Input`, an optional hint and the error, linked with `aria-describedby`. Pass the action's result as `result`, and the field shows that action's error for its name and, after a failed submit, the value that was typed. `src/components/Input.astro` is the bare control, with `as="select"` for selects and `danger` for destructive confirmations. `aubr design:lint` rejects a `<label>` outside `Field` and `Checkbox`; the cost split's suffixed number inputs are the one other exception.
 - **Focus:** border shifts to stronger neutral, in addition to the global focus outline.
 - **Placeholder / Disabled:** placeholder text is muted but must remain readable against the active surface.
 - **Read-only:** `Input` draws a `readonly` input's value in `text-fg-muted` inside the same dashed box, like a calculated output, so it reads as shown rather than editable; it stays focusable and its value selectable. Its hint says why it is locked.

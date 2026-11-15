@@ -113,6 +113,19 @@ const rules = [
 		doc: "DESIGN.md#links",
 		ignore: "src/styles/global.css",
 	},
+	// Checkbox wraps its control in its label; the cost split labels number
+	// inputs that sit in a % suffix box, which Input cannot draw yet.
+	{
+		id: "raw-label",
+		pattern: /<label\b/g,
+		use: "<Field> for a labelled control, or <Checkbox>",
+		doc: "DESIGN.md#inputs--fields",
+		ignore: [
+			"src/components/Field.astro",
+			"src/components/Checkbox.astro",
+			"src/components/PhaseAmountCalculator.astro",
+		],
+	},
 ];
 
 // Shadow, rounded and flex are also ordinary words, so those rules skip free text.
@@ -128,7 +141,8 @@ const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
 				: rules
 						.filter(
 							({ ignore, only }) =>
-								ignore !== file && (!only || file.startsWith(only)),
+								![ignore].flat().includes(file) &&
+								(!only || file.startsWith(only)),
 						)
 						.flatMap(({ pattern, use, doc, classOnly }) =>
 							[...(classOnly ? classText(line) : line).matchAll(pattern)].map(
