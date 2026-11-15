@@ -30,7 +30,7 @@ colors:
   status-error-dark: "#fca5a5"
   status-warning: "#b45309"
   status-warning-dark: "#fcd34d"
-  status-line-error: "#fca5a5"
+  status-line-error: "#ef4444"
   status-line-success: "#34d399"
   status-line-info: "#7dd3fc"
   fill-error: "#b91c1c"
@@ -156,7 +156,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 ### Tertiary
 
 - **Status Green**: success or paid state.
-- **Status Red**: error, cancelled, or budget-risk state.
+- **Status Red**: error, cancelled, or budget-risk state. Its outline (`line-danger`) is the boundary of an invalid or destructive input, so it holds 3:1 on canvas.
 - **Status Info**: informational project and phase state.
 
 ### Neutral

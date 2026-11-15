@@ -16,7 +16,7 @@
 	--line-strong: light-dark(#a3a3a3, #525252);
 	--line-control: light-dark(#737373, #737373);
 	--line-active: light-dark(#525252, #d4d4d4);
-	--line-danger: light-dark(#fca5a5, #b91c1c);
+	--line-danger: light-dark(#ef4444, #b91c1c);
 	--line-success: light-dark(#34d399, #047857);
 	--line-info: light-dark(#7dd3fc, #0369a1);
 
