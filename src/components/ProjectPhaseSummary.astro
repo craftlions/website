@@ -2,7 +2,8 @@
 import { type PhaseState, phaseStateSummary } from "../lib/status.ts";
 
 // A project's phases at a glance: how many are accepted, and which states
-// are the admin's move or wait on the client. Cancelled phases do not count.
+// are the admin's move or wait on the client. Cancelled phases do not count;
+// a project whose phases are all cancelled says so instead of "None yet".
 interface Props {
 	phases: ReadonlyArray<{ state: PhaseState }>;
 	class?: string | undefined;
@@ -24,7 +25,9 @@ const waitingOnClient = phaseStateSummary(phases, "gray");
 	<dd class="tabular-nums wrap-break-word">
 		{counted.length > 0
 			? `${counted.filter((phase) => phase.state === "accepted").length} of ${counted.length} accepted`
-			: "None yet"}
+			: phases.length > 0
+				? `${phases.length} cancelled`
+				: "None yet"}
 	</dd>
 	{yourMove && (
 		<>
