@@ -339,7 +339,7 @@ Search across the signed-in person's own data opens in one modal, from the nav's
 - **Selection:** the active option takes the `bg-panel` fill and a dashed `currentColor` outline, which forced colors repaint, so selection never rests on the fill alone.
 - **Navigation only:** a result goes to the page that holds the record or form (`#invoice-…`, `#phase-…`, `#create-project`); nothing is changed from the palette.
 - **Keyboard:** arrows move through the options, Page Up and Page Down jump between groups, Enter opens the active one and Ctrl+Enter (Cmd+Enter) opens it in a new tab; Esc, Close, the backdrop or the shortcut again close it and focus returns to where it was. The shortcut does nothing while another dialog is open.
-- **Status:** the status line shows the parsed filters and the count ("Overdue · 2025 — 3 results."), "Searching…" after a pause, or why a search failed; only its text changes. Moving through options is announced through `aria-activedescendant`, not the status line.
+- **Status:** the status line shows the parsed filters and the count ("Overdue · 2025 — 3 results."), "Searching…" after a pause, or why a search failed; only its text changes. A filter word can also be a title ("May release", "Open banking"): when the filters leave nothing, the query runs again with every word as text and the line names no filter. Double quotes keep words as text from the start. Moving through options is announced through `aria-activedescendant`, not the status line.
 
 ### Chips
 

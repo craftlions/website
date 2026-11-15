@@ -2,11 +2,7 @@ import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { problem } from "../../lib/api-adapters.ts";
 import { loadSearchSlice } from "../../lib/search.ts";
-import {
-	parseQuery,
-	rank,
-	type SearchResponse,
-} from "../../lib/search-query.ts";
+import { type SearchResponse, searchItems } from "../../lib/search-query.ts";
 
 export const prerender = false;
 
@@ -52,15 +48,13 @@ export const GET: APIRoute = async (context) => {
 			session,
 			now,
 		);
-		const parsed = parseQuery(query, {
-			admin: session.user.role === "admin",
-			now,
-			currencies,
-		});
 		return Response.json({
 			query,
-			filters: parsed.labels,
-			groups: rank(items, parsed),
+			...searchItems(items, query, {
+				admin: session.user.role === "admin",
+				now,
+				currencies,
+			}),
 		} satisfies SearchResponse);
 	} catch (error) {
 		console.error("Search failed", error);

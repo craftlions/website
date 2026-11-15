@@ -345,7 +345,12 @@ const amountLabel = (amount: Amount, currency: string | undefined) => {
 
 const maxTerms = 8;
 
-export const parseQuery = (q: string, context: QueryContext): ParsedQuery => {
+// With `asText`, every word is text and nothing is a filter.
+export const parseQuery = (
+	q: string,
+	context: QueryContext,
+	asText = false,
+): ParsedQuery => {
 	const currencies = new Set(
 		[...context.currencies].map((code) => code.toUpperCase()),
 	);
@@ -370,11 +375,14 @@ export const parseQuery = (q: string, context: QueryContext): ParsedQuery => {
 	const labels: Array<() => string> = [];
 	let monthYear: number | undefined;
 
-	const tokens = q
-		.trim()
-		.replace(/([<>]=?|=)\s+/g, "$1")
-		.split(/\s+/)
-		.filter(Boolean);
+	// Double quotes, straight or curly, force text: "may release" is never a
+	// month. An unclosed quote runs to the end.
+	const tokens = q.split(/["“”]/).flatMap((part, index) =>
+		(index % 2 ? part : part.replace(/([<>]=?|=)\s+/g, "$1"))
+			.split(/\s+/)
+			.filter(Boolean)
+			.map((text) => ({ text, quoted: asText || index % 2 === 1 })),
+	);
 
 	const addText = (token: string) => {
 		const words = fold(token).match(wordPattern) ?? [];
@@ -389,9 +397,18 @@ export const parseQuery = (q: string, context: QueryContext): ParsedQuery => {
 	};
 
 	for (let index = 0; index < tokens.length; index++) {
-		const token = tokens[index] ?? "";
+		const { text: token, quoted } = tokens[index] ?? {
+			text: "",
+			quoted: false,
+		};
+		if (quoted) {
+			addText(token);
+			continue;
+		}
 		const word = fold(token);
-		const next = tokens[index + 1];
+		const next = tokens[index + 1]?.quoted
+			? undefined
+			: tokens[index + 1]?.text;
 
 		const scope = Object.hasOwn(scopeWords, word)
 			? scopeWords[word]
@@ -786,4 +803,20 @@ export const rank = (
 			})),
 			total: group.total,
 		}));
+};
+
+// The query read with its filters first. When they leave nothing, it is read
+// again with every word as text, since "May release", "Open banking" or
+// "Sprint 10-12" are titles as often as filters; the filters then come back
+// empty, so the palette does not claim one was applied.
+export const searchItems = (
+	items: readonly RankItem[],
+	q: string,
+	context: QueryContext,
+): Pick<SearchResponse, "filters" | "groups"> => {
+	const parsed = parseQuery(q, context);
+	const groups = rank(items, parsed);
+	return groups.length > 0 || parsed.labels.length === 0
+		? { filters: parsed.labels, groups }
+		: { filters: [], groups: rank(items, parseQuery(q, context, true)) };
 };
