@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
+import ConfirmAction from "../../../../components/ConfirmAction.astro";
 import Field from "../../../../components/Field.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
@@ -33,6 +34,9 @@ const [organization, members] = await Promise.all([
 					name: true,
 					lastActiveAt: true,
 				},
+				with: {
+					memberships: { columns: { organizationId: true } },
+				},
 			},
 		},
 		where: {
@@ -47,6 +51,9 @@ const [organization, members] = await Promise.all([
 if (!organization) {
 	return Astro.redirect("/admin");
 }
+
+const otherClients = (count: number) =>
+	`${count} other ${count === 1 ? "client" : "clients"}`;
 ---
 
 <AdminOrgShell
@@ -185,7 +192,14 @@ if (!organization) {
 								)}
 								<form method="POST" action={actions.resendWelcomeMail}>
 									<input type="hidden" name="email" value={member.user.email} />
-									<Button type="submit">Resend</Button>
+									<Button
+										type="submit"
+										aria-label={`${member.user.lastActiveAt ? "Send password reset" : "Resend invite"} to ${member.user.name}`}
+									>
+										{member.user.lastActiveAt
+											? "Send password reset"
+											: "Resend invite"}
+									</Button>
 								</form>
 								<form method="POST" action={actions.removeOrganizationMember}>
 									<input
@@ -194,12 +208,31 @@ if (!organization) {
 										value={organization.id}
 									/>
 									<input type="hidden" name="memberId" value={member.id} />
-									<Button type="submit">Remove member</Button>
+									<ConfirmAction
+										id={`remove-member-${member.id}`}
+										trigger="Remove from client"
+										triggerLabel={`Remove from client: ${member.user.name}`}
+										triggerVariant="quiet"
+										title={`Remove ${member.user.name} from ${organization.name}?`}
+										confirm="Remove from client"
+									>
+										{`${member.user.name} can no longer see the ${organization.name} dashboard. The account stays${member.user.memberships.length > 1 ? ` and keeps access to ${otherClients(member.user.memberships.length - 1)}` : ""}, and you can add it again with the same email.${members.length === 1 ? " Nobody else is a member, so nobody at the client will see the dashboard." : ""}`}
+									</ConfirmAction>
 								</form>
 								{!member.user.lastActiveAt && (
 									<form method="POST" action={actions.removeNeverLoggedInUser}>
 										<input type="hidden" name="userId" value={member.userId} />
-										<Button type="submit">Remove user</Button>
+										<ConfirmAction
+											id={`delete-user-${member.userId}`}
+											trigger="Delete account"
+											triggerLabel={`Delete account of ${member.user.name}`}
+											triggerVariant="quiet"
+											title={`Delete the account of ${member.user.name}?`}
+											confirm="Delete account"
+											typeToConfirm={{ value: member.user.email }}
+										>
+											{`This deletes the account for ${member.user.email} everywhere: it is removed from ${organization.name}${member.user.memberships.length > 1 ? ` and from ${otherClients(member.user.memberships.length - 1)}` : ""} and can no longer sign in. This cannot be undone; adding the same email later creates a new account.`}
+										</ConfirmAction>
 									</form>
 								)}
 							</div>
