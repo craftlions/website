@@ -5,6 +5,7 @@ import { actions } from "astro:actions";
 import Badge from "../../../../../components/Badge.astro";
 import Button from "../../../../../components/Button.astro";
 import CostSplit from "../../../../../components/CostSplit.astro";
+import DeliveryForm from "../../../../../components/DeliveryForm.astro";
 import Input from "../../../../../components/Input.astro";
 import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculator.astro";
 import PhaseTransitionForm from "../../../../../components/PhaseTransitionForm.astro";
@@ -226,44 +227,7 @@ const phases = project.phases.map((phase) => ({
 									<Button as="summary" variant="quiet">
 										Record delivery
 									</Button>
-									<form
-										method="POST"
-										action={actions.recordDelivery}
-										class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-end"
-										data-record-delivery
-									>
-										<input type="hidden" name="phaseId" value={phase.id} />
-										<input
-											type="hidden"
-											name="expectedVersion"
-											value={phase.version}
-										/>
-										<label class="grid gap-1 text-sm">
-											<span class="font-medium">Delivery</span>
-											<Input
-												as="select"
-												name="deliveryChoice"
-												data-delivery-choice
-												required
-											>
-												<option value="url" selected>
-													Delivery link
-												</option>
-												<option value="none">No delivery PR/MR</option>
-											</Input>
-										</label>
-										<label data-delivery-url-field class="grid gap-1 text-sm">
-											<span class="font-medium">Delivery URL</span>
-											<Input
-												name="deliveryUrl"
-												type="url"
-												inputmode="url"
-												autocomplete="off"
-												placeholder="https://github.com/…"
-											/>
-										</label>
-										<Button type="submit">Record delivery</Button>
-									</form>
+									<DeliveryForm mode="record" {phase} />
 								</details>
 							)}
 							{!phase.locked && phase.state !== "cancelled" && (
@@ -442,38 +406,5 @@ const phases = project.phases.map((phase) => ({
 		}
 		costInput.addEventListener("input", syncAmounts);
 		syncAmounts();
-	}
-
-	for (const select of document.querySelectorAll("[data-delivery-choice]")) {
-		if (!(select instanceof HTMLSelectElement)) {
-			continue;
-		}
-
-		const field = select
-			.closest("form")
-			?.querySelector<HTMLLabelElement>("[data-delivery-url-field]");
-		const input = field?.querySelector<HTMLInputElement>(
-			'input[name="deliveryUrl"]',
-		);
-
-		if (
-			!(field instanceof HTMLElement) ||
-			!(input instanceof HTMLInputElement)
-		) {
-			continue;
-		}
-
-		const syncDeliveryUrl = () => {
-			const show = select.value === "url";
-			field.hidden = !show;
-			input.required = show;
-
-			if (!show) {
-				input.value = "";
-			}
-		};
-
-		syncDeliveryUrl();
-		select.addEventListener("change", syncDeliveryUrl);
 	}
 </script>
