@@ -2,9 +2,7 @@
 export const prerender = false;
 
 import Button from "../../components/Button.astro";
-import Footer from "../../components/Footer.astro";
-import Nav from "../../components/Nav.astro";
-import Shell from "../../layouts/Shell.astro";
+import ClientShell from "../../layouts/ClientShell.astro";
 
 const session = Astro.locals.session;
 
@@ -15,25 +13,12 @@ if (!session) {
 }
 ---
 
-<Shell
-	bodyClass="min-h-dvh grid bg-canvas text-fg antialiased gap-6 p-4 text-pretty"
->
-	<Fragment slot="head"> <title>craftlions | API Keys</title> </Fragment>
-
-	<Fragment slot="body">
-		<header class="grid gap-6 max-w-3xl mx-auto w-full"> <Nav /> </header>
-
-		<main
-			class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
-		>
-			<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
-				API Keys
-			</h1>
-			<Button id="create-api-key" type="button"> Create new API Key </Button>
-		</main>
-		<Footer />
-	</Fragment>
-</Shell>
+<ClientShell title="API Keys">
+	<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
+		API Keys
+	</h1>
+	<Button id="create-api-key" type="button"> Create new API Key </Button>
+</ClientShell>
 
 <script>
 	import { authClient } from "../../lib/auth-client.ts";

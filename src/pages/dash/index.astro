@@ -1,9 +1,7 @@
 ---
 export const prerender = false;
 
-import Footer from "../../components/Footer.astro";
-import Nav from "../../components/Nav.astro";
-import Shell from "../../layouts/Shell.astro";
+import ClientShell from "../../layouts/ClientShell.astro";
 
 const session = Astro.locals.session;
 
@@ -22,20 +20,8 @@ if (organizations.length === 1 && organizations[0]) {
 }
 ---
 
-<Shell
-	bodyClass="min-h-dvh grid bg-canvas text-fg antialiased gap-6 p-4 text-pretty"
->
-	<Fragment slot="head"> <title>craftlions | Dashboard</title> </Fragment>
-	<Fragment slot="body">
-		<header class="grid gap-6 max-w-6xl mx-auto w-full"> <Nav /> </header>
-
-		<main
-			class="w-full grid content-start min-h-0 pl-3 max-w-6xl mx-auto gap-6"
-		>
-			<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
-				Welcome back, {session.user.name}!
-			</h1>
-		</main>
-		<Footer />
-	</Fragment>
-</Shell>
+<ClientShell title="Dashboard" wide>
+	<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
+		Welcome back, {session.user.name}!
+	</h1>
+</ClientShell>

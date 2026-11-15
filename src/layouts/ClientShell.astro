@@ -1,0 +1,43 @@
+---
+import type { ComponentProps } from "astro/types";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+import Footer from "../components/Footer.astro";
+import Nav from "../components/Nav.astro";
+import Shell from "./Shell.astro";
+
+interface Props {
+	title: string;
+	breadcrumbs?: ComponentProps<typeof Breadcrumbs>["items"];
+	organizationSlug?: string | undefined;
+	wide?: boolean;
+}
+
+const { title, breadcrumbs = [], organizationSlug, wide = false } = Astro.props;
+---
+
+<Shell
+	bodyClass="min-h-dvh grid gap-6 bg-canvas p-4 text-pretty text-fg antialiased"
+>
+	<Fragment slot="head"> <title>{title} · craftlions</title> </Fragment>
+	<Fragment slot="body">
+		<header
+			class:list={[
+				"mx-auto grid w-full gap-6",
+				wide ? "max-w-6xl" : "max-w-3xl",
+			]}
+		>
+			<Nav {organizationSlug} />
+		</header>
+		<main
+			class:list={[
+				"mx-auto grid min-h-0 w-full content-start gap-6 pl-3",
+				wide ? "max-w-6xl" : "max-w-3xl",
+			]}
+		>
+			{breadcrumbs.length > 1 && <Breadcrumbs items={breadcrumbs} />}
+			<slot name="header" />
+			<slot />
+		</main>
+		<Footer {wide} />
+	</Fragment>
+</Shell>
