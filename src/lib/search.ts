@@ -206,15 +206,6 @@ const createItems = () => {
 			parts,
 		);
 	};
-	return { items, currencies, add, addInvoice };
-};
-
-export const loadSearchSlice = async (
-	db: Db,
-	session: { user: { id: string; role?: string | null | undefined } },
-	now: Date,
-): Promise<SearchSlice> => {
-	const { items, currencies, add, addInvoice } = createItems();
 	const page = (
 		label: string,
 		sublabel: string,
@@ -228,15 +219,74 @@ export const loadSearchSlice = async (
 			[sublabel],
 			[searchField(label, true), searchField(sublabel, primarySublabel)],
 		);
+	return { items, currencies, add, addInvoice, page };
+};
+
+type Page = ReturnType<typeof createItems>["page"];
+
+// The pages each kind of user starts from. The full slice and the empty query
+// list them from here, so both show the same home pages.
+const adminPages = (page: Page) => {
+	page("Admin", "All clients", "/admin", true);
+	page("Dashboard", "Your organizations", "/dash", true);
+	page("Profile", "Account", "/settings/profile", true);
+	page("API keys", "Account", "/settings/api", true);
+};
+
+const memberPages = (
+	page: Page,
+	organizations: Array<{ name: string; slug: string }>,
+) => {
+	for (const org of organizations) {
+		const base = `/dash/org/${org.slug}`;
+		page("Overview", org.name, base, true, true);
+		page("Invoices", org.name, `${base}/invoices`, false, true);
+		page("Spend by year", org.name, `${base}/spend`, false, true);
+	}
+	if (organizations.length > 1) {
+		page("Organizations", "Your organizations", "/dash");
+	}
+	page("Profile", "Account", "/settings/profile", true);
+	page("API keys", "Account", "/settings/api", true);
+};
+
+// What the palette shows before anything is typed: only the home pages, so
+// the admin's need no query and a member's only their organizations' names.
+export const loadSearchHome = async (
+	db: Db,
+	session: { user: { id: string; role?: string | null | undefined } },
+): Promise<SearchSlice> => {
+	const { items, currencies, page } = createItems();
+	if (session.user.role === "admin") {
+		adminPages(page);
+	} else {
+		const memberships = await db.query.member.findMany({
+			columns: {},
+			with: { organization: { columns: { name: true, slug: true } } },
+			where: { userId: session.user.id },
+		});
+		memberPages(
+			page,
+			memberships.flatMap(({ organization }) =>
+				organization ? [organization] : [],
+			),
+		);
+	}
+	return { items, currencies };
+};
+
+export const loadSearchSlice = async (
+	db: Db,
+	session: { user: { id: string; role?: string | null | undefined } },
+	now: Date,
+): Promise<SearchSlice> => {
+	const { items, currencies, add, addInvoice, page } = createItems();
 
 	if (session.user.role === "admin") {
 		const [organizations, invoices] = await loadAdminSlice(db);
 		const byId = new Map(organizations.map((org) => [org.id, org]));
 
-		page("Admin", "All clients", "/admin", true);
-		page("Dashboard", "Your organizations", "/dash", true);
-		page("Profile", "Account", "/settings/profile", true);
-		page("API keys", "Account", "/settings/api", true);
+		adminPages(page);
 		add(
 			{
 				group: "actions",
@@ -377,6 +427,7 @@ export const loadSearchSlice = async (
 		organization ? [organization] : [],
 	);
 	const byId = new Map(organizations.map((org) => [org.id, org]));
+	memberPages(page, organizations);
 
 	for (const org of organizations) {
 		const base = `/dash/org/${org.slug}`;
@@ -389,9 +440,6 @@ export const loadSearchSlice = async (
 			},
 			["Organization"],
 		);
-		page("Overview", org.name, base, true, true);
-		page("Invoices", org.name, `${base}/invoices`, false, true);
-		page("Spend by year", org.name, `${base}/spend`, false, true);
 
 		for (const project of org.projects) {
 			const projectHref = `${base}/project/${project.publicId}`;
@@ -425,11 +473,6 @@ export const loadSearchSlice = async (
 			}
 		}
 	}
-	if (organizations.length > 1) {
-		page("Organizations", "Your organizations", "/dash");
-	}
-	page("Profile", "Account", "/settings/profile", true);
-	page("API keys", "Account", "/settings/api", true);
 
 	for (const { link, metadata, ...invoice } of invoices) {
 		// The query already keeps only the user's organizations' invoices.

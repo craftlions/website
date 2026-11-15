@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { problem } from "../../lib/api-adapters.ts";
-import { loadSearchSlice } from "../../lib/search.ts";
+import { loadSearchHome, loadSearchSlice } from "../../lib/search.ts";
 import { type SearchResponse, searchItems } from "../../lib/search-query.ts";
 
 export const prerender = false;
@@ -43,11 +43,10 @@ export const GET: APIRoute = async (context) => {
 
 	try {
 		const now = new Date();
-		const { items, currencies } = await loadSearchSlice(
-			context.locals.db,
-			session,
-			now,
-		);
+		// The empty query shows only the home pages, which need no slice.
+		const { items, currencies } = query
+			? await loadSearchSlice(context.locals.db, session, now)
+			: await loadSearchHome(context.locals.db, session);
 		return Response.json({
 			query,
 			...searchItems(items, query, {
