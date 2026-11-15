@@ -327,6 +327,7 @@ Every destructive or irreversible action is confirmed in a native modal dialog.
 - **Copy:** the title names the action and its object ("Archive Website relaunch?"), the text names the consequence, and the confirm button repeats the trigger. Cancel reads "Keep …" for destructive actions and "Go back" for acting on a client's behalf.
 - **Weight:** `confirmVariant="danger"` (default) for destructive actions, `default` for deliberate steps that destroy nothing. `typeToConfirm` adds a field the admin must fill with the given text; use it only when the dialog's button is the form's sole submit.
 - **Validity:** the trigger reports the form's first invalid field before the dialog opens, because the open dialog makes the form behind it inert.
+- **Focus and scroll:** the dialog opens with focus on the cancel action, so Enter never confirms by accident, and closing returns focus to the trigger. Scrolling inside the dialog or on its backdrop does not scroll the page behind it.
 
 ### Chips
 

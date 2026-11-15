@@ -45,7 +45,7 @@ const {
 		{id}
 		aria-labelledby={`${id}-title`}
 		aria-describedby={`${id}-consequence`}
-		class="m-auto w-full max-w-[min(28rem,calc(100%-2rem))] grid-cols-1 gap-4 border border-dashed border-line bg-canvas p-4 text-fg wrap-anywhere open:grid backdrop:bg-canvas/80"
+		class="m-auto w-full max-w-[min(28rem,calc(100%-2rem))] grid-cols-1 gap-4 border border-dashed border-line bg-canvas p-4 text-fg wrap-anywhere overscroll-contain open:grid backdrop:overflow-hidden backdrop:overscroll-contain backdrop:bg-canvas/80"
 		data-confirm-dialog
 	>
 		<h2 id={`${id}-title`} class="text-title">{title}</h2>
@@ -67,10 +67,12 @@ const {
 		<div
 			class="grid grid-cols-[minmax(0,auto)_minmax(0,auto)] justify-end gap-2"
 		>
+			{/* The dialog opens on the safe action, so Enter cannot confirm by accident. */}
 			<Button
 				command="close"
 				commandfor={id}
 				class="max-w-full"
+				autofocus
 				data-confirm-cancel
 			>
 				{cancel}
