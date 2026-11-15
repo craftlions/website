@@ -211,12 +211,9 @@ export const server = {
 				actorId,
 				input,
 			);
-			// A repeated onboarding returns the existing client by id only.
-			return {
-				id: organization.id,
-				name:
-					"name" in organization ? organization.name : input.organizationName,
-			};
+			// A repeated onboarding returns the existing client under its stored
+			// name, not the name submitted again.
+			return { id: organization.id, name: organization.name };
 		}),
 	}),
 	createProject: defineAction({

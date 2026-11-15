@@ -1019,7 +1019,7 @@ export const onboardOrganization = async (
 			where: { email },
 		}),
 		db.query.organization.findFirst({
-			columns: { id: true },
+			columns: { id: true, name: true },
 			where: { slug },
 		}),
 	]);
@@ -1053,6 +1053,8 @@ export const onboardOrganization = async (
 			yearlyBudget: input.yearlyBudget,
 		});
 
+		// A retried onboarding: the organization keeps its stored name, which
+		// may differ from the one submitted again.
 		return existingOrganization;
 	}
 
