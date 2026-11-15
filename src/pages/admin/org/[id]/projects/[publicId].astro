@@ -247,7 +247,6 @@ const phases = project.phases.map((phase) => ({
 										method="POST"
 										action={actions.updatePhaseAmounts}
 										class="grid gap-3 border border-dashed border-line p-4"
-										data-phase-amount-form
 									>
 										<input type="hidden" name="phaseId" value={phase.id} />
 										<input
@@ -255,13 +254,9 @@ const phases = project.phases.map((phase) => ({
 											name="expectedVersion"
 											value={phase.version}
 										/>
-										<input
-											type="hidden"
-											data-phase-cost-input
-											value={phase.cost}
-										/>
 										<PhaseAmountCalculator
 											cost={phase.cost}
+											currency={phase.currency}
 											upfrontAmount={phase.upfrontAmount}
 											deliveryAmount={phase.deliveryAmount}
 											acceptanceAmount={phase.acceptanceAmount}
@@ -282,7 +277,6 @@ const phases = project.phases.map((phase) => ({
 					method="POST"
 					action={actions.createPhase}
 					class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-3 md:items-end"
-					data-phase-amount-form
 				>
 					<input type="hidden" name="projectId" value={project.id}>
 					<label class="grid gap-1 text-sm md:col-span-full"
@@ -293,7 +287,6 @@ const phases = project.phases.map((phase) => ({
 						><span class="font-medium">Cost</span>
 						<Input
 							name="cost"
-							data-phase-cost-input
 							type="number"
 							min="0"
 							step="0.0001"
@@ -309,7 +302,11 @@ const phases = project.phases.map((phase) => ({
 						<Input name="dueAt" type="date" /></label
 					>
 					<div class="border-t border-dashed border-line pt-3 md:col-span-full"
-						><PhaseAmountCalculator cost={0} acceptanceAmount={0} /></div
+						><PhaseAmountCalculator
+							cost={0}
+							currency={project.phases.at(-1)?.currency ?? "EUR"}
+							acceptanceAmount={0}
+						/></div
 					>
 					<Button type="submit" class="md:col-span-full">Add phase</Button>
 				</form>
@@ -317,102 +314,3 @@ const phases = project.phases.map((phase) => ({
 		</div>
 	</section>
 </AdminOrgShell>
-
-<script>
-	const formatAmount = (amount: number) =>
-		amount.toFixed(4).replace(/\.?0+$/, "") || "0";
-
-	for (const form of document.querySelectorAll("[data-phase-amount-form]")) {
-		if (!(form instanceof HTMLFormElement)) {
-			continue;
-		}
-
-		const costInput = form.querySelector("[data-phase-cost-input]");
-		const percentages = [
-			...form.querySelectorAll<HTMLInputElement>("[data-phase-amount-percent]"),
-		];
-		const amounts = [
-			...form.querySelectorAll<HTMLInputElement>("[data-phase-amount-value]"),
-		];
-		const total = form.querySelector("[data-phase-amount-total]");
-		const error = form.querySelector("[data-phase-amount-error]");
-		const submit = form.querySelector('button[type="submit"]');
-
-		if (
-			!(costInput instanceof HTMLInputElement) ||
-			!(total instanceof HTMLElement) ||
-			!(error instanceof HTMLElement) ||
-			!(submit instanceof HTMLButtonElement)
-		) {
-			continue;
-		}
-
-		const syncAmounts = () => {
-			const cost = Number(costInput.value);
-			const safeCost = Number.isFinite(cost) && cost >= 0 ? cost : 0;
-			const values = percentages.map((input) => Number(input.value));
-			const percentTotal = values.reduce(
-				(sum, value) => sum + (Number.isFinite(value) ? value : 0),
-				0,
-			);
-			const activeIndexes = values.flatMap((value, index) =>
-				Number.isFinite(value) && value > 0 ? [index] : [],
-			);
-			let remaining = safeCost;
-
-			for (const [index, amountInput] of amounts.entries()) {
-				const percentage = values[index] ?? 0;
-				if (!Number.isFinite(percentage) || percentage <= 0) {
-					amountInput.value = "";
-					continue;
-				}
-
-				const isLastActive = index === activeIndexes.at(-1);
-				// Assign the rounded remainder to the last active component so the
-				// stored amounts still sum exactly to the database cost.
-				const amount = isLastActive
-					? remaining
-					: Math.round(((safeCost * percentage) / 100) * 10_000) / 10_000;
-				amountInput.value = formatAmount(amount);
-				remaining = Math.round((remaining - amount) * 10_000) / 10_000;
-			}
-
-			total.textContent = `${percentTotal.toFixed(2)}% · ${formatAmount(safeCost)}`;
-			// Displayed percentages are rounded to four decimals, so allow the
-			// accumulated rounding drift from the three component values.
-			const valid =
-				Math.abs(percentTotal - 100) < 0.0002 && activeIndexes.length > 0;
-			error.hidden = valid;
-			error.textContent = valid ? "" : "Percentages must total 100%.";
-			submit.disabled = !valid;
-		};
-
-		// Editing one percentage rebalances the remainder onto the last other
-		// component so the split always totals 100% without manual arithmetic.
-		const rebalance = (edited: number) => {
-			const balancer = percentages.findLastIndex(
-				(_, index) => index !== edited,
-			);
-			const balancerInput = percentages[balancer];
-			if (!balancerInput) return;
-			const others = percentages.reduce((sum, input, index) => {
-				const value = Number(input.value);
-				return index === balancer || !Number.isFinite(value)
-					? sum
-					: sum + value;
-			}, 0);
-			balancerInput.value = formatAmount(
-				Math.max(0, Math.round((100 - others) * 10_000) / 10_000),
-			);
-		};
-
-		for (const [index, input] of percentages.entries()) {
-			input.addEventListener("input", () => {
-				rebalance(index);
-				syncAmounts();
-			});
-		}
-		costInput.addEventListener("input", syncAmounts);
-		syncAmounts();
-	}
-</script>

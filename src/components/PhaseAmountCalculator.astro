@@ -1,6 +1,12 @@
 ---
+// Cost split editor for a phase form. Upfront and Delivery are entered as
+// percentages; Acceptance is always the remainder, so editing one part never
+// changes another part the admin typed. The enclosing form supplies the cost
+// (a `cost` field, else the `cost` prop) and the currency (a `currency` field,
+// else the `currency` prop), and receives the three amounts as hidden fields.
 interface Props {
 	cost: number;
+	currency: string;
 	upfrontAmount?: number | null;
 	deliveryAmount?: number | null;
 	acceptanceAmount?: number | null;
@@ -8,76 +14,247 @@ interface Props {
 
 const {
 	cost,
+	currency,
 	upfrontAmount = null,
 	deliveryAmount = null,
 	acceptanceAmount = null,
 } = Astro.props;
-const amounts = [upfrontAmount, deliveryAmount, acceptanceAmount];
-const labels = ["Upfront", "Delivery", "Acceptance"];
+const id = `split-${crypto.randomUUID()}`;
 const formatAmount = (amount: number | null) =>
 	amount === null ? "" : amount.toFixed(4).replace(/\.?0+$/, "") || "0";
-const percentageFor = (amount: number | null, index: number) => {
-	if (cost === 0) {
-		return amount !== null &&
-			amounts.findIndex((value) => value !== null) === index
-			? "100"
-			: "0";
-	}
-
-	return amount === null
-		? "0"
-		: ((amount / cost) * 100).toFixed(4).replace(/\.?0+$/, "");
-};
+// A zero-cost phase has no ratio; its first stored part then carries 100%.
+const firstStoredPart = [
+	upfrontAmount,
+	deliveryAmount,
+	acceptanceAmount,
+].findIndex((amount) => amount !== null);
+const percentageFor = (amount: number | null, index: number) =>
+	cost === 0
+		? index === firstStoredPart
+			? 100
+			: 0
+		: amount === null
+			? 0
+			: Math.round((amount / cost) * 1_000_000) / 10_000;
+const parts = [
+	{ key: "upfront", label: "Upfront", when: "billed on approval" },
+	{ key: "delivery", label: "Delivery", when: "billed on delivery" },
+] as const;
+const percentages = [
+	percentageFor(upfrontAmount, 0),
+	percentageFor(deliveryAmount, 1),
+];
 ---
 
-<fieldset class="grid gap-2" data-phase-amount-fields>
-	<legend class="label-caps">Cost split</legend>
-	<div
-		class="grid grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2 text-sm"
-	>
-		{labels.map((label, index) => (
-			<>
-				<label class="contents">
-					<span class="font-medium">{label}</span>
-					<span class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-line px-3 py-2 transition-colors focus-within:border-line-active">
-						<input
-							class="min-w-0 bg-transparent tabular-nums"
-							data-phase-amount-percent
-							min="0"
-							max="100"
-							step="0.0001"
-							type="number"
-							value={percentageFor(amounts[index] ?? null, index)}
-							inputmode="decimal"
-						/>
-						<span class="text-fg-muted">%</span>
-					</span>
+<phase-amount-calculator
+	class="grid gap-3"
+	data-cost={cost}
+	data-currency={currency}
+>
+	<fieldset class="grid gap-3" aria-describedby={`${id}-rule`}>
+		<legend class="label-caps">Cost split</legend>
+		<p id={`${id}-rule`} class="max-w-prose text-sm text-fg-muted">
+			Set the share billed upfront and on delivery. Acceptance takes the
+			remainder, so leaving both at 0% bills the whole cost on acceptance.
+		</p>
+		{parts.map((part, index) => (
+			<div class="grid grid-cols-[minmax(0,1fr)_7rem] items-center gap-x-3 gap-y-0.5">
+				<label for={`${id}-${part.key}`} class="text-label wrap-break-word">
+					{part.label}{" "}
+					<span class="font-normal text-fg-muted">{part.when}</span>
 				</label>
-				<input
-					class="min-w-0 bg-transparent text-right tabular-nums text-fg-muted"
-					data-phase-amount-value
-					name={`${label.toLowerCase()}Amount`}
-					readonly
-					tabindex="-1"
-					value={formatAmount(amounts[index] ?? null)}
-					aria-readonly="true"
-					aria-label={`${label} amount`}
-				/>
-			</>
+				<span class="row-span-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-line px-3 py-2 text-sm transition-colors focus-within:border-line-active">
+					<input
+						id={`${id}-${part.key}`}
+						class="min-w-0 bg-transparent tabular-nums"
+						data-split-percent
+						min="0"
+						max="100"
+						step="any"
+						type="number"
+						inputmode="decimal"
+						required
+						value={percentages[index]}
+					/>
+					<span class="text-fg-muted">%</span>
+				</span>
+				<output
+					for={`${id}-${part.key}`}
+					class="text-xs tabular-nums text-fg-muted wrap-break-word"
+					data-split-amount-output
+				></output>
+			</div>
 		))}
-		<span class="border-t border-dashed border-line pt-2 label-caps"
-			>Total</span
+		<div
+			class="grid grid-cols-[minmax(0,1fr)_7rem] items-center gap-x-3 gap-y-0.5"
 		>
+			<p class="text-label wrap-break-word">
+				Acceptance
+				<span class="font-normal text-fg-muted"
+					>billed on acceptance · remainder</span
+				>
+			</p>
+			<output
+				class="row-span-2 border border-dashed border-line px-3 py-2 text-sm tabular-nums text-fg-muted"
+				aria-label="Acceptance share, calculated"
+				data-split-remainder
+			></output>
+			<output
+				class="text-xs tabular-nums text-fg-muted wrap-break-word"
+				data-split-amount-output
+			></output>
+		</div>
 		<p
-			class="col-span-2 border-t border-dashed border-line pt-2 text-right text-xs tabular-nums text-fg-muted"
-			data-phase-amount-total
+			class="border-t border-dashed border-line pt-2 text-sm tabular-nums text-fg-muted wrap-break-word"
+			data-split-total
 			role="status"
 		></p>
-	</div>
-	<p
-		class="text-sm text-fg-danger"
-		data-phase-amount-error
-		role="alert"
-		hidden
-	></p>
-</fieldset>
+		<p class="text-sm text-fg-danger" data-split-error role="alert" hidden></p>
+	</fieldset>
+	<input
+		type="hidden"
+		name="upfrontAmount"
+		value={formatAmount(upfrontAmount)}
+		data-split-amount
+	>
+	<input
+		type="hidden"
+		name="deliveryAmount"
+		value={formatAmount(deliveryAmount)}
+		data-split-amount
+	>
+	<input
+		type="hidden"
+		name="acceptanceAmount"
+		value={formatAmount(acceptanceAmount)}
+		data-split-amount
+	>
+</phase-amount-calculator>
+
+<script>
+	// Amounts are kept in ten-thousandths, the precision the server stores, so
+	// the three parts always add up to the cost exactly.
+	const units = (value: number) => Math.round(value * 10_000);
+	const formatAmount = (amountUnits: number) =>
+		(amountUnits / 10_000).toFixed(4).replace(/\.?0+$/, "") || "0";
+	const formatPercent = (value: number) =>
+		`${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 4 }).format(value)}%`;
+	const formatMoney = (amountUnits: number, currency: string) => {
+		try {
+			return new Intl.NumberFormat("de-DE", {
+				style: "currency",
+				currency,
+			}).format(amountUnits / 10_000);
+		} catch {
+			return `${formatAmount(amountUnits)} ${currency}`;
+		}
+	};
+
+	class PhaseAmountCalculator extends HTMLElement {
+		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
+			const form = this.closest("form");
+			const percentInputs = [
+				...this.querySelectorAll<HTMLInputElement>("[data-split-percent]"),
+			];
+			const amountInputs = [
+				...this.querySelectorAll<HTMLInputElement>("[data-split-amount]"),
+			];
+			const amountOutputs = [
+				...this.querySelectorAll<HTMLOutputElement>(
+					"[data-split-amount-output]",
+				),
+			];
+			const remainder = this.querySelector("[data-split-remainder]");
+			const total = this.querySelector("[data-split-total]");
+			const error = this.querySelector<HTMLElement>("[data-split-error]");
+			const costField = form?.elements.namedItem("cost");
+			const currencyField = form?.elements.namedItem("currency");
+
+			if (!form || !remainder || !total || !error) return;
+
+			const sync = () => {
+				const cost =
+					costField instanceof HTMLInputElement
+						? Number(costField.value)
+						: Number(this.dataset.cost);
+				const costUnits = Number.isFinite(cost) && cost > 0 ? units(cost) : 0;
+				const currency =
+					currencyField instanceof HTMLSelectElement ||
+					currencyField instanceof HTMLInputElement
+						? currencyField.value.toUpperCase()
+						: (this.dataset.currency ?? "EUR");
+				const entered = percentInputs.map((input) =>
+					input.value === "" ? 0 : Number(input.value),
+				);
+				const enteredSum = entered.reduce((sum, value) => sum + value, 0);
+				const partInvalid = entered.some(
+					(value) => !Number.isFinite(value) || value < 0 || value > 100,
+				);
+				const valid = !partInvalid && units(enteredSum) <= units(100);
+				const percentages = [
+					...entered,
+					Math.max(0, units(100 - enteredSum) / 10_000),
+				];
+
+				// Each part rounds to the stored precision; the last part with a
+				// share takes what is left so the parts sum to the cost.
+				const lastPart = percentages.findLastIndex((value) => value > 0);
+				let assigned = 0;
+				const partUnits = percentages.map((percentage, index) => {
+					if (percentage <= 0) return null;
+					const amount =
+						index === lastPart
+							? costUnits - assigned
+							: Math.round((costUnits * percentage) / 100);
+					assigned += amount;
+					return amount;
+				});
+
+				for (const [index, input] of amountInputs.entries()) {
+					const amount = partUnits[index];
+					input.value = valid && amount != null ? formatAmount(amount) : "";
+				}
+				for (const [index, output] of amountOutputs.entries()) {
+					const amount = partUnits[index];
+					output.value = !valid
+						? "—"
+						: amount == null
+							? "Not billed"
+							: formatMoney(amount, currency);
+				}
+				for (const input of percentInputs) {
+					input.setAttribute("aria-invalid", String(!valid));
+				}
+
+				remainder.textContent = valid
+					? formatPercent(percentages[2] ?? 0)
+					: "—";
+				total.textContent = valid
+					? `Total 100% · ${formatMoney(costUnits, currency)}`
+					: `Upfront and Delivery: ${formatPercent(enteredSum)}`;
+				error.hidden = valid;
+				error.textContent = valid
+					? ""
+					: partInvalid
+						? "Each share must be between 0% and 100%."
+						: "Upfront and Delivery together cannot exceed 100%.";
+
+				for (const button of form.querySelectorAll<HTMLButtonElement>(
+					'button[type="submit"]',
+				)) {
+					button.disabled = !valid;
+				}
+			};
+
+			form.addEventListener("input", sync);
+			sync();
+		}
+	}
+
+	if (!customElements.get("phase-amount-calculator")) {
+		customElements.define("phase-amount-calculator", PhaseAmountCalculator);
+	}
+</script>
