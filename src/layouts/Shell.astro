@@ -10,6 +10,8 @@ interface Props {
 
 const { bodyClass } = Astro.props;
 const session = Astro.locals.session;
+// Without the query string, so tracking and form parameters share one URL.
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 
 <html lang={lang ?? "en"}>
@@ -27,6 +29,10 @@ const session = Astro.locals.session;
 		</style>
 
 		<slot name="head" />
+		<link rel="canonical" href={canonical}>
+		<meta property="og:url" content={canonical}>
+		<meta property="og:site_name" content="craftlions">
+		<meta name="twitter:card" content="summary">
 		<link rel="sitemap" href="/sitemap-index.xml">
 		<link rel="icon" type="image/x-icon" href="/favicon.ico">
 	</head>
