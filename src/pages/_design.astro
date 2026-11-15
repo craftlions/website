@@ -3,6 +3,7 @@ import { ActionError } from "astro:actions";
 import ActionBanner from "../components/ActionBanner.astro";
 import Badge from "../components/Badge.astro";
 import Button from "../components/Button.astro";
+import ConfirmAction from "../components/ConfirmAction.astro";
 import Field from "../components/Field.astro";
 import Shell from "../layouts/Shell.astro";
 import tokensCss from "../styles/tokens.css?raw";
@@ -173,6 +174,10 @@ const typeRoles = [
 							<div class="grid grid-flow-col justify-start gap-2">
 								<Button>Default</Button>
 								<Button aria-pressed="true">Pressed</Button>
+								<Button href="/design" aria-current="page">
+									Current
+								</Button>
+								<Button variant="danger">Danger</Button>
 								<Button disabled>Disabled</Button>
 								<Button href="/design">Link</Button>
 							</div>
@@ -227,6 +232,31 @@ const typeRoles = [
 								<Badge type="error">Error</Badge>
 								<Badge type="gray">Gray</Badge>
 							</div>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Confirmation</h3>
+							<form method="dialog" class="grid gap-2">
+								<ConfirmAction
+									id={`confirm-${scheme}`}
+									trigger="Remove"
+									triggerLabel="Remove Jane Doe"
+									title="Remove Jane Doe from Acme?"
+									confirm="Remove member"
+								>
+									Jane loses access to the Acme dashboard. Her account stays.
+								</ConfirmAction>
+								<ConfirmAction
+									id={`confirm-typed-${scheme}`}
+									trigger="Delete client"
+									triggerVariant="danger"
+									title="Delete Acme?"
+									confirm="Delete client"
+									typeToConfirm={{ value: "Acme" }}
+								>
+									The client and its settings are deleted for good.
+								</ConfirmAction>
+							</form>
 						</section>
 
 						<section class="grid gap-3">

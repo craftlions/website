@@ -1,0 +1,129 @@
+---
+import Button from "./Button.astro";
+import Field from "./Field.astro";
+
+interface Props {
+	id: string;
+	trigger: string;
+	triggerLabel?: string | undefined;
+	triggerVariant?: "default" | "danger" | "quiet";
+	title: string;
+	confirm: string;
+	cancel?: string;
+	form?: string | undefined;
+	name?: string | undefined;
+	value?: string | undefined;
+	typeToConfirm?:
+		| { value: string; name?: string | undefined; label?: string | undefined }
+		| undefined;
+}
+
+const {
+	id,
+	trigger,
+	triggerLabel,
+	triggerVariant = "default",
+	title,
+	confirm,
+	cancel = "Cancel",
+	form,
+	name,
+	value,
+	typeToConfirm,
+} = Astro.props;
+---
+
+<confirm-action class="grid justify-items-start">
+	<Button
+		command="show-modal"
+		commandfor={id}
+		variant={triggerVariant}
+		aria-label={triggerLabel}
+		aria-haspopup="dialog"
+		data-confirm-trigger
+	>
+		{trigger}
+	</Button>
+	<dialog
+		{id}
+		aria-labelledby={`${id}-title`}
+		aria-describedby={`${id}-consequence`}
+		class="m-auto w-full max-w-[min(28rem,calc(100%-2rem))] gap-4 border border-dashed border-line bg-canvas p-4 text-fg open:grid backdrop:bg-canvas/80"
+	>
+		<h2 id={`${id}-title`} class="text-title wrap-break-word">{title}</h2>
+		<p id={`${id}-consequence`} class="text-sm text-fg-muted">
+			<slot />
+		</p>
+		{typeToConfirm && (
+			<Field
+				label={typeToConfirm.label ?? `Type ${typeToConfirm.value} to confirm`}
+				name={typeToConfirm.name ?? "confirmation"}
+				{form}
+				required
+				danger
+				autocomplete="off"
+				spellcheck="false"
+				pattern={typeToConfirm.value.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&")}
+				title={`Type ${typeToConfirm.value} exactly`}
+			/>
+		)}
+		<div class="grid grid-flow-col justify-end gap-2">
+			<Button command="close" commandfor={id} data-confirm-cancel>
+				{cancel}
+			</Button>
+			<Button
+				type="submit"
+				variant="danger"
+				{form}
+				{name}
+				{value}
+				data-confirm-submit
+			>
+				{confirm}
+			</Button>
+		</div>
+	</dialog>
+</confirm-action>
+
+<script>
+	class ConfirmAction extends HTMLElement {
+		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
+			const dialog = this.querySelector("dialog");
+			const trigger = this.querySelector<HTMLButtonElement>(
+				"[data-confirm-trigger]",
+			);
+			const submit = this.querySelector<HTMLButtonElement>(
+				"[data-confirm-submit]",
+			);
+
+			if (!dialog || !trigger || !submit) return;
+
+			// Browsers without invoker commands open and close the dialog here.
+			if (!("command" in HTMLButtonElement.prototype)) {
+				trigger.addEventListener("click", () => dialog.showModal());
+				this.querySelector("[data-confirm-cancel]")?.addEventListener(
+					"click",
+					() => dialog.close(),
+				);
+			}
+
+			// Safari does not focus a clicked button, so focus would not return to it.
+			dialog.addEventListener("close", () => trigger.focus());
+
+			// Enter in another field of the form must not confirm past the dialog.
+			submit.form?.addEventListener("submit", (event) => {
+				if (event.submitter === submit && !dialog.open) {
+					event.preventDefault();
+					dialog.showModal();
+				}
+			});
+		}
+	}
+
+	if (!customElements.get("confirm-action")) {
+		customElements.define("confirm-action", ConfirmAction);
+	}
+</script>

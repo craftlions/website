@@ -6,7 +6,7 @@ interface Props extends HTMLAttributes<"button"> {
 	href?: string;
 	rel?: string;
 	target?: string;
-	variant?: "default" | "quiet" | "hint";
+	variant?: "default" | "danger" | "quiet" | "hint";
 }
 
 const {
@@ -23,6 +23,8 @@ const buttonClass = [
 	{
 		default:
 			"inline-grid w-max grid-flow-col items-center justify-center gap-2 border border-dashed border-line bg-transparent px-3 py-1 text-sm font-medium text-fg not-disabled:hover:border-line-active not-disabled:hover:bg-panel aria-pressed:border-line-active aria-pressed:bg-panel aria-[current=page]:border-line-active aria-[current=page]:bg-panel",
+		danger:
+			"inline-grid w-max grid-flow-col items-center justify-center gap-2 border border-dashed border-line-danger bg-transparent px-3 py-1 text-sm font-medium text-fg-danger not-disabled:hover:bg-panel",
 		quiet:
 			"w-max text-sm text-fg-muted underline decoration-dashed underline-offset-4 not-disabled:hover:text-fg",
 		hint: "grid size-4 place-items-center border border-dashed border-line-strong text-xs leading-none text-fg-muted focus-visible:border-line-active focus-visible:text-fg",
