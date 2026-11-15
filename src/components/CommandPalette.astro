@@ -112,6 +112,9 @@ const idleStatus =
 				link.tabIndex = -1;
 				link.setAttribute("role", "option");
 				link.setAttribute("aria-selected", "false");
+				// Hovering a result must not load its page: some page loads change
+				// state, such as the active organization.
+				link.setAttribute("data-astro-prefetch", "false");
 				link.className = optionClass;
 				const primary = document.createElement("span");
 				primary.className = "text-fg wrap-break-word";
