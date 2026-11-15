@@ -364,24 +364,8 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 			);
 			output.value = `${window.location.origin}/dash/org/${slug.value}`;
 		};
+		// ConfirmAction reports this validity before its dialog opens.
 		slug.addEventListener("input", sync);
 		sync();
-
-		// The open dialog makes the slug field inert, so the browser could not
-		// point at an invalid slug once it is open; check before it opens.
-		form.addEventListener(
-			"click",
-			(event) => {
-				if (
-					event.target instanceof Element &&
-					event.target.closest("[data-confirm-trigger]") &&
-					!form.reportValidity()
-				) {
-					event.preventDefault();
-					event.stopPropagation();
-				}
-			},
-			{ capture: true },
-		);
 	}
 </script>
