@@ -8,6 +8,8 @@ import DisclosureButton from "../../components/DisclosureButton.astro";
 import Field from "../../components/Field.astro";
 import AdminShell from "../../layouts/AdminShell.astro";
 import {
+	clientDeletedMessage,
+	deliveryRecordedMessage,
 	phaseTransitionMessage,
 	successMessage,
 } from "../../lib/action-feedback.ts";
@@ -114,7 +116,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 	results={[
 		successMessage(
 			Astro.getActionResult(actions.hardDeleteOrganization),
-			(client) => `Client ${client.name} deleted`,
+			clientDeletedMessage,
 		),
 		successMessage(onboardResult, (client) => ({
 			text: `${client.name} onboarded.`,
@@ -124,7 +126,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 			Astro.getActionResult(actions.transitionPhase),
 			(phase) => phaseTransitionMessage[phase.state],
 		),
-		[Astro.getActionResult(actions.recordDelivery), "Delivery recorded"],
+		[Astro.getActionResult(actions.recordDelivery), deliveryRecordedMessage],
 	]}
 	fieldLabels={{
 		organizationName: "Client name",
@@ -226,7 +228,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 					required
 					autocomplete="off"
 					spellcheck="false"
-					hint="The client's dashboard address: /dash/org/slug. Filled in from the name; lowercase letters, numbers and dashes."
+					hint="The client's dashboard address: /dash/org/slug. Filled in from the name. Lowercase letters, digits and single hyphens."
 					result={onboardResult}
 				/>
 				<Field

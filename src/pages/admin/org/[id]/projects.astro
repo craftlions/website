@@ -132,7 +132,7 @@ const isCreateOpen =
 <AdminOrgShell
 	{organization}
 	activePage="projects"
-	results={[[actionResult, "Project created"]]}
+	results={[[actionResult, "Project created."]]}
 	fieldLabels={{ organizationId: "Client", name: "Project name" }}
 >
 	{groups
@@ -162,8 +162,8 @@ const isCreateOpen =
 				{!archived && (
 					<>
 						<p class="max-w-prose text-sm text-fg-muted">
-							Projects with a phase that needs you come first, then active,
-							draft and completed ones.
+							Projects where it is your move come first, then active, draft and
+							completed ones.
 						</p>
 						<form
 							id="create-project"

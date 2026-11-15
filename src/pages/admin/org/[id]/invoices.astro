@@ -215,7 +215,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 <AdminOrgShell
 	{organization}
 	activePage="invoices"
-	results={[[attachResult, "Invoice attached"]]}
+	results={[[attachResult, "Invoice attached to its cost part."]]}
 	fieldLabels={{ stripeId: "Stripe invoice", target: "Attach to" }}
 >
 	<section aria-labelledby="summary-heading" class="grid gap-3">
@@ -313,7 +313,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 				<p>
 					<span class="font-medium">No Stripe customer linked.</span>
 					<span class="text-fg-muted">
-						Add the client's Stripe customer id in settings to open the client
+						Add the client's Stripe customer ID in settings to open the client
 						in Stripe from here.
 					</span>
 				</p>

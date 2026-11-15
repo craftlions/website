@@ -13,6 +13,7 @@ import PhaseTransitionForm from "../../../../../components/PhaseTransitionForm.a
 import ProjectTransitionForm from "../../../../../components/ProjectTransitionForm.astro";
 import AdminOrgShell from "../../../../../layouts/AdminOrgShell.astro";
 import {
+	deliveryRecordedMessage,
 	phaseTransitionMessage,
 	projectTransitionMessage,
 	successMessage,
@@ -178,10 +179,7 @@ const phases = project.phases
 			Astro.getActionResult(actions.transitionPhase),
 			(phase) => phaseTransitionMessage[phase.state],
 		),
-		[
-			Astro.getActionResult(actions.recordDelivery),
-			"Delivery recorded. The phase now awaits the client's acceptance.",
-		],
+		[Astro.getActionResult(actions.recordDelivery), deliveryRecordedMessage],
 		[Astro.getActionResult(actions.updatePhaseDelivery), "Delivery updated."],
 		[Astro.getActionResult(actions.updatePhaseAmounts), "Cost split saved."],
 	]}
@@ -241,7 +239,7 @@ const phases = project.phases
 						triggerLabel={`Archive: ${project.name}`}
 						triggerVariant="quiet"
 						title={`Archive ${project.name}?`}
-						confirm="Archive project"
+						confirm="Archive"
 						cancel="Keep project"
 					>
 						Archiving is final: the project cannot be reopened and no phases can

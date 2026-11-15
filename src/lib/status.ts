@@ -32,8 +32,8 @@ export const phaseStatus: Record<
 };
 
 // "To send (1), In work (2)": how many phases are in each state with this
-// badge, in lifecycle order; empty when there are none. "info" lists what
-// needs the admin, "gray" what waits on the client.
+// badge, in lifecycle order; empty when there are none. "info" lists the
+// admin's move, "gray" what waits on the client.
 export const phaseStateSummary = (
 	phases: ReadonlyArray<{ state: PhaseState }>,
 	badge: BadgeType,

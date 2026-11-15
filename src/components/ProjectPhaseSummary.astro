@@ -2,7 +2,7 @@
 import { type PhaseState, phaseStateSummary } from "../lib/status.ts";
 
 // A project's phases at a glance: how many are accepted, and which states
-// need the admin or wait on the client. Cancelled phases do not count.
+// are the admin's move or wait on the client. Cancelled phases do not count.
 interface Props {
 	phases: ReadonlyArray<{ state: PhaseState }>;
 	class?: string | undefined;
@@ -10,7 +10,7 @@ interface Props {
 
 const { phases, class: className } = Astro.props;
 const counted = phases.filter((phase) => phase.state !== "cancelled");
-const needsYou = phaseStateSummary(phases, "info");
+const yourMove = phaseStateSummary(phases, "info");
 const waitingOnClient = phaseStateSummary(phases, "gray");
 ---
 
@@ -26,10 +26,10 @@ const waitingOnClient = phaseStateSummary(phases, "gray");
 			? `${counted.filter((phase) => phase.state === "accepted").length} of ${counted.length} accepted`
 			: "None yet"}
 	</dd>
-	{needsYou && (
+	{yourMove && (
 		<>
-			<dt class="label-caps">Needs you</dt>
-			<dd class="wrap-break-word text-fg-info">{needsYou}</dd>
+			<dt class="label-caps">Your move</dt>
+			<dd class="wrap-break-word text-fg-info">{yourMove}</dd>
 		</>
 	)}
 	{waitingOnClient && (

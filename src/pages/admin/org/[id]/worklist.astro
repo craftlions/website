@@ -5,6 +5,7 @@ import { actions } from "astro:actions";
 import AdminWorklist from "../../../../components/AdminWorklist.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import {
+	deliveryRecordedMessage,
 	phaseTransitionMessage,
 	successMessage,
 } from "../../../../lib/action-feedback.ts";
@@ -40,7 +41,7 @@ if (!organization) {
 			Astro.getActionResult(actions.transitionPhase),
 			(phase) => phaseTransitionMessage[phase.state],
 		),
-		[Astro.getActionResult(actions.recordDelivery), "Delivery recorded"],
+		[Astro.getActionResult(actions.recordDelivery), deliveryRecordedMessage],
 	]}
 	fieldLabels={{ deliveryChoice: "Delivery", deliveryUrl: "Delivery URL" }}
 >

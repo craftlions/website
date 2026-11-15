@@ -7,6 +7,10 @@ import Button from "../../../../components/Button.astro";
 import ConfirmAction from "../../../../components/ConfirmAction.astro";
 import Field from "../../../../components/Field.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
+import {
+	clientDeletedMessage,
+	successMessage,
+} from "../../../../lib/action-feedback.ts";
 import { member, projects } from "../../../../lib/schema.ts";
 import { submittedValues } from "../../../../lib/submitted-values.ts";
 
@@ -92,8 +96,11 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 	{organization}
 	activePage="settings"
 	results={[
-		[settingsResult, `Settings for ${organization.name} saved`],
-		[Astro.getActionResult(actions.hardDeleteOrganization), "Client deleted"],
+		[settingsResult, `Settings for ${organization.name} saved.`],
+		successMessage(
+			Astro.getActionResult(actions.hardDeleteOrganization),
+			clientDeletedMessage,
+		),
 	]}
 	fieldLabels={{
 		name: "Name",
@@ -249,6 +256,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 					trigger="Change client URL"
 					title="Change the client URL?"
 					confirm="Change client URL"
+					cancel="Keep current URL"
 				>
 					The dashboard moves from
 					<span class="wrap-anywhere"
@@ -300,8 +308,9 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 					id="confirm-delete-client"
 					trigger="Delete client"
 					triggerVariant="danger"
-					title="Delete this client?"
+					title={`Delete ${organization.name}?`}
 					confirm="Delete client"
+					cancel="Keep client"
 					typeToConfirm={{ value: organization.name }}
 				>
 					<span class="wrap-anywhere">{organization.name}</span>, its settings,

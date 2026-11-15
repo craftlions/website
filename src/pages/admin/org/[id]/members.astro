@@ -81,9 +81,12 @@ const otherClients = (count: number) =>
 		],
 		successMessage(
 			Astro.getActionResult(actions.resendWelcomeMail),
-			(mail) => `Password reset sent to ${mail.email}`,
+			(mail) => `Password reset email sent to ${mail.email}.`,
 		),
-		[Astro.getActionResult(actions.removeNeverLoggedInUser), "Account deleted"],
+		[
+			Astro.getActionResult(actions.removeNeverLoggedInUser),
+			"Account deleted.",
+		],
 	]}
 	fieldLabels={{
 		email: "Email",
@@ -229,6 +232,7 @@ const otherClients = (count: number) =>
 										triggerVariant="quiet"
 										title={`Remove ${member.user.name} from ${organization.name}?`}
 										confirm="Remove from client"
+										cancel="Keep member"
 									>
 										{`${member.user.name} can no longer see the ${organization.name} dashboard. The account stays${member.user.memberships.length > 1 ? ` and keeps access to ${otherClients(member.user.memberships.length - 1)}` : ""}, and you can add it again with the same email.${members.length === 1 ? " Nobody else is a member, so nobody at the client will see the dashboard." : ""}`}
 									</ConfirmAction>
@@ -243,6 +247,7 @@ const otherClients = (count: number) =>
 											triggerVariant="quiet"
 											title={`Delete the account of ${member.user.name}?`}
 											confirm="Delete account"
+											cancel="Keep account"
 											typeToConfirm={{ value: member.user.email }}
 										>
 											{`This deletes the account for ${member.user.email} everywhere: it is removed from ${organization.name}${member.user.memberships.length > 1 ? ` and from ${otherClients(member.user.memberships.length - 1)}` : ""} and can no longer sign in. This cannot be undone; adding the same email later creates a new account.`}

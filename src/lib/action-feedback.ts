@@ -9,7 +9,7 @@ export type BannerMessage =
 /**
  * A `results` entry whose success message is computed from the action's
  * returned data, e.g.
- * `successMessage(result, (client) => `${client.name} onboarded`)`.
+ * `successMessage(result, (client) => `${client.name} onboarded.`)`.
  * The message is only built for a successful result, so `data` is typed and
  * present; the plain `[result, "text"]` form stays valid next to it.
  */
@@ -18,22 +18,31 @@ export const successMessage = <TData>(
 	message: (data: TData) => BannerMessage,
 ) => [result, result && !result.error ? message(result.data) : ""] as const;
 
+// Success messages are sentences ending in a period, the same on every page
+// that reports the action.
+
 // What a successful `transitionPhase` did, by the state it moved to.
 export const phaseTransitionMessage = {
-	planned: "Phase sent to client",
-	approved: "Approved for client",
-	in_progress: "Work started",
-	accepted: "Acceptance recorded for client",
-	cancelled: "Phase cancelled",
+	planned: "Phase sent to client.",
+	approved: "Approved for client.",
+	in_progress: "Work started.",
+	accepted: "Acceptance recorded for client.",
+	cancelled: "Phase cancelled.",
 } as const;
 
 // What a successful `transitionProject` did, by the event it recorded.
 export const projectTransitionMessage = {
-	activated: "Project activated",
-	completed: "Project completed",
-	reopened: "Project reopened",
-	archived: "Project archived",
+	activated: "Project activated.",
+	completed: "Project completed.",
+	reopened: "Project reopened.",
+	archived: "Project archived.",
 } as const;
+
+export const deliveryRecordedMessage =
+	"Delivery recorded. The phase now awaits the client's acceptance.";
+
+export const clientDeletedMessage = (client: { name: string }) =>
+	`Client ${client.name} deleted.`;
 
 /**
  * Where the middleware sends the admin after a successful form action: the
