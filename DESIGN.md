@@ -369,6 +369,15 @@ A form action's outcome shows once, at the top of the page, below the page headi
 - **Error:** a `role="alert"` plane in status red. Input errors list each field by its label; server errors get a generic retry sentence instead of the raw message.
 - **Live regions:** a message set by a script lives in a `role="alert"` or `role="status"` element that is rendered from the start, empty; only its text changes, because a region revealed at the moment its text is set is not announced reliably. Space it with `not-empty:` utilities instead of hiding it; `aubr design:lint` rejects a live region that starts `hidden`.
 
+### One-time Secrets
+
+A secret the server returns once, such as a new API key, shows once, in the page, and nowhere else.
+
+- **Display:** a heading, a muted sentence that it will not be shown again, then the full value as small body text in a dashed `line-control` box with `wrap-anywhere` and `select-all`, so one click selects all of it. No monospace and no truncation.
+- **Copy:** a default Button "Copy" writes it with `navigator.clipboard`; where that fails it selects the value and says which shortcut copies it. The outcome goes to a `role="status"` line beside the button.
+- **Focus:** creating moves focus to the result section (`tabindex="-1"`, named by its heading and described by the not-shown-again sentence); a failure goes to the always-rendered `role="alert"` line and focus returns to the trigger.
+- **Lifetime:** the value is set as text only, never in an attribute, the console, storage or the URL, and is cleared on `pagehide` so the back-forward cache cannot restore it. Reloading shows nothing. `src/pages/settings/api.astro` is the reference.
+
 ### Navigation
 
 Navigation is a responsive grid with the logo on the left and compact session links on the right at larger widths. On small screens it stacks into a centered single-column grid. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like. It sits in the shared `max-w-6xl` (dashboard) or `max-w-3xl` (public/settings) header, matching the page column it leads.
