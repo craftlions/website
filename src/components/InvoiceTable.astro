@@ -1,4 +1,5 @@
 ---
+import { formatDate, formatMoney, sumByCurrency } from "../lib/format.ts";
 import { buildPhaseComponents } from "../lib/phase-billing";
 import { invoiceStatus } from "../lib/status.ts";
 import Badge from "./Badge.astro";
@@ -48,9 +49,6 @@ interface Props {
 
 const { invoices, slug } = Astro.props;
 const now = new Date();
-const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
-const formatAmount = (total: number, currency: string) =>
-	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(total);
 const rows = invoices.map((invoice) => ({
 	...invoice,
 	status:
@@ -67,17 +65,13 @@ const rows = invoices.map((invoice) => ({
 			})
 		: [],
 }));
-const totalWhere = (statuses: string[]) => {
-	const sums = new Map<string, number>();
-	for (const row of rows) {
-		if (!statuses.includes(row.status ?? "")) continue;
-		sums.set(row.currency, (sums.get(row.currency) ?? 0) + row.total);
-	}
-	if (sums.size === 0) return formatAmount(0, rows[0]?.currency ?? "EUR");
-	return [...sums]
-		.map(([currency, total]) => formatAmount(total, currency))
-		.join(" + ");
-};
+const totalWhere = (statuses: string[]) =>
+	sumByCurrency(
+		rows
+			.filter((row) => statuses.includes(row.status))
+			.map((row) => ({ amount: row.total, currency: row.currency })),
+		rows[0]?.currency,
+	);
 const hasOverdue = rows.some((row) => row.status === "overdue");
 const showFilter =
 	rows.some((row) => row.status === "open" || row.status === "overdue") &&
@@ -153,7 +147,7 @@ const componentLabel: Record<string, string> = {
 							showStatus={false}
 							caption={
 								unassignedTotal > 0
-									? `Plus ${formatAmount(unassignedTotal, unassignedCurrency)} unassigned`
+									? `Plus ${formatMoney(unassignedTotal, unassignedCurrency)} unassigned`
 									: null
 							}
 						/>
@@ -198,7 +192,7 @@ const componentLabel: Record<string, string> = {
 								<p class="label-caps leading-none">Invoice {invoice.number}</p>
 								<div class="grid grid-flow-col items-center justify-start gap-2">
 									<p class="text-title tabular-nums leading-none">
-										{formatAmount(invoice.total, invoice.currency)}
+										{formatMoney(invoice.total, invoice.currency)}
 									</p>
 									{invoice.component && componentLabel[invoice.component] ? (
 										<Badge type="info">
@@ -234,7 +228,7 @@ const componentLabel: Record<string, string> = {
 											invoice.status === "overdue" && "text-fg-danger",
 										]}
 									>
-										{invoice.dueAt ? dateFormatter.format(invoice.dueAt) : "—"}
+										{invoice.dueAt ? formatDate(invoice.dueAt) : "—"}
 									</dd>
 								</div>
 								<div class="grid gap-1">
@@ -256,7 +250,7 @@ const componentLabel: Record<string, string> = {
 											)}
 											{invoice.status === "paid" && invoice.paidAt && (
 												<span class="text-xs text-fg-muted">
-													{dateFormatter.format(invoice.paidAt)}
+													{formatDate(invoice.paidAt)}
 												</span>
 											)}
 										</div>
