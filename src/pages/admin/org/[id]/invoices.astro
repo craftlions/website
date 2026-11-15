@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
+import ConfirmAction from "../../../../components/ConfirmAction.astro";
 import Field from "../../../../components/Field.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
@@ -456,12 +457,19 @@ const attachBlocker = (invoice: { currency: string }) => {
 											);
 										})}
 									</Field>
-									<Button
-										type="submit"
-										aria-label={`Attach: invoice ${invoice.number}`}
+									<ConfirmAction
+										id={`confirm-attach-${invoice.id}`}
+										trigger="Attach"
+										triggerLabel={`Attach: invoice ${invoice.number}`}
+										title={`Attach invoice ${invoice.number}?`}
+										confirm="Attach"
+										confirmVariant="default"
+										cancel="Go back"
 									>
-										Attach
-									</Button>
+										The invoice is linked to the cost part you picked for good:
+										it cannot be detached or moved to another part from the
+										dashboard, and the part counts as invoiced from now on.
+									</ConfirmAction>
 								</form>
 							) : (
 								<p class="min-w-0 text-sm text-fg-muted wrap-break-word">
