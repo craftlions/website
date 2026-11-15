@@ -381,10 +381,15 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 															: "[&::-moz-progress-bar]:bg-ink [&::-webkit-progress-value]:bg-ink",
 													]}
 													max="100"
-													value={Math.min(client.budgetUsage, 100)}
+													value={Math.min(
+														Number(client.budgetUsage.toFixed(1)),
+														100,
+													)}
 													aria-label={`Budget used by ${client.name}`}
+													aria-valuetext={formatPercent(client.budgetUsage)}
 												/>
 												<span
+													aria-hidden="true"
 													class:list={[
 														"text-xs tabular-nums",
 														client.budgetUsage > 100
