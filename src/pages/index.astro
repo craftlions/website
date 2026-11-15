@@ -4,6 +4,7 @@ export const prerender = true;
 import Button from "../components/Button.astro";
 import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
+import PageHeading from "../components/PageHeading.astro";
 import Shell from "../layouts/Shell.astro";
 ---
 
@@ -75,11 +76,7 @@ import Shell from "../layouts/Shell.astro";
 			>
 				<section class="grid gap-6">
 					<div class="grid gap-4">
-						<h1
-							class="border-l border-dashed border-line-strong pl-3 text-display"
-						>
-							Modern IT services drawn with care
-						</h1>
+						<PageHeading> Modern IT services drawn with care </PageHeading>
 						<p class="pl-3 text-fg-muted">
 							craftlions helps teams plan, build, and maintain software with a
 							practical engineering mindset. The work is modern, but the process

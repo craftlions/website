@@ -1,5 +1,6 @@
 ---
 import Button from "../components/Button.astro";
+import PageHeading from "../components/PageHeading.astro";
 import ClientShell from "./ClientShell.astro";
 
 interface Props {
@@ -19,9 +20,7 @@ const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 		slot="header"
 		class="grid gap-4 border-b border-dashed border-line pb-6"
 	>
-		<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
-			Account
-		</h1>
+		<PageHeading> Account </PageHeading>
 		<nav aria-label="Account sections">
 			<ul
 				class="-m-1 grid grid-flow-col auto-cols-max gap-2 overflow-x-auto p-1"

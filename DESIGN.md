@@ -215,7 +215,7 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 
 ### Hierarchy
 
-- **Display** (`text-display`; 600, 1.875rem, 1.25): page h1 headings with a dashed left rule.
+- **Display** (`text-display`; 600, 1.875rem, 1.25): page h1 headings with a dashed left rule, always through `src/components/PageHeading.astro`.
 - **Headline** (`text-headline`; 600, 1.5rem, 1.333): major public-page section headings.
 - **Title** (`text-title`; 600, 1.25rem, 1.4): article titles, card headings, and compact section titles.
 - **Body** (400, 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.

@@ -6,6 +6,7 @@ import AdminWorklist from "../../components/AdminWorklist.astro";
 import Button from "../../components/Button.astro";
 import DisclosureButton from "../../components/DisclosureButton.astro";
 import Field from "../../components/Field.astro";
+import PageHeading from "../../components/PageHeading.astro";
 import Progress from "../../components/Progress.astro";
 import AdminShell from "../../layouts/AdminShell.astro";
 import {
@@ -169,11 +170,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 	>
 		<div class="grid gap-1">
 			<p class="text-label uppercase text-fg-muted">Admin</p>
-			<h1
-				class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
-			>
-				Client workbench
-			</h1>
+			<PageHeading> Client workbench </PageHeading>
 		</div>
 	</header>
 

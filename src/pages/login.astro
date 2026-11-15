@@ -5,6 +5,7 @@ import Button from "../components/Button.astro";
 import Field from "../components/Field.astro";
 import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
+import PageHeading from "../components/PageHeading.astro";
 import Shell from "../layouts/Shell.astro";
 import { parseReturnTo } from "../lib/return-to.ts";
 
@@ -30,9 +31,7 @@ if (session) {
 			</header>
 
 			<main class="w-full grid content-start min-h-0 max-w-lg mx-auto gap-6">
-				<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
-					Sign in
-				</h1>
+				<PageHeading> Sign in </PageHeading>
 				<form
 					id="login-form"
 					class="grid gap-6"

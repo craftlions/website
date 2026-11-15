@@ -1,6 +1,7 @@
 ---
 import type { ComponentProps } from "astro/types";
 import Button from "../components/Button.astro";
+import PageHeading from "../components/PageHeading.astro";
 import AdminShell from "./AdminShell.astro";
 
 interface Props
@@ -80,11 +81,9 @@ const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 	>
 		<div class="grid gap-1">
 			<p class="text-label uppercase text-fg-muted">Client</p>
-			<h1
-				class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
-			>
+			<PageHeading>
 				{organization.name}
-			</h1>
+			</PageHeading>
 		</div>
 		<nav aria-label="Client sections">
 			<ul

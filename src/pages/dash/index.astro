@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 
+import PageHeading from "../../components/PageHeading.astro";
 import ClientShell from "../../layouts/ClientShell.astro";
 
 const session = Astro.locals.session;
@@ -21,9 +22,7 @@ if (organizations.length === 1 && organizations[0]) {
 ---
 
 <ClientShell title="Organizations" wide>
-	<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
-		Organizations
-	</h1>
+	<PageHeading> Organizations </PageHeading>
 	{organizations.length > 0 ? (
 		<ul class="grid divide-y divide-dashed divide-line border border-dashed border-line">
 			{organizations

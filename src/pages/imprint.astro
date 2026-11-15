@@ -3,6 +3,7 @@ export const prerender = true;
 
 import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
+import PageHeading from "../components/PageHeading.astro";
 import Shell from "../layouts/Shell.astro";
 ---
 
@@ -20,11 +21,7 @@ import Shell from "../layouts/Shell.astro";
 				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
 			>
 				<div class="grid gap-4">
-					<h1
-						class="border-l border-dashed border-line-strong pl-3 text-display"
-					>
-						Impressum
-					</h1>
+					<PageHeading> Impressum </PageHeading>
 					<p class="max-w-[65ch] text-sm text-fg-muted">
 						Diese Seite enthält die gesetzlich vorgeschriebenen Angaben zur
 						Betreiberin der Website und die wichtigsten Kontaktinformationen.

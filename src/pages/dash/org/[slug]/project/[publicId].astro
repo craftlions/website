@@ -3,6 +3,7 @@ export const prerender = false;
 
 import { isAPIError } from "better-auth/api";
 import ClientPhaseBanner from "../../../../../components/ClientPhaseBanner.astro";
+import PageHeading from "../../../../../components/PageHeading.astro";
 import PhaseOverview from "../../../../../components/PhaseOverview.astro";
 import ClientShell from "../../../../../layouts/ClientShell.astro";
 import { stripeInvoiceFields } from "../../../../../lib/stripe.ts";
@@ -118,12 +119,9 @@ const canApprovePhases =
 	breadcrumbs={[{ label: project.name }]}
 	wide
 >
-	<h1
-		slot="header"
-		class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
-	>
+	<PageHeading slot="header">
 		{project.name}
-	</h1>
+	</PageHeading>
 
 	<ClientPhaseBanner />
 

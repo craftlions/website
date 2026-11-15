@@ -4,6 +4,7 @@ export const prerender = true;
 import ChangelogEntry from "../components/ChangelogEntry.astro";
 import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
+import PageHeading from "../components/PageHeading.astro";
 import Shell from "../layouts/Shell.astro";
 
 const entries: {
@@ -79,11 +80,7 @@ const entries: {
 
 			<main class="w-full grid content-start min-h-0 max-w-3xl mx-auto gap-8">
 				<section class="grid gap-4">
-					<h1
-						class="border-l border-dashed border-line-strong pl-3 text-display text-balance"
-					>
-						Changelog
-					</h1>
+					<PageHeading class="text-balance"> Changelog </PageHeading>
 					<p class="max-w-2xl text-fg-muted">
 						A timeline of improvements, fixes, and visible updates to the
 						craftlions website.

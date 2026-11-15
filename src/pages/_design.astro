@@ -7,6 +7,7 @@ import Button from "../components/Button.astro";
 import ConfirmAction from "../components/ConfirmAction.astro";
 import DisclosureButton from "../components/DisclosureButton.astro";
 import Field from "../components/Field.astro";
+import PageHeading from "../components/PageHeading.astro";
 import Progress from "../components/Progress.astro";
 import Shell from "../layouts/Shell.astro";
 import tokensCss from "../styles/tokens.css?raw";
@@ -121,9 +122,7 @@ const typeRoles = [
 	<Fragment slot="body">
 		<body class="grid gap-6 bg-canvas p-4 text-pretty text-fg antialiased">
 			<header class="mx-auto grid w-full max-w-6xl gap-2">
-				<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
-					Design
-				</h1>
+				<PageHeading> Design </PageHeading>
 				<p class="pl-3 text-sm text-fg-muted">
 					Dev only. Every token and primitive in both color schemes; hover and
 					tab through the controls to see their states.
