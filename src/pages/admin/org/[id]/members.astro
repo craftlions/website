@@ -32,7 +32,6 @@ const [organization, members] = await Promise.all([
 		with: {
 			user: {
 				columns: {
-					id: true,
 					email: true,
 					name: true,
 					lastActiveAt: true,
@@ -248,7 +247,7 @@ const otherClients = (count: number) =>
 											title={`Delete the account of ${member.user.name}?`}
 											confirm="Delete account"
 											cancel="Keep account"
-											typeToConfirm={{ value: member.user.email }}
+											typeToConfirm={member.user.email}
 										>
 											{`This deletes the account for ${member.user.email} everywhere: it is removed from ${organization.name}${member.user.memberships.length > 1 ? ` and from ${otherClients(member.user.memberships.length - 1)}` : ""} and can no longer sign in. This cannot be undone; adding the same email later creates a new account.`}
 										</ConfirmAction>

@@ -11,22 +11,17 @@ import Button from "./Button.astro";
 interface Props extends HTMLAttributes<"form"> {
 	project: { id: string; name: string; state: ProjectState; version: number };
 	nextState: ProjectTransitionTarget;
-	// Defaults to the status vocabulary's name for this transition from the
-	// project's current state ("Activate", "Complete", "Reopen", "Archive").
-	label?: string;
 	// Passed through to the submit Button, e.g. `variant` or data attributes.
 	button?: Omit<ComponentProps<typeof Button>, "as" | "href" | "type">;
 }
 
-const {
-	project,
-	nextState,
-	label = projectTransitions[project.state].find(
+const { project, nextState, button, ...attrs } = Astro.props;
+// The status vocabulary's name for this transition from the project's state
+// ("Activate", "Complete", "Reopen", "Archive").
+const label =
+	projectTransitions[project.state].find(
 		(transition) => transition.nextState === nextState,
-	)?.label ?? nextState,
-	button,
-	...attrs
-} = Astro.props;
+	)?.label ?? nextState;
 ---
 
 <form method="POST" action={actions.transitionProject} {...attrs}>

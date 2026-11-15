@@ -13,12 +13,8 @@ interface Props {
 	// steps that need a second look but destroy nothing.
 	confirmVariant?: "default" | "danger";
 	cancel?: string;
-	form?: string | undefined;
-	name?: string | undefined;
-	value?: string | undefined;
-	typeToConfirm?:
-		| { value: string; name?: string | undefined; label?: string | undefined }
-		| undefined;
+	// Text the admin must type before confirming, sent as `confirmation`.
+	typeToConfirm?: string | undefined;
 }
 
 const {
@@ -30,9 +26,6 @@ const {
 	confirm,
 	confirmVariant = "danger",
 	cancel = "Cancel",
-	form,
-	name,
-	value,
 	typeToConfirm,
 } = Astro.props;
 ---
@@ -61,15 +54,14 @@ const {
 		</p>
 		{typeToConfirm && (
 			<Field
-				label={typeToConfirm.label ?? `Type ${typeToConfirm.value} to confirm`}
-				name={typeToConfirm.name ?? "confirmation"}
-				{form}
+				label={`Type ${typeToConfirm} to confirm`}
+				name="confirmation"
 				required
 				danger
 				autocomplete="off"
 				spellcheck="false"
-				pattern={typeToConfirm.value.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&")}
-				title={`Type ${typeToConfirm.value} exactly`}
+				pattern={typeToConfirm.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&")}
+				title={`Type ${typeToConfirm} exactly`}
 			/>
 		)}
 		<div
@@ -87,9 +79,6 @@ const {
 				type="submit"
 				variant={confirmVariant}
 				class="max-w-full"
-				{form}
-				{name}
-				{value}
 				data-confirm-submit
 			>
 				{confirm}

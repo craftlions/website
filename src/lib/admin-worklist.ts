@@ -17,7 +17,7 @@ import { stripeInvoiceFields } from "./stripe.ts";
 import { getUuidV7Date } from "./uuid.ts";
 
 // Phase states that are a worklist item on their own, in priority order.
-export const worklistPhaseStates = [
+const worklistPhaseStates = [
 	"submitted",
 	"planned",
 	"approved",
@@ -100,7 +100,6 @@ export const getLatestPhaseStateEventIds = async (
 export const getWorklistProjects = (db: Db, organizationId?: string) =>
 	db.query.projects.findMany({
 		columns: {
-			id: true,
 			organizationId: true,
 			publicId: true,
 			name: true,
