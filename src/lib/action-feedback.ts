@@ -34,3 +34,27 @@ export const projectTransitionMessage = {
 	reopened: "Project reopened",
 	archived: "Project archived",
 } as const;
+
+/**
+ * Where the middleware sends the admin after a successful form action: the
+ * action's data may name a `next` path (e.g. the project it just created).
+ * Only a path on this origin is accepted; anything else returns undefined and
+ * the middleware falls back to the page the form was posted from.
+ */
+export const nextPath = (data: unknown, url: URL) => {
+	if (
+		typeof data !== "object" ||
+		data === null ||
+		!("next" in data) ||
+		typeof data.next !== "string" ||
+		!data.next.startsWith("/")
+	) {
+		return undefined;
+	}
+
+	const next = new URL(data.next, url);
+
+	return next.origin === url.origin
+		? `${next.pathname}${next.search}${next.hash}`
+		: undefined;
+};

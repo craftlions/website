@@ -137,6 +137,10 @@ const openInvoices = ledger.flatMap((client) => client.openInvoices);
 <AdminShell
 	title="Client workbench"
 	results={[
+		successMessage(
+			Astro.getActionResult(actions.hardDeleteOrganization),
+			(client) => `Client ${client.name} deleted`,
+		),
 		successMessage(onboardResult, (client) => ({
 			text: `${client.name} onboarded.`,
 			link: { label: "Open client", href: `/admin/org/${client.id}` },

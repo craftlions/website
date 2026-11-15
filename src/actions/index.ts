@@ -219,8 +219,12 @@ export const server = {
 			name: z.string().trim().min(1).max(160),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
-			await createProject(context.locals.db, actorId, input);
-			return { success: true };
+			const project = await createProject(context.locals.db, actorId, input);
+			// The admin continues on the new project's page to add its phases.
+			return {
+				publicId: project.publicId,
+				next: `/admin/org/${encodeURIComponent(input.organizationId)}/projects/${project.publicId}`,
+			};
 		}),
 	}),
 	transitionProject: defineAction({
@@ -428,13 +432,14 @@ export const server = {
 			confirmation: z.string().trim().min(1),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
-			await hardDeleteOrganization(
+			const { name } = await hardDeleteOrganization(
 				context.locals.db,
 				context.locals.auth,
 				actorId,
 				input,
 			);
-			return { success: true };
+			// The client's pages are gone; the admin continues on /admin.
+			return { name, next: "/admin" };
 		}),
 	}),
 };

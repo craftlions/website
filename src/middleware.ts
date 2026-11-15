@@ -1,6 +1,7 @@
 import { getActionContext } from "astro:actions";
 import { defineMiddleware } from "astro:middleware";
 import { env } from "cloudflare:workers";
+import { nextPath } from "./lib/action-feedback.ts";
 import { createAuth } from "./lib/auth.ts";
 import { createDb } from "./lib/database.ts";
 
@@ -36,6 +37,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	const { action, serializeActionResult, setActionResult } =
 		getActionContext(context);
 
+	// Form actions follow post/redirect/get: the result is stored in the
+	// session and the browser is sent to a page that shows it.
+	// - Success goes to the `next` path the action's data names, when it is a
+	//   same-origin path (see `nextPath`), else back to the posting page.
+	// - Failure goes back to the referring page, so the form is there again.
+	// - The stored result survives redirects: the GET branch below hands it to
+	//   every request but deletes it only once a page answers with something
+	//   other than a redirect. A page that redirects first (a deleted client's
+	//   settings page sending the admin to /admin) passes it on, and the page
+	//   that renders shows it.
 	if (action?.calledFrom === "form" && context.session) {
 		const actionResult = await action.handler();
 
@@ -48,7 +59,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 			{ ttl: 60 },
 		);
 
-		let redirectPath = context.originPathname;
+		let redirectPath =
+			(!actionResult.error && nextPath(actionResult.data, context.url)) ||
+			context.originPathname;
 
 		if (actionResult.error) {
 			const referer = context.request.headers.get("Referer");
@@ -69,16 +82,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		return response;
 	}
 
-	if (context.request.method === "GET" && context.session) {
-		const actionResult = await context.session.get(actionResultSessionKey);
+	const storedResult =
+		context.request.method === "GET" && context.session
+			? await context.session.get(actionResultSessionKey)
+			: undefined;
 
-		if (actionResult) {
-			setActionResult(actionResult.actionName, actionResult.actionResult);
-			context.session.delete(actionResultSessionKey);
-		}
+	if (storedResult) {
+		setActionResult(storedResult.actionName, storedResult.actionResult);
 	}
 
 	const response = await next();
+
+	if (storedResult && !(response.status >= 300 && response.status < 400)) {
+		context.session?.delete(actionResultSessionKey);
+	}
 
 	if (isPersonalized) {
 		response.headers.set("Cache-Control", "no-store");

@@ -1407,4 +1407,6 @@ export const hardDeleteOrganization = async (
 		event: "deleted",
 		actorId,
 	});
+
+	return { name: selectedOrganization.name };
 };

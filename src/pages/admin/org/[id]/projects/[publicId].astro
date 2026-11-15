@@ -102,7 +102,12 @@ const openPhaseCount = project.phases.filter(
 ).length;
 
 const createResult = Astro.getActionResult(actions.createPhase);
+const projectResult = Astro.getActionResult(actions.createProject);
 const canAddPhase = project.state === "draft" || project.state === "active";
+// The add-phase form starts open after a failed add and right after the
+// project was created, since adding phases is the next step.
+const isAddPhaseOpen =
+	Boolean(createResult?.error) || (projectResult && !projectResult.error);
 // New phases default to the currency the project already bills in.
 const defaultCurrency = project.phases.at(-1)?.currency ?? "EUR";
 const currencyNames = new Intl.DisplayNames("en", { type: "currency" });
@@ -126,6 +131,7 @@ const phases = project.phases
 			Astro.getActionResult(actions.transitionProject),
 			(transition) => projectTransitionMessage[transition.event],
 		),
+		[projectResult, "Project created. Add its phases, then activate it."],
 		[createResult, "Phase added. Send it to the client when it is ready."],
 		successMessage(
 			Astro.getActionResult(actions.transitionPhase),
@@ -212,7 +218,7 @@ const phases = project.phases
 			</h3>
 			{canAddPhase && (
 				<Button
-					aria-expanded={createResult?.error ? "true" : "false"}
+					aria-expanded={isAddPhaseOpen ? "true" : "false"}
 					aria-controls="add-phase"
 					data-add-phase-toggle
 				>
@@ -227,7 +233,7 @@ const phases = project.phases
 				action={actions.createPhase}
 				class="grid gap-4 border border-dashed border-line p-4 md:grid-cols-3"
 				aria-label="Add phase"
-				hidden={!createResult?.error}
+				hidden={!isAddPhaseOpen}
 			>
 				<input type="hidden" name="projectId" value={project.id}>
 				<Field
