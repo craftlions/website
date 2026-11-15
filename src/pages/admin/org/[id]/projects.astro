@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
+import DisclosureButton from "../../../../components/DisclosureButton.astro";
 import Field from "../../../../components/Field.astro";
 import ProjectPhaseSummary from "../../../../components/ProjectPhaseSummary.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
@@ -111,10 +112,12 @@ const rows = projects
 
 const groups = [
 	{
+		id: "projects",
 		archived: false,
 		rows: rows.filter((row) => row.state !== "archived"),
 	},
 	{
+		id: "archived-projects",
 		archived: true,
 		rows: rows.filter((row) => row.state === "archived"),
 	},
@@ -132,40 +135,43 @@ const isCreateOpen =
 	results={[[actionResult, "Project created"]]}
 	fieldLabels={{ organizationId: "Client", name: "Project name" }}
 >
-	{groups.map(({ archived, rows: groupRows }) => {
-		// Archived projects collapse into a disclosure; current ones list openly.
-		const Disclosure = archived ? "details" : Fragment;
-		return archived && groupRows.length === 0 ? null : (
-			<section
-				class="grid gap-3"
-				aria-labelledby={
-					archived ? "archived-projects-heading" : "projects-heading"
-				}
-			>
+	{groups
+		.filter(
+			({ archived, rows: groupRows }) => !archived || groupRows.length > 0,
+		)
+		.map(({ id: groupId, archived, rows: groupRows }) => (
+			<section class="grid gap-3" aria-labelledby={`${groupId}-heading`}>
+				<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+					<h2
+						id={`${groupId}-heading`}
+						class="text-label uppercase text-fg-muted"
+					>
+						{archived ? "Archived" : "Projects"}
+					</h2>
+					{archived ? (
+						<DisclosureButton controls={groupId} variant="quiet">
+							{groupRows.length}{" "}
+							{groupRows.length === 1 ? "project" : "projects"}
+						</DisclosureButton>
+					) : (
+						<DisclosureButton controls="create-project" open={isCreateOpen}>
+							Create project
+						</DisclosureButton>
+					)}
+				</div>
 				{!archived && (
 					<>
-						<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-							<h2
-								id="projects-heading"
-								class="text-label uppercase text-fg-muted"
-							>
-								Projects
-							</h2>
-							<Button
-								aria-expanded={isCreateOpen ? "true" : "false"}
-								aria-controls="new-project"
-								data-new-project-toggle
-							>
-								New project
-							</Button>
-						</div>
+						<p class="max-w-prose text-sm text-fg-muted">
+							Projects with a phase that needs you come first, then active,
+							draft and completed ones.
+						</p>
 						<form
-							id="new-project"
+							id="create-project"
 							method="POST"
 							action={actions.createProject}
-							aria-label="New project"
+							aria-label="Create project"
 							hidden={!isCreateOpen}
-							class="grid gap-3 border border-dashed border-line p-4"
+							class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4"
 						>
 							<input
 								type="hidden"
@@ -178,128 +184,90 @@ const isCreateOpen =
 								required
 								maxlength={160}
 								autocomplete="off"
-								autofocus={Boolean(actionResult?.error)}
 								hint="Starts as a draft. Add its phases on the project page, then activate it."
 								result={actionResult}
 								class="max-w-md"
 							/>
-							<div class="grid grid-flow-col items-center justify-start gap-3">
+							<div class="grid grid-cols-[auto_auto] items-center justify-start gap-3">
 								<Button type="submit">Create project</Button>
-								<Button variant="quiet" data-new-project-cancel>
+								<Button variant="quiet" data-disclosure-cancel>
 									Cancel
 								</Button>
 							</div>
 						</form>
 					</>
 				)}
-				<Disclosure class={archived ? "grid gap-3" : undefined}>
-					{archived && (
-						<Button as="summary" variant="quiet">
-							<h2 id="archived-projects-heading" class="text-label uppercase">
-								Archived ({groupRows.length})
-							</h2>
-						</Button>
-					)}
-					{groupRows.length > 0 ? (
-						<ul class="grid border border-dashed border-line lg:grid-cols-[minmax(10rem,1fr)_auto_auto_auto_auto] lg:gap-x-6">
-							{groupRows.map((project) => (
-								<li
-									class:list={[
-										"grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line p-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:col-span-5 lg:grid-cols-subgrid lg:gap-x-6",
-										archived ? "text-fg-muted" : "text-fg",
-									]}
-								>
-									<h3 class="min-w-0 font-medium wrap-break-word sm:col-span-2 lg:col-span-1">
-										<a
-											href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-											class="underline decoration-dashed underline-offset-4"
-										>
-											{project.name}
-										</a>
-									</h3>
-									<Badge type={projectStatus[project.state].badge}>
-										{projectStatus[project.state].label}
-									</Badge>
-									<ProjectPhaseSummary
-										phases={project.phases}
-										class="col-span-2 sm:col-span-1"
-									/>
-									<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm sm:col-span-1">
-										<dt class="label-caps">Total</dt>
-										<dd class="text-right font-medium tabular-nums wrap-break-word">
-											{project.total ?? "—"}
-										</dd>
-										<dt class="label-caps">Invoiced</dt>
-										<dd class="text-right tabular-nums wrap-break-word">
-											{project.invoiced ?? "—"}
-										</dd>
-										{project.open && (
-											<>
-												<dt class="label-caps">Open</dt>
-												<dd class="text-right tabular-nums wrap-break-word">
-													{project.open}
-												</dd>
-											</>
-										)}
-										{project.overdue && (
-											<>
-												<dt class="label-caps">Overdue</dt>
-												<dd class="text-right tabular-nums wrap-break-word text-fg-danger">
-													{project.overdue}
-												</dd>
-											</>
-										)}
-									</dl>
-									<Button
+				{groupRows.length > 0 ? (
+					<ul
+						id={archived ? groupId : undefined}
+						hidden={archived}
+						class="grid border border-dashed border-line lg:grid-cols-[minmax(10rem,1fr)_auto_auto_auto_auto] lg:gap-x-6"
+					>
+						{groupRows.map((project) => (
+							<li
+								class:list={[
+									"grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line p-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:col-span-5 lg:grid-cols-subgrid lg:gap-x-6",
+									archived ? "text-fg-muted" : "text-fg",
+								]}
+							>
+								<h3 class="min-w-0 font-medium wrap-break-word sm:col-span-2 lg:col-span-1">
+									<a
 										href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-										aria-label={`Open ${project.name}`}
-										class="col-span-2 sm:col-span-1"
+										class="underline decoration-dashed underline-offset-4"
 									>
-										Open
-									</Button>
-								</li>
-							))}
-						</ul>
-					) : (
-						<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
-							{groups[1]?.rows.length
-								? "No current projects. Archived projects are listed below."
-								: "No projects yet. Name the first one above to start it as a draft."}
-						</p>
-					)}
-				</Disclosure>
+										{project.name}
+									</a>
+								</h3>
+								<Badge type={projectStatus[project.state].badge}>
+									{projectStatus[project.state].label}
+								</Badge>
+								<ProjectPhaseSummary
+									phases={project.phases}
+									class="col-span-2 sm:col-span-1"
+								/>
+								<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm sm:col-span-1">
+									<dt class="label-caps">Total</dt>
+									<dd class="text-right font-medium tabular-nums wrap-break-word">
+										{project.total ?? "—"}
+									</dd>
+									<dt class="label-caps">Invoiced</dt>
+									<dd class="text-right tabular-nums wrap-break-word">
+										{project.invoiced ?? "—"}
+									</dd>
+									{project.open && (
+										<>
+											<dt class="label-caps">Open</dt>
+											<dd class="text-right tabular-nums wrap-break-word">
+												{project.open}
+											</dd>
+										</>
+									)}
+									{project.overdue && (
+										<>
+											<dt class="label-caps">Overdue</dt>
+											<dd class="text-right tabular-nums wrap-break-word text-fg-danger">
+												{project.overdue}
+											</dd>
+										</>
+									)}
+								</dl>
+								<Button
+									href={`/admin/org/${organization.id}/projects/${project.publicId}`}
+									aria-label={`Open ${project.name}`}
+									class="col-span-2 sm:col-span-1"
+								>
+									Open
+								</Button>
+							</li>
+						))}
+					</ul>
+				) : (
+					<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+						{groups[1]?.rows.length
+							? "No current projects. Archived projects are listed below."
+							: "No projects yet. Name the first one above to start it as a draft."}
+					</p>
+				)}
 			</section>
-		);
-	})}
+		))}
 </AdminOrgShell>
-
-<script>
-	// "New project" discloses the create form and puts the cursor in its name
-	// field; Cancel clears and closes it and returns focus to the toggle.
-	const toggle = document.querySelector<HTMLButtonElement>(
-		"[data-new-project-toggle]",
-	);
-	const form = document.querySelector<HTMLFormElement>("#new-project");
-	const name = form?.querySelector<HTMLInputElement>('input[name="name"]');
-
-	if (toggle && form && name) {
-		const setOpen = (open: boolean) => {
-			toggle.setAttribute("aria-expanded", String(open));
-			form.hidden = !open;
-		};
-
-		toggle.addEventListener("click", () => {
-			const open = toggle.getAttribute("aria-expanded") !== "true";
-			setOpen(open);
-			if (open) name.focus();
-		});
-
-		form
-			.querySelector("[data-new-project-cancel]")
-			?.addEventListener("click", () => {
-				form.reset();
-				setOpen(false);
-				toggle.focus();
-			});
-	}
-</script>

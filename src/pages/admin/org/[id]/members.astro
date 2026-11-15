@@ -5,6 +5,7 @@ import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import ConfirmAction from "../../../../components/ConfirmAction.astro";
+import DisclosureButton from "../../../../components/DisclosureButton.astro";
 import Field from "../../../../components/Field.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { successMessage } from "../../../../lib/action-feedback.ts";
@@ -54,6 +55,9 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
+// The form starts open after a failed add and while nobody is a member yet.
+const isAddOpen = Boolean(addResult?.error) || members.length === 0;
+
 const otherClients = (count: number) =>
 	`${count} other ${count === 1 ? "client" : "clients"}`;
 ---
@@ -88,21 +92,14 @@ const otherClients = (count: number) =>
 		confirmation: "Confirmation",
 	}}
 >
-	<section class="grid gap-4" aria-labelledby="members-heading">
+	<section class="grid gap-3" aria-labelledby="members-heading">
 		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
 			<h2 id="members-heading" class="text-label uppercase text-fg-muted">
 				Members
 			</h2>
-			<add-member-toggle>
-				<Button
-					aria-expanded={addResult?.error || members.length === 0
-						? "true"
-						: "false"}
-					aria-controls="add-member"
-				>
-					Add member
-				</Button>
-			</add-member-toggle>
+			<DisclosureButton controls="add-member" open={isAddOpen}>
+				Add member
+			</DisclosureButton>
 		</div>
 		<p class="max-w-prose text-sm text-fg-muted">
 			People who can sign in and see the {organization.name} dashboard.
@@ -111,8 +108,9 @@ const otherClients = (count: number) =>
 			id="add-member"
 			method="POST"
 			action={actions.addOrganizationMember}
+			aria-label="Add member"
 			class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(2,minmax(0,1fr))]"
-			hidden={!addResult?.error && members.length > 0}
+			hidden={!isAddOpen}
 		>
 			<input type="hidden" name="organizationId" value={organization.id}>
 			<Field
@@ -144,7 +142,12 @@ const otherClients = (count: number) =>
 				<option value="member" selected>Member</option>
 				<option value="owner">Owner</option>
 			</Field>
-			<Button type="submit" class="md:col-span-2">Add member</Button>
+			<div
+				class="grid grid-cols-[auto_auto] items-center justify-start gap-3 md:col-span-2"
+			>
+				<Button type="submit">Add member</Button>
+				<Button variant="quiet" data-disclosure-cancel>Cancel</Button>
+			</div>
 		</form>
 		{members.length > 0 ? (
 			<div class="grid grid-cols-[minmax(0,1fr)] border border-dashed border-line md:grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,14rem)] md:gap-x-6">
@@ -298,34 +301,6 @@ const otherClients = (count: number) =>
 				}
 			});
 		}
-	}
-
-	// The heading's Add member button shows and hides the form it controls.
-	class AddMemberToggle extends HTMLElement {
-		connectedCallback() {
-			if (this.dataset.initialized === "true") return;
-			this.dataset.initialized = "true";
-
-			const button = this.querySelector("button");
-			const form = document.getElementById(
-				button?.getAttribute("aria-controls") ?? "",
-			);
-
-			if (!button || !form) return;
-
-			button.addEventListener("click", () => {
-				const expanded = button.getAttribute("aria-expanded") !== "true";
-				button.setAttribute("aria-expanded", String(expanded));
-				form.hidden = !expanded;
-				if (expanded) {
-					form.querySelector<HTMLElement>("input:not([type=hidden])")?.focus();
-				}
-			});
-		}
-	}
-
-	if (!customElements.get("add-member-toggle")) {
-		customElements.define("add-member-toggle", AddMemberToggle);
 	}
 
 	if (!customElements.get("impersonate-user")) {

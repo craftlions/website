@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import AdminWorklist from "../../components/AdminWorklist.astro";
 import Button from "../../components/Button.astro";
+import DisclosureButton from "../../components/DisclosureButton.astro";
 import Field from "../../components/Field.astro";
 import AdminShell from "../../layouts/AdminShell.astro";
 import {
@@ -102,6 +103,10 @@ const ledger = await Promise.all(
 	})),
 );
 const openInvoices = ledger.flatMap((client) => client.openInvoices);
+
+// The form starts open after a failed onboarding and while there is no
+// client yet.
+const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 ---
 
 <AdminShell
@@ -143,64 +148,6 @@ const openInvoices = ledger.flatMap((client) => client.openInvoices);
 				Client workbench
 			</h1>
 		</div>
-		<details class="grid gap-3" open={Boolean(onboardResult?.error)}>
-			<Button as="summary" class="[&::-webkit-details-marker]:hidden">
-				Onboard client
-			</Button>
-			<form
-				method="POST"
-				action={actions.onboardOrganization}
-				aria-label="Onboard client"
-				class="grid gap-4 border border-dashed border-line p-4 md:grid-cols-2"
-			>
-				<Field
-					label="Client name"
-					id="organization-name"
-					name="organizationName"
-					required
-					maxlength="120"
-					result={onboardResult}
-				/>
-				<Field
-					label="Slug"
-					id="organization-slug"
-					name="slug"
-					required
-					autocomplete="off"
-					spellcheck="false"
-					hint="The client's dashboard address: /dash/org/slug. Filled in from the name; lowercase letters, numbers and dashes."
-					result={onboardResult}
-				/>
-				<Field
-					label="Contact name"
-					name="name"
-					required
-					maxlength="120"
-					autocomplete="off"
-					result={onboardResult}
-				/>
-				<Field
-					label="Contact email"
-					name="email"
-					type="email"
-					required
-					autocomplete="off"
-					hint="Becomes the first member of the client's dashboard."
-					result={onboardResult}
-				/>
-				<Field
-					label="Yearly budget"
-					name="yearlyBudget"
-					type="number"
-					min="1"
-					step="1"
-					inputmode="numeric"
-					hint="Whole euros (EUR) per calendar year. Leave empty for no budget."
-					result={onboardResult}
-				/>
-				<Button type="submit" class="md:col-span-2">Create client</Button>
-			</form>
-		</details>
 	</header>
 
 	<dl
@@ -248,15 +195,78 @@ const openInvoices = ledger.flatMap((client) => client.openInvoices);
 
 	<client-ledger class="grid">
 		<section class="grid gap-3" aria-labelledby="ledger-heading">
-			<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-				<div class="grid gap-1">
-					<h2 id="ledger-heading" class="text-label uppercase text-fg-muted">
-						Client ledger
-					</h2>
-					<p role="status" class="text-sm text-fg-muted" data-client-count>
-						{ledger.length} {ledger.length === 1 ? "client" : "clients"}
-					</p>
+			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+				<h2 id="ledger-heading" class="text-label uppercase text-fg-muted">
+					Client ledger
+				</h2>
+				<DisclosureButton controls="onboard-client" open={isOnboardOpen}>
+					Onboard client
+				</DisclosureButton>
+			</div>
+			<form
+				id="onboard-client"
+				method="POST"
+				action={actions.onboardOrganization}
+				aria-label="Onboard client"
+				hidden={!isOnboardOpen}
+				class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(2,minmax(0,1fr))]"
+			>
+				<Field
+					label="Client name"
+					id="organization-name"
+					name="organizationName"
+					required
+					maxlength="120"
+					result={onboardResult}
+				/>
+				<Field
+					label="Slug"
+					id="organization-slug"
+					name="slug"
+					required
+					autocomplete="off"
+					spellcheck="false"
+					hint="The client's dashboard address: /dash/org/slug. Filled in from the name; lowercase letters, numbers and dashes."
+					result={onboardResult}
+				/>
+				<Field
+					label="Contact name"
+					name="name"
+					required
+					maxlength="120"
+					autocomplete="off"
+					result={onboardResult}
+				/>
+				<Field
+					label="Contact email"
+					name="email"
+					type="email"
+					required
+					autocomplete="off"
+					hint="Becomes the first member of the client's dashboard."
+					result={onboardResult}
+				/>
+				<Field
+					label="Yearly budget"
+					name="yearlyBudget"
+					type="number"
+					min="1"
+					step="1"
+					inputmode="numeric"
+					hint="Whole euros (EUR) per calendar year. Leave empty for no budget."
+					result={onboardResult}
+				/>
+				<div
+					class="grid grid-cols-[auto_auto] items-center justify-start gap-3 md:col-span-2"
+				>
+					<Button type="submit">Onboard client</Button>
+					<Button variant="quiet" data-disclosure-cancel> Cancel </Button>
 				</div>
+			</form>
+			<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+				<p role="status" class="text-sm text-fg-muted" data-client-count>
+					{ledger.length} {ledger.length === 1 ? "client" : "clients"}
+				</p>
 				{ledger.length > 0 && (
 					<Field
 						label="Filter by name"

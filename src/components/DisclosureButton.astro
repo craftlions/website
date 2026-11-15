@@ -1,0 +1,98 @@
+---
+import type { ComponentProps } from "astro/types";
+import Button from "./Button.astro";
+
+// A Button that shows and hides the element whose id is `controls`: a form
+// opened from a section heading, or a row's extra panel. The page renders
+// that panel with `hidden={!open}`, passing the same `open`, so a form whose
+// submit failed comes back open. Opening focuses the panel's first field; a
+// `data-disclosure-cancel` Button inside the panel resets its forms, closes
+// it and returns focus here.
+interface Props
+	extends Omit<ComponentProps<typeof Button>, "as" | "href" | "type"> {
+	controls: string;
+	open?: boolean | undefined;
+}
+
+const { controls, open = false, class: className, ...attrs } = Astro.props;
+---
+
+<Button
+	{...attrs}
+	class:list={["group", className]}
+	aria-expanded={open ? "true" : "false"}
+	aria-controls={controls}
+	data-disclosure-toggle
+>
+	<slot />
+	<svg
+		aria-hidden="true"
+		viewBox="0 0 12 12"
+		class="size-3 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
+	>
+		<path
+			d="M2.5 4.5 6 8l3.5-3.5"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="1.5"
+		/>
+	</svg>
+</Button>
+
+<script>
+	// One listener serves every disclosure on the page. State lives in
+	// `aria-expanded` and `hidden` only, so a page script may open a panel the
+	// same way (the project page does for deep links).
+	const fields =
+		"input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])";
+
+	const setOpen = (panel: HTMLElement, open: boolean) => {
+		for (const toggle of document.querySelectorAll(
+			`[data-disclosure-toggle][aria-controls="${CSS.escape(panel.id)}"]`,
+		)) {
+			toggle.setAttribute("aria-expanded", String(open));
+		}
+		panel.hidden = !open;
+	};
+
+	document.addEventListener("click", (event) => {
+		if (!(event.target instanceof Element)) return;
+
+		const toggle = event.target.closest<HTMLElement>(
+			"[data-disclosure-toggle]",
+		);
+		if (toggle) {
+			const panel = document.getElementById(
+				toggle.getAttribute("aria-controls") ?? "",
+			);
+			if (!panel) return;
+			const open = toggle.getAttribute("aria-expanded") !== "true";
+			setOpen(panel, open);
+			if (open) panel.querySelector<HTMLElement>(fields)?.focus();
+			return;
+		}
+
+		const cancel = event.target.closest("[data-disclosure-cancel]");
+		// The panel is the nearest ancestor some toggle controls.
+		for (
+			let panel = cancel?.parentElement?.closest<HTMLElement>("[id]");
+			panel;
+			panel = panel.parentElement?.closest<HTMLElement>("[id]")
+		) {
+			const owner = document.querySelector<HTMLElement>(
+				`[data-disclosure-toggle][aria-controls="${CSS.escape(panel.id)}"]`,
+			);
+			if (!owner) continue;
+			for (const form of panel instanceof HTMLFormElement
+				? [panel]
+				: panel.querySelectorAll("form")) {
+				form.reset();
+				// Live helpers such as the cost split recompute from the reset values.
+				form.dispatchEvent(new Event("input"));
+			}
+			setOpen(panel, false);
+			owner.focus();
+			return;
+		}
+	});
+</script>

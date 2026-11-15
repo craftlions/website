@@ -6,6 +6,7 @@ import Badge from "../../../../../components/Badge.astro";
 import Button from "../../../../../components/Button.astro";
 import ConfirmAction from "../../../../../components/ConfirmAction.astro";
 import DeliveryForm from "../../../../../components/DeliveryForm.astro";
+import DisclosureButton from "../../../../../components/DisclosureButton.astro";
 import Field from "../../../../../components/Field.astro";
 import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculator.astro";
 import PhaseTransitionForm from "../../../../../components/PhaseTransitionForm.astro";
@@ -253,21 +254,22 @@ const phases = project.phases
 				Phases
 			</h3>
 			{canAddPhase && (
-				<Button
-					aria-expanded={isAddPhaseOpen ? "true" : "false"}
-					aria-controls="add-phase"
-					data-add-phase-toggle
-				>
+				<DisclosureButton controls="add-phase" open={isAddPhaseOpen}>
 					Add phase
-				</Button>
+				</DisclosureButton>
 			)}
 		</div>
+		<p class="max-w-prose text-sm text-fg-muted">
+			Open phases come first. Each row offers its next step; corrections and
+			cancelling sit under More.
+			{!canAddPhase && " Phases can only be added to draft or active projects."}
+		</p>
 		{canAddPhase && (
 			<form
 				id="add-phase"
 				method="POST"
 				action={actions.createPhase}
-				class="grid gap-4 border border-dashed border-line p-4 md:grid-cols-3"
+				class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(3,minmax(0,1fr))]"
 				aria-label="Add phase"
 				hidden={!isAddPhaseOpen}
 			>
@@ -331,16 +333,14 @@ const phases = project.phases
 						: { acceptanceAmount: 0 })}
 					class="border-t border-dashed border-line pt-4 md:col-span-full"
 				/>
-				<Button type="submit" class="md:col-span-full">
-					Create phase
-				</Button>
+				<div class="grid grid-cols-[auto_auto] items-center justify-start gap-3 md:col-span-full">
+					<Button type="submit">Add phase</Button>
+					<Button variant="quiet" data-disclosure-cancel>
+						Cancel
+					</Button>
+				</div>
 			</form>
 		)}
-		<p class="max-w-prose text-sm text-fg-muted">
-			Open phases come first. Each row offers its next step; corrections and
-			cancelling sit under More.
-			{!canAddPhase && " Phases can only be added to draft or active projects."}
-		</p>
 		{phases.length > 0 ? (
 			<admin-phase-list
 				class="grid border border-dashed border-line lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] lg:gap-x-6"
@@ -705,26 +705,5 @@ const phases = project.phases
 
 	if (!customElements.get("admin-phase-list")) {
 		customElements.define("admin-phase-list", AdminPhaseList);
-	}
-</script>
-
-<script>
-	// The add-phase form opens under the Phases heading with its title focused.
-	for (const toggle of document.querySelectorAll<HTMLButtonElement>(
-		"[data-add-phase-toggle]",
-	)) {
-		const form = document.getElementById(
-			toggle.getAttribute("aria-controls") ?? "",
-		);
-		if (!(form instanceof HTMLFormElement)) continue;
-
-		toggle.addEventListener("click", () => {
-			const open = form.hidden;
-			form.hidden = !open;
-			toggle.setAttribute("aria-expanded", String(open));
-			if (open) {
-				form.querySelector<HTMLInputElement>('input[name="title"]')?.focus();
-			}
-		});
 	}
 </script>
