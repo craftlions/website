@@ -233,9 +233,11 @@ const sentence = (word: string) =>
 // A number with optional thousands or decimal separators and an optional
 // "k": with both "." and ",", the last one is the decimal separator; with
 // one kind, groups of exactly three digits are thousands and one separator
-// before one or two digits is a decimal point. Anything else is not a number.
+// before one or two digits is a decimal point. A leading zero before another
+// digit, as in "0012", marks an identifier, not a number; "0,50" is one.
+// Anything else is not a number.
 const parseNumber = (text: string) => {
-	const match = /^(\d[\d.,]*)(k?)$/i.exec(text);
+	const match = /^(?!0\d)(\d[\d.,]*)(k?)$/i.exec(text);
 	if (!match?.[1]) return undefined;
 	const body = match[1];
 	const factor = match[2] ? 1000 : 1;
@@ -502,7 +504,7 @@ export const parseQuery = (
 				index++;
 				continue;
 			}
-			// A bare number stays text, so "0012" finds invoice ABCD-0012.
+			// A bare number stays text, so "1200" also finds titles and numbers.
 			if (!amount.bare) {
 				setAmount(amount.amount, amount.currency);
 				continue;
