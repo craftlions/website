@@ -4,6 +4,7 @@ import ActionBanner from "../components/ActionBanner.astro";
 import Badge from "../components/Badge.astro";
 import Breadcrumbs from "../components/Breadcrumbs.astro";
 import Button from "../components/Button.astro";
+import Checkbox from "../components/Checkbox.astro";
 import ConfirmAction from "../components/ConfirmAction.astro";
 import DisclosureButton from "../components/DisclosureButton.astro";
 import Field from "../components/Field.astro";
@@ -279,6 +280,8 @@ const typeRoles = [
 								hint="Locked: shown, not edited."
 							/>
 							<Field label="Disabled" disabled value="Disabled" />
+							<Checkbox>Unchecked</Checkbox>
+							<Checkbox checked>Checked</Checkbox>
 						</section>
 
 						<section class="grid gap-3">

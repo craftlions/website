@@ -1,0 +1,28 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends Omit<HTMLAttributes<"input">, "type"> {}
+
+const { class: className, ...attrs } = Astro.props;
+---
+
+<label
+	class:list={[
+		"grid w-max cursor-pointer grid-flow-col items-center gap-2 text-label text-fg-muted select-none",
+		className,
+	]}
+>
+	<span class="grid">
+		<input
+			type="checkbox"
+			class="peer col-start-1 row-start-1 size-4 cursor-pointer appearance-none border border-dashed border-line-control bg-transparent checked:bg-ink"
+			{...attrs}
+		>
+		{/* The tick is the surface color cut to shape, so it follows the scheme. */}
+		<span
+			aria-hidden="true"
+			class="pointer-events-none invisible col-start-1 row-start-1 size-3 place-self-center bg-canvas mask-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')] mask-contain mask-no-repeat peer-checked:visible"
+		></span>
+	</span>
+	<slot />
+</label>

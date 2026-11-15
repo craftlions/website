@@ -4,6 +4,7 @@ export const prerender = false;
 import type { projectSelectType } from "../../../lib/schema.ts";
 import { isAPIError } from "better-auth/api";
 import Badge from "../../../components/Badge.astro";
+import Checkbox from "../../../components/Checkbox.astro";
 import ClientPhaseBanner from "../../../components/ClientPhaseBanner.astro";
 import ClientWorklist from "../../../components/ClientWorklist.astro";
 import CostSplit from "../../../components/CostSplit.astro";
@@ -240,15 +241,7 @@ const worklist = deriveClientWorklist({
 		>
 			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
 				<h2 id="projects-heading" class="label-caps"> Projects </h2>
-				{completedProjectCount > 0 && (
-					<label class="grid cursor-pointer grid-flow-col items-center gap-2 text-label text-fg-muted select-none">
-						<input
-							type="checkbox"
-							class="size-4 cursor-pointer appearance-none border border-dashed border-line-control bg-transparent checked:bg-ink checked:bg-[length:0.75rem] checked:bg-center checked:bg-no-repeat checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')] dark:checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')]"
-						/>
-						<span>Hide completed</span>
-					</label>
-				)}
+				{completedProjectCount > 0 && <Checkbox>Hide completed</Checkbox>}
 			</div>
 			{projects.length > 0 ? (
 				<div class="overflow-x-auto border border-dashed border-line">
