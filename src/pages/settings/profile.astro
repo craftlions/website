@@ -23,15 +23,13 @@ if (!session) {
 	const linkGitHubButton = document.getElementById("link-github");
 
 	linkGitHubButton?.addEventListener("click", async () => {
-		const { data, error } = await authClient.linkSocial({
+		const { error } = await authClient.linkSocial({
 			provider: "github",
 			scopes: ["read:user", "user:email", "repo"],
 			callbackURL: "/settings/profile",
 		});
 		if (error) {
 			console.error("Error linking GitHub account:", error);
-			return;
 		}
-		console.log("GitHub account linked successfully:", data);
 	});
 </script>
