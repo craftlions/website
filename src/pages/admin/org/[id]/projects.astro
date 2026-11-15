@@ -115,13 +115,9 @@ const archivedProjects = projects.filter(
 <AdminOrgShell
 	{organization}
 	activePage="projects"
-	showSuccess={Boolean(actionResult && !actionResult.error)}
+	results={[[actionResult, "Project created"]]}
+	fieldLabels={{ organizationId: "Client", name: "Project name" }}
 >
-	{actionResult?.error && (
-		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
-			{actionResult.error.message}
-		</p>
-	)}
 	<section class="grid gap-4" aria-labelledby="projects-heading">
 		<div class="grid grid-cols-[1fr_auto] items-center gap-3">
 			<h2 id="projects-heading" class="text-label uppercase text-fg-muted"
