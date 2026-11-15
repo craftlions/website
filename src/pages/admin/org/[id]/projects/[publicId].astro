@@ -5,7 +5,6 @@ import { actions } from "astro:actions";
 import Badge from "../../../../../components/Badge.astro";
 import Button from "../../../../../components/Button.astro";
 import ConfirmAction from "../../../../../components/ConfirmAction.astro";
-import CostSplit from "../../../../../components/CostSplit.astro";
 import DeliveryForm from "../../../../../components/DeliveryForm.astro";
 import Input from "../../../../../components/Input.astro";
 import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculator.astro";
@@ -13,11 +12,16 @@ import PhaseTransitionForm from "../../../../../components/PhaseTransitionForm.a
 import ProjectTransitionForm from "../../../../../components/ProjectTransitionForm.astro";
 import AdminOrgShell from "../../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../../lib/admin-org.ts";
-import { formatDate, formatMoney } from "../../../../../lib/format.ts";
+import {
+	formatDate,
+	formatMoney,
+	formatPercent,
+} from "../../../../../lib/format.ts";
 import { buildPhaseComponents } from "../../../../../lib/phase-billing";
 import {
+	costPartLabel,
 	phaseStatus,
-	phaseTransitionsFrom,
+	phaseTransitions,
 	projectStatus,
 } from "../../../../../lib/status.ts";
 
@@ -85,19 +89,21 @@ if (!project) {
 	return Astro.redirect(`/admin/org/${organization.id}/projects`);
 }
 
-// The server completes a project only once every phase is accepted or
-// cancelled (transitionProject in admin-mutations.ts).
+// Accepted and cancelled phases are settled. The server completes a project
+// only once every phase is settled (transitionProject in admin-mutations.ts).
+const settledStates = ["accepted", "cancelled"];
 const openPhaseCount = project.phases.filter(
-	(phase) => !["accepted", "cancelled"].includes(phase.state),
+	(phase) => !settledStates.includes(phase.state),
 ).length;
 
-const phases = project.phases.map((phase) => ({
-	...phase,
-	components: buildPhaseComponents(phase),
-	locked: ["approved", "in_progress", "delivered", "accepted"].includes(
-		phase.state,
-	),
-}));
+// Open phases first, settled ones after; each group keeps creation order.
+const phases = project.phases
+	.map((phase) => ({
+		...phase,
+		components: buildPhaseComponents(phase),
+		settled: settledStates.includes(phase.state),
+	}))
+	.toSorted((a, b) => Number(a.settled) - Number(b.settled));
 ---
 
 <AdminOrgShell
@@ -195,111 +201,285 @@ const phases = project.phases.map((phase) => ({
 		<h3 id="phases-heading" class="text-label uppercase text-fg-muted"
 			>Phases</h3
 		>
-		<ol class="grid border border-dashed border-line">
-			{phases.length > 0 ? (
-				phases.map((phase) => (
-					<li
-						id={`phase-${phase.publicId}`}
-						class="grid scroll-mt-20 gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start"
-					>
-						<div class="grid gap-1">
-							<p class="font-medium wrap-break-word">{phase.title}</p>
-							<p class="text-sm text-fg-muted">
-								{phase.dueAt ? `Due ${formatDate(phase.dueAt)}` : "No due date"}
-							</p>
-							{phase.externalUrl && (
-								<a
-									class="w-max text-sm underline decoration-dashed underline-offset-4"
-									href={phase.externalUrl}
-									rel="noreferrer"
-									target="_blank"
+		<p class="max-w-prose text-sm text-fg-muted">
+			Open phases come first. Each row offers its next step; corrections and
+			cancelling sit under More.
+		</p>
+		{phases.length > 0 ? (
+			<admin-phase-list
+				class="grid border border-dashed border-line lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] lg:gap-x-6"
+				data-reopen={
+					[
+						Astro.getActionResult(actions.transitionPhase),
+						Astro.getActionResult(actions.recordDelivery),
+						Astro.getActionResult(actions.updatePhaseDelivery),
+						Astro.getActionResult(actions.updatePhaseAmounts),
+					].some((result) => result?.error)
+						? "true"
+						: undefined
+				}
+			>
+				<div
+					aria-hidden="true"
+					class="hidden border-b border-dashed border-line px-4 py-3 label-caps lg:col-span-5 lg:grid lg:grid-cols-subgrid"
+				>
+					<span>Phase</span>
+					<span>State</span>
+					<span class="text-right">Amount</span>
+					<span class="col-span-2 text-right">Next step</span>
+				</div>
+				<ul class="grid lg:col-span-5 lg:grid-cols-subgrid">
+					{phases.map((phase) => (
+						<li
+							id={`phase-${phase.publicId}`}
+							class="grid scroll-mt-20 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid lg:items-center"
+							data-phase
+						>
+							<div class="grid min-w-0 gap-1">
+								<h4
+									class:list={[
+										"font-medium wrap-break-word",
+										phase.settled ? "text-fg-muted" : undefined,
+										phase.state === "cancelled" && "line-through",
+									]}
 								>
-									External link
-								</a>
-							)}
-							{phase.deliveryState === "url" && phase.deliveryUrl && (
-								<a
-									class="w-max text-sm underline decoration-dashed underline-offset-4"
-									href={phase.deliveryUrl}
-									rel="noreferrer"
-									target="_blank"
+									{phase.title}
+								</h4>
+								<p class="text-sm text-fg-muted">
+									{phase.dueAt
+										? `Due ${formatDate(phase.dueAt)}`
+										: "No due date"}
+								</p>
+								{phase.externalUrl && (
+									<a
+										class="w-max text-sm underline decoration-dashed underline-offset-4"
+										href={phase.externalUrl}
+										rel="noopener noreferrer"
+										target="_blank"
+										aria-label={`Open Epic for ${phase.title}`}
+									>
+										Epic
+									</a>
+								)}
+								{phase.deliveryState === "url" && phase.deliveryUrl ? (
+									<a
+										class="w-max text-sm underline decoration-dashed underline-offset-4"
+										href={phase.deliveryUrl}
+										rel="noopener noreferrer"
+										target="_blank"
+										aria-label={`Open delivery for ${phase.title}`}
+									>
+										Delivery
+									</a>
+								) : (
+									phase.deliveryState === "none" && (
+										<p class="text-sm text-fg-muted">
+											Delivered without a PR/MR
+										</p>
+									)
+								)}
+							</div>
+							<Badge type={phaseStatus[phase.state].badge}>
+								{phaseStatus[phase.state].label}
+							</Badge>
+							<div class="grid gap-1 lg:w-48 lg:justify-items-end lg:text-right">
+								<p
+									class:list={[
+										"font-medium tabular-nums wrap-break-word",
+										phase.settled ? "text-fg-muted" : undefined,
+									]}
 								>
-									Delivery
-								</a>
-							)}
-							{phase.deliveryState === "none" && (
-								<p class="text-sm text-fg-muted">Delivered without PR/MR</p>
-							)}
-						</div>
-						<Badge type={phaseStatus[phase.state].badge}>
-							{phaseStatus[phase.state].label}
-						</Badge>
-						<div class="grid min-w-52 gap-1.5 md:justify-items-end md:text-right">
-							<p class="font-medium tabular-nums">
-								{formatMoney(phase.cost, phase.currency)}
-							</p>
-							{phase.components.length > 0 && (
-								<div class="w-full max-w-64">
-									<CostSplit
-										items={phase.components}
-										currency={phase.currency}
-										total={phase.cost}
-									/>
-								</div>
-							)}
-						</div>
-						<div class="grid grid-flow-col items-center justify-start gap-4 md:justify-self-end">
-							{phaseTransitionsFrom(phase.state).map((nextState) => (
+									{formatMoney(phase.cost, phase.currency)}
+								</p>
+								{phase.components.length > 0 ? (
+									<ul
+										class="grid gap-0.5 text-xs tabular-nums text-fg-muted wrap-break-word"
+										aria-label={`Cost split of ${phase.title}`}
+									>
+										{phase.components.map((part) => (
+											<li>
+												{costPartLabel[part.component]}
+												{phase.cost > 0 &&
+													` ${formatPercent((part.amount / phase.cost) * 100)}`}
+												{" · "}
+												{formatMoney(part.amount, phase.currency)}
+											</li>
+										))}
+									</ul>
+								) : (
+									<p class="text-xs text-fg-muted">Nothing to bill</p>
+								)}
+							</div>
+							{(phase.state === "submitted" || phase.state === "approved") && (
 								<PhaseTransitionForm
 									{phase}
-									{nextState}
-									button={{
-										variant: nextState === "cancelled" ? "quiet" : "default",
-									}}
+									nextState={
+										phase.state === "submitted" ? "planned" : "in_progress"
+									}
+									class="lg:col-start-4 lg:justify-self-end"
 								/>
-							))}
-						</div>
-						{phase.state === "in_progress" && (
-							<details class="grid gap-3 md:col-span-4">
-								<Button as="summary" variant="quiet">
-									Record delivery
-								</Button>
-								<DeliveryForm mode="record" {phase} />
-							</details>
-						)}
-						{!phase.locked && phase.state !== "cancelled" && (
-							<details class="grid gap-3 md:col-span-4">
-								<Button as="summary" variant="quiet">
-									Edit cost split
-								</Button>
+							)}
+							{(phase.state === "planned" || phase.state === "delivered") && (
 								<form
 									method="POST"
-									action={actions.updatePhaseAmounts}
-									class="grid gap-3 border border-dashed border-line p-4"
+									action={actions.transitionPhase}
+									class="lg:col-start-4 lg:justify-self-end"
 								>
-									<input type="hidden" name="phaseId" value={phase.id} />
+									<input type="hidden" name="phaseId" value={phase.id}>
+									<input
+										type="hidden"
+										name="nextState"
+										value={phase.state === "planned" ? "approved" : "accepted"}
+									>
 									<input
 										type="hidden"
 										name="expectedVersion"
 										value={phase.version}
-									/>
-									<PhaseAmountCalculator
-										cost={phase.cost}
-										currency={phase.currency}
-										upfrontAmount={phase.upfrontAmount}
-										deliveryAmount={phase.deliveryAmount}
-										acceptanceAmount={phase.acceptanceAmount}
-									/>
-									<Button type="submit">Save cost split</Button>
+									>
+									{phase.state === "planned" ? (
+										<ConfirmAction
+											id={`approve-${phase.publicId}`}
+											trigger={phaseTransitions.approved.label}
+											triggerLabel={`${phaseTransitions.approved.label}: ${phase.title}`}
+											title={`Approve ${phase.title} for the client?`}
+											confirm={phaseTransitions.approved.label}
+											cancel="Go back"
+										>
+											You approve on the client's behalf, as if they had
+											approved it themselves. The phase becomes ready to start,
+											its cost split locks, and any Upfront part becomes due for
+											invoicing.
+										</ConfirmAction>
+									) : (
+										<ConfirmAction
+											id={`accept-${phase.publicId}`}
+											trigger={phaseTransitions.accepted.label}
+											triggerLabel={`${phaseTransitions.accepted.label}: ${phase.title}`}
+											title={`Record acceptance of ${phase.title}?`}
+											confirm={phaseTransitions.accepted.label}
+											cancel="Go back"
+										>
+											You accept the delivery on the client's behalf, as if they
+											had accepted it themselves. The phase becomes accepted and
+											any Acceptance part becomes due for invoicing.
+										</ConfirmAction>
+									)}
 								</form>
-							</details>
-						)}
-					</li>
-				))
-			) : (
-				<li class="p-4 text-sm text-fg-muted">No phases yet.</li>
-			)}
-		</ol>
+							)}
+							{phase.state === "in_progress" && (
+								<Button
+									class="lg:col-start-4 lg:justify-self-end"
+									aria-label={`Record delivery: ${phase.title}`}
+									aria-expanded="false"
+									aria-controls={`phase-${phase.publicId}-more`}
+									data-phase-toggle
+								>
+									Record delivery
+								</Button>
+							)}
+							{["submitted", "planned", "delivered", "accepted"].includes(
+								phase.state,
+							) && (
+								<Button
+									variant="quiet"
+									class="group lg:col-start-5 lg:justify-self-end"
+									aria-label={`More for ${phase.title}`}
+									aria-expanded="false"
+									aria-controls={`phase-${phase.publicId}-more`}
+									data-phase-toggle
+								>
+									More
+									<svg
+										aria-hidden="true"
+										viewBox="0 0 12 12"
+										class="inline size-3 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
+									>
+										<path
+											d="M2.5 4.5 6 8l3.5-3.5"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="1.5"
+										/>
+									</svg>
+								</Button>
+							)}
+							{!["approved", "cancelled"].includes(phase.state) && (
+								<div
+									id={`phase-${phase.publicId}-more`}
+									class="grid gap-4 border-t border-dashed border-line pt-4 lg:col-span-5"
+									hidden
+									data-phase-panel
+								>
+									{phase.state === "in_progress" && (
+										<DeliveryForm mode="record" {phase} />
+									)}
+									{(phase.state === "delivered" ||
+										phase.state === "accepted") && (
+										<DeliveryForm mode="edit" {phase} />
+									)}
+									{(phase.state === "submitted" ||
+										phase.state === "planned") && (
+										<>
+											<form
+												method="POST"
+												action={actions.updatePhaseAmounts}
+												class="grid justify-items-start gap-3 border border-dashed border-line p-4"
+											>
+												<input type="hidden" name="phaseId" value={phase.id}>
+												<input
+													type="hidden"
+													name="expectedVersion"
+													value={phase.version}
+												>
+												<PhaseAmountCalculator
+													cost={phase.cost}
+													currency={phase.currency}
+													upfrontAmount={phase.upfrontAmount}
+													deliveryAmount={phase.deliveryAmount}
+													acceptanceAmount={phase.acceptanceAmount}
+												/>
+												<Button
+													type="submit"
+													aria-label={`Save cost split: ${phase.title}`}
+												>
+													Save cost split
+												</Button>
+											</form>
+											<form method="POST" action={actions.transitionPhase}>
+												<input type="hidden" name="phaseId" value={phase.id}>
+												<input type="hidden" name="nextState" value="cancelled">
+												<input
+													type="hidden"
+													name="expectedVersion"
+													value={phase.version}
+												>
+												<ConfirmAction
+													id={`cancel-${phase.publicId}`}
+													trigger={phaseTransitions.cancelled.label}
+													triggerLabel={`${phaseTransitions.cancelled.label}: ${phase.title}`}
+													triggerVariant="quiet"
+													title={`Cancel ${phase.title}?`}
+													confirm={phaseTransitions.cancelled.label}
+													cancel="Keep phase"
+												>
+													Cancelling is final: the phase cannot be restarted,
+													the client can no longer approve it, and it stops
+													counting toward the project's estimated cost.
+												</ConfirmAction>
+											</form>
+										</>
+									)}
+								</div>
+							)}
+						</li>
+					))}
+				</ul>
+			</admin-phase-list>
+		) : (
+			<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+				No phases yet. Add the first phase, then send it to the client.
+			</p>
+		)}
 		<details class="grid gap-3">
 			<Button as="summary">Add phase</Button>
 			<form
@@ -342,3 +522,113 @@ const phases = project.phases.map((phase) => ({
 		</details>
 	</section>
 </AdminOrgShell>
+
+<script>
+	// Deep links (`#phase-<publicId>`, from the worklist and invoices) and the
+	// row an action was just submitted from are marked with a background tint
+	// plus a non-color outline cue, without motion. A deep-linked row opens its
+	// More panel; a submitted row reopens it only when the action failed, so
+	// the form is back in view next to the error.
+	const highlightClasses = [
+		"outline-2",
+		"-outline-offset-2",
+		"outline-dashed",
+		"outline-fill-info/70",
+		"bg-info-subtle",
+	];
+	const submittedKey = "admin-phase-submitted";
+
+	class AdminPhaseList extends HTMLElement {
+		currentTarget: HTMLElement | null = null;
+
+		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
+			for (const toggle of this.querySelectorAll<HTMLButtonElement>(
+				"[data-phase-toggle]",
+			)) {
+				toggle.addEventListener("click", () => {
+					this.setExpanded(
+						toggle.getAttribute("aria-controls") ?? "",
+						toggle.getAttribute("aria-expanded") !== "true",
+					);
+				});
+			}
+
+			// Runs after ConfirmAction's own listener on the form, so a submit it
+			// holds back for its dialog is not recorded.
+			this.addEventListener("submit", (event) => {
+				if (event.defaultPrevented || !(event.target instanceof Element)) {
+					return;
+				}
+				const row = event.target.closest("[data-phase]");
+				if (!row) return;
+				try {
+					sessionStorage.setItem(
+						submittedKey,
+						JSON.stringify({
+							id: row.id,
+							inPanel: event.target.closest("[data-phase-panel]") !== null,
+							at: Date.now(),
+						}),
+					);
+				} catch {}
+			});
+
+			let submitted: { id?: string; inPanel?: boolean; at?: number } | null =
+				null;
+			try {
+				submitted = JSON.parse(sessionStorage.getItem(submittedKey) ?? "null");
+				sessionStorage.removeItem(submittedKey);
+			} catch {}
+
+			// Action results live for a minute; an older entry is stale.
+			const row =
+				submitted && Date.now() - (submitted.at ?? 0) < 60_000
+					? document.getElementById(submitted.id ?? "")
+					: null;
+			if (row && this.contains(row)) {
+				this.mark(row, this.dataset.reopen === "true" && !!submitted?.inPanel);
+			} else {
+				this.applyHash();
+			}
+			window.addEventListener("hashchange", () => this.applyHash());
+		}
+
+		setExpanded(panelId: string, expanded: boolean) {
+			for (const toggle of this.querySelectorAll(
+				`[aria-controls="${CSS.escape(panelId)}"]`,
+			)) {
+				toggle.setAttribute("aria-expanded", String(expanded));
+			}
+			const panel = document.getElementById(panelId);
+			if (panel) panel.hidden = !expanded;
+		}
+
+		mark(row: HTMLElement, open: boolean) {
+			this.currentTarget?.classList.remove(...highlightClasses);
+			row.classList.add(...highlightClasses);
+			this.currentTarget = row;
+			if (open) this.setExpanded(`${row.id}-more`, true);
+		}
+
+		applyHash() {
+			const target = document.getElementById(location.hash.slice(1));
+			if (
+				target instanceof HTMLElement &&
+				this.contains(target) &&
+				target.matches("[data-phase]")
+			) {
+				this.mark(target, true);
+			} else {
+				this.currentTarget?.classList.remove(...highlightClasses);
+				this.currentTarget = null;
+			}
+		}
+	}
+
+	if (!customElements.get("admin-phase-list")) {
+		customElements.define("admin-phase-list", AdminPhaseList);
+	}
+</script>
