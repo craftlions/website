@@ -278,32 +278,39 @@ const typeRoles = [
 
 						<section class="grid gap-3">
 							<h3 class="text-title">Confirmation</h3>
-							<form method="dialog" class="grid gap-2">
+							<form method="dialog">
 								<ConfirmAction
 									id={`confirm-${scheme}`}
 									trigger="Remove"
 									triggerLabel="Remove Jane Doe"
 									title="Remove Jane Doe from Acme?"
 									confirm="Remove member"
+									cancel="Keep member"
 								>
 									Jane loses access to the Acme dashboard. Her account stays.
 								</ConfirmAction>
+							</form>
+							<form method="dialog">
 								<ConfirmAction
 									id={`confirm-approve-${scheme}`}
 									trigger="Approve for client"
 									title="Approve Discovery for the client?"
 									confirm="Approve for client"
 									confirmVariant="default"
+									cancel="Go back"
 								>
 									You approve this phase on the client's behalf. Its upfront
 									payment becomes due.
 								</ConfirmAction>
+							</form>
+							<form method="dialog">
 								<ConfirmAction
 									id={`confirm-typed-${scheme}`}
 									trigger="Delete client"
 									triggerVariant="danger"
 									title="Delete Acme?"
 									confirm="Delete client"
+									cancel="Keep client"
 									typeToConfirm="Acme"
 								>
 									The client and its settings are deleted for good.
