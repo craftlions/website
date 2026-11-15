@@ -4,7 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
-import Input from "../../../../components/Input.astro";
+import Field from "../../../../components/Field.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import { sumByCurrency } from "../../../../lib/format.ts";
@@ -136,6 +136,11 @@ const groups = [
 		rows: rows.filter((row) => row.state === "archived"),
 	},
 ];
+
+// The form starts open after a failed create and when there is nothing to
+// list yet, so the first project is one step away.
+const isCreateOpen =
+	Boolean(actionResult?.error) || groups[0]?.rows.length === 0;
 ---
 
 <AdminOrgShell
@@ -156,31 +161,52 @@ const groups = [
 			>
 				{!archived && (
 					<>
-						<h2
-							id="projects-heading"
-							class="text-label uppercase text-fg-muted"
-						>
-							Projects
-						</h2>
-						<details class="grid gap-3">
-							<Button as="summary">New project</Button>
-							<form
-								method="POST"
-								action={actions.createProject}
-								class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end"
+						<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+							<h2
+								id="projects-heading"
+								class="text-label uppercase text-fg-muted"
 							>
-								<input
-									type="hidden"
-									name="organizationId"
-									value={organization.id}
-								>
-								<label class="grid gap-1 text-sm">
-									<span class="font-medium">Project name</span>
-									<Input name="name" required />
-								</label>
+								Projects
+							</h2>
+							<Button
+								aria-expanded={isCreateOpen ? "true" : "false"}
+								aria-controls="new-project"
+								data-new-project-toggle
+							>
+								New project
+							</Button>
+						</div>
+						<form
+							id="new-project"
+							method="POST"
+							action={actions.createProject}
+							aria-label="New project"
+							hidden={!isCreateOpen}
+							class="grid gap-3 border border-dashed border-line p-4"
+						>
+							<input
+								type="hidden"
+								name="organizationId"
+								value={organization.id}
+							>
+							<Field
+								label="Project name"
+								name="name"
+								required
+								maxlength={160}
+								autocomplete="off"
+								autofocus={Boolean(actionResult?.error)}
+								hint="Starts as a draft. Add its phases on the project page, then activate it."
+								result={actionResult}
+								class="max-w-md"
+							/>
+							<div class="grid grid-flow-col items-center justify-start gap-3">
 								<Button type="submit">Create project</Button>
-							</form>
-						</details>
+								<Button variant="quiet" data-new-project-cancel>
+									Cancel
+								</Button>
+							</div>
+						</form>
 					</>
 				)}
 				<Disclosure class={archived ? "grid gap-3" : undefined}>
@@ -281,7 +307,7 @@ const groups = [
 						<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
 							{groups[1]?.rows.length
 								? "No current projects. Archived projects are listed below."
-								: "No projects yet. Create the first one with New project; it starts as a draft you can add phases to."}
+								: "No projects yet. Name the first one above to start it as a draft."}
 						</p>
 					)}
 				</Disclosure>
@@ -289,3 +315,34 @@ const groups = [
 		);
 	})}
 </AdminOrgShell>
+
+<script>
+	// "New project" discloses the create form and puts the cursor in its name
+	// field; Cancel clears and closes it and returns focus to the toggle.
+	const toggle = document.querySelector<HTMLButtonElement>(
+		"[data-new-project-toggle]",
+	);
+	const form = document.querySelector<HTMLFormElement>("#new-project");
+	const name = form?.querySelector<HTMLInputElement>('input[name="name"]');
+
+	if (toggle && form && name) {
+		const setOpen = (open: boolean) => {
+			toggle.setAttribute("aria-expanded", String(open));
+			form.hidden = !open;
+		};
+
+		toggle.addEventListener("click", () => {
+			const open = toggle.getAttribute("aria-expanded") !== "true";
+			setOpen(open);
+			if (open) name.focus();
+		});
+
+		form
+			.querySelector("[data-new-project-cancel]")
+			?.addEventListener("click", () => {
+				form.reset();
+				setOpen(false);
+				toggle.focus();
+			});
+	}
+</script>
