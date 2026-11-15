@@ -9,6 +9,11 @@ import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import {
+	formatDate,
+	formatMoney,
+	sumByCurrency,
+} from "../../../../lib/format.ts";
+import {
 	buildPhaseComponents,
 	invoiceComponents,
 	isInvoiceComponentDue,
@@ -155,30 +160,13 @@ const suggestedTargetValue = (invoice: (typeof unattachedInvoices)[number]) => {
 const now = new Date();
 const defaultCurrency =
 	allPhases[0]?.currency ?? unattachedInvoices[0]?.currency ?? "EUR";
-const formatCurrency = (amount: number, currency: string) =>
-	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
-		amount,
-	);
-const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
-
-const sumByCurrency = (
-	items: ReadonlyArray<{ amount: number; currency: string }>,
-) => {
-	const sums = new Map<string, number>();
-	for (const item of items) {
-		sums.set(item.currency, (sums.get(item.currency) ?? 0) + item.amount);
-	}
-	if (sums.size === 0) return formatCurrency(0, defaultCurrency);
-	return [...sums]
-		.map(([currency, total]) => formatCurrency(total, currency))
-		.join(" + ");
-};
 
 const totalInvoiced = sumByCurrency(
 	recordedTargets.map((t) => ({
 		amount: t.invoice.total,
 		currency: t.invoice.currency,
 	})),
+	defaultCurrency,
 );
 const totalOutstanding = sumByCurrency(
 	recordedTargets
@@ -187,6 +175,7 @@ const totalOutstanding = sumByCurrency(
 			amount: t.invoice.total,
 			currency: t.invoice.currency,
 		})),
+	defaultCurrency,
 );
 const overdueTargets = recordedTargets.filter(
 	(t) =>
@@ -197,6 +186,7 @@ const totalOverdue = sumByCurrency(
 		amount: t.invoice.total,
 		currency: t.invoice.currency,
 	})),
+	defaultCurrency,
 );
 const totalPaid = sumByCurrency(
 	recordedTargets
@@ -205,8 +195,9 @@ const totalPaid = sumByCurrency(
 			amount: t.invoice.total,
 			currency: t.invoice.currency,
 		})),
+	defaultCurrency,
 );
-const totalDueToBill = sumByCurrency(attachableTargets);
+const totalDueToBill = sumByCurrency(attachableTargets, defaultCurrency);
 
 // Invoiced and due-to-bill totals grouped by cost part and currency so all
 // three types stay visible in the summary, not just the grand totals.
@@ -494,7 +485,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 															"font-semibold text-fg-danger",
 													]}
 												>
-													due {dateFormatter.format(invoice.dueAt)}
+													due {formatDate(invoice.dueAt)}
 													{invoice.status === "open" &&
 														invoice.dueAt < now &&
 														" (overdue)"}
@@ -504,13 +495,13 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 										{invoice.paidAt && (
 											<>
 												<span> · </span>
-												<span>paid {dateFormatter.format(invoice.paidAt)}</span>
+												<span>paid {formatDate(invoice.paidAt)}</span>
 											</>
 										)}
 									</p>
 								</div>
 								<p class="font-medium tabular-nums md:text-right">
-									{formatCurrency(invoice.total, invoice.currency)}
+									{formatMoney(invoice.total, invoice.currency)}
 								</p>
 								{guidance.canAttach ? (
 									<form
@@ -532,7 +523,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 												>
 													{target.project.name} · {target.title} ·{" "}
 													{target.component} ·{" "}
-													{formatCurrency(target.amount, target.currency)}
+													{formatMoney(target.amount, target.currency)}
 													{targetValue(target) === suggested
 														? " (suggested)"
 														: ""}
@@ -582,7 +573,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 							</div>
 							<div class="grid gap-1 md:justify-items-end md:text-right">
 								<p class="font-medium tabular-nums">
-									{formatCurrency(target.amount, target.currency)}
+									{formatMoney(target.amount, target.currency)}
 								</p>
 								<Badge type="info">
 									{componentLabel[target.component] ?? target.component}
@@ -676,7 +667,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 														status.isOverdue && "font-semibold text-fg-danger",
 													]}
 												>
-													due {dateFormatter.format(target.invoice.dueAt)}
+													due {formatDate(target.invoice.dueAt)}
 													{status.isOverdue && " (overdue)"}
 												</span>
 											</>
@@ -684,9 +675,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 										{target.invoice.paidAt && (
 											<>
 												<span> · </span>
-												<span>
-													paid {dateFormatter.format(target.invoice.paidAt)}
-												</span>
+												<span>paid {formatDate(target.invoice.paidAt)}</span>
 											</>
 										)}
 									</p>
@@ -711,11 +700,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 								<Badge type={status.type}>{status.label}</Badge>
 								<div class="grid gap-1 md:text-right">
 									<p class="font-medium tabular-nums">
-										{formatCurrency(target.invoice.total, target.currency)}
+										{formatMoney(target.invoice.total, target.currency)}
 									</p>
 									{target.invoice.total !== target.amount && (
 										<p class="text-xs text-fg-warning">
-											Expected {formatCurrency(target.amount, target.currency)}
+											Expected {formatMoney(target.amount, target.currency)}
 										</p>
 									)}
 								</div>

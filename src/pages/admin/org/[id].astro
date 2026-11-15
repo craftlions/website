@@ -18,6 +18,7 @@ import {
 	deriveBudgetConsumption,
 	getSpendByYear,
 } from "../../../lib/budget-consumption.ts";
+import { formatMoney, formatPercent } from "../../../lib/format.ts";
 import {
 	invoices,
 	member,
@@ -172,10 +173,6 @@ const { usagePercentage } = deriveBudgetConsumption(spendRows, yearlyBudget);
 // R7: "Budget used" shows a one-decimal uncapped percentage only when there
 // is a positive yearly budget; otherwise "No budget" with no percentage.
 const hasBudget = yearlyBudget > 0;
-const currencyFormatter = new Intl.NumberFormat("de-DE", {
-	style: "currency",
-	currency: "EUR",
-});
 const sections = [
 	{
 		label: "Worklist",
@@ -216,13 +213,13 @@ const sections = [
 						"text-title tabular-nums",
 						hasBudget && usagePercentage > 100 && "text-fg-danger",
 					]}
-					>{hasBudget ? `${usagePercentage.toFixed(1)}%` : "No budget"}</dd
+					>{hasBudget ? formatPercent(usagePercentage) : "No budget"}</dd
 				>
 			</div>
 			<div class="grid content-start gap-1">
 				<dt class="label-caps">Open invoices</dt>
 				<dd class="text-title tabular-nums"
-					>{currencyFormatter.format(organization.openInvoiceTotal)}</dd
+					>{formatMoney(organization.openInvoiceTotal, "EUR")}</dd
 				>
 				{openByPart.length > 0 && (
 					<dd>

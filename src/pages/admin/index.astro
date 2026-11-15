@@ -13,6 +13,7 @@ import {
 	deriveBudgetConsumption,
 	getSpendByYear,
 } from "../../lib/budget-consumption.ts";
+import { formatMoney, formatPercent } from "../../lib/format.ts";
 import { buildPhaseComponents } from "../../lib/phase-billing.ts";
 import { hasStripeRow, stripeInvoiceFields } from "../../lib/stripe.ts";
 import { getUuidV7Date } from "../../lib/uuid.ts";
@@ -84,14 +85,6 @@ const organizationsWithSpend = await Promise.all(
 );
 
 const now = new Date();
-const currencyFormatter = new Intl.NumberFormat("de-DE", {
-	style: "currency",
-	currency: "EUR",
-});
-const formatAmount = (amount: number, currency: string) =>
-	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
-		amount,
-	);
 const componentLabel: Record<string, string> = {
 	upfront: "Upfront",
 	delivery: "Delivery",
@@ -326,9 +319,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 				<dl class="grid grid-flow-col justify-start gap-8 text-sm">
 					<div class="grid content-start gap-1">
 						<dt class="label-caps">Outstanding</dt>
-						<dd class="tabular-nums"
-							>{currencyFormatter.format(outstandingTotal)}</dd
-						>
+						<dd class="tabular-nums">{formatMoney(outstandingTotal, "EUR")}</dd>
 						{outstandingPartItems.length > 0 && (
 							<dd class="max-w-56">
 								<CostSplit
@@ -386,7 +377,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 								<div class="grid min-w-48 gap-1.5 sm:justify-items-end">
 									<div class="grid grid-flow-col items-center justify-start gap-2 sm:justify-end">
 										<p class="text-sm font-medium tabular-nums">
-											{formatAmount(item.amount, item.currency)}
+											{formatMoney(item.amount, item.currency)}
 										</p>
 										{item.component && componentLabel[item.component] && (
 											<Badge type="info">
@@ -506,7 +497,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 																"text-fg-danger",
 														]}
 													>
-														{organization.budgetUsage.toFixed(1)}%
+														{formatPercent(organization.budgetUsage)}
 													</span>
 												</div>
 											)}
@@ -514,7 +505,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 										<td class="px-4 py-3">
 											<div class="grid justify-items-end gap-1.5">
 												<p class="tabular-nums">
-													{currencyFormatter.format(organization.openInvoices)}
+													{formatMoney(organization.openInvoices, "EUR")}
 												</p>
 												{organization.openByPart.length > 0 && (
 													<div class="w-full min-w-40 max-w-52">
@@ -548,7 +539,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 									<td class="px-4 py-3">
 										<div class="grid justify-items-end gap-1.5">
 											<p class="tabular-nums">
-												{currencyFormatter.format(outstandingTotal)}
+												{formatMoney(outstandingTotal, "EUR")}
 											</p>
 											{outstandingPartItems.length > 0 && (
 												<div class="w-full min-w-40 max-w-52">

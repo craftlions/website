@@ -8,6 +8,7 @@ import Button from "../../../../components/Button.astro";
 import CostSplit from "../../../../components/CostSplit.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
+import { formatMoney } from "../../../../lib/format.ts";
 import {
 	buildPhaseComponents,
 	componentBillingStatus,
@@ -221,10 +222,6 @@ const worklist = allPhases
 			a.priority - b.priority ||
 			daysInPhaseState(b.phase.id) - daysInPhaseState(a.phase.id),
 	);
-const formatAmount = (amount: number, currency: string) =>
-	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
-		amount,
-	);
 const componentLabel: Record<string, string> = {
 	upfront: "Upfront part",
 	delivery: "Delivery part",
@@ -272,7 +269,7 @@ const componentLabel: Record<string, string> = {
 								<>
 									<div class="grid grid-flow-col items-center justify-start gap-2 md:justify-end">
 										<p class="text-sm font-medium tabular-nums">
-											{formatAmount(
+											{formatMoney(
 												item.invoice.stripe.total,
 												item.phase.currency,
 											)}
@@ -309,7 +306,7 @@ const componentLabel: Record<string, string> = {
 							) : (
 								<>
 									<p class="text-sm font-medium tabular-nums md:text-right">
-										{formatAmount(item.phase.cost, item.phase.currency)}
+										{formatMoney(item.phase.cost, item.phase.currency)}
 									</p>
 									<div class="w-full max-w-56">
 										<CostSplit

@@ -8,6 +8,7 @@ import CostSplit from "../../../../components/CostSplit.astro";
 import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
+import { formatMoney } from "../../../../lib/format.ts";
 
 const { id } = Astro.params;
 
@@ -172,10 +173,7 @@ const archivedProjects = projects.filter(
 											? summary.splits.map((split) => (
 													<div class="grid gap-1">
 														<p class="tabular-nums">
-															{new Intl.NumberFormat("de-DE", {
-																style: "currency",
-																currency: split.currency,
-															}).format(split.total)}
+															{formatMoney(split.total, split.currency)}
 														</p>
 														{split.items.length > 0 && (
 															<CostSplit

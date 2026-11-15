@@ -9,6 +9,7 @@ import Input from "../../../../../components/Input.astro";
 import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculator.astro";
 import AdminOrgShell from "../../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../../lib/admin-org.ts";
+import { formatDate, formatMoney } from "../../../../../lib/format.ts";
 import { buildPhaseComponents } from "../../../../../lib/phase-billing";
 
 const { id, publicId } = Astro.params;
@@ -91,8 +92,6 @@ const phases = project.phases.map((phase) => ({
 		phase.state,
 	),
 }));
-
-const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 ---
 
 <AdminOrgShell
@@ -200,7 +199,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 								<p class="font-medium wrap-break-word">{phase.title}</p>
 								<p class="text-sm text-fg-muted">
 									{phase.dueAt
-										? `Due ${dateFormatter.format(phase.dueAt)}`
+										? `Due ${formatDate(phase.dueAt)}`
 										: "No due date"}
 								</p>
 								{phase.externalUrl && (
@@ -240,10 +239,7 @@ const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 							</Badge>
 							<div class="grid min-w-52 gap-1.5 md:justify-items-end md:text-right">
 								<p class="font-medium tabular-nums">
-									{new Intl.NumberFormat("de-DE", {
-										style: "currency",
-										currency: phase.currency,
-									}).format(phase.cost)}
+									{formatMoney(phase.cost, phase.currency)}
 								</p>
 								{phase.components.length > 0 && (
 									<div class="w-full max-w-64">
