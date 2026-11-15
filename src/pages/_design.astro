@@ -45,8 +45,16 @@ const contrast = (hex: string, background: string) => {
 	return (lighter + 0.05) / (darker + 0.05);
 };
 
+// Text needs 4.5:1; focus rings, lines, fills and chart marks are non-text
+// contrast (WCAG 1.4.11) and need 3:1.
 const minimumContrast = (name: string) =>
-	name === "focus" ? 3 : name.startsWith("fg") ? 4.5 : undefined;
+	name.startsWith("fg")
+		? 4.5
+		: ["focus", "line", "fill", "chart"].some((prefix) =>
+					name.startsWith(prefix),
+				)
+			? 3
+			: undefined;
 
 const schemes = (["light", "dark"] as const).map((scheme) => {
 	const values = tokens.map((token) => ({
