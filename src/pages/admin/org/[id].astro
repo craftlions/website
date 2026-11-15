@@ -3,6 +3,7 @@ export const prerender = false;
 
 import { actions } from "astro:actions";
 import AdminWorklist from "../../../components/AdminWorklist.astro";
+import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
 import SpendByYear from "../../../components/SpendByYear.astro";
 import AdminOrgShell from "../../../layouts/AdminOrgShell.astro";
@@ -23,7 +24,13 @@ import {
 	invoiceComponents,
 	isInvoiceComponentDue,
 } from "../../../lib/phase-billing.ts";
-import { isInvoiceOverdue } from "../../../lib/status.ts";
+import {
+	type BadgeType,
+	isInvoiceOverdue,
+	type PhaseState,
+	phaseStatus,
+	projectStatus,
+} from "../../../lib/status.ts";
 import {
 	organizationStripeInvoices,
 	stripeInvoiceFields,
@@ -54,12 +61,14 @@ const [organization, projects, latestStateEventIds, openInvoices, spendRows] =
 			},
 		}),
 		// The worklist page's query, so the preview lists the same items, plus
-		// the delivery and acceptance amounts that "To invoice" adds up.
+		// the project state for the project list and the delivery and
+		// acceptance amounts that "To invoice" adds up.
 		Astro.locals.db.query.projects.findMany({
 			columns: {
 				id: true,
 				publicId: true,
 				name: true,
+				state: true,
 			},
 			with: {
 				phases: {
@@ -134,6 +143,31 @@ const overdueInvoices = openInvoices.filter((invoice) =>
 	isInvoiceOverdue(invoice, now),
 );
 const invoicesHref = `/admin/org/${organization.id}/invoices`;
+const activeProjects = projects
+	.filter((project) => project.state === "active")
+	.map((project) => {
+		const phases = project.phases.filter(
+			(phase) => phase.state !== "cancelled",
+		);
+		// "To send (1), In work (2)": phase states with this badge, in lifecycle
+		// order, labelled from the shared vocabulary, as on the Projects tab.
+		const phaseStates = (badge: BadgeType) =>
+			(Object.keys(phaseStatus) as PhaseState[])
+				.filter((state) => phaseStatus[state].badge === badge)
+				.flatMap((state) => {
+					const count = phases.filter((phase) => phase.state === state).length;
+					return count > 0 ? [`${phaseStatus[state].label} (${count})`] : [];
+				})
+				.join(", ");
+		return {
+			...project,
+			phaseCount: phases.length,
+			acceptedCount: phases.filter((phase) => phase.state === "accepted")
+				.length,
+			needsAdmin: phaseStates("info"),
+			waitingOnClient: phaseStates("gray"),
+		};
+	});
 ---
 
 <AdminOrgShell
@@ -167,140 +201,219 @@ const invoicesHref = `/admin/org/${organization.id}/invoices`;
 			id="overview-worklist"
 		/>
 	</section>
-	<div class="grid min-w-0 content-start gap-6">
-		<section class="grid content-start gap-4" aria-labelledby="money-heading">
-			<div class="grid gap-1">
-				<h2 id="money-heading" class="text-label uppercase text-fg-muted">
-					Money
-				</h2>
-				<p class="max-w-prose text-sm text-fg-muted">
-					Budget for the current calendar year, and invoices waiting for payment
-					or to be sent.
-				</p>
-			</div>
-			<dl class="grid border-t border-dashed border-line">
-				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
-					<dt class="label-caps">Yearly budget</dt>
-					{yearlyBudget > 0 ? (
+	<div
+		class="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-start"
+	>
+		<div class="grid min-w-0 content-start gap-6">
+			<section class="grid content-start gap-4" aria-labelledby="money-heading">
+				<div class="grid gap-1">
+					<h2 id="money-heading" class="text-label uppercase text-fg-muted">
+						Money
+					</h2>
+					<p class="max-w-prose text-sm text-fg-muted">
+						Budget for the current calendar year, and invoices waiting for
+						payment or to be sent.
+					</p>
+				</div>
+				<dl class="grid border-t border-dashed border-line">
+					<div
+						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
+					>
+						<dt class="label-caps">Yearly budget</dt>
+						{yearlyBudget > 0 ? (
+							<dd class="text-title tabular-nums wrap-break-word">
+								{formatMoney(yearlyBudget, "EUR")}
+							</dd>
+						) : (
+							<dd class="grid gap-1 text-sm">
+								<span class="text-fg-muted">No yearly budget set.</span>
+								<Button
+									href={`/admin/org/${organization.id}/settings#billing-heading`}
+									variant="quiet"
+								>
+									Set a budget in settings
+								</Button>
+							</dd>
+						)}
+					</div>
+					<div
+						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
+					>
+						<dt class="label-caps">Invoiced this year</dt>
 						<dd class="text-title tabular-nums wrap-break-word">
-							{formatMoney(yearlyBudget, "EUR")}
-						</dd>
-					) : (
-						<dd class="grid gap-1 text-sm">
-							<span class="text-fg-muted">No yearly budget set.</span>
-							<Button
-								href={`/admin/org/${organization.id}/settings#billing-heading`}
-								variant="quiet"
-							>
-								Set a budget in settings
-							</Button>
-						</dd>
-					)}
-				</div>
-				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
-					<dt class="label-caps">Invoiced this year</dt>
-					<dd class="text-title tabular-nums wrap-break-word">
-						{formatMoney(currentYearTotal, "EUR")}
-					</dd>
-				</div>
-				{yearlyBudget > 0 && (
-					<div class="grid min-w-0 gap-2 border-b border-dashed border-line p-4">
-						<dt class="label-caps">Budget used</dt>
-						<dd
-							class:list={[
-								"text-title tabular-nums",
-								usagePercentage > 100 && "text-fg-danger",
-							]}
-						>
-							{formatPercent(usagePercentage)}
-						</dd>
-						<dd class="grid">
-							<progress
-								aria-label="Budget used"
-								max="100"
-								value={Math.min(usagePercentage, 100)}
-								class:list={[
-									"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
-									usagePercentage > 100
-										? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
-										: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
-								]}
-							>
-								{`${formatPercent(usagePercentage)} used`}
-							</progress>
+							{formatMoney(currentYearTotal, "EUR")}
 						</dd>
 					</div>
-				)}
-				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
-					<dt class="label-caps">Outstanding</dt>
-					<dd class="text-title tabular-nums wrap-break-word">
-						<a
-							href={`${invoicesHref}#invoices`}
-							class="underline decoration-dashed underline-offset-4"
-						>
-							{sumByCurrency(
-								openInvoices.map((invoice) => ({
-									amount: invoice.total,
-									currency: invoice.currency,
-								})),
-							)}
-							<span class="sr-only"> outstanding, see invoices</span>
-						</a>
-					</dd>
-				</div>
-				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
-					<dt class="label-caps">Overdue</dt>
-					<dd
-						class:list={[
-							"text-title tabular-nums wrap-break-word",
-							overdueInvoices.length > 0 && "text-fg-danger",
-						]}
+					{yearlyBudget > 0 && (
+						<div class="grid min-w-0 gap-2 border-b border-dashed border-line p-4">
+							<dt class="label-caps">Budget used</dt>
+							<dd
+								class:list={[
+									"text-title tabular-nums",
+									usagePercentage > 100 && "text-fg-danger",
+								]}
+							>
+								{formatPercent(usagePercentage)}
+							</dd>
+							<dd class="grid">
+								<progress
+									aria-label="Budget used"
+									max="100"
+									value={Math.min(usagePercentage, 100)}
+									class:list={[
+										"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+										usagePercentage > 100
+											? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
+											: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
+									]}
+								>
+									{`${formatPercent(usagePercentage)} used`}
+								</progress>
+							</dd>
+						</div>
+					)}
+					<div
+						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
 					>
-						<a
-							href={`${invoicesHref}#invoices`}
-							class="underline decoration-dashed underline-offset-4"
+						<dt class="label-caps">Outstanding</dt>
+						<dd class="text-title tabular-nums wrap-break-word">
+							<a
+								href={`${invoicesHref}#invoices`}
+								class="underline decoration-dashed underline-offset-4"
+							>
+								{sumByCurrency(
+									openInvoices.map((invoice) => ({
+										amount: invoice.total,
+										currency: invoice.currency,
+									})),
+								)}
+								<span class="sr-only"> outstanding, see invoices</span>
+							</a>
+						</dd>
+					</div>
+					<div
+						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
+					>
+						<dt class="label-caps">Overdue</dt>
+						<dd
+							class:list={[
+								"text-title tabular-nums wrap-break-word",
+								overdueInvoices.length > 0 && "text-fg-danger",
+							]}
 						>
-							{sumByCurrency(
-								overdueInvoices.map((invoice) => ({
-									amount: invoice.total,
-									currency: invoice.currency,
-								})),
-							)}
-							<span class="sr-only"> overdue, see invoices</span>
-						</a>
-					</dd>
-				</div>
-				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
-					<dt class="label-caps">To invoice</dt>
-					<dd class="text-title tabular-nums wrap-break-word">
-						<a
-							href={`${invoicesHref}#to-invoice`}
-							class="underline decoration-dashed underline-offset-4"
-						>
-							{sumByCurrency(
-								projects.flatMap((project) =>
-									project.phases.flatMap((phase) =>
-										invoiceComponents.flatMap((component) => {
-											// A due, priced cost part without an invoice, as
-											// on the Invoices tab.
-											const amount = phase[`${component}Amount`];
-											return amount &&
-												isInvoiceComponentDue(component, phase.state) &&
-												phase.invoices.every(
-													(invoice) => invoice.component !== component,
-												)
-												? [{ amount, currency: phase.currency }]
-												: [];
-										}),
+							<a
+								href={`${invoicesHref}#invoices`}
+								class="underline decoration-dashed underline-offset-4"
+							>
+								{sumByCurrency(
+									overdueInvoices.map((invoice) => ({
+										amount: invoice.total,
+										currency: invoice.currency,
+									})),
+								)}
+								<span class="sr-only"> overdue, see invoices</span>
+							</a>
+						</dd>
+					</div>
+					<div
+						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
+					>
+						<dt class="label-caps">To invoice</dt>
+						<dd class="text-title tabular-nums wrap-break-word">
+							<a
+								href={`${invoicesHref}#to-invoice`}
+								class="underline decoration-dashed underline-offset-4"
+							>
+								{sumByCurrency(
+									projects.flatMap((project) =>
+										project.phases.flatMap((phase) =>
+											invoiceComponents.flatMap((component) => {
+												// A due, priced cost part without an invoice, as
+												// on the Invoices tab.
+												const amount = phase[`${component}Amount`];
+												return amount &&
+													isInvoiceComponentDue(component, phase.state) &&
+													phase.invoices.every(
+														(invoice) => invoice.component !== component,
+													)
+													? [{ amount, currency: phase.currency }]
+													: [];
+											}),
+										),
 									),
-								),
-							)}
-							<span class="sr-only"> to invoice, see due cost parts</span>
-						</a>
-					</dd>
-				</div>
-			</dl>
+								)}
+								<span class="sr-only"> to invoice, see due cost parts</span>
+							</a>
+						</dd>
+					</div>
+				</dl>
+			</section>
+			<SpendByYear rows={spendRows} />
+		</div>
+		<section
+			class="grid min-w-0 content-start gap-3"
+			aria-labelledby="projects-heading"
+		>
+			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+				<h2 id="projects-heading" class="text-label uppercase text-fg-muted">
+					Active projects
+				</h2>
+				{projects.length > 0 && (
+					<Button
+						href={`/admin/org/${organization.id}/projects`}
+						variant="quiet"
+					>
+						All projects ({projects.length})
+					</Button>
+				)}
+			</div>
+			{activeProjects.length > 0 ? (
+				<ul class="grid border border-dashed border-line">
+					{activeProjects.map((project) => (
+						<li class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line p-4 last:border-b-0">
+							<h3 class="min-w-0 font-medium wrap-break-word">
+								<a
+									href={`/admin/org/${organization.id}/projects/${project.publicId}`}
+									class="underline decoration-dashed underline-offset-4"
+								>
+									{project.name}
+								</a>
+							</h3>
+							<Badge type={projectStatus[project.state].badge}>
+								{projectStatus[project.state].label}
+							</Badge>
+							<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm">
+								<dt class="label-caps">Phases</dt>
+								<dd class="tabular-nums wrap-break-word">
+									{project.phaseCount > 0
+										? `${project.acceptedCount} of ${project.phaseCount} accepted`
+										: "None yet"}
+								</dd>
+								{project.needsAdmin && (
+									<>
+										<dt class="label-caps">Needs you</dt>
+										<dd class="wrap-break-word text-fg-info">
+											{project.needsAdmin}
+										</dd>
+									</>
+								)}
+								{project.waitingOnClient && (
+									<>
+										<dt class="label-caps">Waiting on client</dt>
+										<dd class="wrap-break-word">{project.waitingOnClient}</dd>
+									</>
+								)}
+							</dl>
+						</li>
+					))}
+				</ul>
+			) : (
+				<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+					{projects.length > 0
+						? "No active projects. Drafts, completed and archived projects are on the Projects tab."
+						: "No projects yet."}
+				</p>
+			)}
 		</section>
-		<SpendByYear rows={spendRows} />
 	</div>
 </AdminOrgShell>
