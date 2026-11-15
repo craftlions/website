@@ -335,7 +335,24 @@ export const transitionProject = async (
 			project.state === input.nextState &&
 			project.version === input.expectedVersion + 1
 		) {
-			return { idempotent: true };
+			// Activating and reopening both end in `active`; the recorded event
+			// tells which one the retried request was.
+			const recorded = await tx.query.events.findFirst({
+				columns: { event: true },
+				where: {
+					aggregateType: "project",
+					aggregateId: project.id,
+					aggregateVersion: project.version,
+				},
+			});
+
+			return {
+				idempotent: true,
+				event:
+					recorded?.event === "reopened"
+						? ("reopened" as const)
+						: nextProjectEvents[input.nextState],
+			};
 		}
 
 		if (project.version !== input.expectedVersion) {
@@ -392,18 +409,20 @@ export const transitionProject = async (
 			);
 		}
 
+		const event =
+			project.state === "completed" && input.nextState === "active"
+				? ("reopened" as const)
+				: nextProjectEvents[input.nextState];
+
 		await insertEvent(tx, {
 			aggregateType: "project",
 			aggregateId: project.id,
 			aggregateVersion: input.expectedVersion + 1,
-			event:
-				project.state === "completed" && input.nextState === "active"
-					? "reopened"
-					: nextProjectEvents[input.nextState],
+			event,
 			actorId,
 		});
 
-		return { idempotent: false };
+		return { idempotent: false, event };
 	});
 };
 

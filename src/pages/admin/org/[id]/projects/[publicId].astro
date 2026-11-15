@@ -11,6 +11,11 @@ import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculat
 import PhaseTransitionForm from "../../../../../components/PhaseTransitionForm.astro";
 import ProjectTransitionForm from "../../../../../components/ProjectTransitionForm.astro";
 import AdminOrgShell from "../../../../../layouts/AdminOrgShell.astro";
+import {
+	phaseTransitionMessage,
+	projectTransitionMessage,
+	successMessage,
+} from "../../../../../lib/action-feedback.ts";
 import { getAdminOrganizationCore } from "../../../../../lib/admin-org.ts";
 import {
 	formatDate,
@@ -117,15 +122,15 @@ const phases = project.phases
 	activePage="projects"
 	breadcrumbs={[{ label: project.name }]}
 	results={[
-		[
+		successMessage(
 			Astro.getActionResult(actions.transitionProject),
-			`Project is now ${projectStatus[project.state].label.toLowerCase()}.`,
-		],
+			(transition) => projectTransitionMessage[transition.event],
+		),
 		[createResult, "Phase added. Send it to the client when it is ready."],
-		[
+		successMessage(
 			Astro.getActionResult(actions.transitionPhase),
-			"Phase state changed. The highlighted phase shows its new state.",
-		],
+			(phase) => phaseTransitionMessage[phase.state],
+		),
 		[
 			Astro.getActionResult(actions.recordDelivery),
 			"Delivery recorded. The phase now awaits the client's acceptance.",

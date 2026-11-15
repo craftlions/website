@@ -1,11 +1,15 @@
 ---
+import type { BannerMessage } from "../lib/action-feedback.ts";
 import { isInputError, type SafeResult } from "astro:actions";
 
 interface Props {
+	// Each entry pairs an action's result with the message shown when it
+	// succeeded: `[result, "Text"]`, `[result, { text, link }]`, or
+	// `successMessage(result, (data) => …)` to build it from the returned data.
 	results?:
 		| (readonly [
 				result: SafeResult<Record<string, unknown>, unknown> | undefined,
-				success: string,
+				success: BannerMessage,
 		  ])[]
 		| undefined;
 	fieldLabels?: Record<string, string> | undefined;
@@ -51,9 +55,26 @@ if (error?.code === "INTERNAL_SERVER_ERROR") {
 	message && (
 		<p
 			role="status"
-			class="border border-dashed border-line-success p-3 text-sm text-fg-success"
+			class="border border-dashed border-line-success p-3 text-sm text-fg-success wrap-break-word"
 		>
-			{message}
+			{typeof message === "string" ? (
+				message
+			) : (
+				<>
+					{message.text}
+					{message.link && (
+						<>
+							{" "}
+							<a
+								href={message.link.href}
+								class="underline decoration-dashed underline-offset-4"
+							>
+								{message.link.label}
+							</a>
+						</>
+					)}
+				</>
+			)}
 		</p>
 	)
 )}

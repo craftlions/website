@@ -4,6 +4,10 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import AdminWorklist from "../../../../components/AdminWorklist.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
+import {
+	phaseTransitionMessage,
+	successMessage,
+} from "../../../../lib/action-feedback.ts";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import {
 	deriveWorklist,
@@ -72,7 +76,10 @@ if (!organization) {
 	{organization}
 	activePage="worklist"
 	results={[
-		[Astro.getActionResult(actions.transitionPhase), "Phase status changed"],
+		successMessage(
+			Astro.getActionResult(actions.transitionPhase),
+			(phase) => phaseTransitionMessage[phase.state],
+		),
 		[Astro.getActionResult(actions.recordDelivery), "Delivery recorded"],
 	]}
 	fieldLabels={{ deliveryChoice: "Delivery", deliveryUrl: "Delivery URL" }}

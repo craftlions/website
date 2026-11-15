@@ -226,8 +226,12 @@ export const server = {
 			expectedVersion: z.coerce.number().int().nonnegative(),
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
-			await transitionProject(context.locals.db, actorId, input);
-			return { success: true };
+			const { event } = await transitionProject(
+				context.locals.db,
+				actorId,
+				input,
+			);
+			return { projectId: input.projectId, state: input.nextState, event };
 		}),
 	}),
 	createPhase: defineAction({
@@ -279,7 +283,8 @@ export const server = {
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await transitionPhaseAsAdmin(context.locals.db, actorId, input);
-			return { success: true };
+			// A transition only succeeds once the phase is in the requested state.
+			return { phaseId: input.phaseId, state: input.nextState };
 		}),
 	}),
 	recordDelivery: defineAction({

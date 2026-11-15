@@ -7,6 +7,10 @@ import Button from "../../components/Button.astro";
 import Field from "../../components/Field.astro";
 import AdminShell from "../../layouts/AdminShell.astro";
 import {
+	phaseTransitionMessage,
+	successMessage,
+} from "../../lib/action-feedback.ts";
+import {
 	compareWorklistItems,
 	deriveWorklist,
 	getLatestPhaseStateEventIds,
@@ -134,7 +138,10 @@ const openInvoices = ledger.flatMap((client) => client.openInvoices);
 	title="Client workbench"
 	results={[
 		[onboardResult, "Client onboarded. It is listed in the client ledger."],
-		[Astro.getActionResult(actions.transitionPhase), "Phase status changed"],
+		successMessage(
+			Astro.getActionResult(actions.transitionPhase),
+			(phase) => phaseTransitionMessage[phase.state],
+		),
 		[Astro.getActionResult(actions.recordDelivery), "Delivery recorded"],
 	]}
 	fieldLabels={{
