@@ -133,10 +133,7 @@ const amountsInput = submittedValues(
 );
 
 // The phase row the last phase action came from: its data names the phase
-// on success, its submitted `phaseId` on failure. Only that row is marked,
-// and after a failure its More panel reopens when the failed form lives
-// there (every form but the row's transition buttons; of those, only
-// "Cancel phase" sits in the panel).
+// on success, its submitted `phaseId` on failure. Only that row is marked.
 const phaseResult = [
 	Astro.getActionResult(actions.transitionPhase),
 	Astro.getActionResult(actions.recordDelivery),
@@ -148,6 +145,13 @@ const actedPhase = project.phases.find(
 	(phase) =>
 		phase.id === (phaseResult?.data?.phaseId ?? phaseInput?.get("phaseId")),
 );
+// After a failure the row's More panel renders open when the failed form
+// lives there: every form but the row's transition buttons, of which only
+// "Cancel phase" sits in the panel.
+const reopenedPhase =
+	phaseInput && [null, "cancelled"].includes(phaseInput.get("nextState"))
+		? actedPhase
+		: undefined;
 
 // Open phases first, settled ones after; each group keeps creation order.
 const phases = project.phases
@@ -345,12 +349,6 @@ const phases = project.phases
 			<admin-phase-list
 				class="grid border border-dashed border-line lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] lg:gap-x-6"
 				data-acted={actedPhase && `phase-${actedPhase.publicId}`}
-				data-reopen={
-					phaseInput &&
-					[null, "cancelled"].includes(phaseInput.get("nextState"))
-						? "true"
-						: undefined
-				}
 			>
 				<div
 					aria-hidden="true"
@@ -500,48 +498,33 @@ const phases = project.phases
 								</form>
 							)}
 							{phase.state === "in_progress" && (
-								<Button
+								<DisclosureButton
+									controls={`phase-${phase.publicId}-more`}
+									open={phase.id === reopenedPhase?.id}
 									class="lg:col-start-4 lg:justify-self-end"
 									aria-label={`Record delivery: ${phase.title}`}
-									aria-expanded="false"
-									aria-controls={`phase-${phase.publicId}-more`}
-									data-phase-toggle
 								>
 									Record delivery
-								</Button>
+								</DisclosureButton>
 							)}
 							{["submitted", "planned", "delivered", "accepted"].includes(
 								phase.state,
 							) && (
-								<Button
+								<DisclosureButton
+									controls={`phase-${phase.publicId}-more`}
+									open={phase.id === reopenedPhase?.id}
 									variant="quiet"
-									class="group lg:col-start-5 lg:justify-self-end"
+									class="lg:col-start-5 lg:justify-self-end"
 									aria-label={`More for ${phase.title}`}
-									aria-expanded="false"
-									aria-controls={`phase-${phase.publicId}-more`}
-									data-phase-toggle
 								>
 									More
-									<svg
-										aria-hidden="true"
-										viewBox="0 0 12 12"
-										class="inline size-3 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
-									>
-										<path
-											d="M2.5 4.5 6 8l3.5-3.5"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="1.5"
-										/>
-									</svg>
-								</Button>
+								</DisclosureButton>
 							)}
 							{!["approved", "cancelled"].includes(phase.state) && (
 								<div
 									id={`phase-${phase.publicId}-more`}
 									class="grid min-w-0 gap-4 border-t border-dashed border-line pt-4 lg:col-span-5"
-									hidden
-									data-phase-panel
+									hidden={phase.id !== reopenedPhase?.id}
 								>
 									{phase.state === "in_progress" && (
 										<DeliveryForm
@@ -633,9 +616,9 @@ const phases = project.phases
 	// Deep links (`#phase-<publicId>`, from the worklist and invoices) and the
 	// row the last action came from (`data-acted`, set by the server) are
 	// marked with a background tint plus a non-color outline cue, without
-	// motion. A deep-linked row opens its More panel; the acted row reopens it
-	// only when the server says its failed form lives there (`data-reopen`),
-	// so the form is back in view next to the error.
+	// motion. A deep-linked row also opens its More panel, the way its
+	// DisclosureButton does; the server already rendered the acted row's panel
+	// open when its failed form lives there.
 	const highlightClasses = [
 		"outline-2",
 		"-outline-offset-2",
@@ -651,41 +634,19 @@ const phases = project.phases
 			if (this.dataset.initialized === "true") return;
 			this.dataset.initialized = "true";
 
-			for (const toggle of this.querySelectorAll<HTMLButtonElement>(
-				"[data-phase-toggle]",
-			)) {
-				toggle.addEventListener("click", () => {
-					this.setExpanded(
-						toggle.getAttribute("aria-controls") ?? "",
-						toggle.getAttribute("aria-expanded") !== "true",
-					);
-				});
-			}
-
 			const row = document.getElementById(this.dataset.acted ?? "");
 			if (row && this.contains(row)) {
-				this.mark(row, this.dataset.reopen === "true");
+				this.mark(row);
 			} else {
 				this.applyHash();
 			}
 			window.addEventListener("hashchange", () => this.applyHash());
 		}
 
-		setExpanded(panelId: string, expanded: boolean) {
-			for (const toggle of this.querySelectorAll(
-				`[aria-controls="${CSS.escape(panelId)}"]`,
-			)) {
-				toggle.setAttribute("aria-expanded", String(expanded));
-			}
-			const panel = document.getElementById(panelId);
-			if (panel) panel.hidden = !expanded;
-		}
-
-		mark(row: HTMLElement, open: boolean) {
+		mark(row: HTMLElement) {
 			this.currentTarget?.classList.remove(...highlightClasses);
 			row.classList.add(...highlightClasses);
 			this.currentTarget = row;
-			if (open) this.setExpanded(`${row.id}-more`, true);
 		}
 
 		applyHash() {
@@ -695,7 +656,15 @@ const phases = project.phases
 				this.contains(target) &&
 				target.matches("[data-phase]")
 			) {
-				this.mark(target, true);
+				this.mark(target);
+				const panel = document.getElementById(`${target.id}-more`);
+				if (!panel) return;
+				for (const toggle of this.querySelectorAll(
+					`[aria-controls="${CSS.escape(panel.id)}"]`,
+				)) {
+					toggle.setAttribute("aria-expanded", "true");
+				}
+				panel.hidden = false;
 			} else {
 				this.currentTarget?.classList.remove(...highlightClasses);
 				this.currentTarget = null;
