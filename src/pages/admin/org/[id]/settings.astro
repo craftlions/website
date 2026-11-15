@@ -14,13 +14,6 @@ if (!id) {
 	return Astro.redirect("/admin");
 }
 
-const actionResults = [
-	Astro.getActionResult(actions.updateOrganizationSettings),
-	Astro.getActionResult(actions.hardDeleteOrganization),
-];
-const actionError = actionResults.find((result) => result?.error)?.error;
-const actionSucceeded = actionResults.some((result) => result && !result.error);
-
 const organization = await Astro.locals.db.query.organization.findFirst({
 	columns: {
 		id: true,
@@ -83,13 +76,22 @@ if (!organization) {
 <AdminOrgShell
 	{organization}
 	activePage="settings"
-	showSuccess={actionSucceeded}
+	results={[
+		[
+			Astro.getActionResult(actions.updateOrganizationSettings),
+			`Settings for ${organization.name} saved`,
+		],
+		[Astro.getActionResult(actions.hardDeleteOrganization), "Client deleted"],
+	]}
+	fieldLabels={{
+		name: "Name",
+		slug: "Client URL",
+		logo: "Logo URL",
+		yearlyBudget: "Yearly budget",
+		stripeCustomerId: "Stripe customer",
+		confirmation: "Confirmation",
+	}}
 >
-	{actionError && (
-		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
-			{actionError.message}
-		</p>
-	)}
 	<section class="grid gap-6" aria-labelledby="settings-heading">
 		<div class="grid gap-3">
 			<h2 id="settings-heading" class="text-label uppercase text-fg-muted"
