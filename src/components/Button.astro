@@ -2,7 +2,6 @@
 import type { HTMLAttributes } from "astro/types";
 
 interface Props extends HTMLAttributes<"button"> {
-	as?: "summary";
 	href?: string;
 	rel?: string;
 	target?: string;
@@ -10,7 +9,6 @@ interface Props extends HTMLAttributes<"button"> {
 }
 
 const {
-	as,
 	type = "button",
 	class: className,
 	href,
@@ -37,10 +35,6 @@ const buttonClass = [
 	<a href={href} class:list={buttonClass} {...attrs}>
 		<slot />
 	</a>
-) : as === "summary" ? (
-	<summary class:list={["list-none", buttonClass]} {...attrs}>
-		<slot />
-	</summary>
 ) : (
 	<button class:list={buttonClass} type={type} {...attrs}>
 		<slot />
