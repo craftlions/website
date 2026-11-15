@@ -56,8 +56,8 @@ const percentages = [
 	<fieldset class="grid gap-3" aria-describedby={`${id}-rule`}>
 		<legend class="label-caps">Cost split</legend>
 		<p id={`${id}-rule`} class="max-w-prose text-sm text-fg-muted">
-			Set the share billed upfront and on delivery. Acceptance takes the
-			remainder, so leaving both at 0% bills the whole cost on acceptance.
+			Set the shares billed upfront and on delivery; Acceptance always takes the
+			remainder, so the default of 0% and 0% bills the whole cost on acceptance.
 		</p>
 		{parts.map((part, index) => (
 			<div class="grid grid-cols-[minmax(0,1fr)_7rem] items-center gap-x-3 gap-y-0.5">
@@ -75,7 +75,6 @@ const percentages = [
 						step="any"
 						type="number"
 						inputmode="decimal"
-						required
 						value={percentages[index]}
 					/>
 					<span class="text-fg-muted">%</span>
