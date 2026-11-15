@@ -296,8 +296,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 							customer and its invoices in Stripe are not touched
 						</li>
 						<li>
-							{organization.memberCount}
-							{organization.memberCount === 1 ? "membership" : "memberships"}
+							{`${organization.memberCount} ${organization.memberCount === 1 ? "membership" : "memberships"}`}{" "}
 							and any open invitations; the people keep their user accounts but
 							lose access to this client
 						</li>
@@ -314,9 +313,8 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 				>
 					<span class="wrap-anywhere">{organization.name}</span>, its settings,
 					budget, Stripe link and
-					{organization.memberCount}
-					{organization.memberCount === 1 ? "membership" : "memberships"} are
-					deleted for good.
+					{`${organization.memberCount} ${organization.memberCount === 1 ? "membership" : "memberships"}`}{" "}
+					are deleted for good.
 				</ConfirmAction>
 			</form>
 		) : (
@@ -333,9 +331,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 							href={`/admin/org/${organization.id}/projects`}
 							class="max-w-full"
 						>
-							{organization.projectCount}
-							{organization.projectCount === 1 ? "project" : "projects"},
-							{organization.unarchivedProjectCount} not archived
+							{`${organization.projectCount} ${organization.projectCount === 1 ? "project" : "projects"}, ${organization.unarchivedProjectCount} not archived`}
 						</Button>
 					</li>
 					<li>
@@ -344,8 +340,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 							href={`/admin/org/${organization.id}/members`}
 							class="max-w-full"
 						>
-							{organization.memberCount}
-							{organization.memberCount === 1 ? "member" : "members"}
+							{`${organization.memberCount} ${organization.memberCount === 1 ? "member" : "members"}`}
 						</Button>
 					</li>
 				</ul>
