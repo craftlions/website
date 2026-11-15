@@ -244,7 +244,11 @@ const worklist = deriveClientWorklist({
 				{completedProjectCount > 0 && <Checkbox>Hide completed</Checkbox>}
 			</div>
 			{projects.length > 0 ? (
-				<div class="overflow-x-auto border border-dashed border-line">
+				<section
+					class="overflow-x-auto border border-dashed border-line"
+					tabindex="0"
+					aria-labelledby="projects-heading"
+				>
 					<table class="w-full min-w-md text-sm">
 						<thead>
 							<tr class="border-b border-dashed border-line text-fg-muted">
@@ -328,7 +332,7 @@ const worklist = deriveClientWorklist({
 							)}
 						</tbody>
 					</table>
-				</div>
+				</section>
 			) : (
 				<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
 					No projects yet.

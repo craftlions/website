@@ -387,7 +387,7 @@ Tables are the main product surface for project, phase, invoice, and budget data
 - **Density:** compact but readable cells (12-16px vertical rhythm).
 - **Headers:** semibold uppercase labels using the `label-caps` class.
 - **Rows:** hover fills are neutral and subtle; status is shown through badges. Row headers and amounts are body text in `text-fg` (see The Two Weights Rule).
-- **Overflow:** horizontal overflow is acceptable for dense data; do not crush columns until labels become ambiguous.
+- **Overflow:** horizontal overflow is acceptable for dense data; do not crush columns until labels become ambiguous. The scrolling wrapper is a `<section tabindex="0">` named by its section heading (`aria-labelledby`), so keyboard users can reach and scroll it in every browser.
 
 ### Progress
 

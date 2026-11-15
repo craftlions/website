@@ -300,7 +300,12 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 					/>
 				)}
 			</div>
-			<div class="overflow-x-auto border border-dashed border-line">
+			<section
+				class="overflow-x-auto border border-dashed border-line"
+				// biome-ignore lint/a11y/noNoninteractiveTabindex: Safari cannot scroll it by keyboard unless it takes focus
+				tabindex="0"
+				aria-labelledby="ledger-heading"
+			>
 				<table class="w-full min-w-3xl text-sm">
 					<thead>
 						<tr class="border-b border-dashed border-line text-fg-muted">
@@ -438,7 +443,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 						</tfoot>
 					)}
 				</table>
-			</div>
+			</section>
 		</section>
 	</client-ledger>
 </AdminShell>
