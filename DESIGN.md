@@ -7,11 +7,17 @@ colors:
   panel-neutral: "#f5f5f5"
   dashed-line: "#d4d4d4"
   dashed-line-strong: "#a3a3a3"
+  dashed-line-active: "#525252"
+  focus-ring: "#404040"
   muted-text: "#525252"
   inverse-paper: "#0a0a0a"
   inverse-ink: "#fafafa"
   inverse-panel: "#171717"
   inverse-line: "#404040"
+  inverse-line-strong: "#525252"
+  inverse-line-active: "#d4d4d4"
+  inverse-muted: "#a3a3a3"
+  inverse-focus-ring: "#d4d4d4"
   link-blue: "#0369a1"
   link-blue-dark: "#7dd3fc"
   status-info: "#0369a1"
@@ -107,7 +113,7 @@ components:
     textColor: "{colors.status-info}"
     rounded: "{rounded.none}"
     padding: "4px 10px"
-    typography: "{typography.label}"
+    typography: "{typography.caption}"
 ---
 
 # Design System: craftlions website
@@ -156,8 +162,10 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 - **Panel Neutral**: low-emphasis hover and grouped-surface color.
 - **Dashed Line**: the default line color for borders, dividers, tables, inputs, and empty states.
 - **Dashed Line Strong**: the headline rule and stronger structural line color.
+- **Dashed Line Active**: the hover, focus, and pressed border of a control.
+- **Focus Ring**: the global `:focus-visible` outline.
 - **Muted Text**: secondary text of every kind: body copy, table values, labels, metadata, placeholders, and helper text. There is one muted tier; express further hierarchy with size or weight.
-- **Inverse Paper / Inverse Ink / Inverse Panel / Inverse Line**: dark-mode equivalents used with the same hierarchy.
+- **Inverse Paper / Inverse Ink / Inverse Panel / Inverse Line / Inverse Line Strong / Inverse Line Active / Inverse Muted / Inverse Focus Ring**: dark-mode equivalents used with the same hierarchy.
 
 ### Named Rules
 
