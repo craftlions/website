@@ -27,6 +27,7 @@ const idleStatus =
 				autocomplete="off"
 				spellcheck="false"
 				enterkeyhint="go"
+				maxlength={200}
 				placeholder={Astro.locals.session?.user.role === "admin"
 					? "Clients, projects, phases, invoices…"
 					: "Projects, phases, invoices…"}
