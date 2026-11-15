@@ -259,7 +259,7 @@ This system is flat by default. It does not use shadows to create hierarchy; dep
 Buttons are compact, transparent, and line-drawn.
 
 - **Shape:** square corners by default (0px radius).
-- **Default:** transparent background, 1px dashed neutral border, neutral text, compact padding (4px 12px), inline-grid alignment.
+- **Default:** transparent background, 1px dashed neutral border, neutral text in the label role (`text-label`, 600), compact padding (4px 12px), inline-grid alignment.
 - **Hover / Focus:** hover darkens the border and adds a neutral fill; focus uses a visible 2px outline with offset.
 - **Pressed:** set `aria-pressed` and the button styles itself, like hover.
 - **Disabled:** disabled buttons keep their shape, drop to 50% opacity with a not-allowed cursor, and do not react to hover.
