@@ -22,11 +22,11 @@ Install git hooks
 hk install
 ```
 
-Install all deps if not done by `mise` add `sfw` beforehand
+Install all deps if not done by `mise`
 
 ```shell
-sfw aube ci
-sfw aube i
+aube ci
+aube i
 ```
 
 Update browserlist
