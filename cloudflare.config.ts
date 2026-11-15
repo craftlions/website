@@ -51,11 +51,7 @@ export default defineConfig({
 					remote: true,
 				},
 			}),
-			IMAGES: bindings.images({
-				dev: {
-					remote: true,
-				},
-			}),
+			IMAGES: bindings.images(),
 			CF_VERSION_METADATA: bindings.versionMetadata(),
 			ASSETS: bindings.assets(),
 		},
