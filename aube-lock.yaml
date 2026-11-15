@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  "@cloudflare/runtime-types": 0.1.28
   zod: 4.6.7
 
 importers:
@@ -938,12 +939,6 @@ packages:
     resolution:
       {
         integrity: sha512-ksIV3OtDJi6CbCWzQjmutFpMGKeALkueX21TyyQOs8NxS2v+DlBYoiYEKVeZOJ4eTDsTLoWyXcyJzOySgImTtg==,
-      }
-
-  "@cloudflare/runtime-types@0.1.20":
-    resolution:
-      {
-        integrity: sha512-m0m/MHEIiGAm9+RgKiSG/KDgTh8wJHNBYRFCBqtBUrnpirTdA3LwDuajOMZgu+sPcg5btccoecpXtVKQzcbsuQ==,
       }
 
   "@cloudflare/runtime-types@0.1.28":
@@ -4075,6 +4070,7 @@ snapshots:
       - bufferutil
       - esbuild
       - jiti
+      - kerberos
       - less
       - sass
       - sass-embedded
@@ -4635,15 +4631,6 @@ snapshots:
     dependencies:
       zod: 4.6.7
 
-  "@cloudflare/runtime-types@0.1.20(@types/node@26.6.6)":
-    dependencies:
-      miniflare: 5.20261101.0-beta(@types/node@26.6.6)
-      workerd: 1.20261101.1
-    transitivePeerDependencies:
-      - "@types/node"
-      - bufferutil
-      - utf-8-validate
-
   "@cloudflare/runtime-types@0.1.28(@types/node@26.6.6)":
     dependencies:
       miniflare: 5.20261113.0-beta(@types/node@26.6.6)
@@ -4664,7 +4651,7 @@ snapshots:
     dependencies:
       "@cloudflare/build-output-utils": 0.9.7
       "@cloudflare/config": 0.29.1
-      "@cloudflare/runtime-types": 0.1.20(@types/node@26.6.6)
+      "@cloudflare/runtime-types": 0.1.28(@types/node@26.6.6)
       "@cloudflare/unenv-preset": 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261113.1)
       miniflare: 5.20261101.0-beta(@types/node@26.6.6)
       unenv: 2.0.0-rc.24
@@ -4673,6 +4660,7 @@ snapshots:
     transitivePeerDependencies:
       - "@types/node"
       - bufferutil
+      - kerberos
       - utf-8-validate
       - workerd
 
