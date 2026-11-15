@@ -19,10 +19,10 @@ export default defineConfig({
 	},
 	compressHTML: "jsx",
 	experimental: {
-		clientPrerender: true,
 		contentIntellisense: true,
 	},
 	prefetch: {
+		prefetchAll: true,
 		defaultStrategy: "hover",
 	},
 	integrations: [
