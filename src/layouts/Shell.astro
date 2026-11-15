@@ -20,14 +20,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="generator" content={Astro.generator}>
 
-		<style is:inline>
-			@media (prefers-reduced-motion: no-preference) {
-				@view-transition {
-					navigation: auto;
-				}
-			}
-		</style>
-
 		<slot name="head" />
 		<link rel="canonical" href={canonical}>
 		<meta property="og:url" content={canonical}>
