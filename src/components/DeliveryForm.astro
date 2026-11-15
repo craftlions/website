@@ -1,9 +1,9 @@
 ---
-import type { HTMLAttributes } from "astro/types";
+import type { ComponentProps, HTMLAttributes } from "astro/types";
 import type { phaseSelectType } from "../lib/schema.ts";
 import { actions } from "astro:actions";
 import Button from "./Button.astro";
-import Input from "./Input.astro";
+import Field from "./Field.astro";
 
 interface Props extends HTMLAttributes<"form"> {
 	// "record" moves an in-progress phase to delivered (recordDelivery);
@@ -17,9 +17,11 @@ interface Props extends HTMLAttributes<"form"> {
 		deliveryState?: phaseSelectType["deliveryState"];
 		deliveryUrl?: string | null;
 	};
+	// The mode's action result, so each field shows its own input error.
+	result?: ComponentProps<typeof Field>["result"];
 }
 
-const { mode, phase, class: className, ...attrs } = Astro.props;
+const { mode, phase, result, class: className, ...attrs } = Astro.props;
 const submitLabel = mode === "record" ? "Record delivery" : "Update delivery";
 ---
 
@@ -30,36 +32,45 @@ const submitLabel = mode === "record" ? "Record delivery" : "Update delivery";
 			? actions.recordDelivery
 			: actions.updatePhaseDelivery}
 		class:list={[
-			"grid gap-3 border border-dashed border-line p-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-end",
+			"grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[auto_minmax(0,1fr)]",
 			className,
 		]}
 		{...attrs}
 	>
 		<input type="hidden" name="phaseId" value={phase.id}>
 		<input type="hidden" name="expectedVersion" value={phase.version}>
-		<label class="grid gap-1">
-			<span class="text-label text-fg-muted">Delivery</span>
-			<Input as="select" name="deliveryChoice" data-delivery-choice required>
-				<option value="url" selected={phase.deliveryState !== "none"}>
-					Delivery link
-				</option>
-				<option value="none" selected={phase.deliveryState === "none"}>
-					No delivery PR/MR
-				</option>
-			</Input>
-		</label>
-		<label class="grid gap-1" data-delivery-url-field>
-			<span class="text-label text-fg-muted">Delivery URL</span>
-			<Input
-				name="deliveryUrl"
-				type="url"
-				inputmode="url"
-				autocomplete="off"
-				value={phase.deliveryUrl ?? ""}
-				placeholder="https://github.com/…"
-			/>
-		</label>
-		<Button type="submit" aria-label={`${submitLabel}: ${phase.title}`}>
+		<Field
+			label="Delivery"
+			as="select"
+			name="deliveryChoice"
+			required
+			{result}
+			data-delivery-choice
+		>
+			<option value="url" selected={phase.deliveryState !== "none"}>
+				Delivery link
+			</option>
+			<option value="none" selected={phase.deliveryState === "none"}>
+				No delivery PR/MR
+			</option>
+		</Field>
+		<Field
+			label="Delivery URL"
+			name="deliveryUrl"
+			type="url"
+			inputmode="url"
+			autocomplete="off"
+			value={phase.deliveryUrl ?? ""}
+			placeholder="https://github.com/…"
+			hint="HTTPS link to the pull or merge request that delivers the phase."
+			{result}
+			data-delivery-url
+		/>
+		<Button
+			type="submit"
+			aria-label={`${submitLabel}: ${phase.title}`}
+			class="md:col-span-2"
+		>
 			{submitLabel}
 		</Button>
 	</form>
@@ -73,14 +84,17 @@ const submitLabel = mode === "record" ? "Record delivery" : "Update delivery";
 			this.dataset.initialized = "true";
 
 			const select = this.querySelector("[data-delivery-choice]");
-			const field = this.querySelector<HTMLElement>(
-				"[data-delivery-url-field]",
-			);
-			const input = field?.querySelector<HTMLInputElement>(
-				'input[name="deliveryUrl"]',
-			);
+			const input = this.querySelector("[data-delivery-url]");
+			// Field's wrapper holds the URL's label, input, hint and error.
+			const field = input?.parentElement;
 
-			if (!(select instanceof HTMLSelectElement) || !field || !input) return;
+			if (
+				!(select instanceof HTMLSelectElement) ||
+				!(input instanceof HTMLInputElement) ||
+				!field
+			) {
+				return;
+			}
 
 			const syncDeliveryUrl = () => {
 				const show = select.value === "url";
