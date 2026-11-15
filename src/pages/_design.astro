@@ -2,8 +2,10 @@
 import { ActionError } from "astro:actions";
 import ActionBanner from "../components/ActionBanner.astro";
 import Badge from "../components/Badge.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
 import Button from "../components/Button.astro";
 import ConfirmAction from "../components/ConfirmAction.astro";
+import DisclosureButton from "../components/DisclosureButton.astro";
 import Field from "../components/Field.astro";
 import Shell from "../layouts/Shell.astro";
 import tokensCss from "../styles/tokens.css?raw";
@@ -181,10 +183,6 @@ const typeRoles = [
 								<Button disabled>Disabled</Button>
 								<Button href="/design">Link</Button>
 							</div>
-							<details class="grid gap-2">
-								<Button as="summary">Summary</Button>
-								<p class="text-sm text-fg-muted">Disclosure content.</p>
-							</details>
 							<div class="grid grid-flow-col items-center justify-start gap-4">
 								<Button variant="quiet">Quiet</Button>
 								<Button variant="quiet" disabled>
@@ -194,12 +192,56 @@ const typeRoles = [
 									i
 								</Button>
 							</div>
-							<details class="grid gap-2">
-								<Button as="summary" variant="quiet">
-									Quiet summary
-								</Button>
-								<p class="text-sm text-fg-muted">Disclosure content.</p>
-							</details>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Disclosure</h3>
+							<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+								<p class="text-label uppercase text-fg-muted">Members</p>
+								<DisclosureButton controls={`disclosure-${scheme}`}>
+									Add member
+								</DisclosureButton>
+							</div>
+							<form
+								id={`disclosure-${scheme}`}
+								method="dialog"
+								aria-label="Add member"
+								hidden
+								class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4"
+							>
+								<Field label="Email" type="email" />
+								<div class="grid grid-cols-[auto_auto] items-center justify-start gap-3">
+									<Button type="submit">Add member</Button>
+									<Button variant="quiet" data-disclosure-cancel>
+										Cancel
+									</Button>
+								</div>
+							</form>
+							<DisclosureButton
+								controls={`disclosure-row-${scheme}`}
+								variant="quiet"
+							>
+								More
+							</DisclosureButton>
+							<p
+								id={`disclosure-row-${scheme}`}
+								hidden
+								class="border-t border-dashed border-line pt-4 text-sm text-fg-muted"
+							>
+								A row's corrections and quiet destructive actions.
+							</p>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Breadcrumbs</h3>
+							<Breadcrumbs
+								items={[
+									{ label: "Admin", href: "/design" },
+									{ label: "Acme", href: "/design" },
+									{ label: "Projects", href: "/design" },
+									{ label: "Website relaunch" },
+								]}
+							/>
 						</section>
 
 						<section class="grid gap-3">

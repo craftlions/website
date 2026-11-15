@@ -250,15 +250,35 @@ Buttons are compact, transparent, and line-drawn.
 - **Pressed:** set `aria-pressed` and the button styles itself, like hover.
 - **Disabled:** disabled buttons keep their shape, drop to 50% opacity with a not-allowed cursor, and do not react to hover.
 - **Component:** every action is `src/components/Button.astro`; `aubr design:lint` rejects a raw `<button>`. It renders `<a>` with `href` and `<summary>` with `as="summary"`.
+- **Danger:** `variant="danger"` draws the border and text in status red. It is for the one button that starts a destructive action, such as Delete client; inside dense rows a destructive trigger stays `quiet` and the danger style moves to the confirmation.
 - **Quiet:** `variant="quiet"` is a dashed underline for secondary actions in dense admin rows.
 - **Hint:** `variant="hint"` is the 1rem square that opens a tooltip.
+
+### Disclosure
+
+A form or extra panel opens from a button, never from a heading or a native `<details>` summary.
+
+- **Component:** `src/components/DisclosureButton.astro` is a Button with `aria-expanded`, `aria-controls` and a chevron that turns when open. Pass the panel's id as `controls`; the page renders the panel with `hidden={!open}` and the same `open`.
+- **Placement:** a section's primary action sits on the right of its heading row (`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3`), and its form opens below the heading and description. A row's extra panel spans the row.
+- **Server state:** the panel renders open after its form failed, so the typed values and field errors are back in view, and a create form starts open while its list is empty.
+- **Focus:** opening moves focus to the panel's first field. A quiet Cancel (`data-disclosure-cancel`) next to the submit resets the form, closes the panel and returns focus to the button. The submit repeats the button's label.
+
+### Confirmations
+
+Every destructive or irreversible action is confirmed in a native modal dialog.
+
+- **Component:** `src/components/ConfirmAction.astro` renders the trigger Button and the dialog inside the action's form. Dialog ids are unique per page.
+- **Copy:** the title names the action and its object ("Archive Website relaunch?"), the text names the consequence, and the confirm button repeats the trigger. Cancel reads "Keep …" for destructive actions and "Go back" for acting on a client's behalf.
+- **Weight:** `confirmVariant="danger"` (default) for destructive actions, `default` for deliberate steps that destroy nothing. `typeToConfirm` adds a field the admin must fill with the given text; use it only when the dialog's button is the form's sole submit.
+- **Validity:** the trigger reports the form's first invalid field before the dialog opens, because the open dialog makes the form behind it inert.
 
 ### Chips
 
 Badges are state labels, not decoration.
 
-- **Style:** transparent background, 1px dashed border, compact horizontal padding (4px 10px), text-xs, semibold, capitalized.
+- **Style:** transparent background, 1px dashed border, compact horizontal padding (4px 10px), text-xs, semibold, sentence case.
 - **State:** info uses blue, success uses green, error uses red, gray uses neutral. The badge color must match state meaning.
+- **Vocabulary:** admin labels and badge types come only from `src/lib/status.ts`. Info means the admin has to act, gray means waiting on the client or inactive, success means done, error means overdue or cancelled.
 
 ### Cards / Containers
 
@@ -275,14 +295,24 @@ Containers are simple line planes.
 Inputs follow the same line vocabulary as buttons.
 
 - **Style:** transparent background, 1px dashed neutral border, 8px 12px padding, small text.
-- **Component:** use `src/components/Input.astro`, with `as="select"` for selects and `danger` for destructive confirmations.
+- **Component:** use `src/components/Field.astro` for every labelled control: a `text-label` label, the `Input`, an optional hint and the error, linked with `aria-describedby`. Pass the action's result as `result`, and the field shows that action's error for its name and, after a failed submit, the value that was typed. `src/components/Input.astro` is the bare control, with `as="select"` for selects and `danger` for destructive confirmations.
 - **Focus:** border shifts to stronger neutral, in addition to the global focus outline.
 - **Placeholder / Disabled:** placeholder text is muted but must remain readable against the active surface.
 - **Error:** error text uses status red and should be placed near the field it explains.
 
+### Action Feedback
+
+A form action's outcome shows once, at the top of the page, below the page heading.
+
+- **Component:** `src/components/ActionBanner.astro`, rendered by the admin shells from their `results` and `fieldLabels`. Pages never render their own result paragraph.
+- **Success:** a `role="status"` line in status green that says what happened, as a sentence ending in a period ("Phase sent to client."). An action reports the same text on every page; never a generic "Saved.".
+- **Error:** a `role="alert"` plane in status red. Input errors list each field by its label; server errors get a generic retry sentence instead of the raw message.
+
 ### Navigation
 
 Navigation is a responsive grid with the logo on the left and compact session links on the right at larger widths. On small screens it stacks into a centered single-column grid. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like. It sits in the shared `max-w-6xl` (dashboard) or `max-w-3xl` (public/settings) header, matching the page column it leads.
+
+**Breadcrumbs** (`src/components/Breadcrumbs.astro`) lead admin pages below the navigation: muted dashed-underline links separated by slashes, with the current page in primary text and `aria-current="page"`. They render only when there is a parent to go back to.
 
 ### Tables
 
