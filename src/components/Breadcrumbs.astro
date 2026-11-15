@@ -1,12 +1,13 @@
 ---
 interface Props {
 	items: { label: string; href?: string | undefined }[];
+	label?: string;
 }
 
-const { items } = Astro.props;
+const { items, label = "Breadcrumb" } = Astro.props;
 ---
 
-<nav aria-label="Breadcrumb">
+<nav aria-label={label}>
 	<ol class="text-sm text-fg-muted wrap-break-word">
 		{items.map((item, index) => (
 			<li class="inline">
