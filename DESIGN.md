@@ -130,7 +130,7 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 - System sans typography with clear weights instead of display styling.
 - Flat components with visible focus, hover, disabled, and loading states.
 
-**Layout:** Public pages and the settings area stay compact and single-column at a `max-w-3xl` container with a `pl-3` left gutter. The authenticated dashboard widens to `max-w-6xl`. Client pages render through `ClientShell` (navigation, breadcrumbs, a `header` slot, footer), the way admin pages use `AdminShell`; an organization's pages render through `ClientOrgShell`, which adds the organization heading and its section tabs (Overview, Invoices, Spend by year). The overview is a two-column grid at `sm` and up — a narrow leading column (`1fr`) holds the budget Overview, while a wider column (`3fr`) holds Projects. Below `sm` the two columns stack into one.
+**Layout:** Public pages and the settings area stay compact and single-column at a `max-w-3xl` container with a `pl-3` left gutter. The authenticated dashboard widens to `max-w-6xl`. Client pages render through `ClientShell` (navigation, breadcrumbs, a `header` slot, footer), the way admin pages use `AdminShell`; an organization's pages render through `ClientOrgShell`, which adds the organization heading and its section tabs (Overview, Invoices, Spend by year). The overview puts the full-width Worklist first, then a two-column grid at `lg` and up: Projects in a wide leading column (`2fr`) and Budget in a narrow one (`1fr`). Below `lg` they stack in that order.
 
 ## 2. Colors
 

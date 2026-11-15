@@ -4,7 +4,6 @@ export const prerender = false;
 import type { projectSelectType } from "../../../lib/schema.ts";
 import { isAPIError } from "better-auth/api";
 import Badge from "../../../components/Badge.astro";
-import Button from "../../../components/Button.astro";
 import ClientPhaseBanner from "../../../components/ClientPhaseBanner.astro";
 import ClientWorklist from "../../../components/ClientWorklist.astro";
 import CostSplit from "../../../components/CostSplit.astro";
@@ -14,6 +13,7 @@ import {
 	getSpendByYear,
 } from "../../../lib/budget-consumption.ts";
 import { deriveClientWorklist } from "../../../lib/client-worklist.ts";
+import { formatMoney, formatPercent } from "../../../lib/format.ts";
 import { projectStatus } from "../../../lib/status.ts";
 import {
 	organizationStripeInvoices,
@@ -90,16 +90,6 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 						dueAt: true,
 						version: true,
 					},
-					with: {
-						invoices: {
-							columns: {
-								component: true,
-							},
-							with: {
-								stripe: { columns: { status: true } },
-							},
-						},
-					},
 				},
 			},
 			orderBy: {
@@ -119,12 +109,11 @@ if (!organization || !currentMember) {
 
 const [spendRows, stripeRows] = await Promise.all([
 	// S-004 R2/R3: one shared-module read returns the full spend history for
-	// this organization; the Spend chart and all budget figures derive from it.
+	// this organization; all budget figures derive from it.
 	getSpendByYear(Astro.locals.db, organization.id),
+	// The worklist lists open invoices only; the Invoices page lists them all.
 	Astro.locals.db.query.stripeInvoices.findMany({
 		...stripeInvoiceFields,
-		// S-003 R2: an attached invoice derives its project, phase, and Delivery
-		// from its one phase — nothing is copied onto the invoice row.
 		with: {
 			link: {
 				columns: {
@@ -135,14 +124,6 @@ const [spendRows, stripeRows] = await Promise.all([
 						columns: {
 							publicId: true,
 							title: true,
-							cost: true,
-							upfrontAmount: true,
-							deliveryAmount: true,
-							acceptanceAmount: true,
-							currency: true,
-							state: true,
-							deliveryState: true,
-							deliveryUrl: true,
 						},
 						with: {
 							project: {
@@ -151,30 +132,17 @@ const [spendRows, stripeRows] = await Promise.all([
 									name: true,
 								},
 							},
-							invoices: {
-								columns: {
-									component: true,
-								},
-								with: {
-									stripe: { columns: { status: true } },
-								},
-							},
 						},
 					},
 				},
 			},
 		},
-		where: organizationStripeInvoices(organization.id),
+		where: { ...organizationStripeInvoices(organization.id), status: "open" },
 		orderBy: {
 			invoicedAt: "desc",
 		},
 	}),
 ]);
-const invoices = stripeRows.map(({ link, ...invoice }) => ({
-	...invoice,
-	component: link?.component ?? null,
-	phase: link?.phase ?? null,
-}));
 
 const now = new Date();
 const projects = organization.projects.map((project) => {
@@ -236,15 +204,6 @@ const budgetPaceGridLineClass = [
 	"col-start-13",
 ][now.getMonth()];
 
-const currencyFormatter = new Intl.NumberFormat("de-DE", {
-	style: "currency",
-	currency: "EUR",
-});
-const formatAmount = (amount: number, currency: string) =>
-	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
-		amount,
-	);
-
 const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 	switch (projectState) {
 		case "completed":
@@ -259,13 +218,14 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 	}
 };
 
-const canManagePhases =
-	currentMember.role === "owner" || currentMember.role === "admin";
-
 const worklist = deriveClientWorklist({
 	slug,
 	projects: organization.projects,
-	invoices,
+	invoices: stripeRows.map(({ link, ...invoice }) => ({
+		...invoice,
+		component: link?.component ?? null,
+		phase: link?.phase ?? null,
+	})),
 	now,
 });
 ---
@@ -275,167 +235,41 @@ const worklist = deriveClientWorklist({
 	activePage="overview"
 >
 	<ClientPhaseBanner />
+	<section aria-labelledby="worklist-heading" class="grid gap-3">
+		<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
+			Worklist
+		</h2>
+		<ClientWorklist
+			items={worklist}
+			canDecide={currentMember.role === "owner" ||
+				currentMember.role === "admin"}
+		/>
+	</section>
+
 	<div
-		class="grid content-start gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,3fr)] sm:items-start"
+		class="grid content-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start"
 	>
 		<section
-			aria-labelledby="worklist-heading"
-			class="grid gap-3 sm:col-span-2"
+			aria-labelledby="projects-heading"
+			class="group grid min-w-0 content-start gap-3"
 		>
-			<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
-				Worklist
-			</h2>
-			<p class="max-w-prose text-sm text-fg-muted">
-				Phases waiting for your decision, invoices waiting for payment, and
-				phases craftlions works on next.
-			</p>
-			<ClientWorklist items={worklist} canDecide={canManagePhases} />
-		</section>
-
-		<div class="grid min-w-0 content-start gap-6">
-			<section
-				aria-labelledby="overview-heading"
-				class="grid content-start gap-4"
-			>
-				<div class="grid gap-1">
-					<h2 id="overview-heading" class="text-label uppercase text-fg-muted">
-						Overview
-					</h2>
-					<p class="max-w-prose text-sm text-fg-muted">
-						Budget and project state for the current calendar year.
-					</p>
-				</div>
-				<dl class="grid border-t border-dashed border-line">
-					<div class="grid gap-1 border-b border-dashed border-line p-4">
-						<dt class="label-caps">Yearly budget</dt>
-						<dd class="text-title tabular-nums">
-							{yearlyBudget > 0 ? currencyFormatter.format(yearlyBudget) : "—"}
-						</dd>
-					</div>
-					<div class="grid gap-1 border-b border-dashed border-line p-4">
-						<dt class="label-caps">Invoiced this year</dt>
-						<dd class="text-title tabular-nums">
-							{currencyFormatter.format(currentYearTotal)}
-						</dd>
-					</div>
-					<div class="grid gap-1 border-b border-dashed border-line p-4">
-						<dt class="label-caps">Budget used</dt>
-						<dd
-							class:list={[
-								"text-title tabular-nums",
-								yearlyBudget > 0 && usagePercentage > 100 && "text-fg-danger",
-							]}
-						>
-							{yearlyBudget > 0
-								? `${usagePercentage.toFixed(1)}%`
-								: "No budget"}
-						</dd>
-					</div>
-					<div class="grid gap-1 border-b border-dashed border-line p-4">
-						<dt class="label-caps">Remaining</dt>
-						<dd
-							class:list={[
-								"text-title tabular-nums",
-								yearlyBudget > 0 && remainingBudget < 0 && "text-fg-danger",
-							]}
-						>
-							{yearlyBudget > 0
-								? currencyFormatter.format(remainingBudget)
-								: "—"}
-						</dd>
-					</div>
-				</dl>
-				<div class="grid gap-2 px-4">
-					<div class="grid grid-cols-[1fr_auto] items-baseline gap-3 text-sm">
-						<div class="grid grid-flow-col justify-start gap-2">
-							<label for="budget-progress" class="label-caps">
-								Budget used
-							</label>
-							<span class="group relative grid place-items-center">
-								<Button variant="hint" aria-describedby="budget-pace-tooltip"
-									>i</Button
-								>
-								<span
-									id="budget-pace-tooltip"
-									role="tooltip"
-									class="pointer-events-none absolute top-full left-0 z-10 mt-2 hidden w-64 border border-dashed border-line bg-canvas p-2 text-xs leading-relaxed text-fg-muted group-hover:grid group-focus-within:grid"
-								>
-									{yearlyBudget > 0
-										? `Based on invoices created this calendar year. The marker shows ${budgetPacePercentage.toFixed(1)}% calendar pace.`
-										: "Set a yearly budget to compare invoices against calendar pace."}
-								</span>
-							</span>
-						</div>
-						<p
-							class:list={[
-								"tabular-nums",
-								yearlyBudget > 0 && usagePercentage > 100
-									? "text-fg-danger"
-									: "text-fg-muted",
-							]}
-						>
-							{yearlyBudget > 0
-								? `${usagePercentage.toFixed(1)}%`
-								: "No budget"}
-						</p>
-					</div>
-					{yearlyBudget > 0 && (
-						<div class="relative grid">
-							<progress
-								id="budget-progress"
-								max="100"
-								value={Math.min(Number(usagePercentage.toFixed(1)), 100)}
-								aria-valuetext={`${usagePercentage.toFixed(1)}%`}
-								class:list={[
-									"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
-									usagePercentage > 100
-										? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
-										: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
-								]}
-							>
-								{`${usagePercentage.toFixed(1)}% used`}
-							</progress>
-							<span
-								aria-hidden="true"
-								class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
-							>
-								<span
-									class:list={[
-										"h-full w-0.75 justify-self-start border-x border-canvas bg-ink",
-										budgetPaceGridLineClass,
-									]}
-								/>
-							</span>
-						</div>
-					)}
-				</div>
-			</section>
-		</div>
-
-		<div class="grid min-w-0 content-start gap-6">
-			<section
-				aria-labelledby="projects-list-heading"
-				class="group grid content-start gap-3"
-			>
-				<div class="grid grid-cols-[1fr_auto] items-center gap-3">
-					<h2
-						id="projects-list-heading"
-						class="text-label uppercase text-fg-muted"
-					>
-						Projects
-					</h2>
-					{completedProjectCount > 0 && (
-						<label class="grid cursor-pointer grid-flow-col items-center gap-2 text-sm font-medium text-fg-muted select-none">
-							<input
-								type="checkbox"
-								class="size-4 cursor-pointer appearance-none border border-dashed border-line-strong bg-transparent checked:bg-ink checked:bg-[length:0.75rem] checked:bg-center checked:bg-no-repeat checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')] dark:checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')]"
-							/>
-							<span>Hide completed</span>
-						</label>
-					)}
-				</div>
+			<div class="grid grid-cols-[1fr_auto] items-center gap-3">
+				<h2 id="projects-heading" class="text-label uppercase text-fg-muted">
+					Projects
+				</h2>
+				{completedProjectCount > 0 && (
+					<label class="grid cursor-pointer grid-flow-col items-center gap-2 text-sm font-medium text-fg-muted select-none">
+						<input
+							type="checkbox"
+							class="size-4 cursor-pointer appearance-none border border-dashed border-line-strong bg-transparent checked:bg-ink checked:bg-[length:0.75rem] checked:bg-center checked:bg-no-repeat checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')] dark:checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E')]"
+						/>
+						<span>Hide completed</span>
+					</label>
+				)}
+			</div>
+			{projects.length > 0 ? (
 				<div class="overflow-x-auto border border-dashed border-line">
-					<table class="w-full min-w-xl text-sm">
+					<table class="w-full min-w-md text-sm">
 						<thead>
 							<tr class="border-b border-dashed border-line text-fg-muted">
 								<th scope="col" class="px-4 py-3 text-left label-caps">
@@ -445,101 +279,178 @@ const worklist = deriveClientWorklist({
 									Status
 								</th>
 								<th scope="col" class="px-4 py-3 text-right label-caps">
-									Total Cost
-								</th>
-								<th scope="col" class="px-4 py-3 text-left label-caps">
-									Actions
+									Total cost
 								</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-dashed divide-line">
-							{projects.length > 0 ? (
-								projects.map((project) => (
-									<tr
+							{projects.map((project) => (
+								<tr
+									class:list={[
+										project.state === "completed" &&
+											"group-has-[:checked]:hidden",
+									]}
+								>
+									<th
+										scope="row"
 										class:list={[
-											project.state === "completed" &&
-												"group-has-[:checked]:hidden",
+											"px-4 py-3 text-left font-medium",
+											project.state === "completed" && "text-fg-muted",
 										]}
 									>
-										<th
-											scope="row"
-											class:list={[
-												"px-4 py-3 text-left font-medium",
-												project.state === "completed" && "text-fg-muted",
-											]}
+										<a
+											href={`/dash/org/${slug}/project/${project.publicId}`}
+											class="link hover:text-fg"
 										>
-											<a
-												href={`/dash/org/${slug}/project/${project.publicId}`}
-												class="link hover:text-fg"
-											>
-												{project.name}
-											</a>
-										</th>
-										<td class="px-4 py-3">
-											<Badge type={projectStateToBadgeType(project.state)}>
-												{projectStatus[project.state].label}
-											</Badge>
-										</td>
-										<td
-											class:list={[
-												"px-4 py-3 text-right tabular-nums",
-												project.state === "completed"
-													? "text-fg-muted"
-													: "text-fg",
-											]}
-										>
-											{project.splits.length > 0 ? (
-												<div class="grid justify-items-end gap-2">
-													{project.splits.map((split) => (
-														<div class="grid w-full min-w-48 max-w-64 gap-1">
-															<p class="whitespace-nowrap font-medium">
-																{formatAmount(split.total, split.currency)}
-															</p>
-															{split.items.length > 0 && (
-																<CostSplit
-																	items={split.items}
-																	currency={split.currency}
-																	total={split.total}
-																	variant="compact"
-																	showStatus={false}
-																/>
-															)}
-														</div>
-													))}
-												</div>
-											) : (
-												"—"
-											)}
-										</td>
-										<td class="px-4 py-3">
-											<Button
-												href={`/dash/org/${slug}/project/${project.publicId}`}
-												aria-label={`Details for ${project.name}`}
-											>
-												Details
-											</Button>
-										</td>
-									</tr>
-								))
-							) : (
-								<tr>
-									<td colspan="4" class="px-4 py-6 text-center text-fg-muted">
-										No projects yet.
+											{project.name}
+										</a>
+									</th>
+									<td class="px-4 py-3">
+										<Badge type={projectStateToBadgeType(project.state)}>
+											{projectStatus[project.state].label}
+										</Badge>
+									</td>
+									<td
+										class:list={[
+											"px-4 py-3 text-right tabular-nums",
+											project.state === "completed"
+												? "text-fg-muted"
+												: "text-fg",
+										]}
+									>
+										{project.splits.length > 0 ? (
+											<div class="grid justify-items-end gap-2">
+												{project.splits.map((split) => (
+													<div class="grid w-full min-w-48 max-w-64 gap-1">
+														<p class="whitespace-nowrap font-medium">
+															{formatMoney(split.total, split.currency)}
+														</p>
+														{split.items.length > 0 && (
+															<CostSplit
+																items={split.items}
+																currency={split.currency}
+																total={split.total}
+																variant="compact"
+																showStatus={false}
+															/>
+														)}
+													</div>
+												))}
+											</div>
+										) : (
+											"—"
+										)}
+									</td>
+								</tr>
+							))}
+							{completedProjectCount === projects.length && (
+								<tr class="hidden group-has-[:checked]:table-row">
+									<td colspan="3" class="px-4 py-6 text-center text-fg-muted">
+										All projects are completed and currently hidden.
 									</td>
 								</tr>
 							)}
-							{projects.length > 0 &&
-								completedProjectCount === projects.length && (
-									<tr class="hidden group-has-[:checked]:table-row">
-										<td colspan="4" class="px-4 py-6 text-center text-fg-muted">
-											All projects are completed and currently hidden.
-										</td>
-									</tr>
-								)}
 						</tbody>
 					</table>
 				</div>
-			</section>
-		</div>
+			) : (
+				<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+					No projects yet.
+				</p>
+			)}
+		</section>
+
+		<section
+			aria-labelledby="budget-heading"
+			class="grid min-w-0 content-start gap-3"
+		>
+			<h2 id="budget-heading" class="text-label uppercase text-fg-muted">
+				Budget
+			</h2>
+			<dl
+				class="grid grid-cols-[minmax(0,1fr)_auto] border border-dashed border-line text-sm"
+			>
+				<div
+					class="col-span-2 grid gap-2 border-b border-dashed border-line p-4"
+				>
+					<dt class="label-caps">Budget used</dt>
+					<dd
+						class:list={[
+							"text-title tabular-nums",
+							yearlyBudget > 0 && usagePercentage > 100
+								? "text-fg-danger"
+								: "text-fg",
+						]}
+					>
+						{yearlyBudget > 0 ? formatPercent(usagePercentage) : "No budget"}
+					</dd>
+					{yearlyBudget > 0 && (
+						<dd class="grid gap-2">
+							<span class="relative grid">
+								<progress
+									aria-label="Budget used"
+									aria-valuetext={formatPercent(usagePercentage)}
+									aria-describedby="budget-pace"
+									max="100"
+									value={Math.min(Number(usagePercentage.toFixed(1)), 100)}
+									class:list={[
+										"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+										usagePercentage > 100
+											? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
+											: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
+									]}
+								>
+									{`${formatPercent(usagePercentage)} used`}
+								</progress>
+								<span
+									aria-hidden="true"
+									class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
+								>
+									<span
+										class:list={[
+											"h-full w-0.75 justify-self-start border-x border-canvas bg-ink",
+											budgetPaceGridLineClass,
+										]}
+									/>
+								</span>
+							</span>
+							<span id="budget-pace" class="text-xs text-fg-muted">
+								The marker shows calendar pace:{" "}
+								{formatPercent(budgetPacePercentage)}.
+							</span>
+						</dd>
+					)}
+				</div>
+				<div
+					class="col-span-2 grid grid-cols-subgrid gap-x-3 px-4 pt-4 last:pb-4"
+				>
+					<dt class="text-fg-muted">Invoiced this year</dt>
+					<dd class="text-right tabular-nums">
+						{formatMoney(currentYearTotal, "EUR")}
+					</dd>
+				</div>
+				{yearlyBudget > 0 && (
+					<>
+						<div class="col-span-2 grid grid-cols-subgrid gap-x-3 px-4 pt-2 last:pb-4">
+							<dt class="text-fg-muted">Yearly budget</dt>
+							<dd class="text-right tabular-nums">
+								{formatMoney(yearlyBudget, "EUR")}
+							</dd>
+						</div>
+						<div class="col-span-2 grid grid-cols-subgrid gap-x-3 px-4 pt-2 last:pb-4">
+							<dt class="text-fg-muted">Remaining</dt>
+							<dd
+								class:list={[
+									"text-right tabular-nums",
+									remainingBudget < 0 ? "text-fg-danger" : "text-fg",
+								]}
+							>
+								{formatMoney(remainingBudget, "EUR")}
+							</dd>
+						</div>
+					</>
+				)}
+			</dl>
+		</section>
 	</div>
 </ClientOrgShell>
