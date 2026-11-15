@@ -262,151 +262,177 @@ const openInvoices = ledger.flatMap((client) => client.openInvoices);
 		<AdminWorklist items={worklist} />
 	</section>
 
-	<section class="grid gap-3" aria-labelledby="ledger-heading">
-		<h2 id="ledger-heading" class="text-label uppercase text-fg-muted">
-			Client ledger
-		</h2>
-		<div class="overflow-x-auto border border-dashed border-line">
-			<table class="w-full min-w-3xl text-sm">
-				<thead>
-					<tr class="border-b border-dashed border-line text-fg-muted">
-						<th scope="col" class="px-4 py-3 text-left label-caps"> Client </th>
-						<th scope="col" class="px-4 py-3 text-right label-caps">
-							Your move
-						</th>
-						<th scope="col" class="px-4 py-3 text-right label-caps">
-							Waiting on client
-						</th>
-						<th scope="col" class="px-4 py-3 text-right label-caps">
-							Active projects
-						</th>
-						<th scope="col" class="px-4 py-3 text-left label-caps">
-							Budget used
-						</th>
-						<th scope="col" class="px-4 py-3 text-right label-caps">
-							Outstanding
-						</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-dashed divide-line">
-					{ledger.length > 0 ? (
-						ledger.map((client) => (
-							<tr>
-								<th
-									scope="row"
-									class="px-4 py-3 text-left font-medium wrap-break-word"
-								>
-									<a
-										href={`/admin/org/${client.id}`}
+	<client-ledger class="grid">
+		<section class="grid gap-3" aria-labelledby="ledger-heading">
+			<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+				<div class="grid gap-1">
+					<h2 id="ledger-heading" class="text-label uppercase text-fg-muted">
+						Client ledger
+					</h2>
+					<p role="status" class="text-sm text-fg-muted" data-client-count>
+						{ledger.length} {ledger.length === 1 ? "client" : "clients"}
+					</p>
+				</div>
+				{ledger.length > 0 && (
+					<Field
+						label="Filter by name"
+						type="search"
+						autocomplete="off"
+						spellcheck="false"
+						class="sm:w-64"
+						data-client-filter
+					/>
+				)}
+			</div>
+			<div class="overflow-x-auto border border-dashed border-line">
+				<table class="w-full min-w-3xl text-sm">
+					<thead>
+						<tr class="border-b border-dashed border-line text-fg-muted">
+							<th scope="col" class="px-4 py-3 text-left label-caps">
+								Client
+							</th>
+							<th scope="col" class="px-4 py-3 text-right label-caps">
+								Your move
+							</th>
+							<th scope="col" class="px-4 py-3 text-right label-caps">
+								Waiting on client
+							</th>
+							<th scope="col" class="px-4 py-3 text-right label-caps">
+								Active projects
+							</th>
+							<th scope="col" class="px-4 py-3 text-left label-caps">
+								Budget used
+							</th>
+							<th scope="col" class="px-4 py-3 text-right label-caps">
+								Outstanding
+							</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-dashed divide-line">
+						{ledger.length > 0 ? (
+							ledger.map((client) => (
+								<tr data-client-name={client.name.toLocaleLowerCase("en")}>
+									<th
+										scope="row"
+										class="px-4 py-3 text-left font-medium wrap-break-word"
+									>
+										<a
+											href={`/admin/org/${client.id}`}
+											class:list={[
+												"underline decoration-dashed underline-offset-4",
+												client.yourMove === 0 &&
+												client.waiting === 0 &&
+												client.openInvoices.length === 0
+													? "text-fg-muted"
+													: "text-fg",
+											]}
+										>
+											{client.name}
+										</a>
+									</th>
+									<td
 										class:list={[
-											"underline decoration-dashed underline-offset-4",
-											client.yourMove === 0 &&
-											client.waiting === 0 &&
-											client.openInvoices.length === 0
-												? "text-fg-muted"
-												: "text-fg",
+											"px-4 py-3 text-right tabular-nums",
+											client.yourMove > 0 ? "text-fg" : "text-fg-muted",
 										]}
 									>
-										{client.name}
-									</a>
-								</th>
-								<td
-									class:list={[
-										"px-4 py-3 text-right tabular-nums",
-										client.yourMove > 0 ? "text-fg" : "text-fg-muted",
-									]}
-								>
-									{client.yourMove}
-								</td>
-								<td class="px-4 py-3 text-right tabular-nums text-fg-muted">
-									{client.waiting}
-								</td>
-								<td class="px-4 py-3 text-right tabular-nums text-fg-muted">
-									{client.activeProjects} of {client.totalProjects}
-								</td>
-								<td class="px-4 py-3">
-									{client.budgetUsage === null ? (
-										<span class="text-fg-muted">No budget</span>
-									) : (
-										<span class="grid gap-1">
-											<progress
-												class:list={[
-													"h-2 w-24 appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
-													client.budgetUsage > 100
-														? "[&::-moz-progress-bar]:bg-fill-danger [&::-webkit-progress-value]:bg-fill-danger"
-														: "[&::-moz-progress-bar]:bg-ink [&::-webkit-progress-value]:bg-ink",
-												]}
-												max="100"
-												value={Math.min(client.budgetUsage, 100)}
-												aria-label={`Budget used by ${client.name}`}
-											/>
-											<span
-												class:list={[
-													"text-xs tabular-nums",
-													client.budgetUsage > 100
-														? "text-fg-danger"
-														: "text-fg-muted",
-												]}
-											>
-												{formatPercent(client.budgetUsage)}
+										{client.yourMove}
+									</td>
+									<td class="px-4 py-3 text-right tabular-nums text-fg-muted">
+										{client.waiting}
+									</td>
+									<td class="px-4 py-3 text-right tabular-nums text-fg-muted">
+										{client.activeProjects} of {client.totalProjects}
+									</td>
+									<td class="px-4 py-3">
+										{client.budgetUsage === null ? (
+											<span class="text-fg-muted">No budget</span>
+										) : (
+											<span class="grid gap-1">
+												<progress
+													class:list={[
+														"h-2 w-24 appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+														client.budgetUsage > 100
+															? "[&::-moz-progress-bar]:bg-fill-danger [&::-webkit-progress-value]:bg-fill-danger"
+															: "[&::-moz-progress-bar]:bg-ink [&::-webkit-progress-value]:bg-ink",
+													]}
+													max="100"
+													value={Math.min(client.budgetUsage, 100)}
+													aria-label={`Budget used by ${client.name}`}
+												/>
+												<span
+													class:list={[
+														"text-xs tabular-nums",
+														client.budgetUsage > 100
+															? "text-fg-danger"
+															: "text-fg-muted",
+													]}
+												>
+													{formatPercent(client.budgetUsage)}
+												</span>
 											</span>
+										)}
+									</td>
+									<td class="px-4 py-3 text-right">
+										<span
+											class:list={[
+												"block tabular-nums",
+												client.openInvoices.length > 0
+													? "text-fg"
+													: "text-fg-muted",
+											]}
+										>
+											{sumByCurrency(client.openInvoices)}
 										</span>
-									)}
-								</td>
-								<td class="px-4 py-3 text-right">
-									<span
-										class:list={[
-											"block tabular-nums",
-											client.openInvoices.length > 0
-												? "text-fg"
-												: "text-fg-muted",
-										]}
-									>
-										{sumByCurrency(client.openInvoices)}
-									</span>
-									{client.openInvoices.some((invoice) => invoice.overdue) && (
-										<span class="block text-xs tabular-nums text-fg-danger">
-											{sumByCurrency(
-												client.openInvoices.filter(
-													(invoice) => invoice.overdue,
-												),
-											)}{" "}
-											overdue
-										</span>
-									)}
+										{client.openInvoices.some((invoice) => invoice.overdue) && (
+											<span class="block text-xs tabular-nums text-fg-danger">
+												{sumByCurrency(
+													client.openInvoices.filter(
+														(invoice) => invoice.overdue,
+													),
+												)}{" "}
+												overdue
+											</span>
+										)}
+									</td>
+								</tr>
+							))
+						) : (
+							<tr>
+								<td colspan="6" class="px-4 py-6 text-center text-fg-muted">
+									No clients yet. Onboard the first one above.
 								</td>
 							</tr>
-						))
-					) : (
-						<tr>
+						)}
+						<tr hidden data-client-empty>
 							<td colspan="6" class="px-4 py-6 text-center text-fg-muted">
-								No clients yet. Onboard the first one above.
+								No client name contains the filter text.
 							</td>
 						</tr>
+					</tbody>
+					{ledger.length > 0 && (
+						<tfoot>
+							<tr class="border-t border-dashed border-line">
+								<th scope="row" class="px-4 py-3 text-left label-caps">
+									All clients
+								</th>
+								<td class="px-4 py-3 text-right font-semibold tabular-nums">
+									{worklist.filter((item) => item.actor === "admin").length}
+								</td>
+								<td class="px-4 py-3 text-right font-semibold tabular-nums">
+									{worklist.filter((item) => item.actor === "client").length}
+								</td>
+								<td class="px-4 py-3" colspan="2"></td>
+								<td class="px-4 py-3 text-right font-semibold tabular-nums">
+									{sumByCurrency(openInvoices)}
+								</td>
+							</tr>
+						</tfoot>
 					)}
-				</tbody>
-				{ledger.length > 0 && (
-					<tfoot>
-						<tr class="border-t border-dashed border-line">
-							<th scope="row" class="px-4 py-3 text-left label-caps">
-								All clients
-							</th>
-							<td class="px-4 py-3 text-right font-semibold tabular-nums">
-								{worklist.filter((item) => item.actor === "admin").length}
-							</td>
-							<td class="px-4 py-3 text-right font-semibold tabular-nums">
-								{worklist.filter((item) => item.actor === "client").length}
-							</td>
-							<td class="px-4 py-3" colspan="2"></td>
-							<td class="px-4 py-3 text-right font-semibold tabular-nums">
-								{sumByCurrency(openInvoices)}
-							</td>
-						</tr>
-					</tfoot>
-				)}
-			</table>
-		</div>
-	</section>
+				</table>
+			</div>
+		</section>
+	</client-ledger>
 </AdminShell>
 
 <script>
@@ -428,4 +454,42 @@ const openInvoices = ledger.flatMap((client) => client.openInvoices);
 			.replace(/[^a-z0-9]+/g, "-")
 			.replace(/^-|-$/g, "");
 	});
+</script>
+
+<script>
+	// Filters the ledger rows by client name and announces the match count.
+	class ClientLedger extends HTMLElement {
+		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
+			const input = this.querySelector<HTMLInputElement>(
+				"[data-client-filter]",
+			);
+			const count = this.querySelector<HTMLElement>("[data-client-count]");
+			const empty = this.querySelector<HTMLElement>("[data-client-empty]");
+			const rows = [
+				...this.querySelectorAll<HTMLElement>("[data-client-name]"),
+			];
+
+			if (!input || !count || !empty) return;
+
+			input.addEventListener("input", () => {
+				const query = input.value.trim().toLocaleLowerCase("en");
+				let matches = 0;
+				for (const row of rows) {
+					row.hidden = !(row.dataset.clientName ?? "").includes(query);
+					if (!row.hidden) matches += 1;
+				}
+				empty.hidden = matches > 0;
+				count.textContent = query
+					? `${matches} of ${rows.length} ${rows.length === 1 ? "client" : "clients"} match`
+					: `${rows.length} ${rows.length === 1 ? "client" : "clients"}`;
+			});
+		}
+	}
+
+	if (!customElements.get("client-ledger")) {
+		customElements.define("client-ledger", ClientLedger);
+	}
 </script>
