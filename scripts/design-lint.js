@@ -173,12 +173,35 @@ if (!/^colors:\n {2}\S/m.test(frontmatter)) {
 		"DESIGN.md  frontmatter is not nested YAML → restore its indentation",
 	);
 }
-for (const [hex] of readFileSync("src/styles/tokens.css", "utf8").matchAll(
-	/#[\da-f]{6,8}/g,
-)) {
-	if (!frontmatter.includes(hex.slice(0, 7))) {
+// Each token is named in the frontmatter with its light value, and its dark value
+// under `-dark`, so a changed value or a renamed token cannot hide behind a
+// matching hex elsewhere.
+const colors = new Map(
+	[...frontmatter.matchAll(/^ {2}([\w-]+): "(#[\da-f]+)"$/gm)].map(
+		([, name, hex]) => [name, hex],
+	),
+);
+const tokenNames = new Set();
+for (const [, name, light, dark] of readFileSync(
+	"src/styles/tokens.css",
+	"utf8",
+).matchAll(/--([\w-]+): light-dark\((#[\da-f]+), (#[\da-f]+)\)/g)) {
+	for (const [key, hex] of [
+		[name, light],
+		[`${name}-dark`, dark],
+	]) {
+		tokenNames.add(key);
+		if (colors.get(key) !== hex) {
+			violations.push(
+				`DESIGN.md  colors.${key} → set it to "${hex}", the value of --${name} in src/styles/tokens.css`,
+			);
+		}
+	}
+}
+for (const name of colors.keys()) {
+	if (!tokenNames.has(name)) {
 		violations.push(
-			`src/styles/tokens.css  ${hex} → add it to the DESIGN.md frontmatter`,
+			`DESIGN.md  colors.${name} → name a token from src/styles/tokens.css`,
 		);
 	}
 }
