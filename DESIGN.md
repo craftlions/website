@@ -2,49 +2,60 @@
 name: craftlions website
 description: A plain technical client portal with line-drawn controls, neutral surfaces, and exact project data.
 colors:
-  paper-neutral: "#fafafa"
-  ink-neutral: "#0a0a0a"
-  panel-neutral: "#f5f5f5"
-  dashed-line: "#d4d4d4"
-  dashed-line-strong: "#a3a3a3"
-  dashed-line-control: "#737373"
-  dashed-line-active: "#525252"
-  focus-ring: "#404040"
-  muted-text: "#525252"
-  inverse-paper: "#0a0a0a"
-  inverse-ink: "#fafafa"
-  inverse-panel: "#171717"
-  inverse-line: "#404040"
-  inverse-line-strong: "#525252"
-  inverse-line-control: "#737373"
-  inverse-line-active: "#d4d4d4"
-  inverse-muted: "#a3a3a3"
-  inverse-focus-ring: "#d4d4d4"
-  link-blue: "#0369a1"
-  link-blue-dark: "#7dd3fc"
-  status-info: "#0369a1"
-  status-info-dark: "#7dd3fc"
-  status-success: "#047857"
-  status-success-dark: "#6ee7b7"
-  status-error: "#b91c1c"
-  status-error-dark: "#fca5a5"
-  status-warning: "#b45309"
-  status-warning-dark: "#fcd34d"
-  status-line-error: "#ef4444"
-  status-line-success: "#34d399"
-  status-line-info: "#7dd3fc"
-  fill-error: "#b91c1c"
-  fill-error-dark: "#f87171"
+  fg: "#0a0a0a"
+  fg-dark: "#fafafa"
+  fg-muted: "#525252"
+  fg-muted-dark: "#a3a3a3"
+  fg-danger: "#b91c1c"
+  fg-danger-dark: "#fca5a5"
+  fg-success: "#047857"
+  fg-success-dark: "#6ee7b7"
+  fg-info: "#0369a1"
+  fg-info-dark: "#7dd3fc"
+  fg-warning: "#b45309"
+  fg-warning-dark: "#fcd34d"
+  canvas: "#fafafa"
+  canvas-dark: "#0a0a0a"
+  panel: "#f5f5f5"
+  panel-dark: "#171717"
+  line: "#d4d4d4"
+  line-dark: "#404040"
+  line-strong: "#a3a3a3"
+  line-strong-dark: "#525252"
+  line-control: "#737373"
+  line-control-dark: "#737373"
+  line-active: "#525252"
+  line-active-dark: "#d4d4d4"
+  line-danger: "#ef4444"
+  line-danger-dark: "#b91c1c"
+  line-success: "#34d399"
+  line-success-dark: "#047857"
+  line-info: "#7dd3fc"
+  line-info-dark: "#0369a1"
+  fill-danger: "#b91c1c"
+  fill-danger-dark: "#f87171"
   fill-success: "#10b981"
   fill-success-dark: "#34d399"
   fill-info: "#0ea5e9"
   fill-info-dark: "#38bdf8"
   info-subtle: "#e0f2fe99"
   info-subtle-dark: "#082f4980"
-  chart-categorical: ["#1d4ed8", "#0e7490", "#c2410c", "#be185d", "#6d28d9", "#047857"]
-  chart-categorical-dark: ["#93c5fd", "#67e8f9", "#fdba74", "#f9a8d4", "#c4b5fd", "#6ee7b7"]
-  chart-unassigned: "#737373"
-  chart-unassigned-dark: "#a3a3a3"
+  focus: "#404040"
+  focus-dark: "#d4d4d4"
+  chart-1: "#1d4ed8b3"
+  chart-1-dark: "#93c5fdcc"
+  chart-2: "#0e7490b3"
+  chart-2-dark: "#67e8f9cc"
+  chart-3: "#c2410cb3"
+  chart-3-dark: "#fdba74cc"
+  chart-4: "#be185db3"
+  chart-4-dark: "#f9a8d4cc"
+  chart-5: "#6d28d9b3"
+  chart-5-dark: "#c4b5fdcc"
+  chart-6: "#047857b3"
+  chart-6-dark: "#6ee7b7cc"
+  chart-unassigned: "#7373738c"
+  chart-unassigned-dark: "#a3a3a38c"
 typography:
   display:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
@@ -101,25 +112,25 @@ spacing:
 components:
   button-default:
     backgroundColor: "transparent"
-    textColor: "{colors.ink-neutral}"
+    textColor: "{colors.fg}"
     rounded: "{rounded.none}"
     padding: "4px 12px"
     typography: "{typography.label}"
   button-hover:
-    backgroundColor: "{colors.panel-neutral}"
-    textColor: "{colors.ink-neutral}"
+    backgroundColor: "{colors.panel}"
+    textColor: "{colors.fg}"
     rounded: "{rounded.none}"
     padding: "4px 12px"
     typography: "{typography.label}"
   input-default:
     backgroundColor: "transparent"
-    textColor: "{colors.ink-neutral}"
+    textColor: "{colors.fg}"
     rounded: "{rounded.none}"
     padding: "8px 12px"
     typography: "{typography.body-small}"
   badge-info:
     backgroundColor: "transparent"
-    textColor: "{colors.status-info}"
+    textColor: "{colors.fg-info}"
     rounded: "{rounded.none}"
     padding: "4px 10px"
     typography: "{typography.caption}"
@@ -151,34 +162,34 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 
 ## 2. Colors
 
-The palette is a restrained paper-and-ink system: neutral structure first, link and status colors only where the user needs action or state.
+The palette is a restrained paper-and-ink system: neutral structure first, link and status colors only where the user needs action or state. The frontmatter keys every color by its token name in `src/styles/tokens.css`, with the light value under the name and the dark value under `-dark`; the names below are what the colors are called in prose, with their tokens.
 
 ### Primary
 
-- **Ink Neutral**: the primary text and active mark color. Use it for body copy, headings, progress fill, checked controls, and high-confidence interface states.
-- **Paper Neutral**: the primary page surface. Use it for the body background and quiet page sections.
+- **Ink Neutral** (`fg`): the primary text and active mark color. Use it for body copy, headings, progress fill, checked controls, and high-confidence interface states.
+- **Paper Neutral** (`canvas`): the primary page surface. Use it for the body background and quiet page sections.
 
 ### Secondary
 
-- **Link Blue**: the action-link color. Use it for text links such as password recovery and legal/contact references, not for decorative emphasis.
+- **Link Blue** (`fg-info`): the action-link color. Use it for text links such as password recovery and legal/contact references, not for decorative emphasis.
 
 ### Tertiary
 
-- **Status Green**: success or paid state.
-- **Status Red**: error, cancelled, or budget-risk state. Its outline (`line-danger`) is the boundary of an invalid or destructive input, so it holds 3:1 on canvas.
-- **Status Info**: informational project and phase state.
-- **Status Warning** (amber, `text-fg-warning`): needs attention, not an error. It marks something the admin should check, such as an invoice total that differs from its cost part or attached invoices Stripe cannot return right now; text only, with no outline or fill.
+- **Status Green** (`fg-success`, `line-success`, `fill-success`): success or paid state.
+- **Status Red** (`fg-danger`, `line-danger`, `fill-danger`): error, cancelled, or budget-risk state. Its outline (`line-danger`) is the boundary of an invalid or destructive input, so it holds 3:1 on canvas.
+- **Status Info** (`fg-info`, `line-info`, `fill-info`, `info-subtle`): informational project and phase state.
+- **Status Warning** (`fg-warning`, amber): needs attention, not an error. It marks something the admin should check, such as an invoice total that differs from its cost part or attached invoices Stripe cannot return right now; text only, with no outline or fill.
 
 ### Neutral
 
-- **Panel Neutral**: low-emphasis hover and grouped-surface color.
-- **Dashed Line**: the default line color for borders, dividers, tables, and empty states.
-- **Dashed Line Strong**: the headline rule and stronger structural line color.
-- **Dashed Line Control**: the boundary of a control the user operates: input and select borders, the checkbox outline, and the progress track. It holds 3:1 against canvas and panel in both schemes, because that line is the only thing that shows the control is there.
-- **Dashed Line Active**: the hover, focus, and pressed border of a control.
-- **Focus Ring**: the global `:focus-visible` outline.
-- **Muted Text**: secondary text of every kind: body copy, table values, labels, metadata, placeholders, and helper text. There is one muted tier; express further hierarchy with size or weight.
-- **Inverse Paper / Inverse Ink / Inverse Panel / Inverse Line / Inverse Line Strong / Inverse Line Control / Inverse Line Active / Inverse Muted / Inverse Focus Ring**: dark-mode equivalents used with the same hierarchy.
+- **Panel Neutral** (`panel`): low-emphasis hover and grouped-surface color.
+- **Dashed Line** (`line`): the default line color for borders, dividers, tables, and empty states.
+- **Dashed Line Strong** (`line-strong`): the headline rule and stronger structural line color.
+- **Dashed Line Control** (`line-control`): the boundary of a control the user operates: input and select borders, the checkbox outline, and the progress track. It holds 3:1 against canvas and panel in both schemes, because that line is the only thing that shows the control is there.
+- **Dashed Line Active** (`line-active`): the hover, focus, and pressed border of a control.
+- **Focus Ring** (`focus`): the global `:focus-visible` outline.
+- **Muted Text** (`fg-muted`): secondary text of every kind: body copy, table values, labels, metadata, placeholders, and helper text. There is one muted tier; express further hierarchy with size or weight.
+- **Inverse**: every token has a dark value, used with the same hierarchy.
 
 ### Named Rules
 
@@ -230,7 +241,7 @@ Status hues collapse to `CanvasText` there, so state never rests on color alone.
 
 The spend chart is the portal's single colored data surface. It stays a chart, not a dashboard carnival: one categorical palette, assigned in stable order, with meaning carried by pattern plus the legend and the exact-amounts table.
 
-- **Categorical series** (`chart-categorical`, dark `chart-categorical-dark`): project segments render as **diagonal hatching** (a 135° repeating linear gradient) in muted ink colors at reduced opacity (70% light, 80% dark), cycled in stable order; repeat when a year holds more projects than the palette. The hatch pattern, not a solid fill, separates one project from another.
+- **Categorical series** (`chart-1` to `chart-6`): project segments render as **diagonal hatching** (a 135° repeating linear gradient) in muted ink colors at reduced opacity (70% light, 80% dark), cycled in stable order; repeat when a year holds more projects than the palette. The hatch pattern, not a solid fill, separates one project from another.
 - **Unassigned** (`chart-unassigned`): phase-less spend stays a neutral gray so it reads as "not a project" and is drawn open (no fill).
 - **State colors keep their meaning everywhere, including the chart**: never use status hues for segments or fills.
 - **Color is never the only code**: bars carry their exact year total as text (the current year's total sits on a dashed `line-strong` rule, never a text underline, which is reserved for links), each bar labels its year, the legend maps a hatch swatch to its project name, and the exact-amounts table holds the numbers.
