@@ -238,8 +238,9 @@ const setupGaps = [
 							<dd class="grid">
 								<progress
 									aria-label="Budget used"
+									aria-valuetext={formatPercent(usagePercentage)}
 									max="100"
-									value={Math.min(usagePercentage, 100)}
+									value={Math.min(Number(usagePercentage.toFixed(1)), 100)}
 									class:list={[
 										"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
 										usagePercentage > 100
