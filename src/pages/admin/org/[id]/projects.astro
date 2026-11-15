@@ -205,12 +205,12 @@ const isCreateOpen =
 					<ul
 						id={archived ? groupId : undefined}
 						hidden={archived}
-						class="grid border border-dashed border-line lg:grid-cols-[minmax(10rem,1fr)_auto_auto_auto_auto] lg:gap-x-6"
+						class="grid border border-dashed border-line lg:grid-cols-[minmax(10rem,1fr)_auto_auto_auto] lg:gap-x-6"
 					>
 						{groupRows.map((project) => (
 							<li
 								class:list={[
-									"grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line p-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:col-span-5 lg:grid-cols-subgrid lg:gap-x-6",
+									"grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line p-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:col-span-4 lg:grid-cols-subgrid lg:gap-x-6",
 									archived ? "text-fg-muted" : "text-fg",
 								]}
 							>
@@ -255,13 +255,6 @@ const isCreateOpen =
 										</>
 									)}
 								</dl>
-								<Button
-									href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-									aria-label={`Open: ${project.name}`}
-									class="col-span-2 sm:col-span-1"
-								>
-									Open
-								</Button>
 							</li>
 						))}
 					</ul>
