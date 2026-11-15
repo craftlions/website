@@ -100,8 +100,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		return response;
 	}
 
+	// The result belongs to the page the browser lands on, so an /api request
+	// (a search between the 303 and that page) neither reads nor deletes it.
 	const storedResult =
-		context.request.method === "GET" && context.session
+		context.request.method === "GET" && context.session && !matches("/api")
 			? await context.session.get(actionResultSessionKey)
 			: undefined;
 
