@@ -274,7 +274,7 @@ const worklist = deriveClientWorklist({
 
 <ClientShell
 	title={`${organization.name}’s Dashboard`}
-	organizationSlug={slug}
+	organization={{ name: organization.name, slug }}
 	wide
 >
 	<div

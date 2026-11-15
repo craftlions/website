@@ -2,7 +2,6 @@
 export const prerender = false;
 
 import { isAPIError } from "better-auth/api";
-import Button from "../../../../../components/Button.astro";
 import ClientPhaseBanner from "../../../../../components/ClientPhaseBanner.astro";
 import PhaseOverview from "../../../../../components/PhaseOverview.astro";
 import ClientShell from "../../../../../layouts/ClientShell.astro";
@@ -45,7 +44,9 @@ const project = await Astro.locals.db.query.projects.findFirst({
 	},
 	with: {
 		organization: {
-			columns: {},
+			columns: {
+				name: true,
+			},
 			with: {
 				members: {
 					columns: {
@@ -103,7 +104,7 @@ if (!project) {
 
 const [currentMember] = project.organization?.members ?? [];
 
-if (!currentMember) {
+if (!project.organization || !currentMember) {
 	return Astro.redirect("/dash");
 }
 
@@ -111,9 +112,12 @@ const canApprovePhases =
 	currentMember.role === "owner" || currentMember.role === "admin";
 ---
 
-<ClientShell title={project.name} organizationSlug={slug} wide>
-	<Button href={`/dash/org/${slug}`}>Back to Dashboard</Button>
-
+<ClientShell
+	title={`${project.name} · ${project.organization.name}`}
+	organization={{ name: project.organization.name, slug }}
+	breadcrumbs={[{ label: project.name }]}
+	wide
+>
 	<section class="grid gap-4">
 		<p class="text-label uppercase text-fg-muted"> Project Overview </p>
 		<h1 class="border-l border-dashed border-line-strong pl-3 text-display">

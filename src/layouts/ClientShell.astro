@@ -8,11 +8,30 @@ import Shell from "./Shell.astro";
 interface Props {
 	title: string;
 	breadcrumbs?: ComponentProps<typeof Breadcrumbs>["items"];
-	organizationSlug?: string | undefined;
+	organization?: { name: string; slug: string } | undefined;
 	wide?: boolean;
 }
 
-const { title, breadcrumbs = [], organizationSlug, wide = false } = Astro.props;
+const { title, breadcrumbs = [], organization, wide = false } = Astro.props;
+const session = Astro.locals.session;
+// Members of several organizations switch between them on /dash.
+const memberships =
+	organization && session
+		? await Astro.locals.db.query.member.findMany({
+				columns: { id: true },
+				where: { userId: session.user.id },
+				limit: 2,
+			})
+		: [];
+const trail = organization
+	? [
+			...(memberships.length > 1
+				? [{ label: "Organizations", href: "/dash" }]
+				: []),
+			{ label: organization.name, href: `/dash/org/${organization.slug}` },
+			...breadcrumbs,
+		]
+	: breadcrumbs;
 ---
 
 <Shell
@@ -26,7 +45,7 @@ const { title, breadcrumbs = [], organizationSlug, wide = false } = Astro.props;
 				wide ? "max-w-6xl" : "max-w-3xl",
 			]}
 		>
-			<Nav {organizationSlug} />
+			<Nav organizationSlug={organization?.slug} />
 		</header>
 		<main
 			class:list={[
@@ -34,7 +53,7 @@ const { title, breadcrumbs = [], organizationSlug, wide = false } = Astro.props;
 				wide ? "max-w-6xl" : "max-w-3xl",
 			]}
 		>
-			{breadcrumbs.length > 1 && <Breadcrumbs items={breadcrumbs} />}
+			{trail.length > 1 && <Breadcrumbs items={trail} />}
 			<slot name="header" />
 			<slot />
 		</main>
