@@ -46,15 +46,13 @@ if (!organization) {
 	fieldLabels={{ deliveryChoice: "Delivery", deliveryUrl: "Delivery URL" }}
 >
 	<section class="grid gap-3" aria-labelledby="worklist-heading">
-		<div class="grid gap-1">
-			<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
-				Worklist
-			</h2>
-			<p class="max-w-prose text-sm text-fg-muted">
-				Phases that need a step from you or the client, and invoices waiting for
-				payment.
-			</p>
-		</div>
+		<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
+			Worklist
+		</h2>
+		<p class="max-w-prose text-sm text-fg-muted">
+			Phases that need a step from you or the client, and invoices waiting for
+			payment.
+		</p>
 		<AdminWorklist
 			items={deriveWorklist({
 				organizationId: organization.id,

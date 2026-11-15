@@ -153,19 +153,19 @@ const otherClients = (count: number) =>
 			</div>
 		</form>
 		{members.length > 0 ? (
-			<div class="grid grid-cols-[minmax(0,1fr)] border border-dashed border-line md:grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,14rem)] md:gap-x-6">
+			<div class="grid grid-cols-[minmax(0,1fr)] border border-dashed border-line lg:grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,14rem)] lg:gap-x-6">
 				<div
 					aria-hidden="true"
-					class="hidden border-b border-dashed border-line px-4 py-3 label-caps md:col-span-4 md:grid md:grid-cols-subgrid"
+					class="hidden border-b border-dashed border-line px-4 py-3 label-caps lg:col-span-4 lg:grid lg:grid-cols-subgrid"
 				>
 					<span>Member</span>
 					<span>Role</span>
 					<span>Last active</span>
 					<span>Actions</span>
 				</div>
-				<ul class="grid grid-cols-[minmax(0,1fr)] md:col-span-4 md:grid-cols-subgrid">
+				<ul class="grid grid-cols-[minmax(0,1fr)] lg:col-span-4 lg:grid-cols-subgrid">
 					{members.map((member) => (
-						<li class="grid grid-cols-[minmax(0,1fr)] gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:col-span-4 md:grid-cols-subgrid md:items-start">
+						<li class="grid grid-cols-[minmax(0,1fr)] gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-4 lg:grid-cols-subgrid lg:items-start">
 							<div class="grid gap-1">
 								<h3 class="font-medium wrap-break-word">{member.user.name}</h3>
 								<p class="text-sm text-fg-muted wrap-break-word">
@@ -177,7 +177,7 @@ const otherClients = (count: number) =>
 							</Badge>
 							{member.user.lastActiveAt ? (
 								<p class="text-sm">
-									<span class="text-fg-muted md:sr-only">Last active </span>
+									<span class="text-fg-muted lg:sr-only">Last active </span>
 									<time datetime={member.user.lastActiveAt.toISOString()}>
 										{formatDate(member.user.lastActiveAt)}
 									</time>

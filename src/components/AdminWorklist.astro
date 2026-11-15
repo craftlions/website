@@ -126,7 +126,7 @@ const groups = [
 								<li class="grid min-w-0 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid lg:items-center">
 									<Badge type={item.badge}>{item.label}</Badge>
 									<div class="grid min-w-0 gap-1">
-										<h4 class="grid gap-1 font-medium wrap-anywhere">
+										<h4 class="grid gap-1 font-medium wrap-break-word">
 											{item.organization && (
 												<span class="text-sm font-normal text-fg-muted">
 													{item.organization.name}
@@ -140,7 +140,7 @@ const groups = [
 											</a>
 										</h4>
 										{item.invoice ? (
-											<p class="text-sm text-fg-muted wrap-anywhere">
+											<p class="text-sm text-fg-muted wrap-break-word">
 												{costPartLabel[item.invoice.component]} invoice{" "}
 												{item.invoice.stripe.number}
 											</p>
@@ -161,8 +161,8 @@ const groups = [
 											)
 										)}
 									</div>
-									<p class="text-sm font-medium tabular-nums lg:text-right">
-										<span class="font-normal text-fg-muted lg:sr-only">
+									<p class="font-medium tabular-nums lg:text-right">
+										<span class="text-sm font-normal text-fg-muted lg:sr-only">
 											Amount{" "}
 										</span>
 										{item.invoice

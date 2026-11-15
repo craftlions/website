@@ -159,15 +159,13 @@ const setupGaps = [
 		</section>
 	)}
 	<section class="grid min-w-0 gap-3" aria-labelledby="worklist-heading">
-		<div class="grid gap-1">
-			<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
-				Worklist
-			</h2>
-			<p class="max-w-prose text-sm text-fg-muted">
-				Phases that need a step from you or the client, and invoices waiting for
-				payment.
-			</p>
-		</div>
+		<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
+			Worklist
+		</h2>
+		<p class="max-w-prose text-sm text-fg-muted">
+			Phases that need a step from you or the client, and invoices waiting for
+			payment.
+		</p>
 		<AdminWorklist
 			items={deriveWorklist({
 				organizationId: organization.id,
@@ -184,16 +182,14 @@ const setupGaps = [
 		class="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-start"
 	>
 		<div class="grid min-w-0 content-start gap-6">
-			<section class="grid content-start gap-4" aria-labelledby="money-heading">
-				<div class="grid gap-1">
-					<h2 id="money-heading" class="text-label uppercase text-fg-muted">
-						Money
-					</h2>
-					<p class="max-w-prose text-sm text-fg-muted">
-						Budget for the current calendar year, and invoices waiting for
-						payment or to be sent.
-					</p>
-				</div>
+			<section class="grid content-start gap-3" aria-labelledby="money-heading">
+				<h2 id="money-heading" class="text-label uppercase text-fg-muted">
+					Money
+				</h2>
+				<p class="max-w-prose text-sm text-fg-muted">
+					Budget for the current calendar year, and invoices waiting for payment
+					or to be sent.
+				</p>
 				<dl class="grid border-t border-dashed border-line">
 					<div
 						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
