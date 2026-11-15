@@ -185,7 +185,7 @@ Biome is excluded from this file because it flattens the YAML frontmatter that I
 | `border-line-strong`                              | Headline rules, gray badges, checkbox outlines, also `bg-` and `decoration-` |
 | `border-line-active`                              | Hover, focus, and pressed borders                                            |
 | `border-line-danger`, `-success`, `-info`         | Status outlines                                                              |
-| `border-ink`, `border-canvas`                     | Active tab, pace marker edge                                                 |
+| `border-canvas`                                   | Pace marker edge                                                             |
 | `text-chart-1`…`6`, `text-chart-unassigned`       | Spend chart only                                                             |
 
 A new token is a design decision: add it to `tokens.css`, `global.css`, and this table together. The dev-only `/design` page reads `tokens.css`, so it shows the new token with its contrast ratios automatically; add new primitives to it by hand.
