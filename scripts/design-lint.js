@@ -132,6 +132,13 @@ const rules = [
 		use: "<DisclosureButton> with a hidden panel",
 		doc: "DESIGN.md#disclosure",
 	},
+	{
+		id: "dark-variant",
+		pattern: /(?<![\w-])dark:/g,
+		classOnly: true,
+		use: "a role token, which switches scheme through light-dark()",
+		doc: "DESIGN.md#role-tokens",
+	},
 ];
 
 // Shadow, rounded and flex are also ordinary words, so those rules skip free text.
