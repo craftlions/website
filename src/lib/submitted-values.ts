@@ -2,28 +2,9 @@ import type { SafeResult } from "astro:actions";
 
 // Typed input survives a failed form action. The middleware stores the
 // submitted fields next to the action result in one session entry (same
-// lifetime) and hands them to the page in `Astro.locals.submittedInput`;
-// `Field` and pages read them back through `submittedValues`.
-declare global {
-	namespace App {
-		interface Locals {
-			submittedInput?: [name: string, value: string][] | undefined;
-		}
-
-		interface SessionData {
-			"form-action": {
-				actionName: string;
-				actionResult: ReturnType<
-					ReturnType<
-						typeof import("astro:actions").getActionContext
-					>["serializeActionResult"]
-				>;
-				// Only stored for a failed action.
-				input?: [name: string, value: string][] | undefined;
-			};
-		}
-	}
-}
+// lifetime) and hands them to the page in `Astro.locals.submittedInput`
+// (both typed in src/env.d.ts); `Field` and pages read them back through
+// `submittedValues`.
 
 // Field names that may hold a secret are never stored.
 const secretName = /pass|secret|token|key|otp|credential/i;
