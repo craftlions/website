@@ -30,21 +30,27 @@ const firstStoredPart = [
 	deliveryAmount,
 	acceptanceAmount,
 ].findIndex((amount) => amount !== null);
-const percentageFor = (amount: number | null, index: number) =>
+// Shares in ten-thousandths of a percent, rounded cumulatively: Delivery
+// shows the rounded Upfront+Delivery share minus the rounded Upfront share,
+// so the two shown shares never add up to more than 100% (rounding each on
+// its own can turn 66.6667 + 133.3333 of 200 into 33.3334% + 66.6667%).
+const [upfrontShare = 0, upfrontDeliveryShare = 0] = [
+	upfrontAmount ?? 0,
+	(upfrontAmount ?? 0) + (deliveryAmount ?? 0),
+].map((amount, index) =>
 	cost === 0
-		? index === firstStoredPart
-			? 100
+		? firstStoredPart !== -1 && firstStoredPart <= index
+			? 1_000_000
 			: 0
-		: amount === null
-			? 0
-			: Math.round((amount / cost) * 1_000_000) / 10_000;
+		: Math.round((amount / cost) * 1_000_000),
+);
 const parts = [
 	{ key: "upfront", label: "Upfront", when: "billed on approval" },
 	{ key: "delivery", label: "Delivery", when: "billed on delivery" },
 ] as const;
 const percentages = [
-	percentageFor(upfrontAmount, 0),
-	percentageFor(deliveryAmount, 1),
+	upfrontShare / 10_000,
+	(upfrontDeliveryShare - upfrontShare) / 10_000,
 ];
 ---
 
@@ -167,6 +173,12 @@ const percentages = [
 
 			if (!form || !remainder || !total || !error) return;
 
+			// Until the admin edits a share or the cost, the parts are the amounts
+			// the server rendered (a stored or submitted split, which adds up to the
+			// cost), so an untouched form posts them unchanged. The shown shares are
+			// rounded, and recomputing from them could move a part by a unit.
+			let edited = false;
+
 			const sync = () => {
 				const cost =
 					costField instanceof HTMLInputElement
@@ -185,7 +197,8 @@ const percentages = [
 				const partInvalid = entered.some(
 					(value) => !Number.isFinite(value) || value < 0 || value > 100,
 				);
-				const valid = !partInvalid && units(enteredSum) <= units(100);
+				const valid =
+					!edited || (!partInvalid && units(enteredSum) <= units(100));
 				const percentages = [
 					...entered,
 					Math.max(0, units(100 - enteredSum) / 10_000),
@@ -195,19 +208,25 @@ const percentages = [
 				// share takes what is left so the parts sum to the cost.
 				const lastPart = percentages.findLastIndex((value) => value > 0);
 				let assigned = 0;
-				const partUnits = percentages.map((percentage, index) => {
-					if (percentage <= 0) return null;
-					const amount =
-						index === lastPart
-							? costUnits - assigned
-							: Math.round((costUnits * percentage) / 100);
-					assigned += amount;
-					return amount;
-				});
+				const partUnits = edited
+					? percentages.map((percentage, index) => {
+							if (percentage <= 0) return null;
+							const amount =
+								index === lastPart
+									? costUnits - assigned
+									: Math.round((costUnits * percentage) / 100);
+							assigned += amount;
+							return amount;
+						})
+					: amountInputs.map((input) =>
+							input.value === "" ? null : units(Number(input.value)),
+						);
 
-				for (const [index, input] of amountInputs.entries()) {
-					const amount = partUnits[index];
-					input.value = valid && amount != null ? formatAmount(amount) : "";
+				if (edited) {
+					for (const [index, input] of amountInputs.entries()) {
+						const amount = partUnits[index];
+						input.value = valid && amount != null ? formatAmount(amount) : "";
+					}
 				}
 				for (const [index, output] of amountOutputs.entries()) {
 					const amount = partUnits[index];
@@ -239,7 +258,15 @@ const percentages = [
 				}
 			};
 
-			form.addEventListener("input", sync);
+			form.addEventListener("input", (event) => {
+				if (
+					event.target === costField ||
+					percentInputs.some((input) => input === event.target)
+				) {
+					edited = true;
+				}
+				sync();
+			});
 			sync();
 		}
 	}
