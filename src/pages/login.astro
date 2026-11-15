@@ -70,6 +70,8 @@ if (session) {
 
 					<Button type="submit" id="login-submit"> Sign in </Button>
 				</form>
+
+				<p id="login-message" class="text-sm text-fg-danger" role="alert"></p>
 			</main>
 
 			<Footer />
@@ -84,6 +86,9 @@ if (session) {
 	const submitBtn = document.getElementById(
 		"login-submit",
 	) as HTMLButtonElement;
+	const message = document.getElementById(
+		"login-message",
+	) as HTMLParagraphElement;
 
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
@@ -98,6 +103,7 @@ if (session) {
 
 		submitBtn.disabled = true;
 		submitBtn.textContent = "Signing in…";
+		message.textContent = "";
 
 		const { error } = await authClient.signIn.email({
 			email,
@@ -111,6 +117,10 @@ if (session) {
 		if (error) {
 			submitBtn.disabled = false;
 			submitBtn.textContent = "Sign in";
+			// The live region is always rendered, so changing its text announces it.
+			message.textContent =
+				error.message || "Something went wrong. Please try again.";
+			document.getElementById("email")?.focus();
 		}
 	});
 </script>
