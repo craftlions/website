@@ -108,12 +108,8 @@ export const invoiceStatus = (
 	}
 	return {
 		label: invoiceStatusLabel[invoice.status] ?? invoice.status,
-		badge:
-			invoice.status === "open"
-				? "info"
-				: invoice.status === "paid"
-					? "success"
-					: "gray",
+		// An open invoice waits on the client, so it is gray, not info.
+		badge: invoice.status === "paid" ? "success" : "gray",
 		overdue: false,
 	};
 };
