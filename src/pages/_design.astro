@@ -1,4 +1,6 @@
 ---
+import { ActionError } from "astro:actions";
+import ActionBanner from "../components/ActionBanner.astro";
 import Badge from "../components/Badge.astro";
 import Button from "../components/Button.astro";
 import Field from "../components/Field.astro";
@@ -65,6 +67,31 @@ const schemes = (["light", "dark"] as const).map((scheme) => {
 		})),
 	};
 });
+
+const feedback = [
+	{ data: undefined, error: undefined },
+	{
+		data: undefined,
+		error: new ActionError({
+			code: "CONFLICT",
+			message: "This phase changed in the meantime. Reload and try again.",
+		}),
+	},
+	{
+		data: undefined,
+		error: ActionError.fromJson({
+			type: "AstroActionInputError",
+			issues: [
+				{ code: "custom", path: ["email"], message: "Invalid email address" },
+				{ code: "custom", path: [], message: "Pick a delivery date" },
+			],
+		}),
+	},
+	{
+		data: undefined,
+		error: new ActionError({ code: "INTERNAL_SERVER_ERROR", message: "raw" }),
+	},
+];
 
 const typeRoles = [
 	["text-display", "Display"],
@@ -200,6 +227,16 @@ const typeRoles = [
 								<Badge type="error">Error</Badge>
 								<Badge type="gray">Gray</Badge>
 							</div>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Action feedback</h3>
+							{feedback.map((result) => (
+								<ActionBanner
+									results={[[result, "Phase sent to client"]]}
+									fieldLabels={{ email: "Email" }}
+								/>
+							))}
 						</section>
 
 						<section class="grid gap-3">

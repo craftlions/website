@@ -1,17 +1,17 @@
 ---
 import type { ComponentProps } from "astro/types";
+import ActionBanner from "../components/ActionBanner.astro";
 import Breadcrumbs from "../components/Breadcrumbs.astro";
 import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
 import Shell from "./Shell.astro";
 
-interface Props {
+interface Props extends ComponentProps<typeof ActionBanner> {
 	title: string;
 	breadcrumbs?: ComponentProps<typeof Breadcrumbs>["items"];
-	success?: string | undefined;
 }
 
-const { title, breadcrumbs = [], success } = Astro.props;
+const { title, breadcrumbs = [], results, fieldLabels, success } = Astro.props;
 ---
 
 <Shell
@@ -25,15 +25,7 @@ const { title, breadcrumbs = [], success } = Astro.props;
 		>
 			{breadcrumbs.length > 1 && <Breadcrumbs items={breadcrumbs} />}
 			<slot name="header" />
-			{success && (
-				<p
-					data-success-toast
-					role="status"
-					class="border border-dashed border-line p-3 text-sm text-fg-muted"
-				>
-					{success}
-				</p>
-			)}
+			<ActionBanner {results} {fieldLabels} {success} />
 			<slot />
 		</main>
 		<Footer wide />
@@ -41,14 +33,6 @@ const { title, breadcrumbs = [], success } = Astro.props;
 </Shell>
 
 <script>
-	const successToast = document.querySelector<HTMLElement>(
-		"[data-success-toast]",
-	);
-
-	if (successToast) {
-		window.setTimeout(() => successToast.remove(), 5000);
-	}
-
 	document.addEventListener("submit", (event) => {
 		if (
 			event.defaultPrevented ||

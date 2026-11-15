@@ -3,7 +3,8 @@ import type { ComponentProps } from "astro/types";
 import Button from "../components/Button.astro";
 import AdminShell from "./AdminShell.astro";
 
-interface Props {
+interface Props
+	extends Omit<ComponentProps<typeof AdminShell>, "title" | "breadcrumbs"> {
 	organization: {
 		id: string;
 		name: string;
@@ -17,6 +18,7 @@ interface Props {
 		| "settings";
 	breadcrumbs?: ComponentProps<typeof AdminShell>["breadcrumbs"];
 	title?: string | undefined;
+	/** @deprecated Pass `results` with a message per action, or `success`. */
 	showSuccess?: boolean;
 }
 
@@ -26,6 +28,9 @@ const {
 	breadcrumbs = [],
 	title,
 	showSuccess = false,
+	results,
+	fieldLabels,
+	success,
 } = Astro.props;
 const pages = [
 	{
@@ -70,7 +75,9 @@ const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 		...(activePage === "overview" ? [] : [activeTab]),
 		...breadcrumbs,
 	]}
-	success={showSuccess ? "Saved." : undefined}
+	{results}
+	{fieldLabels}
+	success={success ?? (showSuccess ? "Saved." : undefined)}
 >
 	<header
 		slot="header"

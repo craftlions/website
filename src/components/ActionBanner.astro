@@ -1,0 +1,59 @@
+---
+import { isInputError, type SafeResult } from "astro:actions";
+
+interface Props {
+	results?:
+		| (readonly [
+				result: SafeResult<Record<string, unknown>, unknown> | undefined,
+				success: string,
+		  ])[]
+		| undefined;
+	fieldLabels?: Record<string, string> | undefined;
+	success?: string | undefined;
+}
+
+const { results = [], fieldLabels = {}, success } = Astro.props;
+const error = results.find(([result]) => result?.error)?.[0]?.error;
+const message =
+	results.find(([result]) => result && !result.error)?.[1] ?? success;
+
+if (error?.code === "INTERNAL_SERVER_ERROR") {
+	console.error(error);
+}
+---
+
+{isInputError(error) ? (
+	<div
+		role="alert"
+		class="grid gap-2 border border-dashed border-line-danger p-3 text-sm text-fg-danger"
+	>
+		<p>Check these fields and try again.</p>
+		<ul class="grid list-disc gap-1 pl-5">
+			{error.issues.map((issue) => (
+				<li>
+					{[fieldLabels[String(issue.path[0] ?? "")], issue.message]
+						.filter(Boolean)
+						.join(": ")}
+				</li>
+			))}
+		</ul>
+	</div>
+) : error ? (
+	<p
+		role="alert"
+		class="border border-dashed border-line-danger p-3 text-sm text-fg-danger"
+	>
+		{error.code === "INTERNAL_SERVER_ERROR" || !error.message
+			? "The action failed because of a server error. Try again."
+			: error.message}
+	</p>
+) : (
+	message && (
+		<p
+			role="status"
+			class="border border-dashed border-line-success p-3 text-sm text-fg-success"
+		>
+			{message}
+		</p>
+	)
+)}
