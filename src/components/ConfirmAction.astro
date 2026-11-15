@@ -52,9 +52,10 @@ const {
 		{id}
 		aria-labelledby={`${id}-title`}
 		aria-describedby={`${id}-consequence`}
-		class="m-auto w-full max-w-[min(28rem,calc(100%-2rem))] gap-4 border border-dashed border-line bg-canvas p-4 text-fg open:grid backdrop:bg-canvas/80"
+		class="m-auto w-full max-w-[min(28rem,calc(100%-2rem))] grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line bg-canvas p-4 text-fg wrap-anywhere open:grid backdrop:bg-canvas/80"
+		data-confirm-dialog
 	>
-		<h2 id={`${id}-title`} class="text-title wrap-break-word">{title}</h2>
+		<h2 id={`${id}-title`} class="text-title">{title}</h2>
 		<p id={`${id}-consequence`} class="text-sm text-fg-muted">
 			<slot />
 		</p>
@@ -71,13 +72,21 @@ const {
 				title={`Type ${typeToConfirm.value} exactly`}
 			/>
 		)}
-		<div class="grid grid-flow-col justify-end gap-2">
-			<Button command="close" commandfor={id} data-confirm-cancel>
+		<div
+			class="grid grid-cols-[minmax(0,auto)_minmax(0,auto)] justify-end gap-2"
+		>
+			<Button
+				command="close"
+				commandfor={id}
+				class="max-w-full"
+				data-confirm-cancel
+			>
 				{cancel}
 			</Button>
 			<Button
 				type="submit"
 				variant={confirmVariant}
+				class="max-w-full"
 				{form}
 				{name}
 				{value}
@@ -105,9 +114,36 @@ const {
 
 			if (!dialog || !trigger || !submit) return;
 
-			// Browsers without invoker commands open and close the dialog here.
+			// The open dialog makes the rest of the form inert, so the browser could
+			// not point at an invalid field behind it: report the first invalid field
+			// instead of opening. Fields inside confirmation dialogs are skipped,
+			// since they are filled in once their dialog is open. Cancelling the
+			// click also cancels the trigger's invoker command.
+			trigger.addEventListener("click", (event) => {
+				if (event.defaultPrevented) return;
+
+				for (const element of submit.form?.elements ?? []) {
+					if (
+						(element instanceof HTMLButtonElement ||
+							element instanceof HTMLInputElement ||
+							element instanceof HTMLSelectElement ||
+							element instanceof HTMLTextAreaElement) &&
+						!element.closest("[data-confirm-dialog]") &&
+						!element.checkValidity()
+					) {
+						event.preventDefault();
+						element.reportValidity();
+						return;
+					}
+				}
+
+				// Browsers without invoker commands open the dialog here.
+				if (!("command" in HTMLButtonElement.prototype)) {
+					dialog.showModal();
+				}
+			});
+
 			if (!("command" in HTMLButtonElement.prototype)) {
-				trigger.addEventListener("click", () => dialog.showModal());
 				this.querySelector("[data-confirm-cancel]")?.addEventListener(
 					"click",
 					() => dialog.close(),
