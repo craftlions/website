@@ -295,7 +295,7 @@ Buttons are compact, transparent, and line-drawn.
 
 A text link is its text with a dashed underline, never a box.
 
-- **Recipe:** the `link` class in `src/styles/global.css` draws the dashed underline (4px offset); do not spell it out with `underline decoration-dashed`. The quiet Button and the breadcrumbs use it too.
+- **Recipe:** the `link` class in `src/styles/global.css` draws the dashed underline (4px offset); do not spell it out with `underline decoration-dashed`; `aubr design:lint` rejects `underline` and decoration styles outside `global.css`, so an underline always means a link. The quiet Button and the breadcrumbs use it too.
 - **Hover:** the underline turns solid and the text keeps its color, so primary, status and `text-fg-info` links keep their meaning. A link that can rest in muted text, including one that inherits it from a muted row, adds `hover:text-fg` as its only hover color. Only decoration and color change, so hovering never moves layout.
 - **Color:** a link inherits its text color or takes one role by ternary; `text-fg-info` marks links in public and account prose.
 

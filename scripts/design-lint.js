@@ -104,6 +104,15 @@ const rules = [
 		use: "the role's own line height, or leading-none in a tight metric row",
 		doc: "DESIGN.md#3-typography",
 	},
+	{
+		id: "link-recipe",
+		pattern:
+			/(?<![\w-])(?:underline|decoration-(?:dashed|dotted|double|wavy))(?![\w-])/g,
+		classOnly: true,
+		use: "the link class, which draws the dashed underline and its hover",
+		doc: "DESIGN.md#links",
+		ignore: "src/styles/global.css",
+	},
 ];
 
 // Shadow, rounded and flex are also ordinary words, so those rules skip free text.
