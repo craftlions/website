@@ -134,7 +134,7 @@ const typeRoles = [
 				{schemes.map(({ scheme, style, swatches }) => (
 					<section
 						aria-labelledby={`scheme-${scheme}`}
-						class="grid min-w-0 content-start gap-8 border border-dashed border-line bg-canvas p-4 text-fg"
+						class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-8 border border-dashed border-line bg-canvas p-4 text-fg"
 						style={style}
 					>
 						<h2 id={`scheme-${scheme}`} class="text-headline capitalize">
@@ -183,7 +183,7 @@ const typeRoles = [
 
 						<section class="grid gap-3">
 							<h3 class="text-title">Buttons</h3>
-							<div class="grid grid-flow-col justify-start gap-2">
+							<div class="grid grid-cols-[repeat(3,max-content)] justify-start gap-2 sm:grid-flow-col sm:grid-cols-none">
 								<Button>Default</Button>
 								<Button aria-pressed="true">Pressed</Button>
 								<Button href="/design" aria-current="page">
