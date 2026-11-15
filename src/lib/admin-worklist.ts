@@ -193,10 +193,12 @@ export const compareWorklistItems = (
 ) => a.priority - b.priority || b.ageDays - a.ageDays;
 
 /**
- * Per phase: each overdue invoice is an item and replaces the phase item;
- * otherwise a phase in a `worklistPhaseStates` state is an item; otherwise
- * each open invoice is an item. Billing derives from the Stripe status alone
- * (D-phase-billing-truth). Sorted by priority, then oldest first.
+ * Per phase: a phase in a `worklistPhaseStates` state is an item, and so is
+ * each overdue invoice, next to it: an unpaid invoice never hides the
+ * admin's next step (recording a delivery does not wait for payment).
+ * Without a phase item, each open invoice that is not overdue is an item too.
+ * Billing derives from the Stripe status alone (D-phase-billing-truth).
+ * Sorted by priority, then oldest first.
  */
 export const deriveWorklist = <Project extends WorklistProjectInput>(input: {
 	organizationId: string;
@@ -218,8 +220,8 @@ export const deriveWorklist = <Project extends WorklistProjectInput>(input: {
 				);
 				const invoiceItem = (
 					invoice: (typeof liveInvoices)[number],
-					overdue: boolean,
 				): WorklistItem<Project> => {
+					const overdue = isInvoiceOverdue(invoice.stripe, now);
 					const ageDays = overdue
 						? daysOverdue(invoice.stripe, now)
 						: daysBetween(
@@ -246,13 +248,6 @@ export const deriveWorklist = <Project extends WorklistProjectInput>(input: {
 					};
 				};
 
-				const overdueInvoices = liveInvoices.filter((invoice) =>
-					isInvoiceOverdue(invoice.stripe, now),
-				);
-				if (overdueInvoices.length > 0) {
-					return overdueInvoices.map((invoice) => invoiceItem(invoice, true));
-				}
-
 				const stateIndex = (
 					worklistPhaseStates as readonly PhaseState[]
 				).indexOf(phase.state);
@@ -263,6 +258,9 @@ export const deriveWorklist = <Project extends WorklistProjectInput>(input: {
 						now,
 					);
 					return [
+						...liveInvoices
+							.filter((invoice) => isInvoiceOverdue(invoice.stripe, now))
+							.map(invoiceItem),
 						{
 							key: `phase-${phase.id}`,
 							kind: "phase",
@@ -283,7 +281,7 @@ export const deriveWorklist = <Project extends WorklistProjectInput>(input: {
 
 				return liveInvoices
 					.filter((invoice) => invoice.stripe.status === "open")
-					.map((invoice) => invoiceItem(invoice, false));
+					.map(invoiceItem);
 			}),
 		)
 		.toSorted(compareWorklistItems);
