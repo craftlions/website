@@ -2,8 +2,8 @@
 export const prerender = false;
 
 import Button from "../components/Button.astro";
+import Field from "../components/Field.astro";
 import Footer from "../components/Footer.astro";
-import Input from "../components/Input.astro";
 import Nav from "../components/Nav.astro";
 import Shell from "../layouts/Shell.astro";
 import { parseReturnTo } from "../lib/return-to.ts";
@@ -40,25 +40,19 @@ if (session) {
 					aria-label="Sign in form"
 				>
 					<fieldset class="grid gap-4 border-none p-0 m-0">
-						<div class="grid gap-1.5">
-							<label for="email" class="text-label text-fg-muted">
-								Email address
-							</label>
-							<Input
-								type="email"
-								id="email"
-								name="email"
-								autocomplete="email"
-								required
-								placeholder="you@example.com"
-							/>
-						</div>
+						<Field
+							label="Email address"
+							type="email"
+							id="email"
+							name="email"
+							autocomplete="email"
+							required
+							placeholder="you@example.com"
+						/>
 
 						<div class="grid gap-1.5">
-							<label for="password" class="text-label text-fg-muted">
-								Password
-							</label>
-							<Input
+							<Field
+								label="Password"
 								type="password"
 								id="password"
 								name="password"
