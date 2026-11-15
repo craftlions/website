@@ -4,6 +4,7 @@ import { env } from "cloudflare:workers";
 import { nextPath, sameOriginPath } from "./lib/action-feedback.ts";
 import { createAuth } from "./lib/auth.ts";
 import { createDb } from "./lib/database.ts";
+import { isPrivatePath } from "./lib/indexing.ts";
 import { submittedEntries } from "./lib/submitted-values.ts";
 
 // One session entry holds the last form action's result and, when it failed,
@@ -117,6 +118,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	if (isPersonalized) {
 		response.headers.set("Cache-Control", "no-store");
+	}
+
+	if (isPrivatePath(pathname)) {
+		response.headers.set("X-Robots-Tag", "noindex");
 	}
 
 	return response;

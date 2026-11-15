@@ -6,6 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 import browserslist from "browserslist";
 import { browserslistToTargets } from "lightningcss";
+import { isPrivatePath } from "./src/lib/indexing.ts";
 
 export default defineConfig({
 	site: "https://craftlions.com",
@@ -25,7 +26,9 @@ export default defineConfig({
 		defaultStrategy: "hover",
 	},
 	integrations: [
-		sitemap(),
+		sitemap({
+			filter: (page) => !isPrivatePath(new URL(page).pathname),
+		}),
 		{
 			// Registered only in dev so production never contains the page.
 			name: "design-page",
