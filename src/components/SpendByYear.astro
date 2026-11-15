@@ -162,7 +162,7 @@ const hasNegativeSpend = bars.some((bar) =>
 												{reversed.map((segment) => (
 													<div
 														class:list={[
-															"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[filter,opacity] duration-150",
+															"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[filter,opacity] duration-150 forced-line",
 															segment.mark,
 														]}
 														data-project={segment.id}
@@ -222,7 +222,7 @@ const hasNegativeSpend = bars.some((bar) =>
 								<span
 									aria-hidden="true"
 									class:list={[
-										"size-3 border border-dashed border-current bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)]",
+										"size-3 border border-dashed border-current bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] forced-line",
 										project.mark,
 									]}
 								/>
