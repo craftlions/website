@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import { and, count, eq, ne } from "drizzle-orm";
 import Button from "../../../../components/Button.astro";
+import Field from "../../../../components/Field.astro";
 import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { member, projects } from "../../../../lib/schema.ts";
@@ -56,6 +57,12 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 				.mapWith(Number),
 	},
 	with: {
+		invoices: {
+			columns: {
+				id: true,
+			},
+			limit: 1,
+		},
 		data: {
 			columns: {
 				yearlyBudget: true,
@@ -71,103 +78,168 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 if (!organization) {
 	return Astro.redirect("/admin");
 }
+
+const settingsResult = Astro.getActionResult(
+	actions.updateOrganizationSettings,
+);
 ---
 
 <AdminOrgShell
 	{organization}
 	activePage="settings"
 	results={[
-		[
-			Astro.getActionResult(actions.updateOrganizationSettings),
-			`Settings for ${organization.name} saved`,
-		],
+		[settingsResult, `Settings for ${organization.name} saved`],
 		[Astro.getActionResult(actions.hardDeleteOrganization), "Client deleted"],
 	]}
 	fieldLabels={{
 		name: "Name",
-		slug: "Client URL",
+		slug: "Slug",
 		logo: "Logo URL",
 		yearlyBudget: "Yearly budget",
-		stripeCustomerId: "Stripe customer",
+		stripeCustomerId: "Stripe customer ID",
 		confirmation: "Confirmation",
 	}}
 >
-	<section class="grid gap-6" aria-labelledby="settings-heading">
-		<div class="grid gap-3">
-			<h2 id="settings-heading" class="text-label uppercase text-fg-muted"
-				>Settings</h2
+	<form
+		method="POST"
+		action={actions.updateOrganizationSettings}
+		class="grid gap-6"
+	>
+		<input type="hidden" name="organizationId" value={organization.id}>
+		<section aria-labelledby="identity-heading" class="grid gap-3">
+			<h2 id="identity-heading" class="text-label uppercase text-fg-muted">
+				Identity
+			</h2>
+			<p class="max-w-prose text-sm text-fg-muted">
+				How this client is named in the admin area and on their dashboard.
+			</p>
+			<div
+				class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(2,minmax(0,1fr))]"
 			>
-			<form
-				method="POST"
-				action={actions.updateOrganizationSettings}
-				class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-2"
+				<Field
+					label="Name"
+					name="name"
+					value={organization.name}
+					required
+					maxlength={120}
+					autocomplete="off"
+					hint="Up to 120 characters. Shown as the client dashboard title."
+					result={settingsResult}
+				/>
+				<Field
+					label="Logo URL"
+					name="logo"
+					type="url"
+					value={organization.logo ?? ""}
+					placeholder="https://"
+					hint="Optional. The full address of an image. Leave empty for no logo."
+					result={settingsResult}
+				/>
+			</div>
+		</section>
+		<section aria-labelledby="client-url-heading" class="grid gap-3">
+			<h2 id="client-url-heading" class="text-label uppercase text-fg-muted">
+				Client URL
+			</h2>
+			<p class="max-w-prose text-sm text-fg-muted">
+				The address members of this client use to open their dashboard.
+			</p>
+			<div
+				class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(2,minmax(0,1fr))]"
 			>
-				<input type="hidden" name="organizationId" value={organization.id}>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Name</span>
-					<Input name="name" value={organization.name} required /></label
-				>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Slug</span>
-					<Input name="slug" value={organization.slug} required /></label
-				>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Logo URL</span>
-					<Input
-						name="logo"
-						value={organization.logo ?? ""}
-						type="url"
-					/></label
-				>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Yearly budget</span>
-					<Input
-						name="yearlyBudget"
-						value={organization.data?.yearlyBudget ?? ""}
-						type="number"
-						min="1"
-					/></label
-				>
-				<label class="grid gap-1 text-sm md:col-span-2"
-					><span class="font-medium">Stripe customer id</span>
-					<Input
+				<Field
+					label="Slug"
+					name="slug"
+					value={organization.slug}
+					required
+					pattern="[a-z0-9]+(-[a-z0-9]+)*"
+					title="Lowercase letters and digits, separated by single hyphens"
+					autocomplete="off"
+					spellcheck="false"
+					class="wrap-break-word"
+					hint={`Currently ${Astro.url.origin}/dash/org/${organization.slug}. Lowercase letters, digits and hyphens. Changing it breaks existing links and bookmarks to the dashboard.`}
+					result={settingsResult}
+				/>
+			</div>
+		</section>
+		<section aria-labelledby="billing-heading" class="grid gap-3">
+			<h2 id="billing-heading" class="text-label uppercase text-fg-muted">
+				Billing
+			</h2>
+			<p class="max-w-prose text-sm text-fg-muted">
+				The budget the client dashboard compares invoices against, and the
+				Stripe customer whose invoices belong to this client.
+			</p>
+			<div
+				class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(2,minmax(0,1fr))]"
+			>
+				<Field
+					label="Yearly budget (EUR)"
+					name="yearlyBudget"
+					type="number"
+					inputmode="numeric"
+					min={1}
+					step={1}
+					value={organization.data?.yearlyBudget ?? ""}
+					hint="Whole euros per calendar year, January to December. Compared with this year's invoices. Leave empty for no budget."
+					result={settingsResult}
+				/>
+				<div class="grid grid-cols-[minmax(0,1fr)] content-start gap-1.5">
+					<Field
+						label="Stripe customer ID"
 						name="stripeCustomerId"
 						value={organization.data?.stripeCustomerId ?? ""}
 						placeholder="cus_…"
-					/></label
-				>
-				<div class="grid md:col-span-2"
-					><Button type="submit">Save settings</Button></div
-				>
-			</form>
-		</div>
-		<section class="grid gap-3 border border-dashed border-line p-4">
-			<h3 class="font-semibold">Offboarding</h3>
-			<p class="text-sm text-fg-muted"
-				>{organization.unarchivedProjectCount}
-				projects not yet archived, {organization.memberCount} members
-				remaining.</p
-			>
-			<div class="grid grid-flow-col justify-start gap-2">
-				<Button href={`/admin/org/${organization.id}/projects`}
-					>Projects</Button
-				>
-				<Button href={`/admin/org/${organization.id}/members`}>Members</Button>
+						pattern="cus_[A-Za-z0-9]+"
+						title="Starts with cus_ followed by letters and digits"
+						autocomplete="off"
+						spellcheck="false"
+						readonly={organization.invoices.length > 0}
+						hint={organization.invoices.length > 0
+							? "Locked: this client has attached invoices, and they stay with this Stripe customer."
+							: "Optional. Starts with cus_, as shown on the customer page in Stripe. Leave empty to unlink."}
+						result={settingsResult}
+					/>
+					{organization.data?.stripeCustomerId && (
+						<Button
+							variant="quiet"
+							href={`https://dashboard.stripe.com/customers/${organization.data.stripeCustomerId}`}
+							target="_blank"
+							rel="noreferrer"
+							class="max-w-full wrap-break-word"
+						>
+							Open {organization.data.stripeCustomerId} in Stripe (new tab)
+						</Button>
+					)}
+				</div>
 			</div>
 		</section>
-		{organization.projectCount === 0 && (
-			<form
-				method="POST"
-				action={actions.hardDeleteOrganization}
-				class="grid gap-3 border border-dashed border-line-danger p-4"
-			>
-				<input type="hidden" name="organizationId" value={organization.id} />
-				<label class="grid gap-1 text-sm">
-					<span class="font-medium">Type {organization.name} to delete</span>
-					<Input danger name="confirmation" required />
-				</label>
-				<Button type="submit">Delete organization</Button>
-			</form>
-		)}
+		<Button type="submit">Save settings</Button>
+	</form>
+	<section class="grid gap-3 border border-dashed border-line p-4">
+		<h3 class="font-semibold">Offboarding</h3>
+		<p class="text-sm text-fg-muted"
+			>{organization.unarchivedProjectCount}
+			projects not yet archived, {organization.memberCount} members
+			remaining.</p
+		>
+		<div class="grid grid-flow-col justify-start gap-2">
+			<Button href={`/admin/org/${organization.id}/projects`}>Projects</Button>
+			<Button href={`/admin/org/${organization.id}/members`}>Members</Button>
+		</div>
 	</section>
+	{organization.projectCount === 0 && (
+		<form
+			method="POST"
+			action={actions.hardDeleteOrganization}
+			class="grid gap-3 border border-dashed border-line-danger p-4"
+		>
+			<input type="hidden" name="organizationId" value={organization.id} />
+			<label class="grid gap-1 text-sm">
+				<span class="font-medium">Type {organization.name} to delete</span>
+				<Input danger name="confirmation" required />
+			</label>
+			<Button type="submit">Delete organization</Button>
+		</form>
+	)}
 </AdminOrgShell>
