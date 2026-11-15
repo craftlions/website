@@ -23,6 +23,11 @@ aubx astro sync
 - For schema changes, update `src/lib/schema.ts`; **never** run `aubx drizzle-kit generate` or create or edit migrations or snapshots. Leave generation to the user because it can prompt interactively and a blind answer can accept a wrong rename.
 - Reuse `src/components/Button.astro` components
 
+## Browser Support
+
+- The target is Baseline Widely available: `browserslist("baseline widely available")` in `astro.config.ts` sets the lightningcss targets.
+- Use features in that set without fallbacks. A newer feature needs a fallback that keeps the page working, as `ConfirmAction` opens its dialog with `showModal()` where invoker commands are missing.
+
 ## Visual Style
 
 - Aim for a professional minimal look that could be sketched with a pen on a piece of paper

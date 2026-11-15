@@ -60,14 +60,7 @@ export default defineConfig({
 			transformer: "lightningcss",
 			lightningcss: {
 				targets: browserslistToTargets(
-					browserslist([
-						"> 0.5%",
-						"last 2 versions",
-						"Firefox ESR",
-						"not dead",
-						"cover 80% in CN",
-						"unreleased versions",
-					]),
+					browserslist("baseline widely available"),
 				),
 			},
 		},
