@@ -231,9 +231,10 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 - **Headline** (`text-headline`; 600, 1.5rem, 1.333): major public-page section headings.
 - **Title** (`text-title`; 600, 1.25rem, 1.4): article titles, card headings, and compact section titles.
 - **Body** (400, 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.
-- **Label** (`text-label` at 0.875rem, or `label-caps` for 0.75rem uppercase table and metric labels; 600): section labels, table headers, form labels, badges, and buttons.
+- **Label** (`text-label` at 0.875rem, or `label-caps` for 0.75rem uppercase table and metric labels; 600): section labels, table headers, form labels, and buttons.
+- **Caption** (`text-caption`; 600, 0.75rem, 1.333): badges and other single-word state marks.
 
-Each role carries its size, weight, and line height together, so do not add `font-*` to it. The one `leading-*` exception is `leading-none`, in tight metric rows and in boxes sized around a single line: the badge (`text-xs/none`) and the hint button. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
+Each role carries its size, weight, and line height together, so do not add `font-*` to it. The one `leading-*` exception is `leading-none`, in tight metric rows and in boxes sized around a single line: the badge (`text-caption leading-none`) and the hint button. Add it as `leading-none`, never as a `/none` size modifier, which drops the role's weight. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
 
 ### Named Rules
 
@@ -297,7 +298,7 @@ Every destructive or irreversible action is confirmed in a native modal dialog.
 
 Badges are state labels, not decoration.
 
-- **Style:** transparent background, 1px dashed border, compact horizontal padding (4px 10px), text-xs, semibold, sentence case.
+- **Style:** transparent background, 1px dashed border, compact horizontal padding (4px 10px), `text-caption`, sentence case.
 - **State:** info uses blue, success uses green, error uses red, gray uses neutral. The badge color must match state meaning.
 - **Vocabulary:** admin labels and badge types come only from `src/lib/status.ts`. Info means the admin has to act, gray means waiting on the client or inactive, success means done, error means overdue or cancelled.
 

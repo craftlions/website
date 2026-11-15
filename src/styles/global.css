@@ -56,6 +56,9 @@
 	--text-label: 0.875rem;
 	--text-label--line-height: calc(1.25 / 0.875);
 	--text-label--font-weight: 600;
+	--text-caption: 0.75rem;
+	--text-caption--line-height: calc(1 / 0.75);
+	--text-caption--font-weight: 600;
 }
 
 /* Same-origin page loads cross-fade, unless the reader asks for less motion. */

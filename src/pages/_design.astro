@@ -111,6 +111,7 @@ const typeRoles = [
 	["text-headline", "Headline"],
 	["text-title", "Title"],
 	["text-label", "Label"],
+	["text-caption", "Caption"],
 	["text-sm", "Small body"],
 	["text-xs", "Extra small body"],
 	["label-caps", "Label caps"],
@@ -154,7 +155,7 @@ const typeRoles = [
 												<span
 													class:list={[
 														minimum && ratio < minimum
-															? "font-semibold text-fg-danger"
+															? "text-caption text-fg-danger"
 															: "text-fg-muted",
 													]}
 												>

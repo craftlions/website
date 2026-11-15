@@ -42,7 +42,7 @@ const rules = [
 			`(?<![\\w-])text-(?:(?:base|lg|[2-9]?xl)(?![\\w-])|\\(length:|\\[(?!#|color:|var\\(|[a-z]+\\]|(?:${colorFunctions})\\())`,
 			"g",
 		),
-		use: "text-display, text-headline, text-title, text-label, label-caps, text-sm or text-xs",
+		use: "text-display, text-headline, text-title, text-label, text-caption, label-caps, text-sm or text-xs",
 		doc: "DESIGN.md#3-typography",
 	},
 	{
