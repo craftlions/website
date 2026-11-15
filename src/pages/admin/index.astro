@@ -25,34 +25,61 @@ import {
 } from "../../lib/budget-consumption.ts";
 import { formatPercent, sumByCurrency } from "../../lib/format.ts";
 import { isInvoiceOverdue } from "../../lib/status.ts";
-import { hasStripeRow } from "../../lib/stripe.ts";
+import { stripeInvoiceFields } from "../../lib/stripe.ts";
 
 const onboardResult = Astro.getActionResult(actions.onboardOrganization);
 
 const now = new Date();
-const [organizations, projects, latestStateEventIds] = await Promise.all([
-	Astro.locals.db.query.organization.findMany({
-		columns: {
-			id: true,
-			name: true,
-		},
-		with: {
-			data: {
-				columns: {
-					yearlyBudget: true,
+const [organizations, projects, latestStateEventIds, openStripeInvoices] =
+	await Promise.all([
+		Astro.locals.db.query.organization.findMany({
+			columns: {
+				id: true,
+				name: true,
+			},
+			with: {
+				data: {
+					columns: {
+						yearlyBudget: true,
+					},
 				},
 			},
-		},
-		orderBy: {
-			name: "asc",
-		},
-	}),
-	getWorklistProjects(Astro.locals.db),
-	getLatestPhaseStateEventIds(Astro.locals.db),
-]);
+			orderBy: {
+				name: "asc",
+			},
+		}),
+		getWorklistProjects(Astro.locals.db),
+		getLatestPhaseStateEventIds(Astro.locals.db),
+		// Open invoices of every client, attached or not, counted as on each
+		// client's Invoices tab: an attached invoice belongs to the client of its
+		// cost part, an unattached one to the client its Stripe customer is linked
+		// to.
+		Astro.locals.db.query.stripeInvoices.findMany({
+			columns: {
+				status: true,
+				currency: true,
+				dueAt: true,
+			},
+			extras: {
+				total: stripeInvoiceFields.extras.total,
+			},
+			with: {
+				link: { columns: { organizationId: true } },
+				metadata: { columns: { organizationId: true } },
+			},
+			where: {
+				status: "open",
+				OR: [{ link: true }, { metadata: true }],
+			},
+		}),
+	]);
 const projectsByOrganization = Map.groupBy(
 	projects,
 	(project) => project.organizationId,
+);
+const openStripeInvoicesByOrganization = Map.groupBy(
+	openStripeInvoices,
+	(invoice) => invoice.link?.organizationId ?? invoice.metadata?.organizationId,
 );
 
 const worklist = organizations
@@ -85,16 +112,13 @@ const ledger = await Promise.all(
 			(item) =>
 				item.organization.id === organization.id && item.actor === "client",
 		).length,
-		openInvoices: (projectsByOrganization.get(organization.id) ?? [])
-			.flatMap((project) => project.phases)
-			.flatMap((phase) => phase.invoices)
-			.filter(hasStripeRow)
-			.filter((invoice) => invoice.stripe.status === "open")
-			.map((invoice) => ({
-				amount: invoice.stripe.total,
-				currency: invoice.stripe.currency,
-				overdue: isInvoiceOverdue(invoice.stripe, now),
-			})),
+		openInvoices: (
+			openStripeInvoicesByOrganization.get(organization.id) ?? []
+		).map((invoice) => ({
+			amount: invoice.total,
+			currency: invoice.currency,
+			overdue: isInvoiceOverdue(invoice, now),
+		})),
 		budgetUsage:
 			(organization.data?.yearlyBudget ?? 0) > 0
 				? deriveBudgetConsumption(

@@ -69,7 +69,9 @@ const [organization, projects, latestStateEventIds, openInvoices, spendRows] =
 		// The worklist page's query, so the preview lists the same items.
 		getWorklistProjects(Astro.locals.db, id),
 		getLatestPhaseStateEventIds(Astro.locals.db, id),
-		// Attached and unattached, as in the Invoices tab's summary.
+		// Attached and unattached, as in the Invoices tab's summary: attached
+		// ones by their cost part's client, unattached ones by the linked Stripe
+		// customer.
 		Astro.locals.db.query.stripeInvoices.findMany({
 			columns: {
 				status: true,
@@ -80,8 +82,11 @@ const [organization, projects, latestStateEventIds, openInvoices, spendRows] =
 				total: stripeInvoiceFields.extras.total,
 			},
 			where: {
-				...organizationStripeInvoices(id),
 				status: "open",
+				OR: [
+					{ link: { organizationId: id } },
+					{ NOT: { link: true }, ...organizationStripeInvoices(id) },
+				],
 			},
 		}),
 		// The client dashboard's spend history: the one grouped aggregate here,
