@@ -39,7 +39,7 @@ const paceColumnClass =
 		max="100"
 		value={Math.min(Number(percent.toFixed(1)), 100)}
 		class:list={[
-			"h-2 w-full appearance-none border border-dashed border-line-control bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+			"h-2 w-full appearance-none border border-dashed border-line-control bg-transparent forced-line [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:forced-ink [&::-moz-progress-bar]:forced-ink",
 			percent > 100
 				? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
 				: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
@@ -54,7 +54,7 @@ const paceColumnClass =
 		>
 			<span
 				class:list={[
-					"h-full w-0.75 justify-self-start border-x border-canvas bg-ink",
+					"h-full w-0.75 justify-self-start border-x border-canvas bg-ink forced-ink",
 					paceColumnClass,
 				]}
 			/>

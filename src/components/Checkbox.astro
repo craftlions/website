@@ -15,7 +15,7 @@ const { class: className, ...attrs } = Astro.props;
 	<span class="grid">
 		<input
 			type="checkbox"
-			class="peer col-start-1 row-start-1 size-4 cursor-pointer appearance-none border border-dashed border-line-control bg-transparent checked:bg-ink"
+			class="peer col-start-1 row-start-1 size-4 cursor-pointer appearance-none border border-dashed border-line-control bg-transparent checked:bg-ink checked:forced-ink"
 			{...attrs}
 		>
 		{/* The tick is the surface color cut to shape, so it follows the scheme. */}

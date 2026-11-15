@@ -217,6 +217,15 @@ Give an element one role per property, and choose between roles with a ternary. 
 
 Focus is global. Every focusable element gets the `:focus-visible` outline in `--focus` from the base layer; do not remove it or restyle it per component.
 
+### Forced Colors
+
+Forced-color modes (Windows High Contrast, `forced-colors: active`) are supported. The browser repaints text, borders and outlines in system colors, so dashed lines, planes, focus outlines and the dashed outline of a linked target need nothing; the target loses its `bg-info-subtle` tint and keeps the outline. It also repaints every background as Canvas and drops gradients, so a mark drawn as a fill would vanish. Such a mark opts out with one of two utilities from `src/styles/global.css`, which do nothing outside forced colors:
+
+- `forced-ink`: a solid mark in `CanvasText`: the checked checkbox and the progress fill and pace marker.
+- `forced-line`: an element that keeps drawing itself, with its border and text color in `CanvasText`: the progress track.
+
+Status hues collapse to `CanvasText` there, so state never rests on color alone. These two utilities are the only place system colors appear; do not add `forced-colors:` variants or system colors in components. Check a change with Chrome DevTools, Rendering, "Emulate CSS media feature forced-colors".
+
 ### Data Visualization
 
 The spend chart is the portal's single colored data surface. It stays a chart, not a dashboard carnival: one categorical palette, assigned in stable order, with meaning carried by pattern plus the legend and the exact-amounts table.
