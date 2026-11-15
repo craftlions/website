@@ -1,10 +1,10 @@
 ---
 import type { phaseSelectType } from "../lib/schema";
-import { actions } from "astro:actions";
 import { buildPhaseComponents } from "../lib/phase-billing";
 import { invoiceStatus } from "../lib/status.ts";
 import Badge from "./Badge.astro";
 import Button from "./Button.astro";
+import ClientPhaseActions from "./ClientPhaseActions.astro";
 
 interface Phase {
 	publicId: phaseSelectType["publicId"];
@@ -275,64 +275,13 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 														: "Not invoiced yet"}
 								</p>
 							</div>
-							<div class="grid grid-flow-col justify-start gap-2 max-md:empty:hidden">
-								{canApprovePhases && phase.state === "planned" && (
-									<>
-										<form
-											method="POST"
-											action={actions.approvePhase}
-											data-disable-on-submit
-										>
-											<input
-												type="hidden"
-												name="phaseId"
-												value={phase.publicId}
-											/>
-											<input
-												type="hidden"
-												name="expectedVersion"
-												value={phase.version}
-											/>
-											<Button type="submit">Approve</Button>
-										</form>
-										<form
-											method="POST"
-											action={actions.declinePhase}
-											data-disable-on-submit
-										>
-											<input
-												type="hidden"
-												name="phaseId"
-												value={phase.publicId}
-											/>
-											<input
-												type="hidden"
-												name="expectedVersion"
-												value={phase.version}
-											/>
-											<Button type="submit">Decline</Button>
-										</form>
-									</>
-								)}
-								{canAcceptPhases && phase.state === "delivered" && (
-									<form
-										method="POST"
-										action={actions.acceptPhase}
-										data-disable-on-submit
-									>
-										<input
-											type="hidden"
-											name="phaseId"
-											value={phase.publicId}
-										/>
-										<input
-											type="hidden"
-											name="expectedVersion"
-											value={phase.version}
-										/>
-										<Button type="submit">Accept</Button>
-									</form>
-								)}
+							<div class="grid grid-flow-col items-center justify-start gap-3 max-md:empty:hidden">
+								<ClientPhaseActions
+									{phase}
+									id="phase"
+									canApprove={canApprovePhases}
+									canAccept={canAcceptPhases}
+								/>
 							</div>
 							<Button
 								type="button"
@@ -633,6 +582,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 <script>
 	document.addEventListener("submit", (event) => {
 		if (
+			event.defaultPrevented ||
 			!(event.target instanceof HTMLFormElement) ||
 			!event.target.checkValidity()
 		) {

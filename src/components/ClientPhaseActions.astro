@@ -1,0 +1,106 @@
+---
+// The client's decision on a phase: Approve or Decline a planned phase,
+// Accept a delivered one. Approve and Accept are primary and confirmed with
+// the amount they make due; Decline is quiet and confirmed as final. Renders
+// nothing in other states or without the permission. The caller lays the
+// forms out.
+import type { PhaseState } from "../lib/status.ts";
+import { actions } from "astro:actions";
+import { formatMoney } from "../lib/format.ts";
+import ConfirmAction from "./ConfirmAction.astro";
+
+interface Props {
+	phase: {
+		publicId: string;
+		title: string;
+		state: PhaseState;
+		version: number;
+		cost: number;
+		currency: string;
+		upfrontAmount: number | null;
+		deliveryAmount: number | null;
+		acceptanceAmount: number | null;
+	};
+	// Names the phase in the controls' accessible names, e.g. "Project · Phase".
+	name?: string | undefined;
+	// Prefix for the dialog ids; unique per page.
+	id: string;
+	canApprove: boolean;
+	canAccept: boolean;
+}
+
+const { phase, name = phase.title, id, canApprove, canAccept } = Astro.props;
+const later = [
+	phase.deliveryAmount
+		? `${formatMoney(phase.deliveryAmount, phase.currency)} on delivery`
+		: null,
+	phase.acceptanceAmount
+		? `${formatMoney(phase.acceptanceAmount, phase.currency)} on acceptance`
+		: null,
+].filter(Boolean);
+---
+
+{canApprove && phase.state === "planned" && (
+	<>
+		<form method="POST" action={actions.approvePhase}>
+			<input type="hidden" name="phaseId" value={phase.publicId}>
+			<input type="hidden" name="expectedVersion" value={phase.version}>
+			<ConfirmAction
+				id={`${id}-${phase.publicId}-approve`}
+				trigger="Approve"
+				triggerLabel={`Approve ${name}`}
+				title={`Approve ${phase.title}?`}
+				confirm="Approve"
+				confirmVariant="default"
+				cancel="Not yet"
+			>
+				You commit to {formatMoney(phase.cost, phase.currency)} for this phase,
+				and craftlions can start the work.{" "}
+				{phase.upfrontAmount
+					? `The upfront part of ${formatMoney(phase.upfrontAmount, phase.currency)} becomes due now and is invoiced to you.`
+					: "Nothing becomes due now."}{" "}
+				{later.length > 0 &&
+					`The rest is billed later: ${later.join(" and ")}.`}{" "}
+				You cannot withdraw an approval from the dashboard.
+			</ConfirmAction>
+		</form>
+		<form method="POST" action={actions.declinePhase}>
+			<input type="hidden" name="phaseId" value={phase.publicId}>
+			<input type="hidden" name="expectedVersion" value={phase.version}>
+			<ConfirmAction
+				id={`${id}-${phase.publicId}-decline`}
+				trigger="Decline"
+				triggerLabel={`Decline ${name}`}
+				triggerVariant="quiet"
+				title={`Decline ${phase.title}?`}
+				confirm="Decline phase"
+				cancel="Keep phase"
+			>
+				Declining cancels this phase for good: it cannot be approved later, and
+				nothing is billed for it. craftlions is not notified automatically, so
+				let them know if you want a changed offer.
+			</ConfirmAction>
+		</form>
+	</>
+)}
+{canAccept && phase.state === "delivered" && (
+	<form method="POST" action={actions.acceptPhase}>
+		<input type="hidden" name="phaseId" value={phase.publicId}>
+		<input type="hidden" name="expectedVersion" value={phase.version}>
+		<ConfirmAction
+			id={`${id}-${phase.publicId}-accept`}
+			trigger="Accept"
+			triggerLabel={`Accept ${name}`}
+			title={`Accept ${phase.title}?`}
+			confirm="Accept"
+			confirmVariant="default"
+			cancel="Not yet"
+		>
+			You confirm the delivery and close the phase as accepted; this cannot be
+			undone.{" "}
+			{phase.acceptanceAmount
+				? `The acceptance part of ${formatMoney(phase.acceptanceAmount, phase.currency)} becomes due and is invoiced to you.`
+				: "No further payment becomes due."}
+		</ConfirmAction>
+	</form>
+)}

@@ -2,10 +2,10 @@
 export const prerender = false;
 
 import type { projectSelectType } from "../../../lib/schema.ts";
-import { actions } from "astro:actions";
 import { isAPIError } from "better-auth/api";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
+import ClientPhaseActions from "../../../components/ClientPhaseActions.astro";
 import ClientPhaseBanner from "../../../components/ClientPhaseBanner.astro";
 import CostSplit from "../../../components/CostSplit.astro";
 import Footer from "../../../components/Footer.astro";
@@ -469,68 +469,15 @@ const worklist: WorklistItem[] = [
 									) : null}
 								</div>
 								<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
-									{item.phase &&
-										item.project &&
-										canManagePhases &&
-										item.phase.state === "planned" && (
-											<>
-												<form
-													method="POST"
-													action={actions.approvePhase}
-													data-disable-on-submit
-												>
-													<input
-														type="hidden"
-														name="phaseId"
-														value={item.phase.publicId}
-													/>
-													<input
-														type="hidden"
-														name="expectedVersion"
-														value={item.phase.version}
-													/>
-													<Button type="submit">Approve</Button>
-												</form>
-												<form
-													method="POST"
-													action={actions.declinePhase}
-													data-disable-on-submit
-												>
-													<input
-														type="hidden"
-														name="phaseId"
-														value={item.phase.publicId}
-													/>
-													<input
-														type="hidden"
-														name="expectedVersion"
-														value={item.phase.version}
-													/>
-													<Button type="submit">Decline</Button>
-												</form>
-											</>
-										)}
-									{item.phase &&
-										canManagePhases &&
-										item.phase.state === "delivered" && (
-											<form
-												method="POST"
-												action={actions.acceptPhase}
-												data-disable-on-submit
-											>
-												<input
-													type="hidden"
-													name="phaseId"
-													value={item.phase.publicId}
-												/>
-												<input
-													type="hidden"
-													name="expectedVersion"
-													value={item.phase.version}
-												/>
-												<Button type="submit">Accept</Button>
-											</form>
-										)}
+									{item.phase && item.project && (
+										<ClientPhaseActions
+											phase={item.phase}
+											name={`${item.project.name} · ${item.phase.title}`}
+											id="worklist"
+											canApprove={canManagePhases}
+											canAccept={canManagePhases}
+										/>
+									)}
 									{item.invoice && (
 										<Button
 											href={item.invoice.paymentPage}
@@ -825,6 +772,7 @@ const worklist: WorklistItem[] = [
 	<script>
 		document.addEventListener("submit", (event) => {
 			if (
+				event.defaultPrevented ||
 				!(event.target instanceof HTMLFormElement) ||
 				!event.target.checkValidity()
 			) {
