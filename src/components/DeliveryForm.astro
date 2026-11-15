@@ -73,9 +73,21 @@ const submitLabel = mode === "record" ? "Record delivery" : "Update delivery";
 			result={ownResult}
 			data-delivery-url
 		/>
+		{mode === "record" && (
+			<p
+				id={`delivery-${phase.id}-consequence`}
+				class="max-w-prose text-sm text-fg-muted md:col-span-2"
+			>
+				The phase moves to Awaiting acceptance for good and any Delivery amount
+				becomes due for invoicing. The delivery details stay correctable.
+			</p>
+		)}
 		<Button
 			type="submit"
 			aria-label={`${submitLabel}: ${phase.title}`}
+			aria-describedby={mode === "record"
+				? `delivery-${phase.id}-consequence`
+				: undefined}
 			class="md:col-span-2"
 		>
 			{submitLabel}
