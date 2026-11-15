@@ -8,6 +8,10 @@ import Button from "../../../components/Button.astro";
 import SpendByYear from "../../../components/SpendByYear.astro";
 import AdminOrgShell from "../../../layouts/AdminOrgShell.astro";
 import {
+	phaseTransitionMessage,
+	successMessage,
+} from "../../../lib/action-feedback.ts";
+import {
 	deriveWorklist,
 	getLatestPhaseStateEventIds,
 } from "../../../lib/admin-worklist.ts";
@@ -151,31 +155,30 @@ const overdueInvoices = openInvoices.filter((invoice) =>
 	isInvoiceOverdue(invoice, now),
 );
 const invoicesHref = `/admin/org/${organization.id}/invoices`;
-const activeProjects = projects
-	.filter((project) => project.state === "active")
-	.map((project) => {
-		const phases = project.phases.filter(
-			(phase) => phase.state !== "cancelled",
-		);
-		// "To send (1), In work (2)": phase states with this badge, in lifecycle
-		// order, labelled from the shared vocabulary, as on the Projects tab.
-		const phaseStates = (badge: BadgeType) =>
-			(Object.keys(phaseStatus) as PhaseState[])
-				.filter((state) => phaseStatus[state].badge === badge)
-				.flatMap((state) => {
-					const count = phases.filter((phase) => phase.state === state).length;
-					return count > 0 ? [`${phaseStatus[state].label} (${count})`] : [];
-				})
-				.join(", ");
-		return {
-			...project,
-			phaseCount: phases.length,
-			acceptedCount: phases.filter((phase) => phase.state === "accepted")
-				.length,
-			needsAdmin: phaseStates("info"),
-			waitingOnClient: phaseStates("gray"),
-		};
-	});
+// Active projects, then drafts, which wait for the admin to activate them.
+const currentProjects = [
+	...projects.filter((project) => project.state === "active"),
+	...projects.filter((project) => project.state === "draft"),
+].map((project) => {
+	const phases = project.phases.filter((phase) => phase.state !== "cancelled");
+	// "To send (1), In work (2)": phase states with this badge, in lifecycle
+	// order, labelled from the shared vocabulary, as on the Projects tab.
+	const phaseStates = (badge: BadgeType) =>
+		(Object.keys(phaseStatus) as PhaseState[])
+			.filter((state) => phaseStatus[state].badge === badge)
+			.flatMap((state) => {
+				const count = phases.filter((phase) => phase.state === state).length;
+				return count > 0 ? [`${phaseStatus[state].label} (${count})`] : [];
+			})
+			.join(", ");
+	return {
+		...project,
+		phaseCount: phases.length,
+		acceptedCount: phases.filter((phase) => phase.state === "accepted").length,
+		needsAdmin: phaseStates("info"),
+		waitingOnClient: phaseStates("gray"),
+	};
+});
 // Setup steps still missing, each listed only while it is.
 const setupGaps = [
 	organization.members.length === 0 && {
@@ -200,7 +203,10 @@ const setupGaps = [
 	{organization}
 	activePage="overview"
 	results={[
-		[Astro.getActionResult(actions.transitionPhase), "Phase status changed"],
+		successMessage(
+			Astro.getActionResult(actions.transitionPhase),
+			(phase) => phaseTransitionMessage[phase.state],
+		),
 		[Astro.getActionResult(actions.recordDelivery), "Delivery recorded"],
 	]}
 	fieldLabels={{ deliveryChoice: "Delivery", deliveryUrl: "Delivery URL" }}
@@ -399,7 +405,7 @@ const setupGaps = [
 		>
 			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
 				<h2 id="projects-heading" class="text-label uppercase text-fg-muted">
-					Active projects
+					Current projects
 				</h2>
 				{projects.length > 0 && (
 					<Button
@@ -410,9 +416,12 @@ const setupGaps = [
 					</Button>
 				)}
 			</div>
-			{activeProjects.length > 0 ? (
+			<p class="max-w-prose text-sm text-fg-muted">
+				Active projects first, then drafts waiting for you to activate them.
+			</p>
+			{currentProjects.length > 0 ? (
 				<ul class="grid border border-dashed border-line">
-					{activeProjects.map((project) => (
+					{currentProjects.map((project) => (
 						<li class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line p-4 last:border-b-0">
 							<h3 class="min-w-0 font-medium wrap-break-word">
 								<a
@@ -453,7 +462,7 @@ const setupGaps = [
 			) : (
 				<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
 					{projects.length > 0
-						? "No active projects. Drafts, completed and archived projects are on the Projects tab."
+						? "No active or draft projects. Completed and archived projects are on the Projects tab."
 						: "No projects yet."}
 				</p>
 			)}
