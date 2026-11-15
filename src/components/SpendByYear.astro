@@ -89,6 +89,8 @@ const years =
 			)
 		: [...new Set([...dataYears, currentYear])].sort((a, b) => a - b);
 const hasCondensedYears = lastYear - firstYear > 50;
+const period =
+	firstYear === lastYear ? `${firstYear}` : `${firstYear}–${lastYear}`;
 const bars = years.map((year) => {
 	const totalsForYear = totalsByYear.get(year);
 	const segments = projectKeys.flatMap((project) =>
@@ -138,7 +140,7 @@ const hasNegativeSpend = bars.some((bar) =>
 				</p>
 			) : (
 				<div
-					class="grid gap-3 border border-dashed border-line p-4"
+					class="grid grid-cols-[minmax(0,1fr)] gap-3 border border-dashed border-line p-4"
 					data-spend-chart
 				>
 					<div class="grid gap-1 overflow-x-auto" dir="rtl">
@@ -162,10 +164,11 @@ const hasNegativeSpend = bars.some((bar) =>
 												{reversed.map((segment) => (
 													<div
 														class:list={[
-															"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[transform,filter,opacity] duration-150 hover:scale-y-105",
+															"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[filter,opacity] duration-150",
 															segment.mark,
 														]}
 														data-project={segment.id}
+														data-name={segment.name}
 														data-amount={currencyFormatter.format(
 															segment.total,
 														)}
@@ -197,31 +200,40 @@ const hasNegativeSpend = bars.some((bar) =>
 						</div>
 					</div>
 
+					<p class="text-sm" data-spend-status>
+						<span class="block h-5 truncate" dir="auto">
+							All projects
+						</span>
+						<span class="block h-5 truncate tabular-nums text-fg-muted">
+							{`${currencyFormatter.format(bars.reduce((sum, bar) => sum + bar.total, 0))} · ${period}`}
+						</span>
+					</p>
+
 					<ul
 						aria-label="Spend by project"
 						class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,9rem),1fr))] gap-x-4 gap-y-2 text-sm"
 					>
 						{projectKeys.map((project) => (
 							<li
-								class="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-1 py-0.5 transition-[background-color,opacity] duration-150 hover:bg-panel"
+								class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 px-1 py-0.5 transition-colors duration-150"
 								data-project={project.id}
+								data-name={project.name}
 								data-amount={currencyFormatter.format(project.total)}
+								data-year={period}
 							>
 								<span
 									aria-hidden="true"
 									class:list={[
-										"size-3 border border-dashed border-current bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-transform duration-150 group-hover:scale-110",
+										"size-3 border border-dashed border-current bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)]",
 										project.mark,
 									]}
 								/>
 								<span class="min-w-0 wrap-break-word" dir="auto">
 									{project.name}
 								</span>
-								<span
-									class="whitespace-nowrap text-xs tabular-nums text-fg-muted"
-									data-legend-amount
-									hidden
-								/>
+								<span class="col-start-2 min-w-0 text-xs tabular-nums text-fg-muted wrap-break-word">
+									{currencyFormatter.format(project.total)}
+								</span>
 							</li>
 						))}
 					</ul>
@@ -239,28 +251,34 @@ const hasNegativeSpend = bars.some((bar) =>
 <script>
 	for (const chart of document.querySelectorAll("[data-spend-chart]")) {
 		const items = chart.querySelectorAll<HTMLElement>("[data-project]");
+		// The status line has a fixed height of two truncated lines, so changing
+		// its text never moves the bars or the legend. It is not a live region:
+		// it changes on every pointer move, and the legend already lists each
+		// project's total.
+		const [name, figure] = chart.querySelectorAll<HTMLElement>(
+			"[data-spend-status] > span",
+		);
+		const defaults = [name?.textContent, figure?.textContent];
 
+		// Only colour, opacity, filter and text change here; no class affects
+		// an element's box.
 		const setActive = (active: HTMLElement | null) => {
 			for (const item of items) {
 				const match = item.dataset.project === active?.dataset.project;
-				item.classList.toggle("opacity-30", active !== null && !match);
-				item.classList.toggle(
-					"brightness-125",
-					match && "year" in item.dataset,
-				);
-				item.classList.toggle("bg-panel", match && !("year" in item.dataset));
-
-				const amount = item.querySelector<HTMLElement>("[data-legend-amount]");
-				if (!amount) continue;
-				amount.hidden = !match;
-				// A hovered bar segment shows that year's share; the legend itself
-				// shows the project total across all years.
-				amount.textContent = match
-					? active?.dataset.year
-						? `${active.dataset.amount} · ${active.dataset.year}`
-						: (item.dataset.amount ?? "")
-					: "";
+				const dimmed = active !== null && !match;
+				if (item instanceof HTMLLIElement) {
+					item.classList.toggle("text-fg-muted", dimmed);
+					item.classList.toggle("bg-panel", match);
+				} else {
+					item.classList.toggle("opacity-30", dimmed);
+					item.classList.toggle("brightness-125", match);
+				}
 			}
+			if (!name || !figure) return;
+			name.textContent = active?.dataset.name ?? defaults[0] ?? "";
+			figure.textContent = active
+				? `${active.dataset.amount} · ${active.dataset.year}`
+				: (defaults[1] ?? "");
 		};
 
 		for (const item of items) {
