@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import * as t from "drizzle-orm/pg-core";
-import { createInsertSchema, createUpdateSchema } from "drizzle-orm/zod";
 
 /**
  * BETTER-AUTH TABLES
@@ -500,11 +499,5 @@ export const organizationMetadata = t.pgTable(
 	],
 );
 
-export const organizationMetadataInsertSchema =
-	createInsertSchema(organizationMetadata);
-export const organizationMetadataUpdateSchema =
-	createUpdateSchema(organizationMetadata);
-
 export type projectSelectType = typeof projects.$inferSelect;
 export type phaseSelectType = typeof phases.$inferSelect;
-export type eventSelectType = typeof events.$inferSelect;
