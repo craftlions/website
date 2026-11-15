@@ -8,9 +8,15 @@ interface Props {
 	pathname: string;
 }
 
-const { pathname } = Astro.props;
-const current = (path: string) =>
-	pathname === path || pathname.startsWith(`${path}/`) ? "page" : undefined;
+const { organizationSlug, pathname } = Astro.props;
+const dashboard = organizationSlug ? `/dash/org/${organizationSlug}` : "/dash";
+// "page" marks the link to this very page, "true" the section it lies in.
+const current = (href: string, section = href) =>
+	pathname === href
+		? "page"
+		: pathname.startsWith(`${section}/`)
+			? "true"
+			: undefined;
 
 const session =
 	Astro.locals.session === undefined
@@ -25,7 +31,7 @@ const session =
 		{session ? (
 			<>
 				<li>
-					<Button href="/dash" aria-current={current("/dash")}>
+					<Button href={dashboard} aria-current={current(dashboard, "/dash")}>
 						Dashboard
 					</Button>
 				</li>

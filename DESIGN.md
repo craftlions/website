@@ -321,6 +321,9 @@ A form action's outcome shows once, at the top of the page, below the page headi
 
 Navigation is a responsive grid with the logo on the left and compact session links on the right at larger widths. On small screens it stacks into a centered single-column grid. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like. It sits in the shared `max-w-6xl` (dashboard) or `max-w-3xl` (public/settings) header, matching the page column it leads.
 
+- **Dashboard:** on a client page it leads to that organization's dashboard, otherwise to `/dash`, which lists the member's organizations.
+- **Current:** a link to the page itself carries `aria-current="page"`; a link to the section the page lies in carries `aria-current="true"`. Both draw the pressed style; a quiet link turns primary with a solid underline.
+
 **Breadcrumbs** (`src/components/Breadcrumbs.astro`) lead admin pages below the navigation: muted links (`link hover:text-fg`) separated by slashes, with the current page in primary text and `aria-current="page"`. They render only when there is a parent to go back to.
 
 ### Tables
