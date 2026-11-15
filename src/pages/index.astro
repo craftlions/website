@@ -64,40 +64,44 @@ import Shell from "../layouts/Shell.astro";
 	</Fragment>
 	<Fragment slot="body">
 		<body
-			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-canvas text-fg antialiased gap-12 p-4 text-pretty"
+			class="min-h-dvh grid grid-rows-[auto_1fr_auto] bg-canvas text-fg antialiased gap-6 p-4 text-pretty"
 		>
-			<header class="grid gap-6 justify-items-center max-w-3xl mx-auto">
+			<header class="grid max-w-3xl mx-auto w-full">
 				<Nav deferSessionLinks variant="marketing" />
-				<section class="grid gap-4">
-					<h1
-						class="border-l border-dashed border-line-strong pl-3 text-display"
-					>
-						Modern IT services drawn with care
-					</h1>
-					<p class="pl-3 text-fg-muted">
-						craftlions helps teams plan, build, and maintain software with a
-						practical engineering mindset. The work is modern, but the process
-						stays legible: clear lines, useful decisions, and outcomes that can
-						be explained without decoration.
-					</p>
-					<p class="pl-3 text-fg-muted">
-						From product development and technical strategy to workshops and
-						hands-on delivery, craftlions brings focused external expertise into
-						your existing process. The standard is simple:{" "}
-						<strong>
-							build carefully, communicate plainly, and leave systems easier to
-							trust.
-						</strong>
-					</p>
-				</section>
-				<section class="justify-self-start pl-3">
-					<Button href="mailto:alexander@craftlions.com">
-						Start a project
-					</Button>
-				</section>
 			</header>
 
-			<main class="w-full grid content-start min-h-0 max-w-3xl mx-auto gap-12">
+			<main
+				class="w-full grid content-start min-h-0 max-w-3xl mx-auto gap-12 pb-6"
+			>
+				<section class="grid gap-6">
+					<div class="grid gap-4">
+						<h1
+							class="border-l border-dashed border-line-strong pl-3 text-display"
+						>
+							Modern IT services drawn with care
+						</h1>
+						<p class="pl-3 text-fg-muted">
+							craftlions helps teams plan, build, and maintain software with a
+							practical engineering mindset. The work is modern, but the process
+							stays legible: clear lines, useful decisions, and outcomes that
+							can be explained without decoration.
+						</p>
+						<p class="pl-3 text-fg-muted">
+							From product development and technical strategy to workshops and
+							hands-on delivery, craftlions brings focused external expertise
+							into your existing process. The standard is simple:{" "}
+							<strong>
+								build carefully, communicate plainly, and leave systems easier
+								to trust.
+							</strong>
+						</p>
+					</div>
+					<div class="justify-self-start pl-3">
+						<Button href="mailto:alexander@craftlions.com">
+							Start a project
+						</Button>
+					</div>
+				</section>
 				<section class="grid gap-6">
 					<h2 class="text-headline">
 						Services for steady technical progress
