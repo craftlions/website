@@ -7,11 +7,18 @@ import Button from "../../../../../components/Button.astro";
 import CostSplit from "../../../../../components/CostSplit.astro";
 import Input from "../../../../../components/Input.astro";
 import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculator.astro";
+import PhaseTransitionForm from "../../../../../components/PhaseTransitionForm.astro";
+import ProjectTransitionForm from "../../../../../components/ProjectTransitionForm.astro";
 import AdminOrgShell from "../../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../../lib/admin-org.ts";
 import { formatDate, formatMoney } from "../../../../../lib/format.ts";
 import { buildPhaseComponents } from "../../../../../lib/phase-billing";
-import { phaseStatus, projectStatus } from "../../../../../lib/status.ts";
+import {
+	phaseStatus,
+	phaseTransitionsFrom,
+	projectStatus,
+	projectTransitions,
+} from "../../../../../lib/status.ts";
 
 const { id, publicId } = Astro.params;
 
@@ -132,56 +139,16 @@ const phases = project.phases.map((phase) => ({
 				<div
 					class="grid grid-flow-col items-center justify-start gap-4 md:justify-end"
 				>
-					{project.state === "draft" && (
-						<form method="POST" action={actions.transitionProject}>
-							<input type="hidden" name="projectId" value={project.id} />
-							<input type="hidden" name="nextState" value="active" />
-							<input
-								type="hidden"
-								name="expectedVersion"
-								value={project.version}
-							/>
-							<Button type="submit">Activate</Button>
-						</form>
-					)}
-					{project.state === "active" && (
-						<form method="POST" action={actions.transitionProject}>
-							<input type="hidden" name="projectId" value={project.id} />
-							<input type="hidden" name="nextState" value="completed" />
-							<input
-								type="hidden"
-								name="expectedVersion"
-								value={project.version}
-							/>
-							<Button type="submit">Complete</Button>
-						</form>
-					)}
-					{project.state === "completed" && (
-						<form method="POST" action={actions.transitionProject}>
-							<input type="hidden" name="projectId" value={project.id} />
-							<input type="hidden" name="nextState" value="active" />
-							<input
-								type="hidden"
-								name="expectedVersion"
-								value={project.version}
-							/>
-							<Button type="submit">Reopen</Button>
-						</form>
-					)}
-					{project.state === "completed" && (
-						<form method="POST" action={actions.transitionProject}>
-							<input type="hidden" name="projectId" value={project.id} />
-							<input type="hidden" name="nextState" value="archived" />
-							<input
-								type="hidden"
-								name="expectedVersion"
-								value={project.version}
-							/>
-							<Button type="submit" variant="quiet">
-								Archive
-							</Button>
-						</form>
-					)}
+					{projectTransitions[project.state].map((transition) => (
+						<ProjectTransitionForm
+							{project}
+							nextState={transition.nextState}
+							button={{
+								variant:
+									transition.nextState === "archived" ? "quiet" : "default",
+							}}
+						/>
+					))}
 				</div>
 			</div>
 		</div>
@@ -244,68 +211,15 @@ const phases = project.phases.map((phase) => ({
 								)}
 							</div>
 							<div class="grid grid-flow-col items-center justify-start gap-4 md:justify-self-end">
-								{phase.state === "submitted" && (
-									<form method="POST" action={actions.transitionPhase}>
-										<input type="hidden" name="phaseId" value={phase.id} />
-										<input type="hidden" name="nextState" value="planned" />
-										<input
-											type="hidden"
-											name="expectedVersion"
-											value={phase.version}
-										/>
-										<Button type="submit">Send</Button>
-									</form>
-								)}
-								{phase.state === "planned" && (
-									<form method="POST" action={actions.transitionPhase}>
-										<input type="hidden" name="phaseId" value={phase.id} />
-										<input type="hidden" name="nextState" value="approved" />
-										<input
-											type="hidden"
-											name="expectedVersion"
-											value={phase.version}
-										/>
-										<Button type="submit">Approve</Button>
-									</form>
-								)}
-								{phase.state === "approved" && (
-									<form method="POST" action={actions.transitionPhase}>
-										<input type="hidden" name="phaseId" value={phase.id} />
-										<input type="hidden" name="nextState" value="in_progress" />
-										<input
-											type="hidden"
-											name="expectedVersion"
-											value={phase.version}
-										/>
-										<Button type="submit">Start</Button>
-									</form>
-								)}
-								{phase.state === "delivered" && (
-									<form method="POST" action={actions.transitionPhase}>
-										<input type="hidden" name="phaseId" value={phase.id} />
-										<input type="hidden" name="nextState" value="accepted" />
-										<input
-											type="hidden"
-											name="expectedVersion"
-											value={phase.version}
-										/>
-										<Button type="submit">Record acceptance</Button>
-									</form>
-								)}
-								{(phase.state === "submitted" || phase.state === "planned") && (
-									<form method="POST" action={actions.transitionPhase}>
-										<input type="hidden" name="phaseId" value={phase.id} />
-										<input type="hidden" name="nextState" value="cancelled" />
-										<input
-											type="hidden"
-											name="expectedVersion"
-											value={phase.version}
-										/>
-										<Button type="submit" variant="quiet">
-											Cancel
-										</Button>
-									</form>
-								)}
+								{phaseTransitionsFrom(phase.state).map((nextState) => (
+									<PhaseTransitionForm
+										{phase}
+										{nextState}
+										button={{
+											variant: nextState === "cancelled" ? "quiet" : "default",
+										}}
+									/>
+								))}
 							</div>
 							{phase.state === "in_progress" && (
 								<details class="grid gap-3 md:col-span-4">

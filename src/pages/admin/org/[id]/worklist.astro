@@ -3,8 +3,8 @@ export const prerender = false;
 
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
-import Button from "../../../../components/Button.astro";
 import CostSplit from "../../../../components/CostSplit.astro";
+import PhaseTransitionForm from "../../../../components/PhaseTransitionForm.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import {
@@ -16,7 +16,7 @@ import {
 	buildPhaseComponents,
 	componentBillingStatus,
 } from "../../../../lib/phase-billing";
-import { costPartLabel } from "../../../../lib/status.ts";
+import { costPartLabel, phaseTransitionsFrom } from "../../../../lib/status.ts";
 import { stripeInvoiceFields } from "../../../../lib/stripe.ts";
 
 const { id } = Astro.params;
@@ -192,67 +192,9 @@ const worklist = deriveWorklist({
 						</div>
 						<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
 							<p class="text-sm tabular-nums text-fg-muted">{item.age}</p>
-							{item.phase.state === "submitted" && (
-								<form method="POST" action={actions.transitionPhase}>
-									<input type="hidden" name="phaseId" value={item.phase.id} />
-									<input type="hidden" name="nextState" value="planned" />
-									<input
-										type="hidden"
-										name="expectedVersion"
-										value={item.phase.version}
-									/>
-									<Button type="submit">Send</Button>
-								</form>
-							)}
-							{item.phase.state === "planned" && (
-								<form method="POST" action={actions.transitionPhase}>
-									<input type="hidden" name="phaseId" value={item.phase.id} />
-									<input type="hidden" name="nextState" value="approved" />
-									<input
-										type="hidden"
-										name="expectedVersion"
-										value={item.phase.version}
-									/>
-									<Button type="submit">Approve</Button>
-								</form>
-							)}
-							{(item.phase.state === "submitted" ||
-								item.phase.state === "planned") && (
-								<form method="POST" action={actions.transitionPhase}>
-									<input type="hidden" name="phaseId" value={item.phase.id} />
-									<input type="hidden" name="nextState" value="cancelled" />
-									<input
-										type="hidden"
-										name="expectedVersion"
-										value={item.phase.version}
-									/>
-									<Button type="submit">Cancel</Button>
-								</form>
-							)}
-							{item.phase.state === "approved" && (
-								<form method="POST" action={actions.transitionPhase}>
-									<input type="hidden" name="phaseId" value={item.phase.id} />
-									<input type="hidden" name="nextState" value="in_progress" />
-									<input
-										type="hidden"
-										name="expectedVersion"
-										value={item.phase.version}
-									/>
-									<Button type="submit">Start</Button>
-								</form>
-							)}
-							{item.phase.state === "delivered" && (
-								<form method="POST" action={actions.transitionPhase}>
-									<input type="hidden" name="phaseId" value={item.phase.id} />
-									<input type="hidden" name="nextState" value="accepted" />
-									<input
-										type="hidden"
-										name="expectedVersion"
-										value={item.phase.version}
-									/>
-									<Button type="submit">Record acceptance</Button>
-								</form>
-							)}
+							{phaseTransitionsFrom(item.phase.state).map((nextState) => (
+								<PhaseTransitionForm phase={item.phase} {nextState} />
+							))}
 						</div>
 					</article>
 				))

@@ -1,0 +1,32 @@
+---
+import type { ComponentProps, HTMLAttributes } from "astro/types";
+import { actions } from "astro:actions";
+import { type PhaseTransitionTarget, phaseTransitions } from "../lib/status.ts";
+import Button from "./Button.astro";
+
+interface Props extends HTMLAttributes<"form"> {
+	phase: { id: string; title: string; version: number };
+	nextState: PhaseTransitionTarget;
+	// Defaults to the status vocabulary's action name for `nextState`.
+	label?: string;
+	// Passed through to the submit Button, e.g. `variant` or data attributes.
+	button?: Omit<ComponentProps<typeof Button>, "as" | "href" | "type">;
+}
+
+const {
+	phase,
+	nextState,
+	label = phaseTransitions[nextState].label,
+	button,
+	...attrs
+} = Astro.props;
+---
+
+<form method="POST" action={actions.transitionPhase} {...attrs}>
+	<input type="hidden" name="phaseId" value={phase.id}>
+	<input type="hidden" name="nextState" value={nextState}>
+	<input type="hidden" name="expectedVersion" value={phase.version}>
+	<Button type="submit" aria-label={`${label}: ${phase.title}`} {...button}>
+		{label}
+	</Button>
+</form>
