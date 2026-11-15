@@ -14,9 +14,7 @@ interface Props extends ComponentProps<typeof ActionBanner> {
 const { title, breadcrumbs = [], results, fieldLabels } = Astro.props;
 ---
 
-<Shell
-	bodyClass="min-h-dvh grid gap-6 bg-canvas p-4 text-pretty text-fg antialiased"
->
+<Shell bodyClass="min-h-dvh grid gap-6 p-4 text-pretty">
 	<Fragment slot="head"> <title>{title} · craftlions</title> </Fragment>
 	<Fragment slot="body">
 		<header class="mx-auto grid w-full max-w-6xl gap-6"> <Nav /> </header>

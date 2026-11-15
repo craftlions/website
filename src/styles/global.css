@@ -89,6 +89,14 @@
 }
 
 @layer base {
+	/* Every page sits on the canvas in primary text; layout stays per page. */
+	body {
+		background-color: var(--canvas);
+		color: var(--fg);
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
 	/* Like headings after preflight, table cells take their weight from a role,
 	   not from the browser's bold th. */
 	th {
