@@ -145,6 +145,13 @@ const optionalPhaseAmount = z.preprocess(
 	z.number().nonnegative().nullable(),
 );
 
+// Checked after normalising, so input like "!!!" that normalises to nothing
+// is rejected instead of saved as an empty slug.
+const slugSchema = z
+	.string()
+	.transform(toSlug)
+	.pipe(z.string().min(1, "Use at least one letter or digit."));
+
 export const server = {
 	approvePhase: defineAction({
 		accept: "form",
@@ -194,7 +201,7 @@ export const server = {
 			email: z.string().trim().pipe(z.email()),
 			name: z.string().trim().min(1).max(120),
 			organizationName: z.string().trim().min(1).max(120),
-			slug: z.string().trim().min(1).transform(toSlug),
+			slug: slugSchema,
 			yearlyBudget: optionalBudget,
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
@@ -404,7 +411,7 @@ export const server = {
 		input: z.object({
 			organizationId: z.string().trim().min(1),
 			name: z.string().trim().min(1).max(120),
-			slug: z.string().trim().min(1).transform(toSlug),
+			slug: slugSchema,
 			logo: z.preprocess(
 				(value) => (value === "" ? null : value),
 				z.string().trim().pipe(z.url()).nullable().optional(),
