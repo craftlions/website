@@ -4,7 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
-import Input from "../../../../components/Input.astro";
+import Field from "../../../../components/Field.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import { formatDate } from "../../../../lib/format.ts";
@@ -66,35 +66,64 @@ if (!organization) {
 	]}
 	fieldLabels={{ email: "Email", name: "Name", role: "Role" }}
 >
-	<section class="grid gap-6" aria-labelledby="members-heading">
-		<div class="grid gap-3">
-			<h2 id="members-heading" class="text-label uppercase text-fg-muted"
-				>Members</h2
-			>
-			<form
-				method="POST"
-				action={actions.addOrganizationMember}
-				class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_max-content_max-content] md:items-end"
-			>
-				<input type="hidden" name="organizationId" value={organization.id}>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Email</span>
-					<Input name="email" type="email" required /></label
+	<section class="grid gap-4" aria-labelledby="members-heading">
+		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+			<h2 id="members-heading" class="text-label uppercase text-fg-muted">
+				Members
+			</h2>
+			<add-member-toggle>
+				<Button
+					aria-expanded={addResult?.error || members.length === 0
+						? "true"
+						: "false"}
+					aria-controls="add-member"
 				>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Name</span>
-					<Input name="name" required /></label
-				>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Role</span
-					><Input as="select" name="role">
-						<option value="member" selected>Member</option>
-						<option value="owner">Owner</option>
-					</Input></label
-				>
-				<Button type="submit">Add user</Button>
-			</form>
+					Add member
+				</Button>
+			</add-member-toggle>
 		</div>
+		<p class="max-w-prose text-sm text-fg-muted">
+			People who can sign in and see the {organization.name} dashboard.
+		</p>
+		<form
+			id="add-member"
+			method="POST"
+			action={actions.addOrganizationMember}
+			class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(2,minmax(0,1fr))]"
+			hidden={!addResult?.error && members.length > 0}
+		>
+			<input type="hidden" name="organizationId" value={organization.id}>
+			<Field
+				label="Email"
+				name="email"
+				type="email"
+				required
+				autocomplete="off"
+				result={addResult}
+				hint="A new address gets an account and a “Reset your password” email to set a password. An existing account is added without an email; an existing member stays unchanged."
+			/>
+			<Field
+				label="Name"
+				name="name"
+				required
+				maxlength="120"
+				autocomplete="off"
+				result={addResult}
+				hint="Only used when a new account is created."
+			/>
+			<Field
+				label="Role"
+				as="select"
+				name="role"
+				result={addResult}
+				hint="Members see projects, phases and invoices and can pay invoices. Owners can also approve, decline and accept phases."
+				class="md:col-span-2"
+			>
+				<option value="member" selected>Member</option>
+				<option value="owner">Owner</option>
+			</Field>
+			<Button type="submit" class="md:col-span-2">Add member</Button>
+		</form>
 		{members.length > 0 ? (
 			<div class="grid grid-cols-[minmax(0,1fr)] border border-dashed border-line md:grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,14rem)] md:gap-x-6">
 				<div
@@ -225,6 +254,34 @@ if (!organization) {
 				}
 			});
 		}
+	}
+
+	// The heading's Add member button shows and hides the form it controls.
+	class AddMemberToggle extends HTMLElement {
+		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
+			const button = this.querySelector("button");
+			const form = document.getElementById(
+				button?.getAttribute("aria-controls") ?? "",
+			);
+
+			if (!button || !form) return;
+
+			button.addEventListener("click", () => {
+				const expanded = button.getAttribute("aria-expanded") !== "true";
+				button.setAttribute("aria-expanded", String(expanded));
+				form.hidden = !expanded;
+				if (expanded) {
+					form.querySelector<HTMLElement>("input:not([type=hidden])")?.focus();
+				}
+			});
+		}
+	}
+
+	if (!customElements.get("add-member-toggle")) {
+		customElements.define("add-member-toggle", AddMemberToggle);
 	}
 
 	if (!customElements.get("impersonate-user")) {
