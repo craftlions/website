@@ -4,12 +4,18 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
-import CostSplit from "../../../../components/CostSplit.astro";
 import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
-import { formatMoney } from "../../../../lib/format.ts";
-import { phaseStatus, projectStatus } from "../../../../lib/status.ts";
+import { sumByCurrency } from "../../../../lib/format.ts";
+import {
+	type BadgeType,
+	isInvoiceOverdue,
+	type PhaseState,
+	phaseStatus,
+	projectStatus,
+} from "../../../../lib/status.ts";
+import { stripeInvoiceFields } from "../../../../lib/stripe.ts";
 
 const { id } = Astro.params;
 
@@ -31,11 +37,18 @@ const [organization, projects] = await Promise.all([
 			phases: {
 				columns: {
 					cost: true,
-					upfrontAmount: true,
-					deliveryAmount: true,
-					acceptanceAmount: true,
 					currency: true,
 					state: true,
+				},
+				with: {
+					invoices: {
+						columns: {
+							id: true,
+						},
+						with: {
+							stripe: stripeInvoiceFields,
+						},
+					},
 				},
 			},
 		},
@@ -52,64 +65,77 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-// Phase states that still need someone to act, in lifecycle order.
-const attentionStates = [
-	"submitted",
-	"planned",
-	"approved",
-	"in_progress",
-	"delivered",
-] as const;
+// Projects needing the admin come first (rank 0), then by project state.
+const stateRank = { active: 1, draft: 2, completed: 3, archived: 4 } as const;
 
-const summarize = (project: (typeof projects)[number]) => {
-	const totals = new Map<
-		string,
-		{ total: number; upfront: number; delivery: number; acceptance: number }
-	>();
-	const attention = new Map<(typeof attentionStates)[number], number>();
-	for (const phase of project.phases) {
-		if (phase.state === "cancelled") continue;
-		const entry = totals.get(phase.currency) ?? {
-			total: 0,
-			upfront: 0,
-			delivery: 0,
-			acceptance: 0,
+const rows = projects
+	.map((project) => {
+		const phases = project.phases.filter(
+			(phase) => phase.state !== "cancelled",
+		);
+		// Issued invoices only: drafts are unsent and void ones never count.
+		const invoices = phases.flatMap((phase) =>
+			phase.invoices.flatMap((invoice) =>
+				invoice.stripe &&
+				invoice.stripe.status !== "draft" &&
+				invoice.stripe.status !== "void"
+					? [{ ...invoice.stripe, amount: invoice.stripe.total }]
+					: [],
+			),
+		);
+		const openInvoices = invoices.filter(
+			(invoice) => invoice.status === "open",
+		);
+		const overdueInvoices = openInvoices.filter((invoice) =>
+			isInvoiceOverdue(invoice),
+		);
+		// "To send (1), In work (2)": phase states with this badge, in
+		// lifecycle order, labelled from the shared vocabulary.
+		const phaseStates = (badge: BadgeType) =>
+			(Object.keys(phaseStatus) as PhaseState[])
+				.filter((state) => phaseStatus[state].badge === badge)
+				.flatMap((state) => {
+					const count = phases.filter((phase) => phase.state === state).length;
+					return count > 0 ? [`${phaseStatus[state].label} (${count})`] : [];
+				})
+				.join(", ");
+		const needsAdmin = phaseStates("info");
+		return {
+			...project,
+			rank: needsAdmin ? 0 : stateRank[project.state],
+			phaseCount: phases.length,
+			acceptedCount: phases.filter((phase) => phase.state === "accepted")
+				.length,
+			needsAdmin,
+			waitingOnClient: phaseStates("gray"),
+			total:
+				phases.length > 0
+					? sumByCurrency(
+							phases.map((phase) => ({
+								amount: phase.cost,
+								currency: phase.currency,
+							})),
+						)
+					: null,
+			invoiced: invoices.length > 0 ? sumByCurrency(invoices) : null,
+			open: openInvoices.length > 0 ? sumByCurrency(openInvoices) : null,
+			overdue:
+				overdueInvoices.length > 0 ? sumByCurrency(overdueInvoices) : null,
 		};
-		entry.total += phase.cost;
-		entry.upfront += phase.upfrontAmount ?? 0;
-		entry.delivery += phase.deliveryAmount ?? 0;
-		entry.acceptance += phase.acceptanceAmount ?? 0;
-		totals.set(phase.currency, entry);
-		const state = attentionStates.find((state) => state === phase.state);
-		if (state) attention.set(state, (attention.get(state) ?? 0) + 1);
-	}
-	return {
-		splits: [...totals].map(([currency, entry]) => ({
-			currency,
-			total: entry.total,
-			items: [
-				{ component: "upfront" as const, amount: entry.upfront },
-				{ component: "delivery" as const, amount: entry.delivery },
-				{ component: "acceptance" as const, amount: entry.acceptance },
-			]
-				.filter((item) => item.amount !== 0)
-				.map((item) => ({ ...item, status: "not_due" as const })),
-		})),
-		attention: [...attention]
-			.map(
-				([state, count]) =>
-					`${count} ${phaseStatus[state].label.toLowerCase()}`,
-			)
-			.join(" · "),
-	};
-};
+	})
+	// Stable sort keeps the name order from the query inside each rank.
+	.toSorted((a, b) => a.rank - b.rank);
 
-const activeProjects = projects.filter(
-	(project) => project.state !== "archived",
-);
-const archivedProjects = projects.filter(
-	(project) => project.state === "archived",
-);
+const groups = [
+	{
+		archived: false,
+		rows: rows.filter((row) => row.state !== "archived"),
+	},
+	{
+		archived: true,
+		rows: rows.filter((row) => row.state === "archived"),
+	},
+];
 ---
 
 <AdminOrgShell
@@ -118,105 +144,148 @@ const archivedProjects = projects.filter(
 	results={[[actionResult, "Project created"]]}
 	fieldLabels={{ organizationId: "Client", name: "Project name" }}
 >
-	<section class="grid gap-4" aria-labelledby="projects-heading">
-		<div class="grid grid-cols-[1fr_auto] items-center gap-3">
-			<h2 id="projects-heading" class="text-label uppercase text-fg-muted"
-				>Projects</h2
+	{groups.map(({ archived, rows: groupRows }) => {
+		// Archived projects collapse into a disclosure; current ones list openly.
+		const Disclosure = archived ? "details" : Fragment;
+		return archived && groupRows.length === 0 ? null : (
+			<section
+				class="grid gap-3"
+				aria-labelledby={
+					archived ? "archived-projects-heading" : "projects-heading"
+				}
 			>
-		</div>
-		<details class="grid gap-3">
-			<Button as="summary">New project</Button>
-			<form
-				method="POST"
-				action={actions.createProject}
-				class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end"
-			>
-				<input type="hidden" name="organizationId" value={organization.id}>
-				<label class="grid gap-1 text-sm">
-					<span class="font-medium">Project name</span>
-					<Input name="name" required />
-				</label>
-				<Button type="submit">Create project</Button>
-			</form>
-		</details>
-		{activeProjects.length > 0 ? (
-			<ul class="grid gap-4 md:grid-cols-2">
-				{activeProjects.map((project) => {
-					const summary = summarize(project);
-					return (
-						<li class="grid">
-							<a
-								href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-								class="grid content-start gap-3 border border-dashed border-line p-4 transition-colors hover:border-line-active hover:bg-panel"
+				{!archived && (
+					<>
+						<h2
+							id="projects-heading"
+							class="text-label uppercase text-fg-muted"
+						>
+							Projects
+						</h2>
+						<details class="grid gap-3">
+							<Button as="summary">New project</Button>
+							<form
+								method="POST"
+								action={actions.createProject}
+								class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end"
 							>
-								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-									<h3 class="text-title wrap-break-word">{project.name}</h3>
+								<input
+									type="hidden"
+									name="organizationId"
+									value={organization.id}
+								>
+								<label class="grid gap-1 text-sm">
+									<span class="font-medium">Project name</span>
+									<Input name="name" required />
+								</label>
+								<Button type="submit">Create project</Button>
+							</form>
+						</details>
+					</>
+				)}
+				<Disclosure class={archived ? "grid gap-3" : undefined}>
+					{archived && (
+						<Button as="summary" variant="quiet">
+							<h2 id="archived-projects-heading" class="text-label uppercase">
+								Archived ({groupRows.length})
+							</h2>
+						</Button>
+					)}
+					{groupRows.length > 0 ? (
+						<ul class="grid border border-dashed border-line lg:grid-cols-[minmax(10rem,1fr)_auto_auto_auto_auto] lg:gap-x-6">
+							{groupRows.map((project) => (
+								<li
+									class:list={[
+										"grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line p-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:col-span-5 lg:grid-cols-subgrid lg:gap-x-6",
+										archived ? "text-fg-muted" : "text-fg",
+									]}
+								>
+									<h3 class="min-w-0 font-medium wrap-break-word sm:col-span-2 lg:col-span-1">
+										<a
+											href={`/admin/org/${organization.id}/projects/${project.publicId}`}
+											class="underline decoration-dashed underline-offset-4"
+										>
+											{project.name}
+										</a>
+									</h3>
 									<Badge type={projectStatus[project.state].badge}>
 										{projectStatus[project.state].label}
 									</Badge>
-								</div>
-								<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
-									<dt class="text-fg-muted">Phases</dt>
-									<dd class="tabular-nums">
-										{
-											project.phases.filter(
-												(phase) => phase.state !== "cancelled",
-											).length
-										}
-									</dd>
-									<dt class="text-fg-muted">Total</dt>
-									<dd class="grid gap-2">
-										{summary.splits.length > 0
-											? summary.splits.map((split) => (
-													<div class="grid gap-1">
-														<p class="tabular-nums">
-															{formatMoney(split.total, split.currency)}
-														</p>
-														{split.items.length > 0 && (
-															<CostSplit
-																items={split.items}
-																currency={split.currency}
-																total={split.total}
-																variant="compact"
-																showStatus={false}
-															/>
-														)}
-													</div>
-												))
-											: "—"}
-									</dd>
-								</dl>
-								<p class="text-sm text-fg-muted">
-									{summary.attention || "Nothing needs attention."}
-								</p>
-							</a>
-						</li>
-					);
-				})}
-			</ul>
-		) : (
-			<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
-				No projects yet.
-			</p>
-		)}
-		{archivedProjects.length > 0 && (
-			<details class="grid gap-2">
-				<Button as="summary" variant="quiet">
-					Archived ({archivedProjects.length})
-				</Button>
-				<ul class="grid gap-1 text-sm">
-					{archivedProjects.map((project) => (
-						<li>
-							<a
-								class="underline decoration-dashed underline-offset-4"
-								href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-							>
-								{project.name}
-							</a>
-						</li>
-					))}
-				</ul>
-			</details>
-		)}
-	</section>
+									<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm sm:col-span-1">
+										<dt class="label-caps">Phases</dt>
+										<dd class="tabular-nums wrap-break-word">
+											{project.phaseCount > 0 ? project.phaseCount : "None yet"}
+										</dd>
+										{project.phaseCount > 0 && (
+											<>
+												<dt class="label-caps">Accepted</dt>
+												<dd class="tabular-nums wrap-break-word">
+													{project.acceptedCount} of {project.phaseCount}
+												</dd>
+											</>
+										)}
+										{project.needsAdmin && (
+											<>
+												<dt class="label-caps">Needs you</dt>
+												<dd class="wrap-break-word text-fg-info">
+													{project.needsAdmin}
+												</dd>
+											</>
+										)}
+										{project.waitingOnClient && (
+											<>
+												<dt class="label-caps">Waiting on client</dt>
+												<dd class="wrap-break-word">
+													{project.waitingOnClient}
+												</dd>
+											</>
+										)}
+									</dl>
+									<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm sm:col-span-1">
+										<dt class="label-caps">Total</dt>
+										<dd class="text-right font-medium tabular-nums wrap-break-word">
+											{project.total ?? "—"}
+										</dd>
+										<dt class="label-caps">Invoiced</dt>
+										<dd class="text-right tabular-nums wrap-break-word">
+											{project.invoiced ?? "—"}
+										</dd>
+										{project.open && (
+											<>
+												<dt class="label-caps">Open</dt>
+												<dd class="text-right tabular-nums wrap-break-word">
+													{project.open}
+												</dd>
+											</>
+										)}
+										{project.overdue && (
+											<>
+												<dt class="label-caps">Overdue</dt>
+												<dd class="text-right tabular-nums wrap-break-word text-fg-danger">
+													{project.overdue}
+												</dd>
+											</>
+										)}
+									</dl>
+									<Button
+										href={`/admin/org/${organization.id}/projects/${project.publicId}`}
+										aria-label={`Open ${project.name}`}
+										class="col-span-2 sm:col-span-1"
+									>
+										Open
+									</Button>
+								</li>
+							))}
+						</ul>
+					) : (
+						<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+							{groups[1]?.rows.length
+								? "No current projects. Archived projects are listed below."
+								: "No projects yet. Create the first one with New project; it starts as a draft you can add phases to."}
+						</p>
+					)}
+				</Disclosure>
+			</section>
+		);
+	})}
 </AdminOrgShell>
