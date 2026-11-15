@@ -1,4 +1,5 @@
 ---
+import { clientCostPartLabel } from "../lib/client-worklist.ts";
 import { formatDate, formatMoney, sumByCurrency } from "../lib/format.ts";
 import { buildPhaseComponents } from "../lib/phase-billing";
 import { invoiceStatus } from "../lib/status.ts";
@@ -109,11 +110,6 @@ const partSummaryTotal = partSummaryItems.reduce(
 	(sum, item) => sum + item.amount,
 	0,
 );
-const componentLabel: Record<string, string> = {
-	upfront: "Upfront part",
-	delivery: "Delivery part",
-	acceptance: "Acceptance part",
-};
 ---
 
 <invoice-table class="grid gap-3">
@@ -194,9 +190,10 @@ const componentLabel: Record<string, string> = {
 									<p class="text-title tabular-nums leading-none">
 										{formatMoney(invoice.total, invoice.currency)}
 									</p>
-									{invoice.component && componentLabel[invoice.component] ? (
+									{invoice.component &&
+									clientCostPartLabel[invoice.component] ? (
 										<Badge type="info">
-											{componentLabel[invoice.component]}
+											{clientCostPartLabel[invoice.component]}
 										</Badge>
 									) : (
 										<Badge type="gray">Unassigned</Badge>

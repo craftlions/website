@@ -1,6 +1,9 @@
 ---
-import type { ClientWorklistItem } from "../lib/client-worklist.ts";
 import type { PhaseState } from "../lib/status.ts";
+import {
+	type ClientWorklistItem,
+	clientCostPartLabel,
+} from "../lib/client-worklist.ts";
 import { formatMoney } from "../lib/format.ts";
 import Badge from "./Badge.astro";
 import Button from "./Button.astro";
@@ -50,11 +53,6 @@ interface Props {
 
 const { items, canDecide, id = "worklist" } = Astro.props;
 
-const costPartLabel: Record<string, string> = {
-	upfront: "Upfront part",
-	delivery: "Delivery part",
-	acceptance: "Acceptance part",
-};
 const groups = [
 	{
 		id: `${id}-your-move`,
@@ -126,8 +124,8 @@ const groups = [
 										<p class="text-sm text-fg-muted wrap-anywhere">
 											Invoice {item.invoice.number}
 											{item.invoice.component &&
-												costPartLabel[item.invoice.component] &&
-												` · ${costPartLabel[item.invoice.component]}`}
+												clientCostPartLabel[item.invoice.component] &&
+												` · ${clientCostPartLabel[item.invoice.component]}`}
 										</p>
 									)}
 								</div>

@@ -21,6 +21,14 @@ export const clientPhaseLabel: Record<PhaseState, string> = {
 	cancelled: "Cancelled",
 };
 
+// The client's own wording for an invoice's cost part; the admin says
+// "Upfront" etc. (costPartLabel in status.ts).
+export const clientCostPartLabel: Record<string, string> = {
+	upfront: "Upfront part",
+	delivery: "Delivery part",
+	acceptance: "Acceptance part",
+};
+
 // Phase states that are a worklist item, in priority order after overdue
 // invoices: the client decides on planned and delivered phases, craftlions
 // moves the others on. Open invoices rank between the two groups.
