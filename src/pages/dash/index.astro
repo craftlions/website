@@ -20,8 +20,25 @@ if (organizations.length === 1 && organizations[0]) {
 }
 ---
 
-<ClientShell title="Dashboard" wide>
+<ClientShell title="Organizations" wide>
 	<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
-		Welcome back, {session.user.name}!
+		Organizations
 	</h1>
+	{organizations.length > 0 ? (
+		<ul class="grid divide-y divide-dashed divide-line border border-dashed border-line">
+			{organizations
+				.toSorted((a, b) => a.name.localeCompare(b.name))
+				.map((organization) => (
+					<li class="px-4 py-3 wrap-break-word">
+						<a href={`/dash/org/${organization.slug}`} class="link">
+							{organization.name}
+						</a>
+					</li>
+				))}
+		</ul>
+	) : (
+		<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+			Your account does not belong to an organization yet.
+		</p>
+	)}
 </ClientShell>
