@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import Badge from "../../../../../components/Badge.astro";
 import Button from "../../../../../components/Button.astro";
+import ConfirmAction from "../../../../../components/ConfirmAction.astro";
 import CostSplit from "../../../../../components/CostSplit.astro";
 import DeliveryForm from "../../../../../components/DeliveryForm.astro";
 import Input from "../../../../../components/Input.astro";
@@ -18,7 +19,6 @@ import {
 	phaseStatus,
 	phaseTransitionsFrom,
 	projectStatus,
-	projectTransitions,
 } from "../../../../../lib/status.ts";
 
 const { id, publicId } = Astro.params;
@@ -85,6 +85,12 @@ if (!project) {
 	return Astro.redirect(`/admin/org/${organization.id}/projects`);
 }
 
+// The server completes a project only once every phase is accepted or
+// cancelled (transitionProject in admin-mutations.ts).
+const openPhaseCount = project.phases.filter(
+	(phase) => !["accepted", "cancelled"].includes(phase.state),
+).length;
+
 const phases = project.phases.map((phase) => ({
 	...phase,
 	components: buildPhaseComponents(phase),
@@ -130,187 +136,209 @@ const phases = project.phases.map((phase) => ({
 		deliveryUrl: "Delivery URL",
 	}}
 >
-	<section class="grid gap-6" aria-labelledby="project-heading">
-		<div class="grid gap-4">
-			<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-				<div class="grid gap-2">
-					<div
-						class="grid grid-cols-[minmax(0,max-content)_max-content] items-center gap-3"
-					>
-						<h2 id="project-heading" class="text-headline wrap-break-word"
-							>{project.name}</h2
-						>
-						<Badge type={projectStatus[project.state].badge}
-							>{projectStatus[project.state].label}</Badge
-						>
-					</div>
-				</div>
-				<div
-					class="grid grid-flow-col items-center justify-start gap-4 md:justify-end"
-				>
-					{projectTransitions[project.state].map((transition) => (
-						<ProjectTransitionForm
-							{project}
-							nextState={transition.nextState}
-							button={{
-								variant:
-									transition.nextState === "archived" ? "quiet" : "default",
-							}}
-						/>
-					))}
-				</div>
-			</div>
+	<header class="grid gap-3">
+		<div
+			class="grid grid-cols-[minmax(0,max-content)_max-content] items-center gap-3"
+		>
+			<h2 id="project-heading" class="text-headline wrap-break-word">
+				{project.name}
+			</h2>
+			<Badge type={projectStatus[project.state].badge}
+				>{projectStatus[project.state].label}</Badge
+			>
 		</div>
-
-		<div class="grid gap-3">
-			<h3 class="text-label uppercase text-fg-muted">Phases</h3>
-			<ol class="grid border border-dashed border-line">
-				{phases.length > 0 ? (
-					phases.map((phase) => (
-						<li
-							id={`phase-${phase.publicId}`}
-							class="grid scroll-mt-20 gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start"
-						>
-							<div class="grid gap-1">
-								<p class="font-medium wrap-break-word">{phase.title}</p>
-								<p class="text-sm text-fg-muted">
-									{phase.dueAt
-										? `Due ${formatDate(phase.dueAt)}`
-										: "No due date"}
-								</p>
-								{phase.externalUrl && (
-									<a
-										class="w-max text-sm underline decoration-dashed underline-offset-4"
-										href={phase.externalUrl}
-										rel="noreferrer"
-										target="_blank"
-									>
-										External link
-									</a>
-								)}
-								{phase.deliveryState === "url" && phase.deliveryUrl && (
-									<a
-										class="w-max text-sm underline decoration-dashed underline-offset-4"
-										href={phase.deliveryUrl}
-										rel="noreferrer"
-										target="_blank"
-									>
-										Delivery
-									</a>
-								)}
-								{phase.deliveryState === "none" && (
-									<p class="text-sm text-fg-muted">Delivered without PR/MR</p>
-								)}
-							</div>
-							<Badge type={phaseStatus[phase.state].badge}>
-								{phaseStatus[phase.state].label}
-							</Badge>
-							<div class="grid min-w-52 gap-1.5 md:justify-items-end md:text-right">
-								<p class="font-medium tabular-nums">
-									{formatMoney(phase.cost, phase.currency)}
-								</p>
-								{phase.components.length > 0 && (
-									<div class="w-full max-w-64">
-										<CostSplit
-											items={phase.components}
-											currency={phase.currency}
-											total={phase.cost}
-										/>
-									</div>
-								)}
-							</div>
-							<div class="grid grid-flow-col items-center justify-start gap-4 md:justify-self-end">
-								{phaseTransitionsFrom(phase.state).map((nextState) => (
-									<PhaseTransitionForm
-										{phase}
-										{nextState}
-										button={{
-											variant: nextState === "cancelled" ? "quiet" : "default",
-										}}
-									/>
-								))}
-							</div>
-							{phase.state === "in_progress" && (
-								<details class="grid gap-3 md:col-span-4">
-									<Button as="summary" variant="quiet">
-										Record delivery
-									</Button>
-									<DeliveryForm mode="record" {phase} />
-								</details>
-							)}
-							{!phase.locked && phase.state !== "cancelled" && (
-								<details class="grid gap-3 md:col-span-4">
-									<Button as="summary" variant="quiet">
-										Edit cost split
-									</Button>
-									<form
-										method="POST"
-										action={actions.updatePhaseAmounts}
-										class="grid gap-3 border border-dashed border-line p-4"
-									>
-										<input type="hidden" name="phaseId" value={phase.id} />
-										<input
-											type="hidden"
-											name="expectedVersion"
-											value={phase.version}
-										/>
-										<PhaseAmountCalculator
-											cost={phase.cost}
-											currency={phase.currency}
-											upfrontAmount={phase.upfrontAmount}
-											deliveryAmount={phase.deliveryAmount}
-											acceptanceAmount={phase.acceptanceAmount}
-										/>
-										<Button type="submit">Save cost split</Button>
-									</form>
-								</details>
-							)}
-						</li>
-					))
-				) : (
-					<li class="p-4 text-sm text-fg-muted">No phases yet.</li>
-				)}
-			</ol>
-			<details class="grid gap-3">
-				<Button as="summary">Add phase</Button>
-				<form
-					method="POST"
-					action={actions.createPhase}
-					class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-3 md:items-end"
-				>
+		{project.state === "draft" && (
+			<ProjectTransitionForm {project} nextState="active" />
+		)}
+		{project.state === "active" &&
+			(openPhaseCount === 0 ? (
+				<ProjectTransitionForm {project} nextState="completed" />
+			) : (
+				<div class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+					<ProjectTransitionForm
+						{project}
+						nextState="completed"
+						button={{ disabled: true, "aria-describedby": "complete-blocked" }}
+					/>
+					<p id="complete-blocked" class="max-w-prose text-sm text-fg-muted">
+						{openPhaseCount === 1
+							? "1 phase is still open. Accept or cancel it to complete the project."
+							: `${openPhaseCount} phases are still open. Accept or cancel them to complete the project.`}
+					</p>
+				</div>
+			))}
+		{project.state === "completed" && (
+			<div class="grid grid-flow-col auto-cols-max items-center justify-start gap-4">
+				<ProjectTransitionForm {project} nextState="active" />
+				<form method="POST" action={actions.transitionProject}>
 					<input type="hidden" name="projectId" value={project.id}>
-					<label class="grid gap-1 text-sm md:col-span-full"
-						><span class="font-medium">Phase title</span>
-						<Input name="title" required /></label
+					<input type="hidden" name="nextState" value="archived">
+					<input type="hidden" name="expectedVersion" value={project.version}>
+					<ConfirmAction
+						id="archive-project"
+						trigger="Archive"
+						triggerLabel={`Archive: ${project.name}`}
+						triggerVariant="quiet"
+						title={`Archive ${project.name}?`}
+						confirm="Archive project"
+						cancel="Keep project"
 					>
-					<label class="grid gap-1 text-sm"
-						><span class="font-medium">Cost</span>
-						<Input
-							name="cost"
-							type="number"
-							min="0"
-							step="0.0001"
-							required
-						/></label
-					>
-					<label class="grid gap-1 text-sm"
-						><span class="font-medium">Currency</span>
-						<Input name="currency" value="EUR" maxlength="3" required /></label
-					>
-					<label class="grid gap-1 text-sm"
-						><span class="font-medium">Due</span>
-						<Input name="dueAt" type="date" /></label
-					>
-					<div class="border-t border-dashed border-line pt-3 md:col-span-full"
-						><PhaseAmountCalculator
-							cost={0}
-							currency={project.phases.at(-1)?.currency ?? "EUR"}
-							acceptanceAmount={0}
-						/></div
-					>
-					<Button type="submit" class="md:col-span-full">Add phase</Button>
+						Archiving is final: the project cannot be reopened and no phases can
+						be added to it. Its phases and invoices stay as they are.
+					</ConfirmAction>
 				</form>
-			</details>
-		</div>
+			</div>
+		)}
+	</header>
+
+	<section class="grid gap-3" aria-labelledby="phases-heading">
+		<h3 id="phases-heading" class="text-label uppercase text-fg-muted"
+			>Phases</h3
+		>
+		<ol class="grid border border-dashed border-line">
+			{phases.length > 0 ? (
+				phases.map((phase) => (
+					<li
+						id={`phase-${phase.publicId}`}
+						class="grid scroll-mt-20 gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start"
+					>
+						<div class="grid gap-1">
+							<p class="font-medium wrap-break-word">{phase.title}</p>
+							<p class="text-sm text-fg-muted">
+								{phase.dueAt ? `Due ${formatDate(phase.dueAt)}` : "No due date"}
+							</p>
+							{phase.externalUrl && (
+								<a
+									class="w-max text-sm underline decoration-dashed underline-offset-4"
+									href={phase.externalUrl}
+									rel="noreferrer"
+									target="_blank"
+								>
+									External link
+								</a>
+							)}
+							{phase.deliveryState === "url" && phase.deliveryUrl && (
+								<a
+									class="w-max text-sm underline decoration-dashed underline-offset-4"
+									href={phase.deliveryUrl}
+									rel="noreferrer"
+									target="_blank"
+								>
+									Delivery
+								</a>
+							)}
+							{phase.deliveryState === "none" && (
+								<p class="text-sm text-fg-muted">Delivered without PR/MR</p>
+							)}
+						</div>
+						<Badge type={phaseStatus[phase.state].badge}>
+							{phaseStatus[phase.state].label}
+						</Badge>
+						<div class="grid min-w-52 gap-1.5 md:justify-items-end md:text-right">
+							<p class="font-medium tabular-nums">
+								{formatMoney(phase.cost, phase.currency)}
+							</p>
+							{phase.components.length > 0 && (
+								<div class="w-full max-w-64">
+									<CostSplit
+										items={phase.components}
+										currency={phase.currency}
+										total={phase.cost}
+									/>
+								</div>
+							)}
+						</div>
+						<div class="grid grid-flow-col items-center justify-start gap-4 md:justify-self-end">
+							{phaseTransitionsFrom(phase.state).map((nextState) => (
+								<PhaseTransitionForm
+									{phase}
+									{nextState}
+									button={{
+										variant: nextState === "cancelled" ? "quiet" : "default",
+									}}
+								/>
+							))}
+						</div>
+						{phase.state === "in_progress" && (
+							<details class="grid gap-3 md:col-span-4">
+								<Button as="summary" variant="quiet">
+									Record delivery
+								</Button>
+								<DeliveryForm mode="record" {phase} />
+							</details>
+						)}
+						{!phase.locked && phase.state !== "cancelled" && (
+							<details class="grid gap-3 md:col-span-4">
+								<Button as="summary" variant="quiet">
+									Edit cost split
+								</Button>
+								<form
+									method="POST"
+									action={actions.updatePhaseAmounts}
+									class="grid gap-3 border border-dashed border-line p-4"
+								>
+									<input type="hidden" name="phaseId" value={phase.id} />
+									<input
+										type="hidden"
+										name="expectedVersion"
+										value={phase.version}
+									/>
+									<PhaseAmountCalculator
+										cost={phase.cost}
+										currency={phase.currency}
+										upfrontAmount={phase.upfrontAmount}
+										deliveryAmount={phase.deliveryAmount}
+										acceptanceAmount={phase.acceptanceAmount}
+									/>
+									<Button type="submit">Save cost split</Button>
+								</form>
+							</details>
+						)}
+					</li>
+				))
+			) : (
+				<li class="p-4 text-sm text-fg-muted">No phases yet.</li>
+			)}
+		</ol>
+		<details class="grid gap-3">
+			<Button as="summary">Add phase</Button>
+			<form
+				method="POST"
+				action={actions.createPhase}
+				class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-3 md:items-end"
+			>
+				<input type="hidden" name="projectId" value={project.id}>
+				<label class="grid gap-1 text-sm md:col-span-full"
+					><span class="font-medium">Phase title</span>
+					<Input name="title" required /></label
+				>
+				<label class="grid gap-1 text-sm"
+					><span class="font-medium">Cost</span>
+					<Input
+						name="cost"
+						type="number"
+						min="0"
+						step="0.0001"
+						required
+					/></label
+				>
+				<label class="grid gap-1 text-sm"
+					><span class="font-medium">Currency</span>
+					<Input name="currency" value="EUR" maxlength="3" required /></label
+				>
+				<label class="grid gap-1 text-sm"
+					><span class="font-medium">Due</span>
+					<Input name="dueAt" type="date" /></label
+				>
+				<div class="border-t border-dashed border-line pt-3 md:col-span-full"
+					><PhaseAmountCalculator
+						cost={0}
+						currency={project.phases.at(-1)?.currency ?? "EUR"}
+						acceptanceAmount={0}
+					/></div
+				>
+				<Button type="submit" class="md:col-span-full">Add phase</Button>
+			</form>
+		</details>
 	</section>
 </AdminOrgShell>
