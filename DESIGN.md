@@ -221,7 +221,7 @@ Focus is global. Every focusable element gets the `:focus-visible` outline in `-
 
 Forced-color modes (Windows High Contrast, `forced-colors: active`) are supported. The browser repaints text, borders and outlines in system colors, so dashed lines, planes, focus outlines and the dashed outline of a linked target need nothing; the target loses its `bg-info-subtle` tint and keeps the outline. It also repaints every background as Canvas and drops gradients, so a mark drawn as a fill would vanish. Such a mark opts out with one of two utilities from `src/styles/global.css`, which do nothing outside forced colors:
 
-- `forced-ink`: a solid mark in `CanvasText`: the checked checkbox and the progress fill and pace marker.
+- `forced-ink`: a solid mark in `CanvasText`: the checked checkbox, the progress fill and pace marker, and the paid payment segment.
 - `forced-line`: an element that keeps drawing itself, with its border and text color in `CanvasText`: the progress track, and the spend chart's segments and legend swatches, whose `currentColor` hatch then stays drawn. Every project shares the one hatch there; the legend and the exact-amounts table still name each one.
 
 Status hues collapse to `CanvasText` there, so state never rests on color alone. These two utilities are the only place system colors appear; do not add `forced-colors:` variants or system colors in components. Check a change with Chrome DevTools, Rendering, "Emulate CSS media feature forced-colors".
@@ -384,6 +384,7 @@ Progress is used for budget state and remains literal.
 - **Track:** transparent track with a dashed `line-control` border.
 - **Fill:** ink neutral by default, status red only when budget use exceeds the budget.
 - **Pace Marker:** a thin neutral marker may show calendar pace, but it must not compete with the actual value.
+- **Payment progress:** a phase's cost parts render as a row of small segments, one per part. Shape carries the state and color repeats it: paid is a solid green block, overdue a solid red outline, invoiced a dashed blue outline, and not yet invoiced a dotted neutral outline. Each segment names its part and state for screen readers and in its `title`, and the line below sums it up in words.
 
 ## 6. Do's and Don'ts
 

@@ -210,14 +210,17 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 											<li
 												title={`${part.component}: ${part.invoice?.status ?? part.status.replaceAll("_", " ")}`}
 												class:list={[
-													"h-1.5 border border-dashed",
+													"h-1.5 border",
+													// Shape carries the state without color: paid is a
+													// solid block, overdue a solid outline, invoiced a
+													// dashed one and not yet invoiced a dotted one.
 													part.invoice?.status === "overdue"
-														? "border-fill-danger bg-fill-danger/70"
+														? "border-solid border-fill-danger"
 														: part.status === "paid"
-															? "border-fill-success bg-fill-success/70"
+															? "border-solid border-fill-success bg-fill-success forced-ink"
 															: part.invoice
-																? "border-fill-info bg-fill-info/30"
-																: "border-line-strong",
+																? "border-dashed border-fill-info"
+																: "border-dotted border-line-strong",
 												]}
 											>
 												<span class="sr-only">
