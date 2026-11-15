@@ -46,11 +46,7 @@ export default defineConfig({
 			SESSION: bindings.kv({
 				id: "988dbc04d7e84fdca174d4b899123594",
 			}),
-			MAIL: bindings.sendEmail({
-				dev: {
-					remote: true,
-				},
-			}),
+			MAIL: bindings.sendEmail(),
 			IMAGES: bindings.images(),
 			CF_VERSION_METADATA: bindings.versionMetadata(),
 			ASSETS: bindings.assets(),
