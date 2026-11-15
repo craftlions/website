@@ -5,8 +5,8 @@ import type { projectSelectType } from "../../../lib/schema.ts";
 import { isAPIError } from "better-auth/api";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
-import ClientPhaseActions from "../../../components/ClientPhaseActions.astro";
 import ClientPhaseBanner from "../../../components/ClientPhaseBanner.astro";
+import ClientWorklist from "../../../components/ClientWorklist.astro";
 import CostSplit from "../../../components/CostSplit.astro";
 import Footer from "../../../components/Footer.astro";
 import InvoiceTable from "../../../components/InvoiceTable.astro";
@@ -17,7 +17,7 @@ import {
 	deriveBudgetConsumption,
 	getSpendByYear,
 } from "../../../lib/budget-consumption.ts";
-import { buildPhaseComponents } from "../../../lib/phase-billing.ts";
+import { deriveClientWorklist } from "../../../lib/client-worklist.ts";
 import { projectStatus } from "../../../lib/status.ts";
 import {
 	organizationStripeInvoices,
@@ -179,10 +179,6 @@ const invoices = stripeRows.map(({ link, ...invoice }) => ({
 	component: link?.component ?? null,
 	phase: link?.phase ?? null,
 }));
-// The worklist lists open invoices oldest first; the table lists all newest first.
-const worklistInvoices = invoices
-	.filter((invoice) => invoice.status === "open")
-	.toReversed();
 
 const now = new Date();
 const projects = organization.projects.map((project) => {
@@ -248,7 +244,6 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 	style: "currency",
 	currency: "EUR",
 });
-const dateFormatter = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" });
 const formatAmount = (amount: number, currency: string) =>
 	new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(
 		amount,
@@ -271,73 +266,12 @@ const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 const canManagePhases =
 	currentMember.role === "owner" || currentMember.role === "admin";
 
-const componentLabel: Record<string, string> = {
-	upfront: "Upfront part",
-	delivery: "Delivery part",
-	acceptance: "Acceptance part",
-};
-
-// Client worklist: phases waiting on the client's decision plus open invoices
-// waiting on the client's payment. Mirrors the admin worklist ordering so the
-// most urgent items (overdue money, pending decisions) surface first.
-const worklistPhases = organization.projects.flatMap((project) =>
-	project.phases
-		.filter((phase) => phase.state === "planned" || phase.state === "delivered")
-		.map((phase) => ({
-			project,
-			phase,
-			components: buildPhaseComponents({
-				upfrontAmount: phase.upfrontAmount,
-				deliveryAmount: phase.deliveryAmount,
-				acceptanceAmount: phase.acceptanceAmount,
-				state: phase.state,
-				invoices: phase.invoices,
-			}),
-		})),
-);
-type WorklistPhase = (typeof worklistPhases)[number];
-type WorklistInvoice = (typeof worklistInvoices)[number];
-type WorklistItem = {
-	priority: number;
-	kind: string;
-	dueAt: Date | null;
-	project?: WorklistPhase["project"];
-	phase?: WorklistPhase["phase"];
-	components?: WorklistPhase["components"];
-	invoice?: WorklistInvoice;
-	invoiceComponents?: ReturnType<typeof buildPhaseComponents>;
-};
-
-const worklist: WorklistItem[] = [
-	...worklistPhases.map(
-		({ project, phase, components }): WorklistItem => ({
-			priority: phase.state === "planned" ? 1 : 2,
-			kind: phase.state === "planned" ? "To approve" : "To review",
-			project,
-			phase,
-			components,
-			dueAt: phase.dueAt,
-		}),
-	),
-	...worklistInvoices.map(
-		(invoice): WorklistItem => ({
-			priority: invoice.dueAt !== null && invoice.dueAt < now ? 0 : 3,
-			kind:
-				invoice.dueAt !== null && invoice.dueAt < now ? "Overdue" : "Unpaid",
-			invoice,
-			invoiceComponents: invoice.phase
-				? buildPhaseComponents({
-						upfrontAmount: invoice.phase.upfrontAmount,
-						deliveryAmount: invoice.phase.deliveryAmount,
-						acceptanceAmount: invoice.phase.acceptanceAmount,
-						state: invoice.phase.state,
-						invoices: invoice.phase.invoices,
-					})
-				: [],
-			dueAt: invoice.dueAt,
-		}),
-	),
-].toSorted((a, b) => a.priority - b.priority);
+const worklist = deriveClientWorklist({
+	slug,
+	projects: organization.projects,
+	invoices,
+	now,
+});
 ---
 
 <Shell
@@ -371,132 +305,10 @@ const worklist: WorklistItem[] = [
 					Worklist
 				</h2>
 				<p class="max-w-prose text-sm text-fg-muted">
-					Phases waiting for your decision and invoices waiting for payment.
+					Phases waiting for your decision, invoices waiting for payment, and
+					phases craftlions works on next.
 				</p>
-				<div
-					class="grid border border-dashed border-line md:grid-cols-[auto_1fr_max-content_max-content] md:gap-x-6"
-				>
-					{worklist.length > 0 ? (
-						worklist.map((item) => (
-							<article class="grid gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:col-span-4 md:grid-cols-subgrid md:items-center">
-								<Badge type={item.kind === "Overdue" ? "error" : "info"}>
-									{item.kind}
-								</Badge>
-								<div class="grid gap-1 md:place-items-start">
-									{item.phase && item.project && (
-										<h3 class="font-medium">
-											<a
-												href={`/dash/org/${slug}/project/${item.project.publicId}#phase-${item.phase.publicId}`}
-												class="underline decoration-dashed underline-offset-4"
-											>
-												{item.project.name} · {item.phase.title}
-											</a>
-										</h3>
-									)}
-									{item.invoice && (
-										<>
-											<h3 class="font-medium">Invoice {item.invoice.number}</h3>
-											{item.invoice.phase?.project && (
-												<a
-													href={`/dash/org/${slug}/project/${item.invoice.phase.project.publicId}#phase-${item.invoice.phase.publicId}`}
-													class="text-sm underline decoration-dashed underline-offset-4"
-												>
-													{item.invoice.phase.project.name} ·{" "}
-													{item.invoice.phase.title}
-												</a>
-											)}
-										</>
-									)}
-									{item.dueAt && (
-										<p class="text-sm text-fg-muted">
-											Due {dateFormatter.format(item.dueAt)}
-										</p>
-									)}
-								</div>
-								<div class="grid min-w-48 gap-1.5 md:justify-items-end">
-									{item.phase && item.components ? (
-										<>
-											<p class="text-sm font-medium tabular-nums md:text-right">
-												{formatAmount(item.phase.cost, item.phase.currency)}
-											</p>
-											{item.components.length > 0 && (
-												<div class="w-full max-w-56">
-													<CostSplit
-														items={item.components}
-														currency={item.phase.currency}
-														total={item.phase.cost}
-														variant="compact"
-													/>
-												</div>
-											)}
-										</>
-									) : item.invoice ? (
-										<>
-											<div class="grid grid-flow-col items-center justify-start gap-2 md:justify-end">
-												<p class="text-sm font-medium tabular-nums md:text-right">
-													{formatAmount(
-														item.invoice.total,
-														item.invoice.currency,
-													)}
-												</p>
-												{item.invoice.component &&
-													componentLabel[item.invoice.component] && (
-														<Badge type="info">
-															{componentLabel[item.invoice.component]}
-														</Badge>
-													)}
-											</div>
-											{item.invoice.phase &&
-												item.invoiceComponents &&
-												item.invoiceComponents.length > 0 && (
-													<div class="w-full max-w-56">
-														<CostSplit
-															items={item.invoiceComponents}
-															currency={item.invoice.phase.currency}
-															total={item.invoice.phase.cost}
-															variant="compact"
-															highlight={
-																item.invoice.component === "upfront" ||
-																item.invoice.component === "delivery" ||
-																item.invoice.component === "acceptance"
-																	? item.invoice.component
-																	: null
-															}
-														/>
-													</div>
-												)}
-										</>
-									) : null}
-								</div>
-								<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
-									{item.phase && item.project && (
-										<ClientPhaseActions
-											phase={item.phase}
-											name={`${item.project.name} · ${item.phase.title}`}
-											id="worklist"
-											canApprove={canManagePhases}
-											canAccept={canManagePhases}
-										/>
-									)}
-									{item.invoice && (
-										<Button
-											href={item.invoice.paymentPage}
-											target="_blank"
-											rel="noopener noreferrer"
-											aria-label={`Pay invoice ${item.invoice.number}`}
-										>
-											Pay
-										</Button>
-									)}
-								</div>
-							</article>
-						))
-					) : (
-						<p class="p-4 text-sm text-fg-muted md:col-span-4">
-							Nothing needs your attention.
-						</p>
-					)}
-				</div>
+				<ClientWorklist items={worklist} canDecide={canManagePhases} />
 			</section>
 
 			<div class="grid min-w-0 content-start gap-6">

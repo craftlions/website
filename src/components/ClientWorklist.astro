@@ -1,0 +1,191 @@
+---
+import type { ClientWorklistItem } from "../lib/client-worklist.ts";
+import type { PhaseState } from "../lib/status.ts";
+import { formatMoney } from "../lib/format.ts";
+import Badge from "./Badge.astro";
+import Button from "./Button.astro";
+import ClientPhaseActions from "./ClientPhaseActions.astro";
+
+type WorklistProject = {
+	publicId: string;
+	name: string;
+	phases: ReadonlyArray<{
+		publicId: string;
+		title: string;
+		state: PhaseState;
+		dueAt: Date | null;
+		version: number;
+		cost: number;
+		currency: string;
+		upfrontAmount: number | null;
+		deliveryAmount: number | null;
+		acceptanceAmount: number | null;
+	}>;
+};
+
+type WorklistInvoice = {
+	id: string;
+	number: string;
+	status: string;
+	total: number;
+	currency: string;
+	dueAt: Date | null;
+	paymentPage: string;
+	component: string | null;
+	phase: {
+		publicId: string;
+		title: string;
+		project: { publicId: string; name: string } | null;
+	} | null;
+};
+
+interface Props {
+	// From `deriveClientWorklist`.
+	items: ReadonlyArray<ClientWorklistItem<WorklistProject, WorklistInvoice>>;
+	// Whether this member may approve, decline and accept phases.
+	canDecide: boolean;
+	// Prefix for element ids; unique per page.
+	id?: string;
+}
+
+const { items, canDecide, id = "worklist" } = Astro.props;
+
+const costPartLabel: Record<string, string> = {
+	upfront: "Upfront part",
+	delivery: "Delivery part",
+	acceptance: "Acceptance part",
+};
+const groups = [
+	{
+		id: `${id}-your-move`,
+		label: "Your move",
+		items: items.filter((item) => item.actor === "client"),
+		empty:
+			"Nothing to do: no phase waits for your decision and no invoice is open.",
+	},
+	{
+		id: `${id}-waiting`,
+		label: "Waiting on craftlions",
+		items: items.filter((item) => item.actor === "craftlions"),
+		empty: "Nothing is waiting on craftlions.",
+	},
+];
+---
+
+{items.length > 0 ? (
+	<div class="grid border border-dashed border-line lg:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] lg:gap-x-6">
+		<div
+			aria-hidden="true"
+			class="hidden border-b border-dashed border-line px-4 py-3 label-caps lg:col-span-5 lg:grid lg:grid-cols-subgrid"
+		>
+			<span>Status</span>
+			<span>Item</span>
+			<span class="text-right">Amount</span>
+			<span>Due</span>
+			<span class="text-right">Action</span>
+		</div>
+		{groups.map((group) => (
+			<section
+				aria-labelledby={group.id}
+				class="grid min-w-0 border-b border-dashed border-line last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid"
+			>
+				<h3
+					id={group.id}
+					class="border-b border-dashed border-line px-4 py-2 text-label lg:col-span-5"
+				>
+					{group.label}{" "}
+					<span class="tabular-nums text-fg-muted">· {group.items.length}</span>
+				</h3>
+				{group.items.length > 0 ? (
+					<ul class="grid min-w-0 lg:col-span-5 lg:grid-cols-subgrid">
+						{group.items.map((item) => (
+							<li class="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid lg:items-center">
+								<Badge type={item.badge}>{item.label}</Badge>
+								<div class="grid min-w-0 gap-1">
+									<h4 class="font-medium wrap-anywhere">
+										{item.kind === "phase" ? (
+											<a
+												href={item.href}
+												class="underline decoration-dashed underline-offset-4"
+											>
+												{item.project.name} · {item.phase.title}
+											</a>
+										) : item.href && item.invoice.phase?.project ? (
+											<a
+												href={item.href}
+												class="underline decoration-dashed underline-offset-4"
+											>
+												{item.invoice.phase.project.name} ·{" "}
+												{item.invoice.phase.title}
+											</a>
+										) : (
+											`Invoice ${item.invoice.number}`
+										)}
+									</h4>
+									{item.kind === "invoice" && item.href && (
+										<p class="text-sm text-fg-muted wrap-anywhere">
+											Invoice {item.invoice.number}
+											{item.invoice.component &&
+												costPartLabel[item.invoice.component] &&
+												` · ${costPartLabel[item.invoice.component]}`}
+										</p>
+									)}
+								</div>
+								<p class="text-sm font-medium tabular-nums lg:text-right">
+									<span class="font-normal text-fg-muted lg:sr-only">
+										Amount{" "}
+									</span>
+									{formatMoney(item.amount, item.currency)}
+								</p>
+								<p
+									class:list={[
+										"text-sm tabular-nums",
+										item.overdue ? "text-fg-danger" : "text-fg-muted",
+									]}
+								>
+									{item.due}
+								</p>
+								{item.kind === "invoice" ? (
+									<div class="grid justify-items-start lg:justify-items-end">
+										<Button
+											href={item.invoice.paymentPage}
+											target="_blank"
+											rel="noopener noreferrer"
+											aria-label={`Pay invoice ${item.invoice.number} (opens in a new tab)`}
+										>
+											Pay invoice
+										</Button>
+									</div>
+								) : item.actor === "client" && canDecide ? (
+									<div class="grid justify-items-start gap-2 lg:justify-items-end">
+										<ClientPhaseActions
+											phase={item.phase}
+											name={`${item.project.name} · ${item.phase.title}`}
+											{id}
+											canApprove
+											canAccept
+										/>
+									</div>
+								) : (
+									item.actor === "client" && (
+										<p class="text-sm text-fg-muted lg:text-right">
+											An owner or admin decides
+										</p>
+									)
+								)}
+							</li>
+						))}
+					</ul>
+				) : (
+					<p class="p-4 text-sm text-fg-muted lg:col-span-5">{group.empty}</p>
+				)}
+			</section>
+		))}
+	</div>
+) : (
+	<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+		Nothing needs your attention right now. Phases to approve or accept and
+		invoices to pay will show up here, along with the work craftlions is doing
+		for you.
+	</p>
+)}
