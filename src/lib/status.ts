@@ -31,6 +31,21 @@ export const phaseStatus: Record<
 	cancelled: { label: "Cancelled", badge: "error", action: null },
 };
 
+// "To send (1), In work (2)": how many phases are in each state with this
+// badge, in lifecycle order; empty when there are none. "info" lists what
+// needs the admin, "gray" what waits on the client.
+export const phaseStateSummary = (
+	phases: ReadonlyArray<{ state: PhaseState }>,
+	badge: BadgeType,
+) =>
+	(Object.keys(phaseStatus) as PhaseState[])
+		.filter((state) => phaseStatus[state].badge === badge)
+		.flatMap((state) => {
+			const count = phases.filter((phase) => phase.state === state).length;
+			return count > 0 ? [`${phaseStatus[state].label} (${count})`] : [];
+		})
+		.join(", ");
+
 // Targets of the admin `transitionPhase` action, with the states each one
 // starts from (mirrors `phaseTransitions` in admin-mutations.ts). Delivery is
 // recorded by its own action, so `in_progress` has no transition here.

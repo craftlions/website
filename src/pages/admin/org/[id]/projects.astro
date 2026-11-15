@@ -5,14 +5,13 @@ import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import Field from "../../../../components/Field.astro";
+import ProjectPhaseSummary from "../../../../components/ProjectPhaseSummary.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import { sumByCurrency } from "../../../../lib/format.ts";
 import {
-	type BadgeType,
 	isInvoiceOverdue,
-	type PhaseState,
-	phaseStatus,
+	phaseStateSummary,
 	projectStatus,
 } from "../../../../lib/status.ts";
 import { stripeInvoiceFields } from "../../../../lib/stripe.ts";
@@ -89,25 +88,9 @@ const rows = projects
 		const overdueInvoices = openInvoices.filter((invoice) =>
 			isInvoiceOverdue(invoice),
 		);
-		// "To send (1), In work (2)": phase states with this badge, in
-		// lifecycle order, labelled from the shared vocabulary.
-		const phaseStates = (badge: BadgeType) =>
-			(Object.keys(phaseStatus) as PhaseState[])
-				.filter((state) => phaseStatus[state].badge === badge)
-				.flatMap((state) => {
-					const count = phases.filter((phase) => phase.state === state).length;
-					return count > 0 ? [`${phaseStatus[state].label} (${count})`] : [];
-				})
-				.join(", ");
-		const needsAdmin = phaseStates("info");
 		return {
 			...project,
-			rank: needsAdmin ? 0 : stateRank[project.state],
-			phaseCount: phases.length,
-			acceptedCount: phases.filter((phase) => phase.state === "accepted")
-				.length,
-			needsAdmin,
-			waitingOnClient: phaseStates("gray"),
+			rank: phaseStateSummary(phases, "info") ? 0 : stateRank[project.state],
 			total:
 				phases.length > 0
 					? sumByCurrency(
@@ -237,36 +220,10 @@ const isCreateOpen =
 									<Badge type={projectStatus[project.state].badge}>
 										{projectStatus[project.state].label}
 									</Badge>
-									<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm sm:col-span-1">
-										<dt class="label-caps">Phases</dt>
-										<dd class="tabular-nums wrap-break-word">
-											{project.phaseCount > 0 ? project.phaseCount : "None yet"}
-										</dd>
-										{project.phaseCount > 0 && (
-											<>
-												<dt class="label-caps">Accepted</dt>
-												<dd class="tabular-nums wrap-break-word">
-													{project.acceptedCount} of {project.phaseCount}
-												</dd>
-											</>
-										)}
-										{project.needsAdmin && (
-											<>
-												<dt class="label-caps">Needs you</dt>
-												<dd class="wrap-break-word text-fg-info">
-													{project.needsAdmin}
-												</dd>
-											</>
-										)}
-										{project.waitingOnClient && (
-											<>
-												<dt class="label-caps">Waiting on client</dt>
-												<dd class="wrap-break-word">
-													{project.waitingOnClient}
-												</dd>
-											</>
-										)}
-									</dl>
+									<ProjectPhaseSummary
+										phases={project.phases}
+										class="col-span-2 sm:col-span-1"
+									/>
 									<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm sm:col-span-1">
 										<dt class="label-caps">Total</dt>
 										<dd class="text-right font-medium tabular-nums wrap-break-word">

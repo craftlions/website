@@ -5,6 +5,7 @@ import { actions } from "astro:actions";
 import AdminWorklist from "../../../components/AdminWorklist.astro";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
+import ProjectPhaseSummary from "../../../components/ProjectPhaseSummary.astro";
 import SpendByYear from "../../../components/SpendByYear.astro";
 import AdminOrgShell from "../../../layouts/AdminOrgShell.astro";
 import {
@@ -26,13 +27,7 @@ import {
 	sumByCurrency,
 } from "../../../lib/format.ts";
 import { costPartsToInvoice } from "../../../lib/phase-billing.ts";
-import {
-	type BadgeType,
-	isInvoiceOverdue,
-	type PhaseState,
-	phaseStatus,
-	projectStatus,
-} from "../../../lib/status.ts";
+import { isInvoiceOverdue, projectStatus } from "../../../lib/status.ts";
 import {
 	organizationStripeInvoices,
 	stripeInvoiceFields,
@@ -112,26 +107,7 @@ const invoicesHref = `/admin/org/${organization.id}/invoices`;
 const currentProjects = [
 	...projects.filter((project) => project.state === "active"),
 	...projects.filter((project) => project.state === "draft"),
-].map((project) => {
-	const phases = project.phases.filter((phase) => phase.state !== "cancelled");
-	// "To send (1), In work (2)": phase states with this badge, in lifecycle
-	// order, labelled from the shared vocabulary, as on the Projects tab.
-	const phaseStates = (badge: BadgeType) =>
-		(Object.keys(phaseStatus) as PhaseState[])
-			.filter((state) => phaseStatus[state].badge === badge)
-			.flatMap((state) => {
-				const count = phases.filter((phase) => phase.state === state).length;
-				return count > 0 ? [`${phaseStatus[state].label} (${count})`] : [];
-			})
-			.join(", ");
-	return {
-		...project,
-		phaseCount: phases.length,
-		acceptedCount: phases.filter((phase) => phase.state === "accepted").length,
-		needsAdmin: phaseStates("info"),
-		waitingOnClient: phaseStates("gray"),
-	};
-});
+];
 // Setup steps still missing, each listed only while it is.
 const setupGaps = [
 	organization.members.length === 0 && {
@@ -379,28 +355,7 @@ const setupGaps = [
 							<Badge type={projectStatus[project.state].badge}>
 								{projectStatus[project.state].label}
 							</Badge>
-							<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm">
-								<dt class="label-caps">Phases</dt>
-								<dd class="tabular-nums wrap-break-word">
-									{project.phaseCount > 0
-										? `${project.acceptedCount} of ${project.phaseCount} accepted`
-										: "None yet"}
-								</dd>
-								{project.needsAdmin && (
-									<>
-										<dt class="label-caps">Needs you</dt>
-										<dd class="wrap-break-word text-fg-info">
-											{project.needsAdmin}
-										</dd>
-									</>
-								)}
-								{project.waitingOnClient && (
-									<>
-										<dt class="label-caps">Waiting on client</dt>
-										<dd class="wrap-break-word">{project.waitingOnClient}</dd>
-									</>
-								)}
-							</dl>
+							<ProjectPhaseSummary phases={project.phases} class="col-span-2" />
 						</li>
 					))}
 				</ul>
