@@ -46,6 +46,12 @@ export default defineConfig({
 			SESSION: bindings.kv({
 				id: "988dbc04d7e84fdca174d4b899123594",
 			}),
+			// Per signed-in user (see src/pages/api/search.ts); Cloudflare counts
+			// per location, so this caps abuse rather than setting an exact quota.
+			SEARCH_RATE_LIMIT: bindings.rateLimit({
+				namespace: "1001",
+				simple: { limit: 30, period: 10 },
+			}),
 			MAIL: bindings.sendEmail(),
 			IMAGES: bindings.images(),
 			CF_VERSION_METADATA: bindings.versionMetadata(),
