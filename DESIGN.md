@@ -317,6 +317,7 @@ A form or extra panel opens from a button, never from a heading or a native `<de
 - **Component:** `src/components/DisclosureButton.astro` is a Button with `aria-expanded`, `aria-controls` and a chevron that turns when open. Pass the panel's id as `controls`; the page renders the panel with `hidden={!open}` and the same `open`.
 - **Placement:** a section's primary action sits on the right of its heading row (`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3`), and its form opens below the heading and description. A row's extra panel spans the row.
 - **Server state:** the panel renders open after its form failed, so the typed values and field errors are back in view, and a create form starts open while its list is empty.
+- **Deep link:** a URL fragment that names a panel (`#create-project`) opens it on load and focuses its first field.
 - **Focus:** opening moves focus to the panel's first field. A quiet Cancel (`data-disclosure-cancel`) next to the submit resets the form, closes the panel and returns focus to the button. The submit repeats the button's label.
 
 ### Confirmations

@@ -61,6 +61,22 @@ const { controls, open = false, class: className, ...attrs } = Astro.props;
 		panel.hidden = !open;
 	};
 
+	// A URL fragment that names a panel (`#create-project`, from search) opens
+	// it. A hidden target cannot be scrolled to, so focusing its first field
+	// brings it into view instead. Runs on landing and on every fragment change.
+	const openFromHash = () => {
+		const panel = document.getElementById(location.hash.slice(1));
+		if (
+			!panel ||
+			!document.querySelector(
+				`[data-disclosure-toggle][aria-controls="${CSS.escape(panel.id)}"]`,
+			)
+		)
+			return;
+		setOpen(panel, true);
+		panel.querySelector<HTMLElement>(fields)?.focus();
+	};
+
 	document.addEventListener("click", (event) => {
 		if (!(event.target instanceof Element)) return;
 
@@ -101,4 +117,7 @@ const { controls, open = false, class: className, ...attrs } = Astro.props;
 			return;
 		}
 	});
+
+	openFromHash();
+	window.addEventListener("hashchange", openFromHash);
 </script>
