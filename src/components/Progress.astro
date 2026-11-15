@@ -39,7 +39,7 @@ const paceColumnClass =
 		max="100"
 		value={Math.min(Number(percent.toFixed(1)), 100)}
 		class:list={[
-			"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+			"h-2 w-full appearance-none border border-dashed border-line-control bg-transparent [&::-webkit-progress-bar]:bg-transparent",
 			percent > 100
 				? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
 				: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",

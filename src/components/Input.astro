@@ -11,7 +11,7 @@ const { as = "input", class: className, danger, value, ...attrs } = Astro.props;
 
 const inputClass = [
 	"border border-dashed bg-transparent px-3 py-2 text-sm transition-colors placeholder:text-fg-muted focus:border-line-active disabled:cursor-not-allowed disabled:opacity-50",
-	danger ? "border-line-danger" : "border-line",
+	danger ? "border-line-danger" : "border-line-control",
 	// A read-only value is shown, not edited: muted like a calculated output,
 	// and still focusable and selectable.
 	as === "input" && attrs.readonly && "text-fg-muted",

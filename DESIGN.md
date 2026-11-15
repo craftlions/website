@@ -7,6 +7,7 @@ colors:
   panel-neutral: "#f5f5f5"
   dashed-line: "#d4d4d4"
   dashed-line-strong: "#a3a3a3"
+  dashed-line-control: "#737373"
   dashed-line-active: "#525252"
   focus-ring: "#404040"
   muted-text: "#525252"
@@ -15,6 +16,7 @@ colors:
   inverse-panel: "#171717"
   inverse-line: "#404040"
   inverse-line-strong: "#525252"
+  inverse-line-control: "#737373"
   inverse-line-active: "#d4d4d4"
   inverse-muted: "#a3a3a3"
   inverse-focus-ring: "#d4d4d4"
@@ -160,16 +162,17 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 ### Neutral
 
 - **Panel Neutral**: low-emphasis hover and grouped-surface color.
-- **Dashed Line**: the default line color for borders, dividers, tables, inputs, and empty states.
+- **Dashed Line**: the default line color for borders, dividers, tables, and empty states.
 - **Dashed Line Strong**: the headline rule and stronger structural line color.
+- **Dashed Line Control**: the boundary of a control the user operates: input and select borders, the checkbox outline, and the progress track. It holds 3:1 against canvas and panel in both schemes, because that line is the only thing that shows the control is there.
 - **Dashed Line Active**: the hover, focus, and pressed border of a control.
 - **Focus Ring**: the global `:focus-visible` outline.
 - **Muted Text**: secondary text of every kind: body copy, table values, labels, metadata, placeholders, and helper text. There is one muted tier; express further hierarchy with size or weight.
-- **Inverse Paper / Inverse Ink / Inverse Panel / Inverse Line / Inverse Line Strong / Inverse Line Active / Inverse Muted / Inverse Focus Ring**: dark-mode equivalents used with the same hierarchy.
+- **Inverse Paper / Inverse Ink / Inverse Panel / Inverse Line / Inverse Line Strong / Inverse Line Control / Inverse Line Active / Inverse Muted / Inverse Focus Ring**: dark-mode equivalents used with the same hierarchy.
 
 ### Named Rules
 
-**The Line Before Color Rule.** Structure is drawn with neutral dashed lines before color is introduced. Color is reserved for links, status, focus, risk, progress, and categorical data in charts.
+**The Line Before Color Rule.** Structure is drawn with neutral dashed lines before color is introduced. Color is reserved for links, status, focus, risk, progress, and categorical data in charts. Structural lines stay light; the line that alone marks a control is `line-control`, which holds 3:1 (WCAG 1.4.11).
 
 **The State Color Rule.** Blue, green, and red must map to information, success, and error/risk. Do not use state colors as decoration. The one exception is the spend chart's categorical hatch marks, which use the chart palette and encode data, not state (see Data Visualization).
 
@@ -191,7 +194,8 @@ Biome is excluded from this file because it flattens the YAML frontmatter that I
 | `bg-info-subtle`                                  | Tinted highlight of a linked target                                          |
 | `outline-fill-info`                               | Dashed outline of a linked target, with `bg-info-subtle`                     |
 | `border-line`                                     | Default structure, also `divide-line`                                        |
-| `border-line-strong`                              | Headline rules, gray badges, checkbox outlines, also `bg-` and `decoration-` |
+| `border-line-strong`                              | Headline rules, gray badges, also `bg-` and `decoration-`                    |
+| `border-line-control`                             | Input, select and checkbox outlines and the progress track (3:1)             |
 | `border-line-active`                              | Hover, focus, and pressed borders                                            |
 | `border-line-danger`, `-success`, `-info`         | Status outlines                                                              |
 | `border-canvas`                                   | Pace marker edge                                                             |
@@ -311,7 +315,7 @@ Containers are simple line planes.
 
 Inputs follow the same line vocabulary as buttons.
 
-- **Style:** transparent background, 1px dashed neutral border, 8px 12px padding, small text.
+- **Style:** transparent background, 1px dashed `line-control` border, 8px 12px padding, small text.
 - **Component:** use `src/components/Field.astro` for every labelled control: a `text-label` label, the `Input`, an optional hint and the error, linked with `aria-describedby`. Pass the action's result as `result`, and the field shows that action's error for its name and, after a failed submit, the value that was typed. `src/components/Input.astro` is the bare control, with `as="select"` for selects and `danger` for destructive confirmations.
 - **Focus:** border shifts to stronger neutral, in addition to the global focus outline.
 - **Placeholder / Disabled:** placeholder text is muted but must remain readable against the active surface.
@@ -352,7 +356,7 @@ Tables are the main product surface for project, phase, invoice, and budget data
 Progress is used for budget state and remains literal.
 
 - **Component:** `src/components/Progress.astro` takes the used `percent` and, for the pace marker, the months elapsed as `pace`; pass the accessible name as `aria-label`.
-- **Track:** transparent track with dashed neutral border.
+- **Track:** transparent track with a dashed `line-control` border.
 - **Fill:** ink neutral by default, status red only when budget use exceeds the budget.
 - **Pace Marker:** a thin neutral marker may show calendar pace, but it must not compete with the actual value.
 

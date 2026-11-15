@@ -71,7 +71,7 @@ const percentages = [
 					{part.label}{" "}
 					<span class="font-normal text-fg-muted">{part.when}</span>
 				</label>
-				<span class="row-span-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-line px-3 py-2 text-sm transition-colors focus-within:border-line-active">
+				<span class="row-span-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-line-control px-3 py-2 text-sm transition-colors focus-within:border-line-active">
 					<input
 						id={`${id}-${part.key}`}
 						class="min-w-0 bg-transparent tabular-nums"
@@ -102,7 +102,7 @@ const percentages = [
 				>
 			</p>
 			<output
-				class="row-span-2 border border-dashed border-line px-3 py-2 text-sm tabular-nums text-fg-muted"
+				class="row-span-2 border border-dashed border-line-control px-3 py-2 text-sm tabular-nums text-fg-muted"
 				aria-label="Acceptance share, calculated"
 				data-split-remainder
 			></output>
