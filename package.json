@@ -42,7 +42,6 @@
     "vite": "8.3.8"
   },
   "overrides": {
-    "@better-auth/utils": "0.5.1",
     "yaml": "2.9.1",
     "zod": "4.6.7"
   }
