@@ -1,0 +1,370 @@
+---
+import type { WorklistItem } from "../lib/admin-worklist.ts";
+import { actions } from "astro:actions";
+import { formatMoney } from "../lib/format.ts";
+import {
+	componentBillingStatus,
+	type InvoiceComponent,
+} from "../lib/phase-billing.ts";
+import {
+	costPartLabel,
+	type PhaseState,
+	phaseTransitionsFrom,
+} from "../lib/status.ts";
+import Badge from "./Badge.astro";
+import Button from "./Button.astro";
+import ConfirmAction from "./ConfirmAction.astro";
+import DeliveryForm from "./DeliveryForm.astro";
+import PhaseTransitionForm from "./PhaseTransitionForm.astro";
+
+type WorklistProject = {
+	publicId: string;
+	name: string;
+	phases: ReadonlyArray<{
+		id: string;
+		publicId: string;
+		title: string;
+		state: PhaseState;
+		version: number;
+		cost: number;
+		currency: string;
+		upfrontAmount: number | null;
+		invoices: ReadonlyArray<{
+			id: string;
+			component: InvoiceComponent;
+			stripe: {
+				id: string;
+				number: string;
+				status: string;
+				currency: string;
+				total: number;
+				dueAt: Date | null;
+				invoicedAt: Date | null;
+			} | null;
+		}>;
+	}>;
+};
+
+interface Props {
+	// From `deriveWorklist`; items that carry their organization show the
+	// client's name, for the cross-client list on /admin.
+	items: ReadonlyArray<
+		WorklistItem<WorklistProject> & {
+			organization?: { id: string; name: string };
+		}
+	>;
+	// Shows at most this many items, the admin's moves first.
+	limit?: number | undefined;
+	// The full worklist, linked below a limited list.
+	allHref?: string | undefined;
+	// Prefix for element ids; unique per page.
+	id?: string;
+}
+
+const { items, limit, allHref, id = "worklist" } = Astro.props;
+
+// A failed delivery reopens the delivery forms, since the page reloads.
+const deliveryFailed = Boolean(
+	Astro.getActionResult(actions.recordDelivery)?.error,
+);
+const ordered = [
+	...items.filter((item) => item.actor === "admin"),
+	...items.filter((item) => item.actor === "client"),
+];
+const visible = ordered.slice(0, limit ?? ordered.length);
+const groups = [
+	{
+		id: `${id}-your-move`,
+		label: "Your move",
+		total: items.filter((item) => item.actor === "admin").length,
+		items: visible.filter((item) => item.actor === "admin"),
+		empty: "Nothing for you to do: every open item waits on the client.",
+	},
+	{
+		id: `${id}-waiting`,
+		label: "Waiting on client",
+		total: items.filter((item) => item.actor === "client").length,
+		items: visible.filter((item) => item.actor === "client"),
+		empty: "Nothing waits on the client.",
+	},
+];
+---
+
+<admin-worklist class="grid gap-3">
+	{items.length > 0 ? (
+		<div class="grid border border-dashed border-line lg:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] lg:gap-x-6">
+			<div
+				aria-hidden="true"
+				class="hidden border-b border-dashed border-line px-4 py-3 label-caps lg:col-span-5 lg:grid lg:grid-cols-subgrid"
+			>
+				<span>Status</span>
+				<span>Item</span>
+				<span class="text-right">Amount</span>
+				<span>Waiting</span>
+				<span class="text-right">Action</span>
+			</div>
+			{groups
+				.filter((group) => group.total === 0 || group.items.length > 0)
+				.map((group) => (
+					<section
+						aria-labelledby={group.id}
+						class="grid min-w-0 border-b border-dashed border-line last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid"
+					>
+						<h3
+							id={group.id}
+							class="border-b border-dashed border-line px-4 py-2 text-label lg:col-span-5"
+						>
+							{group.label}{" "}
+							<span class="tabular-nums text-fg-muted">· {group.total}</span>
+						</h3>
+						{group.items.length > 0 ? (
+							<ul class="grid min-w-0 lg:col-span-5 lg:grid-cols-subgrid">
+								{group.items.map((item) => (
+									<li class="grid min-w-0 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid lg:items-center">
+										<Badge type={item.badge}>{item.label}</Badge>
+										<div class="grid min-w-0 gap-1">
+											<h4 class="grid gap-1 font-medium wrap-anywhere">
+												{item.organization && (
+													<span class="text-sm font-normal text-fg-muted">
+														{item.organization.name}
+													</span>
+												)}
+												<a
+													href={item.href}
+													class="underline decoration-dashed underline-offset-4"
+												>
+													{item.project.name} · {item.phase.title}
+												</a>
+											</h4>
+											{item.invoice ? (
+												<p class="text-sm text-fg-muted wrap-anywhere">
+													{costPartLabel[item.invoice.component]} invoice{" "}
+													{item.invoice.stripe.number}
+												</p>
+											) : (
+												(item.phase.state === "approved" ||
+													item.phase.state === "in_progress" ||
+													item.phase.state === "delivered") &&
+												Boolean(item.phase.upfrontAmount) &&
+												componentBillingStatus({
+													component: "upfront",
+													state: item.phase.state,
+													invoice:
+														item.phase.invoices.find(
+															(invoice) => invoice.component === "upfront",
+														) ?? null,
+												}) !== "paid" && (
+													<p class="text-sm text-fg-danger">Upfront unpaid</p>
+												)
+											)}
+										</div>
+										<p class="text-sm font-medium tabular-nums lg:text-right">
+											<span class="font-normal text-fg-muted lg:sr-only">
+												Amount{" "}
+											</span>
+											{item.invoice
+												? formatMoney(
+														item.invoice.stripe.total,
+														item.invoice.stripe.currency,
+													)
+												: formatMoney(item.phase.cost, item.phase.currency)}
+										</p>
+										<p
+											class:list={[
+												"text-sm tabular-nums",
+												item.status === "overdue"
+													? "text-fg-danger"
+													: "text-fg-muted",
+											]}
+										>
+											{item.status !== "overdue" && (
+												<span class="lg:sr-only">Waiting </span>
+											)}
+											{item.age}
+										</p>
+										<div class="grid justify-items-start gap-2 lg:justify-items-end">
+											{item.invoice ? (
+												<Button
+													href={`https://dashboard.stripe.com/invoices/${item.invoice.stripe.id}`}
+													target="_blank"
+													rel="noreferrer"
+													aria-label={`Open invoice ${item.invoice.stripe.number} in Stripe (opens in a new tab)`}
+												>
+													Open in Stripe
+												</Button>
+											) : item.phase.state === "in_progress" ? (
+												<Button
+													class="group"
+													aria-expanded={deliveryFailed ? "true" : "false"}
+													aria-controls={`${id}-${item.key}-delivery`}
+													aria-label={`Record delivery: ${item.phase.title}`}
+													data-delivery-toggle
+												>
+													Record delivery
+													<svg
+														aria-hidden="true"
+														viewBox="0 0 12 12"
+														class="size-3 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
+													>
+														<path
+															d="M2.5 4.5 6 8l3.5-3.5"
+															fill="none"
+															stroke="currentColor"
+															stroke-width="1.5"
+														/>
+													</svg>
+												</Button>
+											) : (
+												phaseTransitionsFrom(item.phase.state).map(
+													(nextState) =>
+														nextState === "cancelled" ? (
+															<form
+																method="POST"
+																action={actions.transitionPhase}
+															>
+																<input
+																	type="hidden"
+																	name="phaseId"
+																	value={item.phase.id}
+																>
+																<input
+																	type="hidden"
+																	name="nextState"
+																	value={nextState}
+																>
+																<input
+																	type="hidden"
+																	name="expectedVersion"
+																	value={item.phase.version}
+																>
+																<ConfirmAction
+																	id={`${id}-${item.key}-cancel`}
+																	trigger="Cancel phase"
+																	triggerLabel={`Cancel phase: ${item.phase.title}`}
+																	triggerVariant="quiet"
+																	title={`Cancel ${item.phase.title}?`}
+																	confirm="Cancel phase"
+																	cancel="Keep phase"
+																>
+																	Cancelling is final: the phase cannot be
+																	reopened or started again. Add a new phase if
+																	the work comes back.
+																</ConfirmAction>
+															</form>
+														) : nextState === "approved" ||
+															nextState === "accepted" ? (
+															<form
+																method="POST"
+																action={actions.transitionPhase}
+															>
+																<input
+																	type="hidden"
+																	name="phaseId"
+																	value={item.phase.id}
+																>
+																<input
+																	type="hidden"
+																	name="nextState"
+																	value={nextState}
+																>
+																<input
+																	type="hidden"
+																	name="expectedVersion"
+																	value={item.phase.version}
+																>
+																{nextState === "approved" ? (
+																	<ConfirmAction
+																		id={`${id}-${item.key}-approve`}
+																		trigger="Approve for client"
+																		triggerLabel={`Approve for client: ${item.phase.title}`}
+																		title={`Approve ${item.phase.title} for the client?`}
+																		confirm="Approve for client"
+																	>
+																		You approve this phase on the client's
+																		behalf, as if they had approved it
+																		themselves. The phase becomes ready to start
+																		and its upfront payment becomes due.
+																	</ConfirmAction>
+																) : (
+																	<ConfirmAction
+																		id={`${id}-${item.key}-accept`}
+																		trigger="Record acceptance"
+																		triggerLabel={`Record acceptance: ${item.phase.title}`}
+																		title={`Record acceptance of ${item.phase.title}?`}
+																		confirm="Record acceptance"
+																	>
+																		You accept the delivery on the client's
+																		behalf, as if they had accepted it
+																		themselves. The phase is closed as accepted
+																		and its acceptance payment becomes due.
+																	</ConfirmAction>
+																)}
+															</form>
+														) : (
+															<PhaseTransitionForm
+																phase={item.phase}
+																{nextState}
+															/>
+														),
+												)
+											)}
+										</div>
+										{item.phase.state === "in_progress" && !item.invoice && (
+											<div
+												id={`${id}-${item.key}-delivery`}
+												class="grid min-w-0 lg:col-span-5"
+												hidden={!deliveryFailed}
+											>
+												<DeliveryForm mode="record" phase={item.phase} />
+											</div>
+										)}
+									</li>
+								))}
+							</ul>
+						) : (
+							<p class="p-4 text-sm text-fg-muted lg:col-span-5">
+								{group.empty}
+							</p>
+						)}
+					</section>
+				))}
+		</div>
+	) : (
+		<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+			The worklist is empty: no phase waits on you or the client, and no invoice
+			is open.
+		</p>
+	)}
+	{limit !== undefined && allHref && items.length > limit && (
+		<Button href={allHref} variant="quiet">
+			Show all {items.length} items
+		</Button>
+	)}
+</admin-worklist>
+
+<script>
+	// "Record delivery" opens the delivery form below its row.
+	class AdminWorklist extends HTMLElement {
+		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
+			for (const toggle of this.querySelectorAll<HTMLButtonElement>(
+				"[data-delivery-toggle]",
+			)) {
+				toggle.addEventListener("click", () => {
+					const expanded = toggle.getAttribute("aria-expanded") !== "true";
+					toggle.setAttribute("aria-expanded", String(expanded));
+					const panel = document.getElementById(
+						toggle.getAttribute("aria-controls") ?? "",
+					);
+					if (panel) panel.hidden = !expanded;
+				});
+			}
+		}
+	}
+
+	if (!customElements.get("admin-worklist")) {
+		customElements.define("admin-worklist", AdminWorklist);
+	}
+</script>
