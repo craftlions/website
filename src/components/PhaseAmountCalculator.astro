@@ -133,23 +133,14 @@ const percentages = [
 </phase-amount-calculator>
 
 <script>
+	import { formatMoney, formatShare } from "../lib/format.ts";
+
 	// Amounts are kept in ten-thousandths, the precision the server stores, so
-	// the three parts always add up to the cost exactly.
+	// the three parts always add up to the cost exactly. The currency is an
+	// ISO code from the phase or the add-phase form's currency select.
 	const units = (value: number) => Math.round(value * 10_000);
 	const formatAmount = (amountUnits: number) =>
 		(amountUnits / 10_000).toFixed(4).replace(/\.?0+$/, "") || "0";
-	const formatPercent = (value: number) =>
-		`${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 4 }).format(value)}%`;
-	const formatMoney = (amountUnits: number, currency: string) => {
-		try {
-			return new Intl.NumberFormat("de-DE", {
-				style: "currency",
-				currency,
-			}).format(amountUnits / 10_000);
-		} catch {
-			return `${formatAmount(amountUnits)} ${currency}`;
-		}
-	};
 
 	class PhaseAmountCalculator extends HTMLElement {
 		connectedCallback() {
@@ -224,18 +215,16 @@ const percentages = [
 						? "—"
 						: amount == null
 							? "Not billed"
-							: formatMoney(amount, currency);
+							: formatMoney(amount / 10_000, currency);
 				}
 				for (const input of percentInputs) {
 					input.setAttribute("aria-invalid", String(!valid));
 				}
 
-				remainder.textContent = valid
-					? formatPercent(percentages[2] ?? 0)
-					: "—";
+				remainder.textContent = valid ? formatShare(percentages[2] ?? 0) : "—";
 				total.textContent = valid
-					? `Total 100% · ${formatMoney(costUnits, currency)}`
-					: `Upfront and Delivery: ${formatPercent(enteredSum)}`;
+					? `Total 100% · ${formatMoney(costUnits / 10_000, currency)}`
+					: `Upfront and Delivery: ${formatShare(enteredSum)}`;
 				error.hidden = valid;
 				error.textContent = valid
 					? ""

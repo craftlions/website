@@ -16,6 +16,20 @@ export const formatDate = (date: Date) => dateFormatter.format(date);
 // One decimal, uncapped, matching the client dashboard's budget percentages.
 export const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 
+const shareFormatter = new Intl.NumberFormat("de-DE", {
+	maximumFractionDigits: 4,
+});
+
+// A cost split share as the admin typed it, to the stored precision.
+export const formatShare = (value: number) =>
+	`${shareFormatter.format(value)}%`;
+
+const currencyNames = new Intl.DisplayNames("en", { type: "currency" });
+
+// "EUR · Euro", for currency pickers.
+export const formatCurrency = (code: string) =>
+	`${code} · ${currencyNames.of(code) ?? code}`;
+
 // Amounts in several currencies cannot be added, so each currency is summed
 // and formatted on its own and the totals are joined with " + ".
 export const sumByCurrency = (

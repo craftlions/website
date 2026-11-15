@@ -20,6 +20,7 @@ import {
 } from "../../../../../lib/action-feedback.ts";
 import { getAdminOrganizationCore } from "../../../../../lib/admin-org.ts";
 import {
+	formatCurrency,
 	formatDate,
 	formatMoney,
 	formatPercent,
@@ -113,7 +114,6 @@ const isAddPhaseOpen =
 	Boolean(createResult?.error) || (projectResult && !projectResult.error);
 // New phases default to the currency the project already bills in.
 const defaultCurrency = project.phases.at(-1)?.currency ?? "EUR";
-const currencyNames = new Intl.DisplayNames("en", { type: "currency" });
 
 // Cost parts as a failed form submitted them; an empty part is not billed.
 const submittedSplit = (values: URLSearchParams) => ({
@@ -303,7 +303,7 @@ const phases = project.phases
 						.toSorted()
 						.map((code) => (
 							<option value={code} selected={code === defaultCurrency}>
-								{code} · {currencyNames.of(code) ?? code}
+								{formatCurrency(code)}
 							</option>
 						))}
 				</Field>
