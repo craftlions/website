@@ -73,6 +73,11 @@ const idleStatus =
 			let debounce: ReturnType<typeof setTimeout> | undefined;
 			let busy: ReturnType<typeof setTimeout> | undefined;
 			let retry: ReturnType<typeof setTimeout> | undefined;
+			// The query the list shows and the one in flight. While they differ
+			// from the field, Enter waits for the field's results (`onResults`).
+			let shown: string | undefined;
+			let requested: string | undefined;
+			let onResults: ((first: HTMLAnchorElement) => void) | undefined;
 
 			const options = () => [
 				...listbox.querySelectorAll<HTMLAnchorElement>("[role=option]"),
@@ -159,6 +164,7 @@ const idleStatus =
 				clearTimeout(retry);
 				controller = new AbortController();
 				const { signal } = controller;
+				requested = query;
 				clearTimeout(busy);
 				busy = setTimeout(() => {
 					status.textContent = "Searching…";
@@ -184,10 +190,12 @@ const idleStatus =
 						input.setAttribute("aria-expanded", "true");
 						activate(options()[0]);
 						status.textContent = "Your session ended. Sign in again.";
+						landed(query);
 						return;
 					}
 
 					if (response.status === 429) {
+						onResults = undefined;
 						status.textContent = "Too many searches. Wait a few seconds.";
 						if (!retried) {
 							const seconds = Number(response.headers.get("Retry-After")) || 10;
@@ -219,11 +227,24 @@ const idleStatus =
 								: data.filters.length > 0
 									? `${data.filters.join(" · ")} — ${count}`
 									: count;
+					landed(data.query);
 				} catch {
 					if (signal.aborted) return;
 					settle();
+					onResults = undefined;
 					status.textContent = "Search failed. Keep typing to try again.";
+				} finally {
+					if (controller?.signal === signal) requested = undefined;
 				}
+			};
+
+			// The list now shows `query`; an Enter that waited for it is answered.
+			const landed = (query: string) => {
+				shown = query;
+				const first = options()[0];
+				const then = onResults;
+				onResults = undefined;
+				if (then && first) then(first);
 			};
 
 			const open = () => {
@@ -241,6 +262,8 @@ const idleStatus =
 				clearTimeout(retry);
 				settle();
 				input.value = "";
+				shown = undefined;
+				onResults = undefined;
 				listbox.replaceChildren();
 				input.setAttribute("aria-expanded", "false");
 				input.removeAttribute("aria-activedescendant");
@@ -249,7 +272,10 @@ const idleStatus =
 				if (opener?.isConnected) opener.focus();
 			});
 
+			// The old results stay visible, but none of them is chosen any more.
 			input.addEventListener("input", () => {
+				activate(undefined);
+				onResults = undefined;
 				clearTimeout(debounce);
 				debounce = setTimeout(() => search(input.value.trim()), 150);
 			});
@@ -284,12 +310,29 @@ const idleStatus =
 						target?.querySelector<HTMLAnchorElement>("[role=option]") ??
 							undefined,
 					);
-				} else if (event.key === "Enter" && current) {
+				} else if (event.key === "Enter") {
+					const newTab = isMac ? event.metaKey : event.ctrlKey;
+					const go = (link: HTMLAnchorElement) => {
+						if (newTab) {
+							window.open(link.href, "_blank", "noopener");
+						} else {
+							follow(link);
+						}
+					};
+					const query = input.value.trim();
+					if (shown === query) {
+						if (!current) return;
+						event.preventDefault();
+						go(current);
+						return;
+					}
+					// The list is older than the field: take the first result of
+					// the field's own search, starting it now unless it is in flight.
 					event.preventDefault();
-					if (isMac ? event.metaKey : event.ctrlKey) {
-						window.open(current.href, "_blank", "noopener");
-					} else {
-						follow(current);
+					onResults = go;
+					if (requested !== query) {
+						clearTimeout(debounce);
+						search(query);
 					}
 				}
 			});
