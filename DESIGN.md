@@ -181,6 +181,7 @@ Biome is excluded from this file because it flattens the YAML frontmatter that I
 | `bg-ink`                                          | Solid marks: progress fill, checked controls, pace marker                    |
 | `bg-fill-danger`, `-success`, `-info`             | Status fills; also on `border-`                                              |
 | `bg-info-subtle`                                  | Tinted highlight of a linked target                                          |
+| `outline-fill-info`                               | Dashed outline of a linked target, with `bg-info-subtle`                     |
 | `border-line`                                     | Default structure, also `divide-line`                                        |
 | `border-line-strong`                              | Headline rules, gray badges, checkbox outlines, also `bg-` and `decoration-` |
 | `border-line-active`                              | Hover, focus, and pressed borders                                            |
