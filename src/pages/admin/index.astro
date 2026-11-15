@@ -2,13 +2,10 @@
 export const prerender = false;
 
 import { actions } from "astro:actions";
-import Badge from "../../components/Badge.astro";
+import AdminWorklist from "../../components/AdminWorklist.astro";
 import Button from "../../components/Button.astro";
-import CostSplit from "../../components/CostSplit.astro";
-import Footer from "../../components/Footer.astro";
-import Input from "../../components/Input.astro";
-import Nav from "../../components/Nav.astro";
-import Shell from "../../layouts/Shell.astro";
+import Field from "../../components/Field.astro";
+import AdminShell from "../../layouts/AdminShell.astro";
 import {
 	compareWorklistItems,
 	deriveWorklist,
@@ -18,13 +15,8 @@ import {
 	deriveBudgetConsumption,
 	getSpendByYear,
 } from "../../lib/budget-consumption.ts";
-import { formatMoney, formatPercent } from "../../lib/format.ts";
-import { buildPhaseComponents } from "../../lib/phase-billing.ts";
-import {
-	costPartLabel,
-	isInvoiceOverdue,
-	phaseStatus,
-} from "../../lib/status.ts";
+import { formatPercent, sumByCurrency } from "../../lib/format.ts";
+import { isInvoiceOverdue } from "../../lib/status.ts";
 import { hasStripeRow, stripeInvoiceFields } from "../../lib/stripe.ts";
 
 const onboardResult = Astro.getActionResult(actions.onboardOrganization);
@@ -35,7 +27,6 @@ const [organizations, latestStateEventIds] = await Promise.all([
 		columns: {
 			id: true,
 			name: true,
-			slug: true,
 		},
 		with: {
 			data: {
@@ -58,11 +49,9 @@ const [organizations, latestStateEventIds] = await Promise.all([
 							title: true,
 							cost: true,
 							upfrontAmount: true,
-							deliveryAmount: true,
-							acceptanceAmount: true,
 							currency: true,
 							state: true,
-							dueAt: true,
+							version: true,
 						},
 						with: {
 							invoices: {
@@ -89,17 +78,7 @@ const [organizations, latestStateEventIds] = await Promise.all([
 	getLatestPhaseStateEventIds(Astro.locals.db),
 ]);
 
-// S-004 R2/R4: one full-history module read per organization; deriveBudget
-// selects the current-year rows. Any read failure aborts this page render —
-// no partial ledger or fallback (R8).
-const organizationsWithSpend = await Promise.all(
-	organizations.map(async (organization) => ({
-		organization,
-		spendRows: await getSpendByYear(Astro.locals.db, organization.id),
-	})),
-);
-
-const queue = organizations
+const worklist = organizations
 	.flatMap((organization) =>
 		deriveWorklist({
 			organizationId: organization.id,
@@ -110,409 +89,343 @@ const queue = organizations
 	)
 	.toSorted(compareWorklistItems);
 
-const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
-	const activeProjects = organization.projects.filter(
-		(project) => project.state === "active",
-	).length;
-	const totalProjects = organization.projects.length;
-	const openInvoiceRows = organization.projects
-		.flatMap((project) => project.phases)
-		.flatMap((phase) => phase.invoices)
-		.filter(hasStripeRow)
-		.filter((invoice) => invoice.stripe.status === "open");
-	const openInvoices = openInvoiceRows.reduce(
-		(total, invoice) => total + invoice.stripe.total,
-		0,
-	);
-	const openByPart = ["upfront", "delivery", "acceptance"].map((component) => ({
-		component: component as "upfront" | "delivery" | "acceptance",
-		amount: openInvoiceRows
-			.filter((invoice) => invoice.component === component)
-			.reduce((total, invoice) => total + invoice.stripe.total, 0),
-	}));
-	const planned = organization.projects
-		.flatMap((project) => project.phases)
-		.filter((phase) => phase.state === "planned").length;
-	const submitted = organization.projects
-		.flatMap((project) => project.phases)
-		.filter((phase) => phase.state === "submitted").length;
-	const overdue = organization.projects
-		.flatMap((project) => project.phases)
-		.flatMap((phase) => phase.invoices)
-		.filter(hasStripeRow)
-		.filter((invoice) => isInvoiceOverdue(invoice.stripe, now)).length;
-	// S-004 R1/R5: budget usage is the shared module's current-year percentage
-	// (D-budget-consumption-definition, uncapped); null when there is no
-	// positive yearly budget (R7 "No budget").
-	const yearlyBudget = organization.data?.yearlyBudget ?? 0;
-	const { usagePercentage } = deriveBudgetConsumption(spendRows, yearlyBudget);
-
-	return {
-		...organization,
-		activeProjects,
-		totalProjects,
-		openInvoices,
-		openByPart: openByPart
-			.filter((part) => part.amount !== 0)
-			.map((part) => ({ ...part, status: "not_due" as const })),
-		planned,
-		submitted,
-		overdue,
-		budgetUsage: yearlyBudget > 0 ? usagePercentage : null,
-	};
-});
-const outstandingTotal = ledger.reduce(
-	(total, organization) => total + organization.openInvoices,
-	0,
+// S-004 R1/R5: budget usage is the shared module's current-year percentage
+// (D-budget-consumption-definition, uncapped); null without a positive yearly
+// budget (R7 "No budget"). Any read failure aborts the render (R8).
+const ledger = await Promise.all(
+	organizations.map(async (organization) => ({
+		id: organization.id,
+		name: organization.name,
+		activeProjects: organization.projects.filter(
+			(project) => project.state === "active",
+		).length,
+		totalProjects: organization.projects.length,
+		yourMove: worklist.filter(
+			(item) =>
+				item.organization.id === organization.id && item.actor === "admin",
+		).length,
+		waiting: worklist.filter(
+			(item) =>
+				item.organization.id === organization.id && item.actor === "client",
+		).length,
+		openInvoices: organization.projects
+			.flatMap((project) => project.phases)
+			.flatMap((phase) => phase.invoices)
+			.filter(hasStripeRow)
+			.filter((invoice) => invoice.stripe.status === "open")
+			.map((invoice) => ({
+				amount: invoice.stripe.total,
+				currency: invoice.stripe.currency,
+				overdue: isInvoiceOverdue(invoice.stripe, now),
+			})),
+		budgetUsage:
+			(organization.data?.yearlyBudget ?? 0) > 0
+				? deriveBudgetConsumption(
+						await getSpendByYear(Astro.locals.db, organization.id),
+						organization.data?.yearlyBudget ?? 0,
+					).usagePercentage
+				: null,
+	})),
 );
-const outstandingByPart = ["upfront", "delivery", "acceptance"].map(
-	(component) => ({
-		component: component as "upfront" | "delivery" | "acceptance",
-		amount: ledger.reduce(
-			(total, organization) =>
-				total +
-				(organization.openByPart.find((part) => part.component === component)
-					?.amount ?? 0),
-			0,
-		),
-	}),
-);
-const outstandingPartItems = outstandingByPart
-	.filter((part) => part.amount !== 0)
-	.map((part) => ({ ...part, status: "not_due" as const }));
-const overdueCount = queue.filter((item) => item.status === "overdue").length;
+const openInvoices = ledger.flatMap((client) => client.openInvoices);
 ---
 
-<Shell
-	bodyClass="min-h-dvh grid gap-6 bg-canvas p-4 text-pretty text-fg antialiased"
+<AdminShell
+	title="Client workbench"
+	results={[
+		[onboardResult, "Client onboarded. It is listed in the client ledger."],
+		[Astro.getActionResult(actions.transitionPhase), "Phase status changed"],
+		[Astro.getActionResult(actions.recordDelivery), "Delivery recorded"],
+	]}
+	fieldLabels={{
+		organizationName: "Client name",
+		slug: "Slug",
+		name: "Contact name",
+		email: "Contact email",
+		yearlyBudget: "Yearly budget",
+		deliveryChoice: "Delivery",
+		deliveryUrl: "Delivery URL",
+	}}
 >
-	<Fragment slot="head"><title>craftlions | Admin</title></Fragment>
-	<Fragment slot="body">
-		<header class="grid w-full max-w-5xl gap-6 mx-auto">
-			<Nav />
-		</header>
-		<main class="grid w-full max-w-5xl content-start gap-8 mx-auto">
-			<section class="grid gap-4">
-				<div class="grid gap-1">
-					<p class="text-label uppercase text-fg-muted">Admin</p>
-					<h1
-						class="border-l border-dashed border-line-strong pl-3 text-display"
-						>Client workbench</h1
-					>
-				</div>
-				<dl class="grid grid-flow-col justify-start gap-8 text-sm">
-					<div class="grid content-start gap-1">
-						<dt class="label-caps">Outstanding</dt>
-						<dd class="tabular-nums">{formatMoney(outstandingTotal, "EUR")}</dd>
-						{outstandingPartItems.length > 0 && (
-							<dd class="max-w-56">
-								<CostSplit
-									items={outstandingPartItems}
-									currency="EUR"
-									total={outstandingTotal}
-									variant="compact"
-									showStatus={false}
-								/>
-							</dd>
-						)}
-					</div>
-					<div class="grid gap-1">
-						<dt class="label-caps">Overdue</dt>
-						<dd
-							class:list={[
-								"tabular-nums",
-								overdueCount > 0 && "text-fg-danger",
-							]}
-							>{overdueCount}</dd
-						>
-					</div>
-					<div class="grid gap-1">
-						<dt class="label-caps">In queue</dt>
-						<dd class="tabular-nums">{queue.length}</dd>
-					</div>
-				</dl>
-			</section>
+	<header
+		slot="header"
+		class="grid gap-4 border-b border-dashed border-line pb-6"
+	>
+		<div class="grid gap-1">
+			<p class="text-label uppercase text-fg-muted">Admin</p>
+			<h1
+				class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
+			>
+				Client workbench
+			</h1>
+		</div>
+		<details class="grid gap-3" open={Boolean(onboardResult?.error)}>
+			<Button as="summary" class="[&::-webkit-details-marker]:hidden">
+				Onboard client
+			</Button>
+			<form
+				method="POST"
+				action={actions.onboardOrganization}
+				aria-label="Onboard client"
+				class="grid gap-4 border border-dashed border-line p-4 md:grid-cols-2"
+			>
+				<Field
+					label="Client name"
+					id="organization-name"
+					name="organizationName"
+					required
+					maxlength="120"
+					result={onboardResult}
+				/>
+				<Field
+					label="Slug"
+					id="organization-slug"
+					name="slug"
+					required
+					autocomplete="off"
+					spellcheck="false"
+					hint="The client's dashboard address: /dash/org/slug. Filled in from the name; lowercase letters, numbers and dashes."
+					result={onboardResult}
+				/>
+				<Field
+					label="Contact name"
+					name="name"
+					required
+					maxlength="120"
+					autocomplete="off"
+					result={onboardResult}
+				/>
+				<Field
+					label="Contact email"
+					name="email"
+					type="email"
+					required
+					autocomplete="off"
+					hint="Becomes the first member of the client's dashboard."
+					result={onboardResult}
+				/>
+				<Field
+					label="Yearly budget"
+					name="yearlyBudget"
+					type="number"
+					min="1"
+					step="1"
+					inputmode="numeric"
+					hint="Whole euros (EUR) per calendar year. Leave empty for no budget."
+					result={onboardResult}
+				/>
+				<Button type="submit" class="md:col-span-2">Create client</Button>
+			</form>
+		</details>
+	</header>
 
-			<section class="grid gap-3" aria-labelledby="queue-heading">
-				<h2 id="queue-heading" class="text-label uppercase text-fg-muted"
-					>Needs action</h2
-				>
-				<div
-					class="grid border border-dashed border-line sm:grid-cols-[auto_1fr_max-content_max-content] sm:gap-x-6"
-				>
-					{queue.length > 0 ? (
-						queue.map((item) => (
-							<article class="grid gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
-								<Badge type={item.badge}>{item.label}</Badge>
-								<div class="grid gap-1">
-									<h3 class="font-medium">{item.organization.name}</h3>
-									<p class="text-sm text-fg-muted">
-										{item.project.name} ·{" "}
-										{item.invoice
-											? item.invoice.stripe.number
-											: item.phase.title}
-									</p>
-								</div>
-								<div class="grid min-w-48 gap-1.5 sm:justify-items-end">
-									<div class="grid grid-flow-col items-center justify-start gap-2 sm:justify-end">
-										<p class="text-sm font-medium tabular-nums">
-											{formatMoney(
-												item.invoice
-													? item.invoice.stripe.total
-													: item.phase.cost,
-												item.phase.currency,
-											)}
-										</p>
-										{item.invoice && (
-											<Badge type="info">
-												{costPartLabel[item.invoice.component]}
-											</Badge>
-										)}
-									</div>
-									{buildPhaseComponents(item.phase).length > 0 && (
-										<div class="w-full max-w-56">
-											<CostSplit
-												items={buildPhaseComponents(item.phase)}
-												currency={item.phase.currency}
-												total={item.phase.cost}
-												variant="compact"
-												highlight={item.invoice?.component ?? null}
-											/>
-										</div>
-									)}
-								</div>
-								<div class="grid grid-flow-col items-center gap-3 sm:justify-self-end">
-									<p class="text-sm tabular-nums text-fg-muted">{item.age}</p>
-									<Button href={item.href}>Open</Button>
-								</div>
-							</article>
-						))
-					) : (
-						<p class="p-4 text-sm text-fg-muted sm:col-span-4">
-							Nothing needs action.
-						</p>
-					)}
-				</div>
-			</section>
+	<dl
+		class="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-x-8 gap-y-3 text-sm"
+	>
+		<div class="grid min-w-0 content-start gap-1">
+			<dt class="label-caps">Your move</dt>
+			<dd class="text-title tabular-nums">
+				{worklist.filter((item) => item.actor === "admin").length}
+			</dd>
+		</div>
+		<div class="grid min-w-0 content-start gap-1">
+			<dt class="label-caps">Overdue</dt>
+			<dd
+				class:list={[
+					"text-title tabular-nums wrap-break-word",
+					openInvoices.some((invoice) => invoice.overdue)
+						? "text-fg-danger"
+						: "text-fg",
+				]}
+			>
+				{sumByCurrency(openInvoices.filter((invoice) => invoice.overdue))}
+			</dd>
+		</div>
+		<div class="grid min-w-0 content-start gap-1">
+			<dt class="label-caps">Outstanding</dt>
+			<dd class="text-title tabular-nums wrap-break-word">
+				{sumByCurrency(openInvoices)}
+			</dd>
+		</div>
+	</dl>
 
-			<section class="grid gap-3" aria-labelledby="ledger-heading">
-				<h2 id="ledger-heading" class="text-label uppercase text-fg-muted"
-					>Client ledger</h2
-				>
-				<div class="overflow-x-auto border border-dashed border-line">
-					<table class="w-full min-w-2xl border-collapse text-left text-sm">
-						<thead>
-							<tr
-								class="border-b border-dashed border-line text-xs uppercase text-fg-muted"
-							>
-								<th class="px-4 py-3" scope="col">Client</th>
-								<th class="px-4 py-3" scope="col">Attention</th>
-								<th class="px-4 py-3" scope="col">Projects</th>
-								<th class="px-4 py-3" scope="col">Budget used</th>
-								<th class="px-4 py-3 text-right" scope="col">Open</th>
-							</tr>
-						</thead>
-						<tbody>
-							{ledger.length > 0 ? (
-								ledger.map((organization) => (
-									<tr
+	<section class="grid gap-3" aria-labelledby="worklist-heading">
+		<div class="grid gap-1">
+			<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
+				Worklist
+			</h2>
+			<p class="max-w-prose text-sm text-fg-muted">
+				Phases that need a step from you or a client, and invoices waiting for
+				payment, across all clients.
+			</p>
+		</div>
+		<AdminWorklist items={worklist} />
+	</section>
+
+	<section class="grid gap-3" aria-labelledby="ledger-heading">
+		<h2 id="ledger-heading" class="text-label uppercase text-fg-muted">
+			Client ledger
+		</h2>
+		<div class="overflow-x-auto border border-dashed border-line">
+			<table class="w-full min-w-3xl text-sm">
+				<thead>
+					<tr class="border-b border-dashed border-line text-fg-muted">
+						<th scope="col" class="px-4 py-3 text-left label-caps"> Client </th>
+						<th scope="col" class="px-4 py-3 text-right label-caps">
+							Your move
+						</th>
+						<th scope="col" class="px-4 py-3 text-right label-caps">
+							Waiting on client
+						</th>
+						<th scope="col" class="px-4 py-3 text-right label-caps">
+							Active projects
+						</th>
+						<th scope="col" class="px-4 py-3 text-left label-caps">
+							Budget used
+						</th>
+						<th scope="col" class="px-4 py-3 text-right label-caps">
+							Outstanding
+						</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-dashed divide-line">
+					{ledger.length > 0 ? (
+						ledger.map((client) => (
+							<tr>
+								<th
+									scope="row"
+									class="px-4 py-3 text-left font-medium wrap-break-word"
+								>
+									<a
+										href={`/admin/org/${client.id}`}
 										class:list={[
-											"border-b border-dashed border-line last:border-b-0",
-											organization.openInvoices === 0 &&
-												organization.planned === 0 &&
-												organization.submitted === 0 &&
-												"opacity-60",
+											"underline decoration-dashed underline-offset-4",
+											client.yourMove === 0 &&
+											client.waiting === 0 &&
+											client.openInvoices.length === 0
+												? "text-fg-muted"
+												: "text-fg",
 										]}
 									>
-										<td class="px-4 py-3 font-medium">
-											<a
-												class="underline decoration-dashed underline-offset-4"
-												href={`/admin/org/${organization.id}`}
+										{client.name}
+									</a>
+								</th>
+								<td
+									class:list={[
+										"px-4 py-3 text-right tabular-nums",
+										client.yourMove > 0 ? "text-fg" : "text-fg-muted",
+									]}
+								>
+									{client.yourMove}
+								</td>
+								<td class="px-4 py-3 text-right tabular-nums text-fg-muted">
+									{client.waiting}
+								</td>
+								<td class="px-4 py-3 text-right tabular-nums text-fg-muted">
+									{client.activeProjects} of {client.totalProjects}
+								</td>
+								<td class="px-4 py-3">
+									{client.budgetUsage === null ? (
+										<span class="text-fg-muted">No budget</span>
+									) : (
+										<span class="grid gap-1">
+											<progress
+												class:list={[
+													"h-2 w-24 appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+													client.budgetUsage > 100
+														? "[&::-moz-progress-bar]:bg-fill-danger [&::-webkit-progress-value]:bg-fill-danger"
+														: "[&::-moz-progress-bar]:bg-ink [&::-webkit-progress-value]:bg-ink",
+												]}
+												max="100"
+												value={Math.min(client.budgetUsage, 100)}
+												aria-label={`Budget used by ${client.name}`}
+											/>
+											<span
+												class:list={[
+													"text-xs tabular-nums",
+													client.budgetUsage > 100
+														? "text-fg-danger"
+														: "text-fg-muted",
+												]}
 											>
-												{organization.name}
-											</a>
-										</td>
-										<td class="px-4 py-3">
-											<div class="grid grid-flow-col justify-start gap-2">
-												{organization.overdue > 0 && (
-													<Badge type="error">Overdue</Badge>
-												)}
-												{organization.submitted > 0 && (
-													<Badge type={phaseStatus.submitted.badge}>
-														{phaseStatus.submitted.label}
-													</Badge>
-												)}
-												{organization.planned > 0 && (
-													<Badge type={phaseStatus.planned.badge}>
-														{phaseStatus.planned.label}
-													</Badge>
-												)}
-												{organization.overdue === 0 &&
-													organization.submitted === 0 &&
-													organization.planned === 0 && (
-														<span class="text-fg-muted">Quiet</span>
-													)}
-											</div>
-										</td>
-										<td class="px-4 py-3 tabular-nums">
-											{organization.activeProjects}/{organization.totalProjects}
-										</td>
-										<td class="px-4 py-3">
-											{organization.budgetUsage === null ? (
-												<span class="text-fg-muted">No budget</span>
-											) : (
-												<div class="grid gap-1">
-													<progress
-														class:list={[
-															"h-2 w-24 appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
-															organization.budgetUsage > 100
-																? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
-																: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
-														]}
-														max="100"
-														value={Math.min(organization.budgetUsage, 100)}
-													/>
-													<span
-														class:list={[
-															"text-xs tabular-nums",
-															organization.budgetUsage > 100 &&
-																"text-fg-danger",
-														]}
-													>
-														{formatPercent(organization.budgetUsage)}
-													</span>
-												</div>
-											)}
-										</td>
-										<td class="px-4 py-3">
-											<div class="grid justify-items-end gap-1.5">
-												<p class="tabular-nums">
-													{formatMoney(organization.openInvoices, "EUR")}
-												</p>
-												{organization.openByPart.length > 0 && (
-													<div class="w-full min-w-40 max-w-52">
-														<CostSplit
-															items={organization.openByPart}
-															currency="EUR"
-															total={organization.openInvoices}
-															variant="compact"
-															showStatus={false}
-														/>
-													</div>
-												)}
-											</div>
-										</td>
-									</tr>
-								))
-							) : (
-								<tr>
-									<td class="px-4 py-3 text-fg-muted" colspan="5">
-										No clients yet.
-									</td>
-								</tr>
-							)}
-						</tbody>
-						{ledger.length > 0 && (
-							<tfoot>
-								<tr class="border-t border-dashed border-line font-semibold">
-									<td class="px-4 py-3" colspan="4">
-										Outstanding
-									</td>
-									<td class="px-4 py-3">
-										<div class="grid justify-items-end gap-1.5">
-											<p class="tabular-nums">
-												{formatMoney(outstandingTotal, "EUR")}
-											</p>
-											{outstandingPartItems.length > 0 && (
-												<div class="w-full min-w-40 max-w-52">
-													<CostSplit
-														items={outstandingPartItems}
-														currency="EUR"
-														total={outstandingTotal}
-														variant="compact"
-														showStatus={false}
-													/>
-												</div>
-											)}
-										</div>
-									</td>
-								</tr>
-							</tfoot>
-						)}
-					</table>
-				</div>
-			</section>
+												{formatPercent(client.budgetUsage)}
+											</span>
+										</span>
+									)}
+								</td>
+								<td class="px-4 py-3 text-right">
+									<span
+										class:list={[
+											"block tabular-nums",
+											client.openInvoices.length > 0
+												? "text-fg"
+												: "text-fg-muted",
+										]}
+									>
+										{sumByCurrency(client.openInvoices)}
+									</span>
+									{client.openInvoices.some((invoice) => invoice.overdue) && (
+										<span class="block text-xs tabular-nums text-fg-danger">
+											{sumByCurrency(
+												client.openInvoices.filter(
+													(invoice) => invoice.overdue,
+												),
+											)}{" "}
+											overdue
+										</span>
+									)}
+								</td>
+							</tr>
+						))
+					) : (
+						<tr>
+							<td colspan="6" class="px-4 py-6 text-center text-fg-muted">
+								No clients yet. Onboard the first one above.
+							</td>
+						</tr>
+					)}
+				</tbody>
+				{ledger.length > 0 && (
+					<tfoot>
+						<tr class="border-t border-dashed border-line">
+							<th scope="row" class="px-4 py-3 text-left label-caps">
+								All clients
+							</th>
+							<td class="px-4 py-3 text-right font-semibold tabular-nums">
+								{worklist.filter((item) => item.actor === "admin").length}
+							</td>
+							<td class="px-4 py-3 text-right font-semibold tabular-nums">
+								{worklist.filter((item) => item.actor === "client").length}
+							</td>
+							<td class="px-4 py-3" colspan="2"></td>
+							<td class="px-4 py-3 text-right font-semibold tabular-nums">
+								{sumByCurrency(openInvoices)}
+							</td>
+						</tr>
+					</tfoot>
+				)}
+			</table>
+		</div>
+	</section>
+</AdminShell>
 
-			<section aria-labelledby="onboard-heading">
-				<details
-					id="onboard"
-					class="grid gap-3"
-					open={Boolean(onboardResult?.error)}
-				>
-					<summary
-						id="onboard-heading"
-						class="w-max cursor-pointer text-label uppercase text-fg-muted transition-colors hover:text-fg"
-						>Onboard client</summary
-					>
-					<form
-						method="POST"
-						action={actions.onboardOrganization}
-						class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-2"
-					>
-						<label class="grid gap-1 text-sm">
-							<span class="font-medium">Contact email</span>
-							<Input name="email" type="email" required />
-						</label>
-						<label class="grid gap-1 text-sm">
-							<span class="font-medium">Contact name</span>
-							<Input name="name" required />
-						</label>
-						<label class="grid gap-1 text-sm">
-							<span class="font-medium">Organization</span>
-							<Input id="organization-name" name="organizationName" required />
-						</label>
-						<label class="grid gap-1 text-sm">
-							<span class="font-medium">Slug</span>
-							<Input id="organization-slug" name="slug" required />
-						</label>
-						<label class="grid gap-1 text-sm md:col-span-2">
-							<span class="font-medium">Yearly budget</span>
-							<Input name="yearlyBudget" type="number" min="1" />
-						</label>
-						{onboardResult?.error && (
-							<p class="text-sm text-fg-danger md:col-span-2">
-								{onboardResult.error.message}
-							</p>
-						)}
-						<div class="grid md:col-span-2">
-							<Button type="submit">Onboard client</Button>
-						</div>
-					</form>
-				</details>
-			</section>
-		</main>
-		<Footer />
-		<script>
-			const onboard = document.querySelector<HTMLDetailsElement>("#onboard");
-			if (onboard?.open) onboard.scrollIntoView();
+<script>
+	// The slug follows the client name until the admin edits it.
+	const organizationName =
+		document.querySelector<HTMLInputElement>("#organization-name");
+	const organizationSlug =
+		document.querySelector<HTMLInputElement>("#organization-slug");
+	let slugEdited = false;
 
-			const organizationName =
-				document.querySelector<HTMLInputElement>("#organization-name");
-			const organizationSlug =
-				document.querySelector<HTMLInputElement>("#organization-slug");
-			let slugEdited = false;
-
-			organizationSlug?.addEventListener("input", () => {
-				slugEdited = true;
-			});
-			organizationName?.addEventListener("input", () => {
-				if (!organizationSlug || slugEdited) return;
-				organizationSlug.value = organizationName.value
-					.trim()
-					.toLowerCase()
-					.replace(/[^a-z0-9]+/g, "-")
-					.replace(/^-|-$/g, "");
-			});
-		</script>
-	</Fragment>
-</Shell>
+	organizationSlug?.addEventListener("input", () => {
+		slugEdited = true;
+	});
+	organizationName?.addEventListener("input", () => {
+		if (!organizationSlug || slugEdited) return;
+		organizationSlug.value = organizationName.value
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "-")
+			.replace(/^-|-$/g, "");
+	});
+</script>
