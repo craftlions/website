@@ -118,12 +118,12 @@ const canApprovePhases =
 	breadcrumbs={[{ label: project.name }]}
 	wide
 >
-	<section class="grid gap-4">
-		<p class="text-label uppercase text-fg-muted"> Project Overview </p>
-		<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
-			{project.name}
-		</h1>
-	</section>
+	<h1
+		slot="header"
+		class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
+	>
+		{project.name}
+	</h1>
 
 	<ClientPhaseBanner />
 
