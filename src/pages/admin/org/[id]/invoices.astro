@@ -588,13 +588,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 				{recordedTargets.length > 0 ? (
 					recordedTargets.map((target) => {
 						const status = invoiceStatus(target.invoice, now);
-						const rowCategory =
-							target.invoice.status === "paid" ? "paid" : "open";
 						return (
 							<li
 								class="grid gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-start"
 								data-recorded-row
-								data-row-category={rowCategory}
+								data-row-category={target.invoice.status}
 							>
 								<div class="grid gap-2">
 									<div class="grid grid-flow-col items-center justify-start gap-2">
@@ -724,6 +722,8 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 				for (const btn of buttons) {
 					btn.setAttribute("aria-pressed", String(btn === button));
 				}
+				// Rows carry their Stripe status: "Open" shows open and overdue
+				// invoices only; void and uncollectible ones show under "All".
 				for (const row of rows) {
 					if (filter === "all") {
 						row.hidden = false;
