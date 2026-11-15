@@ -301,7 +301,7 @@ A text link is its text with a dashed underline, never a box.
 
 ### Disclosure
 
-A form or extra panel opens from a button, never from a heading or a native `<details>` summary.
+A form or extra panel opens from a button, never from a heading or a native `<details>` summary; `aubr design:lint` rejects `<details>` and `<summary>`.
 
 - **Component:** `src/components/DisclosureButton.astro` is a Button with `aria-expanded`, `aria-controls` and a chevron that turns when open. Pass the panel's id as `controls`; the page renders the panel with `hidden={!open}` and the same `open`.
 - **Placement:** a section's primary action sits on the right of its heading row (`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3`), and its form opens below the heading and description. A row's extra panel spans the row.

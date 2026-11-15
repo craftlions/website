@@ -126,6 +126,12 @@ const rules = [
 			"src/components/PhaseAmountCalculator.astro",
 		],
 	},
+	{
+		id: "native-disclosure",
+		pattern: /<(?:details|summary)\b/g,
+		use: "<DisclosureButton> with a hidden panel",
+		doc: "DESIGN.md#disclosure",
+	},
 ];
 
 // Shadow, rounded and flex are also ordinary words, so those rules skip free text.
