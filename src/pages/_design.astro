@@ -247,6 +247,16 @@ const typeRoles = [
 									Jane loses access to the Acme dashboard. Her account stays.
 								</ConfirmAction>
 								<ConfirmAction
+									id={`confirm-approve-${scheme}`}
+									trigger="Approve for client"
+									title="Approve Discovery for the client?"
+									confirm="Approve for client"
+									confirmVariant="default"
+								>
+									You approve this phase on the client's behalf. Its upfront
+									payment becomes due.
+								</ConfirmAction>
+								<ConfirmAction
 									id={`confirm-typed-${scheme}`}
 									trigger="Delete client"
 									triggerVariant="danger"
