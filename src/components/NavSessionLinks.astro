@@ -26,26 +26,13 @@ const session =
 		: Astro.locals.session;
 ---
 
-<li>
-	<ul class="grid grid-flow-col auto-cols-max items-center gap-2">
-		{session ? (
-			<>
+{session ? (
+	<>
+		<li>
+			<ul class="grid grid-flow-col auto-cols-max items-center gap-2">
 				<li>
 					<Button href={dashboard} aria-current={current(dashboard, "/dash")}>
 						Dashboard
-					</Button>
-				</li>
-				<li>
-					<Button
-						href="/settings/profile"
-						aria-current={current("/settings/profile")}
-					>
-						Profile
-					</Button>
-				</li>
-				<li>
-					<Button href="/settings/api" aria-current={current("/settings/api")}>
-						API Keys
 					</Button>
 				</li>
 				{session.user.role === "admin" && (
@@ -55,18 +42,32 @@ const session =
 						</Button>
 					</li>
 				)}
+			</ul>
+		</li>
+		{/* A future Search (Ctrl+K) trigger sits here, between work and account. */}
+		<li>
+			<ul class="grid grid-flow-col auto-cols-max items-center gap-3">
+				<li>
+					<Button
+						href="/settings/profile"
+						variant="quiet"
+						aria-current={current("/settings/profile", "/settings")}
+					>
+						Account
+					</Button>
+				</li>
 				{!session.session.impersonatedBy && (
 					<li>
 						<LogoutButton />
 					</li>
 				)}
-			</>
-		) : (
-			<li>
-				<Button href="/login" aria-current={current("/login")}>
-					Login
-				</Button>
-			</li>
-		)}
-	</ul>
-</li>
+			</ul>
+		</li>
+	</>
+) : (
+	<li>
+		<Button href="/login" aria-current={current("/login")}>
+			Login
+		</Button>
+	</li>
+)}

@@ -321,6 +321,7 @@ A form action's outcome shows once, at the top of the page, below the page headi
 
 Navigation is a responsive grid with the logo on the left and compact session links on the right at larger widths. On small screens it stacks into a centered single-column grid. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like. It sits in the shared `max-w-6xl` (dashboard) or `max-w-3xl` (public/settings) header, matching the page column it leads.
 
+- **Groups:** signed-in links form two groups. Work destinations (Dashboard, and Admin for admins) are default Buttons; the account group (Account, Logout) is quiet Buttons, set apart by a wider gap. A future Search trigger sits between the two groups. Logout is hidden while viewing as a client.
 - **Dashboard:** on a client page it leads to that organization's dashboard, otherwise to `/dash`, which lists the member's organizations.
 - **Current:** a link to the page itself carries `aria-current="page"`; a link to the section the page lies in carries `aria-current="true"`. Both draw the pressed style; a quiet link turns primary with a solid underline.
 
