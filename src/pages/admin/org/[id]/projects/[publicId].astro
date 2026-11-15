@@ -31,6 +31,7 @@ import {
 	phaseStatus,
 	phaseTransitionsFrom,
 	projectStatus,
+	recordDeliveryLabel,
 } from "../../../../../lib/status.ts";
 import { submittedValues } from "../../../../../lib/submitted-values.ts";
 
@@ -453,9 +454,9 @@ const phases = project.phases
 									controls={`phase-${phase.publicId}-more`}
 									open={phase.id === reopenedPhase?.id}
 									class="lg:col-start-4 lg:justify-self-end"
-									aria-label={`Record delivery: ${phase.title}`}
+									aria-label={`${recordDeliveryLabel}: ${phase.title}`}
 								>
-									Record delivery
+									{recordDeliveryLabel}
 								</DisclosureButton>
 							)}
 							{["submitted", "planned", "delivered", "accepted"].includes(

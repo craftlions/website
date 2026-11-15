@@ -2,6 +2,7 @@
 import type { ComponentProps, HTMLAttributes } from "astro/types";
 import type { phaseSelectType } from "../lib/schema.ts";
 import { actions } from "astro:actions";
+import { recordDeliveryLabel } from "../lib/status.ts";
 import { submittedValues } from "../lib/submitted-values.ts";
 import Button from "./Button.astro";
 import Field from "./Field.astro";
@@ -29,7 +30,7 @@ const ownResult =
 	submittedValues(Astro.locals, result)?.get("phaseId") === phase.id
 		? result
 		: undefined;
-const submitLabel = mode === "record" ? "Record delivery" : "Update delivery";
+const submitLabel = mode === "record" ? recordDeliveryLabel : "Update delivery";
 ---
 
 <delivery-form class="grid">
