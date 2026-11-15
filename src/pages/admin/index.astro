@@ -157,7 +157,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 		slug: "Slug",
 		name: "Contact name",
 		email: "Contact email",
-		yearlyBudget: "Yearly budget",
+		yearlyBudget: "Yearly budget (EUR)",
 		deliveryChoice: "Delivery",
 		deliveryUrl: "Delivery URL",
 	}}
@@ -276,13 +276,13 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 					result={onboardResult}
 				/>
 				<Field
-					label="Yearly budget"
+					label="Yearly budget (EUR)"
 					name="yearlyBudget"
 					type="number"
 					min="1"
 					step="1"
 					inputmode="numeric"
-					hint="Whole euros (EUR) per calendar year. Leave empty for no budget."
+					hint="Whole euros per calendar year, January to December. Leave empty for no budget."
 					result={onboardResult}
 				/>
 				<div
