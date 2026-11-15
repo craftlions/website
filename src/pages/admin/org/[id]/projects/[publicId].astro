@@ -85,16 +85,6 @@ if (!project) {
 	return Astro.redirect(`/admin/org/${organization.id}/projects`);
 }
 
-const actionResults = [
-	Astro.getActionResult(actions.transitionProject),
-	Astro.getActionResult(actions.createPhase),
-	Astro.getActionResult(actions.transitionPhase),
-	Astro.getActionResult(actions.recordDelivery),
-	Astro.getActionResult(actions.updatePhaseAmounts),
-];
-const actionError = actionResults.find((result) => result?.error)?.error;
-const actionSucceeded = actionResults.some((result) => result && !result.error);
-
 const phases = project.phases.map((phase) => ({
 	...phase,
 	components: buildPhaseComponents(phase),
@@ -107,18 +97,41 @@ const phases = project.phases.map((phase) => ({
 <AdminOrgShell
 	{organization}
 	activePage="projects"
-	showSuccess={actionSucceeded}
+	breadcrumbs={[{ label: project.name }]}
+	results={[
+		[
+			Astro.getActionResult(actions.transitionProject),
+			`Project is now ${projectStatus[project.state].label.toLowerCase()}.`,
+		],
+		[
+			Astro.getActionResult(actions.createPhase),
+			"Phase added. Send it to the client when it is ready.",
+		],
+		[
+			Astro.getActionResult(actions.transitionPhase),
+			"Phase state changed. The highlighted phase shows its new state.",
+		],
+		[
+			Astro.getActionResult(actions.recordDelivery),
+			"Delivery recorded. The phase now awaits the client's acceptance.",
+		],
+		[Astro.getActionResult(actions.updatePhaseDelivery), "Delivery updated."],
+		[Astro.getActionResult(actions.updatePhaseAmounts), "Cost split saved."],
+	]}
+	fieldLabels={{
+		title: "Title",
+		cost: "Cost",
+		currency: "Currency",
+		dueAt: "Due date",
+		upfrontAmount: "Upfront",
+		deliveryAmount: "Delivery",
+		acceptanceAmount: "Acceptance",
+		deliveryChoice: "Delivery",
+		deliveryUrl: "Delivery URL",
+	}}
 >
-	{actionError && (
-		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
-			{actionError.message}
-		</p>
-	)}
 	<section class="grid gap-6" aria-labelledby="project-heading">
 		<div class="grid gap-4">
-			<Button href={`/admin/org/${organization.id}/projects`}
-				>Back to projects</Button
-			>
 			<div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
 				<div class="grid gap-2">
 					<div
@@ -131,11 +144,6 @@ const phases = project.phases.map((phase) => ({
 							>{projectStatus[project.state].label}</Badge
 						>
 					</div>
-					<a
-						class="w-max text-sm underline decoration-dashed underline-offset-4"
-						href={`/dash/org/${organization.slug}/project/${project.publicId}`}
-						>View as client</a
-					>
 				</div>
 				<div
 					class="grid grid-flow-col items-center justify-start gap-4 md:justify-end"
