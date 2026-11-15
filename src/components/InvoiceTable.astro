@@ -8,6 +8,7 @@ import Button from "./Button.astro";
 import CostSplit from "./CostSplit.astro";
 
 interface Invoice {
+	id: string;
 	component: string | null;
 	number: string;
 	paymentPage: string;
@@ -172,7 +173,8 @@ const partSummaryTotal = partSummaryItems.reduce(
 		<ul class="grid gap-3">
 			{rows.map((invoice) => (
 				<li
-					class="grid gap-2 border border-dashed border-line p-4"
+					id={`invoice-${invoice.id}`}
+					class="grid scroll-mt-20 gap-2 border border-dashed border-line p-4 target:bg-info-subtle target:outline-2 target:-outline-offset-2 target:outline-dashed target:outline-fill-info/70"
 					data-invoice-item
 					data-category={
 						invoice.status === "paid"

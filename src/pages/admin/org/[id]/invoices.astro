@@ -397,7 +397,10 @@ const attachBlocker = (invoice: { currency: string }) => {
 							part.component === pickedComponent,
 					);
 					return (
-						<li class="grid gap-x-6 gap-y-3 p-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-start">
+						<li
+							id={`invoice-${invoice.id}`}
+							class="grid scroll-mt-20 gap-x-6 gap-y-3 p-4 target:bg-info-subtle target:outline-2 target:-outline-offset-2 target:outline-dashed target:outline-fill-info/70 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-start"
+						>
 							<div class="grid min-w-0 justify-items-start gap-1">
 								<p class="label-caps">
 									Invoice{" "}
@@ -541,7 +544,8 @@ const attachBlocker = (invoice: { currency: string }) => {
 						const status = invoiceStatus(row.invoice, now);
 						return (
 							<li
-								class="grid gap-3 border border-dashed border-line p-4"
+								id={`invoice-${row.invoice.id}`}
+								class="grid scroll-mt-20 gap-3 border border-dashed border-line p-4 target:bg-info-subtle target:outline-2 target:-outline-offset-2 target:outline-dashed target:outline-fill-info/70"
 								data-invoice-item
 								data-category={
 									row.invoice.status === "open" || row.invoice.status === "paid"

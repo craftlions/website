@@ -162,7 +162,10 @@ const otherClients = (count: number) =>
 				</div>
 				<ul class="grid grid-cols-1 lg:col-span-4 lg:grid-cols-subgrid">
 					{members.map((member) => (
-						<li class="grid grid-cols-1 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-4 lg:grid-cols-subgrid lg:items-start">
+						<li
+							id={`member-${member.id}`}
+							class="grid scroll-mt-20 grid-cols-1 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 target:bg-info-subtle target:outline-2 target:-outline-offset-2 target:outline-dashed target:outline-fill-info/70 lg:col-span-4 lg:grid-cols-subgrid lg:items-start"
+						>
 							<div class="grid gap-1">
 								<h3 class="wrap-break-word">{member.user.name}</h3>
 								<p class="text-sm text-fg-muted wrap-break-word">
