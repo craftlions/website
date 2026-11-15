@@ -274,7 +274,7 @@ export const server = {
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await updatePhaseAmounts(context.locals.db, actorId, input);
-			return { success: true };
+			return { phaseId: input.phaseId };
 		}),
 	}),
 	transitionPhase: defineAction({
@@ -308,7 +308,7 @@ export const server = {
 			.superRefine(deliveryPairingIssue),
 		handler: adminHandler(async (input, context, actorId) => {
 			await recordDelivery(context.locals.db, actorId, input);
-			return { success: true };
+			return { phaseId: input.phaseId };
 		}),
 	}),
 	attachInvoiceToPhase: defineAction({
@@ -340,7 +340,7 @@ export const server = {
 			.superRefine(deliveryPairingIssue),
 		handler: adminHandler(async (input, context, actorId) => {
 			await updatePhaseDelivery(context.locals.db, actorId, input);
-			return { success: true };
+			return { phaseId: input.phaseId };
 		}),
 	}),
 	addOrganizationMember: defineAction({

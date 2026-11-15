@@ -29,6 +29,7 @@ import {
 	phaseTransitions,
 	projectStatus,
 } from "../../../../../lib/status.ts";
+import { submittedValues } from "../../../../../lib/submitted-values.ts";
 
 const { id, publicId } = Astro.params;
 
@@ -111,6 +112,41 @@ const isAddPhaseOpen =
 // New phases default to the currency the project already bills in.
 const defaultCurrency = project.phases.at(-1)?.currency ?? "EUR";
 const currencyNames = new Intl.DisplayNames("en", { type: "currency" });
+
+// Cost parts as a failed form submitted them; an empty part is not billed.
+const submittedSplit = (values: URLSearchParams) => ({
+	upfrontAmount: values.get("upfrontAmount")
+		? Number(values.get("upfrontAmount"))
+		: null,
+	deliveryAmount: values.get("deliveryAmount")
+		? Number(values.get("deliveryAmount"))
+		: null,
+	acceptanceAmount: values.get("acceptanceAmount")
+		? Number(values.get("acceptanceAmount"))
+		: null,
+});
+const createInput = submittedValues(Astro.locals, createResult);
+const amountsInput = submittedValues(
+	Astro.locals,
+	Astro.getActionResult(actions.updatePhaseAmounts),
+);
+
+// The phase row the last phase action came from: its data names the phase
+// on success, its submitted `phaseId` on failure. Only that row is marked,
+// and after a failure its More panel reopens when the failed form lives
+// there (every form but the row's transition buttons; of those, only
+// "Cancel phase" sits in the panel).
+const phaseResult = [
+	Astro.getActionResult(actions.transitionPhase),
+	Astro.getActionResult(actions.recordDelivery),
+	Astro.getActionResult(actions.updatePhaseDelivery),
+	Astro.getActionResult(actions.updatePhaseAmounts),
+].find(Boolean);
+const phaseInput = submittedValues(Astro.locals, phaseResult);
+const actedPhase = project.phases.find(
+	(phase) =>
+		phase.id === (phaseResult?.data?.phaseId ?? phaseInput?.get("phaseId")),
+);
 
 // Open phases first, settled ones after; each group keeps creation order.
 const phases = project.phases
@@ -288,9 +324,11 @@ const phases = project.phases
 					class="grid-cols-[minmax(0,1fr)]"
 				/>
 				<PhaseAmountCalculator
-					cost={0}
-					currency={defaultCurrency}
-					acceptanceAmount={0}
+					cost={Number(createInput?.get("cost")) || 0}
+					currency={createInput?.get("currency") ?? defaultCurrency}
+					{...(createInput
+						? submittedSplit(createInput)
+						: { acceptanceAmount: 0 })}
 					class="border-t border-dashed border-line pt-4 md:col-span-full"
 				/>
 				<Button type="submit" class="md:col-span-full">
@@ -306,13 +344,10 @@ const phases = project.phases
 		{phases.length > 0 ? (
 			<admin-phase-list
 				class="grid border border-dashed border-line lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] lg:gap-x-6"
+				data-acted={actedPhase && `phase-${actedPhase.publicId}`}
 				data-reopen={
-					[
-						Astro.getActionResult(actions.transitionPhase),
-						Astro.getActionResult(actions.recordDelivery),
-						Astro.getActionResult(actions.updatePhaseDelivery),
-						Astro.getActionResult(actions.updatePhaseAmounts),
-					].some((result) => result?.error)
+					phaseInput &&
+					[null, "cancelled"].includes(phaseInput.get("nextState"))
 						? "true"
 						: undefined
 				}
@@ -535,6 +570,9 @@ const phases = project.phases
 													upfrontAmount={phase.upfrontAmount}
 													deliveryAmount={phase.deliveryAmount}
 													acceptanceAmount={phase.acceptanceAmount}
+													{...(amountsInput?.get("phaseId") === phase.id
+														? submittedSplit(amountsInput)
+														: {})}
 												/>
 												<Button
 													type="submit"
@@ -583,10 +621,11 @@ const phases = project.phases
 
 <script>
 	// Deep links (`#phase-<publicId>`, from the worklist and invoices) and the
-	// row an action was just submitted from are marked with a background tint
-	// plus a non-color outline cue, without motion. A deep-linked row opens its
-	// More panel; a submitted row reopens it only when the action failed, so
-	// the form is back in view next to the error.
+	// row the last action came from (`data-acted`, set by the server) are
+	// marked with a background tint plus a non-color outline cue, without
+	// motion. A deep-linked row opens its More panel; the acted row reopens it
+	// only when the server says its failed form lives there (`data-reopen`),
+	// so the form is back in view next to the error.
 	const highlightClasses = [
 		"outline-2",
 		"-outline-offset-2",
@@ -594,7 +633,6 @@ const phases = project.phases
 		"outline-fill-info/70",
 		"bg-info-subtle",
 	];
-	const submittedKey = "admin-phase-submitted";
 
 	class AdminPhaseList extends HTMLElement {
 		currentTarget: HTMLElement | null = null;
@@ -614,40 +652,9 @@ const phases = project.phases
 				});
 			}
 
-			// Runs after ConfirmAction's own listener on the form, so a submit it
-			// holds back for its dialog is not recorded.
-			this.addEventListener("submit", (event) => {
-				if (event.defaultPrevented || !(event.target instanceof Element)) {
-					return;
-				}
-				const row = event.target.closest("[data-phase]");
-				if (!row) return;
-				try {
-					sessionStorage.setItem(
-						submittedKey,
-						JSON.stringify({
-							id: row.id,
-							inPanel: event.target.closest("[data-phase-panel]") !== null,
-							at: Date.now(),
-						}),
-					);
-				} catch {}
-			});
-
-			let submitted: { id?: string; inPanel?: boolean; at?: number } | null =
-				null;
-			try {
-				submitted = JSON.parse(sessionStorage.getItem(submittedKey) ?? "null");
-				sessionStorage.removeItem(submittedKey);
-			} catch {}
-
-			// Action results live for a minute; an older entry is stale.
-			const row =
-				submitted && Date.now() - (submitted.at ?? 0) < 60_000
-					? document.getElementById(submitted.id ?? "")
-					: null;
+			const row = document.getElementById(this.dataset.acted ?? "");
 			if (row && this.contains(row)) {
-				this.mark(row, this.dataset.reopen === "true" && !!submitted?.inPanel);
+				this.mark(row, this.dataset.reopen === "true");
 			} else {
 				this.applyHash();
 			}

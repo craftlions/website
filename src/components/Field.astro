@@ -1,6 +1,7 @@
 ---
 import type { ComponentProps } from "astro/types";
 import { isInputError, type SafeResult } from "astro:actions";
+import { submittedValues } from "../lib/submitted-values.ts";
 import Input from "./Input.astro";
 
 interface Props extends Omit<ComponentProps<typeof Input>, "class"> {
@@ -22,6 +23,31 @@ const {
 	...attrs
 } = Astro.props;
 
+// After `result` failed, the field shows what was submitted under its name:
+// the text, the selected options, or whether a checkbox or radio was checked.
+// An explicit `value` (or `checked`) wins; hidden, file and password fields
+// are never restored.
+const submitted =
+	attrs.name && !["hidden", "file", "password"].includes(String(attrs.type))
+		? submittedValues(Astro.locals, result)
+		: undefined;
+const restored =
+	submitted && attrs.name
+		? attrs.type === "checkbox" || attrs.type === "radio"
+			? {
+					checked:
+						attrs.checked ??
+						submitted.getAll(attrs.name).includes(String(attrs.value ?? "on")),
+				}
+			: {
+					value:
+						attrs.value ??
+						(attrs.as === "select"
+							? submitted.getAll(attrs.name)
+							: (submitted.get(attrs.name) ?? undefined)),
+				}
+		: {};
+
 // An explicit error wins; otherwise the action's input error for this field's name.
 const errors = [
 	error ??
@@ -37,6 +63,7 @@ const errors = [
 	<label for={id} class="text-label text-fg-muted">{label}</label>
 	<Input
 		{...attrs}
+		{...restored}
 		{id}
 		danger={danger || errors.length > 0}
 		aria-invalid={errors.length > 0 ? "true" : undefined}

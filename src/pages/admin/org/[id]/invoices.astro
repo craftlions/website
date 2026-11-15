@@ -27,12 +27,18 @@ import {
 	organizationStripeInvoices,
 	stripeInvoiceFields,
 } from "../../../../lib/stripe.ts";
+import { submittedValues } from "../../../../lib/submitted-values.ts";
 
 const { id } = Astro.params;
 
 if (!id) {
 	return Astro.redirect("/admin");
 }
+
+const attachResult = Astro.getActionResult(actions.attachInvoiceToPhase);
+// After a failed attach, only that invoice's row shows the error and keeps
+// the part that was picked.
+const attachInput = submittedValues(Astro.locals, attachResult);
 
 const [organization, organizationData, projects, unattachedInvoices] =
 	await Promise.all([
@@ -206,9 +212,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 <AdminOrgShell
 	{organization}
 	activePage="invoices"
-	results={[
-		[Astro.getActionResult(actions.attachInvoiceToPhase), "Invoice attached"],
-	]}
+	results={[[attachResult, "Invoice attached"]]}
 	fieldLabels={{ stripeId: "Stripe invoice", target: "Attach to" }}
 >
 	<section aria-labelledby="summary-heading" class="grid gap-3">
@@ -419,6 +423,11 @@ const attachBlocker = (invoice: { currency: string }) => {
 										label="Attach to"
 										hint="The closest amount is preselected. Attaching cannot be undone from the dashboard."
 										required
+										result={
+											attachInput?.get("stripeId") === invoice.id
+												? attachResult
+												: undefined
+										}
 										class="min-w-0 [&_select]:w-full [&_select]:min-w-0"
 									>
 										{projects.map((project) => {

@@ -1,24 +1,35 @@
 ---
 import type { HTMLAttributes } from "astro/types";
+import { selectOptions } from "../lib/submitted-values.ts";
 
 interface Props extends HTMLAttributes<"input"> {
 	as?: "input" | "select";
 	danger?: boolean;
 }
 
-const { as = "input", class: className, danger, ...attrs } = Astro.props;
+const { as = "input", class: className, danger, value, ...attrs } = Astro.props;
 
 const inputClass = [
 	"border border-dashed bg-transparent px-3 py-2 text-sm transition-colors placeholder:text-fg-muted focus:border-line-active disabled:cursor-not-allowed disabled:opacity-50",
 	danger ? "border-line-danger" : "border-line",
 	className,
 ];
+
+// A select has no value attribute: a given `value` (one or, for `multiple`,
+// several) selects the matching options of the slot instead.
+const options =
+	as === "select" && value != null
+		? selectOptions(
+				await Astro.slots.render("default"),
+				[value].flat().map(String),
+			)
+		: undefined;
 ---
 
 {as === "select" ? (
 	<select class:list={inputClass} {...attrs}>
-		<slot />
+		{options === undefined ? <slot /> : <Fragment set:html={options} />}
 	</select>
 ) : (
-	<input class:list={inputClass} {...attrs} />
+	<input class:list={inputClass} {value} {...attrs} />
 )}

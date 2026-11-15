@@ -450,23 +450,27 @@ const openInvoices = ledger.flatMap((client) => client.openInvoices);
 </AdminShell>
 
 <script>
-	// The slug follows the client name until the admin edits it.
+	// The slug follows the client name until the admin edits it. A form filled
+	// in again after a failed submit keeps a slug that was edited by hand.
 	const organizationName =
 		document.querySelector<HTMLInputElement>("#organization-name");
 	const organizationSlug =
 		document.querySelector<HTMLInputElement>("#organization-slug");
-	let slugEdited = false;
+	const toSlug = (value: string) =>
+		value
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "-")
+			.replace(/^-|-$/g, "");
+	let slugEdited =
+		organizationSlug?.value !== toSlug(organizationName?.value ?? "");
 
 	organizationSlug?.addEventListener("input", () => {
 		slugEdited = true;
 	});
 	organizationName?.addEventListener("input", () => {
 		if (!organizationSlug || slugEdited) return;
-		organizationSlug.value = organizationName.value
-			.trim()
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, "-")
-			.replace(/^-|-$/g, "");
+		organizationSlug.value = toSlug(organizationName.value);
 	});
 </script>
 

@@ -4,8 +4,11 @@ import { env } from "cloudflare:workers";
 import { nextPath } from "./lib/action-feedback.ts";
 import { createAuth } from "./lib/auth.ts";
 import { createDb } from "./lib/database.ts";
+import { submittedEntries } from "./lib/submitted-values.ts";
 
-const actionResultSessionKey = "action-result";
+// One session entry holds the last form action's result and, when it failed,
+// the submitted values (see submitted-values.ts).
+const actionResultSessionKey = "form-action";
 
 export const onRequest = defineMiddleware(async (context, next) => {
 	context.locals.db = createDb(env);
@@ -41,13 +44,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	// session and the browser is sent to a page that shows it.
 	// - Success goes to the `next` path the action's data names, when it is a
 	//   same-origin path (see `nextPath`), else back to the posting page.
-	// - Failure goes back to the referring page, so the form is there again.
+	// - Failure goes back to the referring page, so the form is there again,
+	//   and the entry also keeps the submitted text fields so the page can
+	//   fill the form in again (`submittedValues`, `Field`).
 	// - The stored result survives redirects: the GET branch below hands it to
 	//   every request but deletes it only once a page answers with something
 	//   other than a redirect. A page that redirects first (a deleted client's
 	//   settings page sending the admin to /admin) passes it on, and the page
 	//   that renders shows it.
 	if (action?.calledFrom === "form" && context.session) {
+		// The handler reads the body, so the submitted values come from a copy.
+		const submission = context.request.clone();
 		const actionResult = await action.handler();
 
 		context.session.set(
@@ -55,6 +62,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 			{
 				actionName: action.name,
 				actionResult: serializeActionResult(actionResult),
+				input: actionResult.error
+					? await submittedEntries(submission)
+					: undefined,
 			},
 			{ ttl: 60 },
 		);
@@ -89,6 +99,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	if (storedResult) {
 		setActionResult(storedResult.actionName, storedResult.actionResult);
+		context.locals.submittedInput = storedResult.input;
 	}
 
 	const response = await next();

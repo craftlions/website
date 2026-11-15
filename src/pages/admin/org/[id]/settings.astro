@@ -8,6 +8,7 @@ import ConfirmAction from "../../../../components/ConfirmAction.astro";
 import Field from "../../../../components/Field.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { member, projects } from "../../../../lib/schema.ts";
+import { submittedValues } from "../../../../lib/submitted-values.ts";
 
 const { id } = Astro.params;
 
@@ -82,6 +83,9 @@ if (!organization) {
 const settingsResult = Astro.getActionResult(
 	actions.updateOrganizationSettings,
 );
+// Both forms post every setting, so after a failed save each field shows what
+// was submitted (the other form's hidden copies equal the stored values).
+const submitted = submittedValues(Astro.locals, settingsResult);
 ---
 
 <AdminOrgShell
@@ -120,7 +124,7 @@ const settingsResult = Astro.getActionResult(
 				<Field
 					label="Name"
 					name="name"
-					value={organization.name}
+					value={submitted?.get("name") ?? organization.name}
 					required
 					maxlength={120}
 					autocomplete="off"
@@ -131,7 +135,7 @@ const settingsResult = Astro.getActionResult(
 					label="Logo URL"
 					name="logo"
 					type="url"
-					value={organization.logo ?? ""}
+					value={submitted?.get("logo") ?? organization.logo ?? ""}
 					placeholder="https://"
 					hint="Optional. The full address of an image. Leave empty for no logo."
 					result={settingsResult}
@@ -156,7 +160,9 @@ const settingsResult = Astro.getActionResult(
 					inputmode="numeric"
 					min={1}
 					step={1}
-					value={organization.data?.yearlyBudget ?? ""}
+					value={submitted?.get("yearlyBudget") ??
+						organization.data?.yearlyBudget ??
+						""}
 					hint="Whole euros per calendar year, January to December. Compared with this year's invoices. Leave empty for no budget."
 					result={settingsResult}
 				/>
@@ -164,7 +170,9 @@ const settingsResult = Astro.getActionResult(
 					<Field
 						label="Stripe customer ID"
 						name="stripeCustomerId"
-						value={organization.data?.stripeCustomerId ?? ""}
+						value={submitted?.get("stripeCustomerId") ??
+							organization.data?.stripeCustomerId ??
+							""}
 						placeholder="cus_…"
 						pattern="cus_[A-Za-z0-9]+"
 						title="Starts with cus_ followed by letters and digits"
@@ -224,7 +232,8 @@ const settingsResult = Astro.getActionResult(
 				id="client-slug"
 				label="Slug"
 				name="slug"
-				value={organization.slug}
+				value={submitted?.get("slug") ?? organization.slug}
+				data-current-slug={organization.slug}
 				required
 				pattern="[a-z0-9]+(-[a-z0-9]+)*"
 				title="Lowercase letters and digits, separated by single hyphens"
@@ -345,15 +354,18 @@ const settingsResult = Astro.getActionResult(
 	const output = form?.querySelector("output");
 
 	if (form && slug instanceof HTMLInputElement && output) {
-		slug.addEventListener("input", () => {
+		// The field can start with a slug that failed to save, so compare with
+		// the client's current slug rather than the field's initial value.
+		const sync = () => {
 			slug.setCustomValidity(
-				slug.value === slug.defaultValue
+				slug.value === slug.dataset.currentSlug
 					? "Enter a new slug to change the client URL."
 					: "",
 			);
 			output.value = `${window.location.origin}/dash/org/${slug.value}`;
-		});
-		slug.setCustomValidity("Enter a new slug to change the client URL.");
+		};
+		slug.addEventListener("input", sync);
+		sync();
 
 		// The open dialog makes the slug field inert, so the browser could not
 		// point at an invalid slug once it is open; check before it opens.
