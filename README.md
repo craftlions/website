@@ -153,18 +153,6 @@ const session = await auth.api.getSession({
 })
 ```
 
-```MAYBE SERVER
-const res = await auth.api.signUpEmail({
-	body: {
-		email: "alexander@nbhr.de",
-		password: "***REMOVED***",
-		name: "Alexander Niebuhr",
-	},
-	headers: Astro.request.headers
-});
-console.log(res)
-```
-
 ```
 const { data, error } = await authClient.requestPasswordReset({
     email: "john.doe@example.com", // required
