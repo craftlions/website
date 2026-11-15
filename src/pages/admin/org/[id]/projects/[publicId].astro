@@ -6,7 +6,7 @@ import Badge from "../../../../../components/Badge.astro";
 import Button from "../../../../../components/Button.astro";
 import ConfirmAction from "../../../../../components/ConfirmAction.astro";
 import DeliveryForm from "../../../../../components/DeliveryForm.astro";
-import Input from "../../../../../components/Input.astro";
+import Field from "../../../../../components/Field.astro";
 import PhaseAmountCalculator from "../../../../../components/PhaseAmountCalculator.astro";
 import PhaseTransitionForm from "../../../../../components/PhaseTransitionForm.astro";
 import ProjectTransitionForm from "../../../../../components/ProjectTransitionForm.astro";
@@ -96,6 +96,12 @@ const openPhaseCount = project.phases.filter(
 	(phase) => !settledStates.includes(phase.state),
 ).length;
 
+const createResult = Astro.getActionResult(actions.createPhase);
+const canAddPhase = project.state === "draft" || project.state === "active";
+// New phases default to the currency the project already bills in.
+const defaultCurrency = project.phases.at(-1)?.currency ?? "EUR";
+const currencyNames = new Intl.DisplayNames("en", { type: "currency" });
+
 // Open phases first, settled ones after; each group keeps creation order.
 const phases = project.phases
 	.map((phase) => ({
@@ -115,10 +121,7 @@ const phases = project.phases
 			Astro.getActionResult(actions.transitionProject),
 			`Project is now ${projectStatus[project.state].label.toLowerCase()}.`,
 		],
-		[
-			Astro.getActionResult(actions.createPhase),
-			"Phase added. Send it to the client when it is ready.",
-		],
+		[createResult, "Phase added. Send it to the client when it is ready."],
 		[
 			Astro.getActionResult(actions.transitionPhase),
 			"Phase state changed. The highlighted phase shows its new state.",
@@ -198,12 +201,96 @@ const phases = project.phases
 	</header>
 
 	<section class="grid gap-3" aria-labelledby="phases-heading">
-		<h3 id="phases-heading" class="text-label uppercase text-fg-muted"
-			>Phases</h3
-		>
+		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+			<h3 id="phases-heading" class="text-label uppercase text-fg-muted">
+				Phases
+			</h3>
+			{canAddPhase && (
+				<Button
+					aria-expanded={createResult?.error ? "true" : "false"}
+					aria-controls="add-phase"
+					data-add-phase-toggle
+				>
+					Add phase
+				</Button>
+			)}
+		</div>
+		{canAddPhase && (
+			<form
+				id="add-phase"
+				method="POST"
+				action={actions.createPhase}
+				class="grid gap-4 border border-dashed border-line p-4 md:grid-cols-3"
+				aria-label="Add phase"
+				hidden={!createResult?.error}
+			>
+				<input type="hidden" name="projectId" value={project.id}>
+				<Field
+					label="Title"
+					name="title"
+					required
+					maxlength="180"
+					hint="Shown to the client in their project view."
+					result={createResult}
+					class="grid-cols-[minmax(0,1fr)] md:col-span-full"
+				/>
+				<Field
+					as="select"
+					label="Currency"
+					name="currency"
+					required
+					hint="Every invoice of the phase bills in this currency."
+					result={createResult}
+					class="grid-cols-[minmax(0,1fr)]"
+				>
+					{[
+						...new Set([
+							...Intl.supportedValuesOf("currency"),
+							...project.phases.map((phase) => phase.currency),
+						]),
+					]
+						.toSorted()
+						.map((code) => (
+							<option value={code} selected={code === defaultCurrency}>
+								{code} · {currencyNames.of(code) ?? code}
+							</option>
+						))}
+				</Field>
+				<Field
+					label="Cost"
+					name="cost"
+					type="number"
+					min="0"
+					step="0.01"
+					inputmode="decimal"
+					required
+					hint="Total for the phase in the currency chosen, e.g. 4800.50."
+					result={createResult}
+					class="grid-cols-[minmax(0,1fr)]"
+				/>
+				<Field
+					label="Due date"
+					name="dueAt"
+					type="date"
+					hint="Optional target date shown to the client."
+					result={createResult}
+					class="grid-cols-[minmax(0,1fr)]"
+				/>
+				<PhaseAmountCalculator
+					cost={0}
+					currency={defaultCurrency}
+					acceptanceAmount={0}
+					class="border-t border-dashed border-line pt-4 md:col-span-full"
+				/>
+				<Button type="submit" class="md:col-span-full">
+					Create phase
+				</Button>
+			</form>
+		)}
 		<p class="max-w-prose text-sm text-fg-muted">
 			Open phases come first. Each row offers its next step; corrections and
 			cancelling sit under More.
+			{!canAddPhase && " Phases can only be added to draft or active projects."}
 		</p>
 		{phases.length > 0 ? (
 			<admin-phase-list
@@ -282,7 +369,7 @@ const phases = project.phases
 							<Badge type={phaseStatus[phase.state].badge}>
 								{phaseStatus[phase.state].label}
 							</Badge>
-							<div class="grid gap-1 lg:w-48 lg:justify-items-end lg:text-right">
+							<div class="grid min-w-0 gap-1 lg:w-48 lg:justify-items-end lg:text-right">
 								<p
 									class:list={[
 										"font-medium tabular-nums wrap-break-word",
@@ -406,7 +493,7 @@ const phases = project.phases
 							{!["approved", "cancelled"].includes(phase.state) && (
 								<div
 									id={`phase-${phase.publicId}-more`}
-									class="grid gap-4 border-t border-dashed border-line pt-4 lg:col-span-5"
+									class="grid min-w-0 gap-4 border-t border-dashed border-line pt-4 lg:col-span-5"
 									hidden
 									data-phase-panel
 								>
@@ -480,46 +567,6 @@ const phases = project.phases
 				No phases yet. Add the first phase, then send it to the client.
 			</p>
 		)}
-		<details class="grid gap-3">
-			<Button as="summary">Add phase</Button>
-			<form
-				method="POST"
-				action={actions.createPhase}
-				class="grid gap-3 border border-dashed border-line p-4 md:grid-cols-3 md:items-end"
-			>
-				<input type="hidden" name="projectId" value={project.id}>
-				<label class="grid gap-1 text-sm md:col-span-full"
-					><span class="font-medium">Phase title</span>
-					<Input name="title" required /></label
-				>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Cost</span>
-					<Input
-						name="cost"
-						type="number"
-						min="0"
-						step="0.0001"
-						required
-					/></label
-				>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Currency</span>
-					<Input name="currency" value="EUR" maxlength="3" required /></label
-				>
-				<label class="grid gap-1 text-sm"
-					><span class="font-medium">Due</span>
-					<Input name="dueAt" type="date" /></label
-				>
-				<div class="border-t border-dashed border-line pt-3 md:col-span-full"
-					><PhaseAmountCalculator
-						cost={0}
-						currency={project.phases.at(-1)?.currency ?? "EUR"}
-						acceptanceAmount={0}
-					/></div
-				>
-				<Button type="submit" class="md:col-span-full">Add phase</Button>
-			</form>
-		</details>
 	</section>
 </AdminOrgShell>
 
@@ -630,5 +677,26 @@ const phases = project.phases
 
 	if (!customElements.get("admin-phase-list")) {
 		customElements.define("admin-phase-list", AdminPhaseList);
+	}
+</script>
+
+<script>
+	// The add-phase form opens under the Phases heading with its title focused.
+	for (const toggle of document.querySelectorAll<HTMLButtonElement>(
+		"[data-add-phase-toggle]",
+	)) {
+		const form = document.getElementById(
+			toggle.getAttribute("aria-controls") ?? "",
+		);
+		if (!(form instanceof HTMLFormElement)) continue;
+
+		toggle.addEventListener("click", () => {
+			const open = form.hidden;
+			form.hidden = !open;
+			toggle.setAttribute("aria-expanded", String(open));
+			if (open) {
+				form.querySelector<HTMLInputElement>('input[name="title"]')?.focus();
+			}
+		});
 	}
 </script>
