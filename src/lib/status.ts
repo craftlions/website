@@ -119,18 +119,21 @@ export const projectTransitions: Record<
 	archived: [],
 };
 
-const memberRoleLabel: Record<string, string> = {
-	owner: "Owner",
-	admin: "Admin",
-	member: "Member",
-};
+// Maps, not object literals: keys come from free-text columns, and a value
+// such as "constructor" must miss instead of finding an Object.prototype
+// property.
+const memberRoleLabel = new Map([
+	["owner", "Owner"],
+	["admin", "Admin"],
+	["member", "Member"],
+]);
 
 // A member's role in an organization; the role column is free text, so any
 // other value reads as Member. Roles are not states, so every badge is gray.
 export const memberRole = (
 	role: string,
 ): { label: string; badge: BadgeType } => ({
-	label: memberRoleLabel[role] ?? "Member",
+	label: memberRoleLabel.get(role) ?? "Member",
 	badge: "gray",
 });
 
@@ -158,13 +161,15 @@ export const daysOverdue = (
 			)
 		: 0;
 
-const invoiceStatusLabel: Record<string, string> = {
-	open: "Open",
-	paid: "Paid",
-	draft: "Draft",
-	void: "Void",
-	uncollectible: "Uncollectible",
-};
+// A Map for the same reason as `memberRoleLabel`: the status is text synced
+// from Stripe.
+const invoiceStatusLabel = new Map([
+	["open", "Open"],
+	["paid", "Paid"],
+	["draft", "Draft"],
+	["void", "Void"],
+	["uncollectible", "Uncollectible"],
+]);
 
 export const invoiceStatus = (
 	invoice: { status: string; dueAt: Date | null },
@@ -174,7 +179,7 @@ export const invoiceStatus = (
 		return { label: "Overdue", badge: "error", overdue: true };
 	}
 	return {
-		label: invoiceStatusLabel[invoice.status] ?? invoice.status,
+		label: invoiceStatusLabel.get(invoice.status) ?? invoice.status,
 		// An open invoice waits on the client, so it is gray, not info.
 		badge: invoice.status === "paid" ? "success" : "gray",
 		overdue: false,
