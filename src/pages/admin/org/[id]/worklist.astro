@@ -12,8 +12,8 @@ import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import {
 	deriveWorklist,
 	getLatestPhaseStateEventIds,
+	getWorklistProjects,
 } from "../../../../lib/admin-worklist.ts";
-import { stripeInvoiceFields } from "../../../../lib/stripe.ts";
 
 const { id } = Astro.params;
 
@@ -23,47 +23,7 @@ if (!id) {
 
 const [organization, projects, latestStateEventIds] = await Promise.all([
 	getAdminOrganizationCore(Astro.locals.db, id),
-	Astro.locals.db.query.projects.findMany({
-		columns: {
-			id: true,
-			publicId: true,
-			name: true,
-		},
-		with: {
-			phases: {
-				columns: {
-					id: true,
-					publicId: true,
-					title: true,
-					cost: true,
-					upfrontAmount: true,
-					currency: true,
-					state: true,
-					version: true,
-				},
-				with: {
-					invoices: {
-						columns: {
-							id: true,
-							component: true,
-						},
-						with: {
-							stripe: stripeInvoiceFields,
-						},
-					},
-				},
-				orderBy: {
-					id: "asc",
-				},
-			},
-		},
-		where: {
-			organizationId: id,
-		},
-		orderBy: {
-			name: "asc",
-		},
-	}),
+	getWorklistProjects(Astro.locals.db, id),
 	getLatestPhaseStateEventIds(Astro.locals.db, id),
 ]);
 

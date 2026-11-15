@@ -13,6 +13,7 @@ import {
 	type PhaseState,
 	phaseStatus,
 } from "./status.ts";
+import { stripeInvoiceFields } from "./stripe.ts";
 import { getUuidV7Date } from "./uuid.ts";
 
 // Phase states that are a worklist item on their own, in priority order.
@@ -89,6 +90,57 @@ export const getLatestPhaseStateEventIds = async (
 
 	return new Map(rows.map((row) => [row.phaseId, row.eventId]));
 };
+
+/**
+ * Projects with every phase and invoice field `deriveWorklist` and
+ * `AdminWorklist` read, plus the project state and the cost parts the client
+ * overview lists and adds up. Without `organizationId` it covers every
+ * organization.
+ */
+export const getWorklistProjects = (db: Db, organizationId?: string) =>
+	db.query.projects.findMany({
+		columns: {
+			id: true,
+			organizationId: true,
+			publicId: true,
+			name: true,
+			state: true,
+		},
+		with: {
+			phases: {
+				columns: {
+					id: true,
+					publicId: true,
+					title: true,
+					cost: true,
+					upfrontAmount: true,
+					deliveryAmount: true,
+					acceptanceAmount: true,
+					currency: true,
+					state: true,
+					version: true,
+				},
+				with: {
+					invoices: {
+						columns: {
+							id: true,
+							component: true,
+						},
+						with: {
+							stripe: stripeInvoiceFields,
+						},
+					},
+				},
+				orderBy: {
+					id: "asc",
+				},
+			},
+		},
+		...(organizationId ? { where: { organizationId } } : {}),
+		orderBy: {
+			name: "asc",
+		},
+	});
 
 type WorklistProjectInput = {
 	publicId: string;

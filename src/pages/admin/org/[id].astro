@@ -14,6 +14,7 @@ import {
 import {
 	deriveWorklist,
 	getLatestPhaseStateEventIds,
+	getWorklistProjects,
 } from "../../../lib/admin-worklist.ts";
 import {
 	deriveBudgetConsumption,
@@ -72,53 +73,8 @@ const [organization, projects, latestStateEventIds, openInvoices, spendRows] =
 				id,
 			},
 		}),
-		// The worklist page's query, so the preview lists the same items, plus
-		// the project state for the project list and the delivery and
-		// acceptance amounts that "To invoice" adds up.
-		Astro.locals.db.query.projects.findMany({
-			columns: {
-				id: true,
-				publicId: true,
-				name: true,
-				state: true,
-			},
-			with: {
-				phases: {
-					columns: {
-						id: true,
-						publicId: true,
-						title: true,
-						cost: true,
-						upfrontAmount: true,
-						deliveryAmount: true,
-						acceptanceAmount: true,
-						currency: true,
-						state: true,
-						version: true,
-					},
-					with: {
-						invoices: {
-							columns: {
-								id: true,
-								component: true,
-							},
-							with: {
-								stripe: stripeInvoiceFields,
-							},
-						},
-					},
-					orderBy: {
-						id: "asc",
-					},
-				},
-			},
-			where: {
-				organizationId: id,
-			},
-			orderBy: {
-				name: "asc",
-			},
-		}),
+		// The worklist page's query, so the preview lists the same items.
+		getWorklistProjects(Astro.locals.db, id),
 		getLatestPhaseStateEventIds(Astro.locals.db, id),
 		// Attached and unattached, as in the Invoices tab's summary.
 		Astro.locals.db.query.stripeInvoices.findMany({

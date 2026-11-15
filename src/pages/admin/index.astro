@@ -14,6 +14,7 @@ import {
 	compareWorklistItems,
 	deriveWorklist,
 	getLatestPhaseStateEventIds,
+	getWorklistProjects,
 } from "../../lib/admin-worklist.ts";
 import {
 	deriveBudgetConsumption,
@@ -21,12 +22,12 @@ import {
 } from "../../lib/budget-consumption.ts";
 import { formatPercent, sumByCurrency } from "../../lib/format.ts";
 import { isInvoiceOverdue } from "../../lib/status.ts";
-import { hasStripeRow, stripeInvoiceFields } from "../../lib/stripe.ts";
+import { hasStripeRow } from "../../lib/stripe.ts";
 
 const onboardResult = Astro.getActionResult(actions.onboardOrganization);
 
 const now = new Date();
-const [organizations, latestStateEventIds] = await Promise.all([
+const [organizations, projects, latestStateEventIds] = await Promise.all([
 	Astro.locals.db.query.organization.findMany({
 		columns: {
 			id: true,
@@ -38,55 +39,24 @@ const [organizations, latestStateEventIds] = await Promise.all([
 					yearlyBudget: true,
 				},
 			},
-			projects: {
-				columns: {
-					id: true,
-					publicId: true,
-					name: true,
-					state: true,
-				},
-				with: {
-					phases: {
-						columns: {
-							id: true,
-							publicId: true,
-							title: true,
-							cost: true,
-							upfrontAmount: true,
-							currency: true,
-							state: true,
-							version: true,
-						},
-						with: {
-							invoices: {
-								columns: {
-									id: true,
-									component: true,
-								},
-								with: {
-									stripe: stripeInvoiceFields,
-								},
-							},
-						},
-					},
-				},
-				orderBy: {
-					name: "asc",
-				},
-			},
 		},
 		orderBy: {
 			name: "asc",
 		},
 	}),
+	getWorklistProjects(Astro.locals.db),
 	getLatestPhaseStateEventIds(Astro.locals.db),
 ]);
+const projectsByOrganization = Map.groupBy(
+	projects,
+	(project) => project.organizationId,
+);
 
 const worklist = organizations
 	.flatMap((organization) =>
 		deriveWorklist({
 			organizationId: organization.id,
-			projects: organization.projects,
+			projects: projectsByOrganization.get(organization.id) ?? [],
 			latestStateEventIds,
 			now,
 		}).map((item) => ({ ...item, organization })),
@@ -100,10 +70,10 @@ const ledger = await Promise.all(
 	organizations.map(async (organization) => ({
 		id: organization.id,
 		name: organization.name,
-		activeProjects: organization.projects.filter(
+		activeProjects: (projectsByOrganization.get(organization.id) ?? []).filter(
 			(project) => project.state === "active",
 		).length,
-		totalProjects: organization.projects.length,
+		totalProjects: projectsByOrganization.get(organization.id)?.length ?? 0,
 		yourMove: worklist.filter(
 			(item) =>
 				item.organization.id === organization.id && item.actor === "admin",
@@ -112,7 +82,7 @@ const ledger = await Promise.all(
 			(item) =>
 				item.organization.id === organization.id && item.actor === "client",
 		).length,
-		openInvoices: organization.projects
+		openInvoices: (projectsByOrganization.get(organization.id) ?? [])
 			.flatMap((project) => project.phases)
 			.flatMap((phase) => phase.invoices)
 			.filter(hasStripeRow)
