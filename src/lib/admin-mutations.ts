@@ -1220,12 +1220,14 @@ export const removeNeverLoggedInUser = async (
 	db: Db,
 	auth: Auth,
 	actorId: string,
-	input: { userId: string },
+	// The admin form passes the typed confirmation, which must be the
+	// account's email; the JSON API has its own explicit request and omits it.
+	input: { userId: string; confirmation?: string | undefined },
 ) => {
 	const [, selectedUser] = await Promise.all([
 		assertAdminUser(db, actorId),
 		db.query.user.findFirst({
-			columns: { id: true, lastActiveAt: true },
+			columns: { id: true, email: true, lastActiveAt: true },
 			with: { memberships: { columns: { organizationId: true } } },
 			where: { id: input.userId },
 		}),
@@ -1233,6 +1235,13 @@ export const removeNeverLoggedInUser = async (
 
 	if (!selectedUser) {
 		throw new DomainError("NotFound", "User not found.");
+	}
+
+	if (
+		input.confirmation !== undefined &&
+		input.confirmation !== selectedUser.email
+	) {
+		throw new DomainError("Validation", "Type the account's email to confirm.");
 	}
 
 	if (selectedUser.lastActiveAt) {

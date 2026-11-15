@@ -80,7 +80,12 @@ const otherClients = (count: number) =>
 		),
 		[Astro.getActionResult(actions.removeNeverLoggedInUser), "Account deleted"],
 	]}
-	fieldLabels={{ email: "Email", name: "Name", role: "Role" }}
+	fieldLabels={{
+		email: "Email",
+		name: "Name",
+		role: "Role",
+		confirmation: "Confirmation",
+	}}
 >
 	<section class="grid gap-4" aria-labelledby="members-heading">
 		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">

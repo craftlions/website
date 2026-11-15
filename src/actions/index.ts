@@ -395,7 +395,10 @@ export const server = {
 	}),
 	removeNeverLoggedInUser: defineAction({
 		accept: "form",
-		input: z.object({ userId: z.string().trim().min(1) }),
+		input: z.object({
+			userId: z.string().trim().min(1),
+			confirmation: z.string().trim().min(1),
+		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await removeNeverLoggedInUser(
 				context.locals.db,
