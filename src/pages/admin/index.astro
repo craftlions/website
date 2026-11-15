@@ -510,7 +510,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 				}
 				empty.hidden = matches > 0;
 				count.textContent = query
-					? `${matches} of ${rows.length} ${rows.length === 1 ? "client" : "clients"} match`
+					? `Showing ${matches} of ${rows.length} ${rows.length === 1 ? "client" : "clients"}`
 					: `${rows.length} ${rows.length === 1 ? "client" : "clients"}`;
 			});
 		}
