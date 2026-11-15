@@ -211,7 +211,7 @@ const otherClients = (count: number) =>
 									<input type="hidden" name="email" value={member.user.email} />
 									<Button
 										type="submit"
-										aria-label={`${member.user.lastActiveAt ? "Send password reset" : "Resend invite"} to ${member.user.name}`}
+										aria-label={`${member.user.lastActiveAt ? "Send password reset" : "Resend invite"}: ${member.user.name}`}
 									>
 										{member.user.lastActiveAt
 											? "Send password reset"
@@ -243,7 +243,7 @@ const otherClients = (count: number) =>
 										<ConfirmAction
 											id={`delete-user-${member.userId}`}
 											trigger="Delete account"
-											triggerLabel={`Delete account of ${member.user.name}`}
+											triggerLabel={`Delete account: ${member.user.name}`}
 											triggerVariant="quiet"
 											title={`Delete the account of ${member.user.name}?`}
 											confirm="Delete account"

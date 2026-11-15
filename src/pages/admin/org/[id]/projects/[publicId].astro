@@ -385,7 +385,7 @@ const phases = project.phases
 										href={phase.externalUrl}
 										rel="noopener noreferrer"
 										target="_blank"
-										aria-label={`Open Epic for ${phase.title}`}
+										aria-label={`Epic: ${phase.title} (opens in a new tab)`}
 									>
 										Epic
 									</a>
@@ -396,7 +396,7 @@ const phases = project.phases
 										href={phase.deliveryUrl}
 										rel="noopener noreferrer"
 										target="_blank"
-										aria-label={`Open delivery for ${phase.title}`}
+										aria-label={`Delivery: ${phase.title} (opens in a new tab)`}
 									>
 										Delivery
 									</a>
@@ -466,7 +466,7 @@ const phases = project.phases
 									open={phase.id === reopenedPhase?.id}
 									variant="quiet"
 									class="lg:col-start-5 lg:justify-self-end"
-									aria-label={`More for ${phase.title}`}
+									aria-label={`More: ${phase.title}`}
 								>
 									More
 								</DisclosureButton>

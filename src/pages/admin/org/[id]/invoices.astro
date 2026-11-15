@@ -346,7 +346,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 								href={`${stripeDashboard}/customers/${organizationData.stripeCustomerId}`}
 								target="_blank"
 								rel="noopener noreferrer"
-								aria-label={`Create invoice in Stripe for ${part.project.name} · ${part.phase.title} · ${costPartLabel[part.component]} (opens in a new tab)`}
+								aria-label={`Create in Stripe: ${part.project.name} · ${part.phase.title} · ${costPartLabel[part.component]} (opens in a new tab)`}
 							>
 								Create in Stripe
 							</Button>
@@ -458,7 +458,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 									</Field>
 									<Button
 										type="submit"
-										aria-label={`Attach invoice ${invoice.number}`}
+										aria-label={`Attach: invoice ${invoice.number}`}
 									>
 										Attach
 									</Button>

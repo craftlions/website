@@ -149,7 +149,11 @@ const isCreateOpen =
 						{archived ? "Archived" : "Projects"}
 					</h2>
 					{archived ? (
-						<DisclosureButton controls={groupId} variant="quiet">
+						<DisclosureButton
+							controls={groupId}
+							variant="quiet"
+							aria-label={`Archived: ${groupRows.length} ${groupRows.length === 1 ? "project" : "projects"}`}
+						>
 							{groupRows.length}{" "}
 							{groupRows.length === 1 ? "project" : "projects"}
 						</DisclosureButton>
@@ -253,7 +257,7 @@ const isCreateOpen =
 								</dl>
 								<Button
 									href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-									aria-label={`Open ${project.name}`}
+									aria-label={`Open: ${project.name}`}
 									class="col-span-2 sm:col-span-1"
 								>
 									Open

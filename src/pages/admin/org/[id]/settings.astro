@@ -197,9 +197,10 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 							href={`https://dashboard.stripe.com/customers/${organization.data.stripeCustomerId}`}
 							target="_blank"
 							rel="noreferrer"
+							aria-label={`Open in Stripe: customer ${organization.data.stripeCustomerId} (opens in a new tab)`}
 							class="max-w-full wrap-break-word"
 						>
-							Open {organization.data.stripeCustomerId} in Stripe (new tab)
+							Open in Stripe
 						</Button>
 					)}
 				</div>
