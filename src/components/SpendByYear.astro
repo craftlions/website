@@ -141,7 +141,12 @@ const hasNegativeSpend = bars.some((bar) =>
 					class="grid grid-cols-1 gap-3 border border-dashed border-line p-4"
 					data-spend-chart
 				>
-					<div class="grid gap-1 overflow-x-auto" dir="rtl">
+					<section
+						class="grid gap-1 overflow-x-auto"
+						dir="rtl"
+						tabindex="0"
+						aria-labelledby="spend-heading"
+					>
 						<div
 							class="grid w-full min-w-max gap-2"
 							dir="ltr"
@@ -196,7 +201,7 @@ const hasNegativeSpend = bars.some((bar) =>
 								);
 							})}
 						</div>
-					</div>
+					</section>
 
 					<p class="text-sm" data-spend-status>
 						<span class="block h-5 truncate" dir="auto">
