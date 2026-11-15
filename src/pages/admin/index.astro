@@ -216,8 +216,9 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 			Worklist
 		</h2>
 		<p class="max-w-prose text-sm text-fg-muted">
-			Phases that need a step from you or a client, and invoices waiting for
-			payment, across all clients.
+			Phases that need a step from you or a client, and unpaid invoices across
+			all clients: overdue ones always, open ones only when their phase is not
+			listed.
 		</p>
 		<AdminWorklist items={worklist} />
 	</section>

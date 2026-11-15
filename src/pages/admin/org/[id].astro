@@ -168,8 +168,8 @@ const setupGaps = [
 			Worklist
 		</h2>
 		<p class="max-w-prose text-sm text-fg-muted">
-			Phases that need a step from you or the client, and invoices waiting for
-			payment.
+			Phases that need a step from you or the client, and unpaid invoices:
+			overdue ones always, open ones only when their phase is not listed.
 		</p>
 		<AdminWorklist
 			items={deriveWorklist({
