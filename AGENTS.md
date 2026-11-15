@@ -38,7 +38,7 @@ aubx astro sync
 After making changes, run every command below. Report any failure; never claim full validation passed unless every command succeeds:
 
 ```shell
-aubx drizzle-kit check
+mise run db:check
 aubr types
 aubr cf-check
 aubx astro sync
