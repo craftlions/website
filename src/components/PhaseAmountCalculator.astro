@@ -109,12 +109,18 @@ const percentages = [
 				data-split-amount-output
 			></output>
 		</div>
-		<p
-			class="border-t border-dashed border-line pt-2 text-sm tabular-nums text-fg-muted wrap-break-word"
-			data-split-total
-			role="status"
-		></p>
-		<p class="text-sm text-fg-danger" data-split-error role="alert" hidden></p>
+		<div class="grid">
+			<p
+				class="border-t border-dashed border-line pt-2 text-sm tabular-nums text-fg-muted wrap-break-word"
+				data-split-total
+				role="status"
+			></p>
+			<p
+				class="text-sm text-fg-danger not-empty:mt-3"
+				data-split-error
+				role="alert"
+			></p>
+		</div>
 	</fieldset>
 	<input
 		type="hidden"
@@ -242,7 +248,6 @@ const percentages = [
 				total.textContent = valid
 					? `Total 100% · ${formatMoney(costUnits / 10_000, currency)}`
 					: `Upfront and Delivery: ${formatShare(enteredSum)}`;
-				error.hidden = valid;
 				error.textContent = valid
 					? ""
 					: partInvalid

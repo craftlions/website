@@ -40,7 +40,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 			{session?.session.impersonatedBy && (
 				<aside
 					aria-label="Impersonation"
-					class="sticky top-0 z-50 grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-dashed border-line-strong bg-panel p-3"
+					class="sticky top-0 z-50 grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-b border-dashed border-line-strong bg-panel p-3"
 				>
 					<p class="text-label wrap-break-word">
 						Viewing as {session.user.name}
@@ -50,8 +50,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 						<p
 							id="stop-impersonating-error"
 							role="alert"
-							class="col-span-2 text-sm text-fg-danger"
-							hidden
+							class="col-span-2 text-sm text-fg-danger not-empty:mt-3"
 						/>
 					</stop-impersonating>
 				</aside>
@@ -78,7 +77,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 
 			button.addEventListener("click", async () => {
 				button.disabled = true;
-				message.hidden = true;
 				message.textContent = "";
 
 				try {
@@ -93,7 +91,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 					button.disabled = false;
 					message.textContent =
 						"Could not return to the admin view. Try again.";
-					message.hidden = false;
 					button.focus();
 				}
 			});
