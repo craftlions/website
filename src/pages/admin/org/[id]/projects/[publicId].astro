@@ -33,6 +33,7 @@ const [organization, project] = await Promise.all([
 			phases: {
 				columns: {
 					id: true,
+					publicId: true,
 					title: true,
 					cost: true,
 					upfrontAmount: true,
@@ -190,7 +191,10 @@ const phases = project.phases.map((phase) => ({
 			<ol class="grid border border-dashed border-line">
 				{phases.length > 0 ? (
 					phases.map((phase) => (
-						<li class="grid gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start">
+						<li
+							id={`phase-${phase.publicId}`}
+							class="grid scroll-mt-20 gap-x-6 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-start"
+						>
 							<div class="grid gap-1">
 								<p class="font-medium wrap-break-word">{phase.title}</p>
 								<p class="text-sm text-fg-muted">

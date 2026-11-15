@@ -2,31 +2,22 @@
 export const prerender = false;
 
 import { actions } from "astro:actions";
-import { and, eq, inArray, sql } from "drizzle-orm";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import CostSplit from "../../../../components/CostSplit.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
+import {
+	deriveWorklist,
+	getLatestPhaseStateEventIds,
+} from "../../../../lib/admin-worklist.ts";
 import { formatMoney } from "../../../../lib/format.ts";
 import {
 	buildPhaseComponents,
 	componentBillingStatus,
 } from "../../../../lib/phase-billing";
-import {
-	events,
-	phases,
-	projects as projectsTable,
-} from "../../../../lib/schema.ts";
-import {
-	type BadgeType,
-	costPartLabel,
-	invoiceStatus,
-	isInvoiceOverdue,
-	phaseStatus,
-} from "../../../../lib/status.ts";
-import { hasStripeRow, stripeInvoiceFields } from "../../../../lib/stripe.ts";
-import { getUuidV7Date } from "../../../../lib/uuid.ts";
+import { costPartLabel } from "../../../../lib/status.ts";
+import { stripeInvoiceFields } from "../../../../lib/stripe.ts";
 
 const { id } = Astro.params;
 
@@ -38,7 +29,7 @@ const actionResult = Astro.getActionResult(actions.transitionPhase);
 const actionError = actionResult?.error;
 const actionSucceeded = Boolean(actionResult && !actionResult.error);
 
-const [organization, projects, latestPhaseEvents] = await Promise.all([
+const [organization, projects, latestStateEventIds] = await Promise.all([
 	getAdminOrganizationCore(Astro.locals.db, id),
 	Astro.locals.db.query.projects.findMany({
 		columns: {
@@ -50,6 +41,7 @@ const [organization, projects, latestPhaseEvents] = await Promise.all([
 			phases: {
 				columns: {
 					id: true,
+					publicId: true,
 					title: true,
 					cost: true,
 					upfrontAmount: true,
@@ -82,75 +74,16 @@ const [organization, projects, latestPhaseEvents] = await Promise.all([
 			name: "asc",
 		},
 	}),
-	// Latest state-change event per phase of this organization; uuidv7 ids sort
-	// by time, so the text max is the newest. Amount and delivery edits do not
-	// reset the age.
-	Astro.locals.db
-		.select({
-			phaseId: events.aggregateId,
-			eventId: sql<string>`max(${events.id}::text)`,
-		})
-		.from(events)
-		.where(
-			and(
-				eq(events.aggregateType, "phase"),
-				inArray(
-					events.aggregateId,
-					Astro.locals.db
-						.select({ id: sql`${phases.id}::text` })
-						.from(phases)
-						.innerJoin(projectsTable, eq(phases.projectId, projectsTable.id))
-						.where(eq(projectsTable.organizationId, id)),
-				),
-				inArray(events.event, [
-					"created",
-					"planned",
-					"approved",
-					"approved_on_behalf",
-					"declined",
-					"cancelled",
-					"started",
-					"delivered",
-					"accepted",
-					"accepted_on_behalf",
-				]),
-			),
-		)
-		.groupBy(events.aggregateId),
+	getLatestPhaseStateEventIds(Astro.locals.db, id),
 ]);
 
 if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-const latestPhaseEventIds = new Map(
-	latestPhaseEvents.map((row) => [row.phaseId, row.eventId]),
-);
-const allPhases = projects.flatMap((project) =>
-	project.phases.map((phase) => ({ ...phase, project })),
-);
-const now = new Date();
-const daysInPhaseState = (phaseId: string) => {
-	const date = getUuidV7Date(latestPhaseEventIds.get(phaseId) ?? phaseId);
-
-	return date
-		? Math.max(0, Math.floor((now.getTime() - date.getTime()) / 86400000))
-		: 0;
-};
-type WorklistPhase = (typeof allPhases)[number];
-type WorklistInvoice = WorklistPhase["invoices"][number] & {
-	stripe: NonNullable<WorklistPhase["invoices"][number]["stripe"]>;
-};
-type WorklistItem = {
-	priority: number;
-	kind: string;
-	badge: BadgeType;
-	phase: WorklistPhase;
-	invoice?: WorklistInvoice;
-	upfrontUnpaid?: boolean;
-};
-
-const isUpfrontUnpaid = (phase: WorklistPhase) => {
+const isUpfrontUnpaid = (
+	phase: (typeof projects)[number]["phases"][number],
+) => {
 	if (phase.upfrontAmount === null || phase.upfrontAmount === 0) return false;
 	const status = componentBillingStatus({
 		component: "upfront",
@@ -160,98 +93,11 @@ const isUpfrontUnpaid = (phase: WorklistPhase) => {
 	});
 	return status !== "paid";
 };
-const worklist = allPhases
-	.flatMap((phase): WorklistItem[] => {
-		const upfrontUnpaid = isUpfrontUnpaid(phase);
-		const liveInvoices = phase.invoices.filter(hasStripeRow);
-		const overdueInvoices = liveInvoices.filter((invoice) =>
-			isInvoiceOverdue(invoice.stripe, now),
-		);
-		if (overdueInvoices.length > 0) {
-			return overdueInvoices.map((invoice) => ({
-				priority: 0,
-				kind: invoiceStatus(invoice.stripe, now).label,
-				badge: invoiceStatus(invoice.stripe, now).badge,
-				phase,
-				invoice,
-				upfrontUnpaid,
-			}));
-		}
-
-		if (phase.state === "submitted") {
-			return [
-				{
-					priority: 1,
-					kind: phaseStatus.submitted.label,
-					badge: phaseStatus.submitted.badge,
-					phase,
-				},
-			];
-		}
-
-		if (phase.state === "planned") {
-			return [
-				{
-					priority: 2,
-					kind: phaseStatus.planned.label,
-					badge: phaseStatus.planned.badge,
-					phase,
-				},
-			];
-		}
-
-		if (phase.state === "approved") {
-			return [
-				{
-					priority: 3,
-					kind: phaseStatus.approved.label,
-					badge: phaseStatus.approved.badge,
-					phase,
-				},
-			];
-		}
-
-		if (phase.state === "in_progress") {
-			return [
-				{
-					priority: 4,
-					kind: phaseStatus.in_progress.label,
-					badge: phaseStatus.in_progress.badge,
-					phase,
-					upfrontUnpaid,
-				},
-			];
-		}
-
-		// Billing derives from each invoice's Stripe status (D-phase-billing-truth).
-		if (phase.state === "delivered") {
-			return [
-				{
-					priority: 5,
-					kind: phaseStatus.delivered.label,
-					badge: phaseStatus.delivered.badge,
-					phase,
-					upfrontUnpaid,
-				},
-			];
-		}
-
-		return liveInvoices
-			.filter((invoice) => invoice.stripe.status === "open")
-			.map((invoice) => ({
-				priority: 6,
-				kind: invoiceStatus(invoice.stripe, now).label,
-				badge: invoiceStatus(invoice.stripe, now).badge,
-				phase,
-				invoice,
-				upfrontUnpaid,
-			}));
-	})
-	.toSorted(
-		(a, b) =>
-			a.priority - b.priority ||
-			daysInPhaseState(b.phase.id) - daysInPhaseState(a.phase.id),
-	);
+const worklist = deriveWorklist({
+	organizationId: organization.id,
+	projects,
+	latestStateEventIds,
+});
 ---
 
 <AdminOrgShell
@@ -274,18 +120,23 @@ const worklist = allPhases
 			{worklist.length > 0 ? (
 				worklist.map((item) => (
 					<article class="grid gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:col-span-4 md:grid-cols-subgrid md:items-center">
-						<Badge type={item.badge}>{item.kind}</Badge>
+						<Badge type={item.badge}>{item.label}</Badge>
 						<div class="grid gap-1 md:place-items-start">
 							<h3 class="font-medium">
 								<a
 									class="underline decoration-dashed underline-offset-4"
-									href={`/admin/org/${organization.id}/projects/${item.phase.project.publicId}`}
+									href={`/admin/org/${organization.id}/projects/${item.project.publicId}`}
 								>
-									{item.phase.project.name}
+									{item.project.name}
 								</a>{" "}
 								· {item.phase.title}
 							</h3>
-							{item.upfrontUnpaid && <Badge type="error">Upfront unpaid</Badge>}
+							{(item.invoice ||
+								item.phase.state === "in_progress" ||
+								item.phase.state === "delivered") &&
+								isUpfrontUnpaid(item.phase) && (
+									<Badge type="error">Upfront unpaid</Badge>
+								)}
 						</div>
 						<div class="grid min-w-48 gap-1.5 md:justify-items-end">
 							{item.invoice ? (
@@ -340,9 +191,7 @@ const worklist = allPhases
 							)}
 						</div>
 						<div class="grid grid-flow-col items-center gap-3 md:justify-self-end">
-							<p class="text-sm tabular-nums text-fg-muted">
-								{daysInPhaseState(item.phase.id)}d
-							</p>
+							<p class="text-sm tabular-nums text-fg-muted">{item.age}</p>
 							{item.phase.state === "submitted" && (
 								<form method="POST" action={actions.transitionPhase}>
 									<input type="hidden" name="phaseId" value={item.phase.id} />

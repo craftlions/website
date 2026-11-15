@@ -10,78 +10,84 @@ import Input from "../../components/Input.astro";
 import Nav from "../../components/Nav.astro";
 import Shell from "../../layouts/Shell.astro";
 import {
+	compareWorklistItems,
+	deriveWorklist,
+	getLatestPhaseStateEventIds,
+} from "../../lib/admin-worklist.ts";
+import {
 	deriveBudgetConsumption,
 	getSpendByYear,
 } from "../../lib/budget-consumption.ts";
 import { formatMoney, formatPercent } from "../../lib/format.ts";
-import {
-	buildPhaseComponents,
-	type InvoiceComponent,
-} from "../../lib/phase-billing.ts";
+import { buildPhaseComponents } from "../../lib/phase-billing.ts";
 import {
 	costPartLabel,
-	invoiceStatus,
 	isInvoiceOverdue,
 	phaseStatus,
 } from "../../lib/status.ts";
 import { hasStripeRow, stripeInvoiceFields } from "../../lib/stripe.ts";
-import { getUuidV7Date } from "../../lib/uuid.ts";
 
 const onboardResult = Astro.getActionResult(actions.onboardOrganization);
 
-const organizations = await Astro.locals.db.query.organization.findMany({
-	columns: {
-		id: true,
-		name: true,
-		slug: true,
-	},
-	with: {
-		data: {
-			columns: {
-				yearlyBudget: true,
-			},
+const now = new Date();
+const [organizations, latestStateEventIds] = await Promise.all([
+	Astro.locals.db.query.organization.findMany({
+		columns: {
+			id: true,
+			name: true,
+			slug: true,
 		},
-		projects: {
-			columns: {
-				id: true,
-				name: true,
-				state: true,
+		with: {
+			data: {
+				columns: {
+					yearlyBudget: true,
+				},
 			},
-			with: {
-				phases: {
-					columns: {
-						id: true,
-						title: true,
-						cost: true,
-						upfrontAmount: true,
-						deliveryAmount: true,
-						acceptanceAmount: true,
-						currency: true,
-						state: true,
-						dueAt: true,
-					},
-					with: {
-						invoices: {
-							columns: {
-								id: true,
-								component: true,
-							},
-							with: {
-								stripe: stripeInvoiceFields,
+			projects: {
+				columns: {
+					id: true,
+					publicId: true,
+					name: true,
+					state: true,
+				},
+				with: {
+					phases: {
+						columns: {
+							id: true,
+							publicId: true,
+							title: true,
+							cost: true,
+							upfrontAmount: true,
+							deliveryAmount: true,
+							acceptanceAmount: true,
+							currency: true,
+							state: true,
+							dueAt: true,
+						},
+						with: {
+							invoices: {
+								columns: {
+									id: true,
+									component: true,
+								},
+								with: {
+									stripe: stripeInvoiceFields,
+								},
 							},
 						},
 					},
 				},
-			},
-			orderBy: {
-				name: "asc",
+				orderBy: {
+					name: "asc",
+				},
 			},
 		},
-	},
-	orderBy: {
-		name: "asc",
-	},
-});
+		orderBy: {
+			name: "asc",
+		},
+	}),
+	getLatestPhaseStateEventIds(Astro.locals.db),
+]);
 
 // S-004 R2/R4: one full-history module read per organization; deriveBudget
 // selects the current-year rows. Any read failure aborts this page render —
@@ -93,139 +99,16 @@ const organizationsWithSpend = await Promise.all(
 	})),
 );
 
-const now = new Date();
-const daysSince = (id: string) => {
-	const date = getUuidV7Date(id);
-	return date
-		? Math.max(0, Math.floor((now.getTime() - date.getTime()) / 86400000))
-		: 0;
-};
-
 const queue = organizations
 	.flatMap((organization) =>
-		organization.projects.flatMap((project) =>
-			project.phases.flatMap((phase) => {
-				const link = `/admin/org/${organization.id}`;
-				const components = buildPhaseComponents({
-					upfrontAmount: phase.upfrontAmount,
-					deliveryAmount: phase.deliveryAmount,
-					acceptanceAmount: phase.acceptanceAmount,
-					state: phase.state,
-					invoices: phase.invoices,
-				});
-				const liveInvoices = phase.invoices.filter(hasStripeRow);
-				const overdueInvoices = liveInvoices.filter((invoice) =>
-					isInvoiceOverdue(invoice.stripe, now),
-				);
-
-				if (overdueInvoices.length > 0) {
-					return overdueInvoices.map((invoice) => ({
-						priority: 0,
-						kind: invoiceStatus(invoice.stripe, now).label,
-						badge: invoiceStatus(invoice.stripe, now).badge,
-						client: organization.name,
-						label: `${project.name} · ${invoice.stripe.number}`,
-						amount: invoice.stripe.total,
-						currency: phase.currency,
-						component: invoice.component as InvoiceComponent | null,
-						components,
-						phaseCost: phase.cost,
-						days: Math.floor(
-							(now.getTime() -
-								(invoice.stripe.dueAt?.getTime() ?? now.getTime())) /
-								86400000,
-						),
-						link,
-					}));
-				}
-
-				if (phase.state === "submitted") {
-					return [
-						{
-							priority: 1,
-							kind: phaseStatus.submitted.label,
-							badge: phaseStatus.submitted.badge,
-							client: organization.name,
-							label: `${project.name} · ${phase.title}`,
-							amount: phase.cost,
-							currency: phase.currency,
-							component: null,
-							components,
-							phaseCost: phase.cost,
-							days: daysSince(phase.id),
-							link,
-						},
-					];
-				}
-
-				if (phase.state === "planned") {
-					return [
-						{
-							priority: 2,
-							kind: phaseStatus.planned.label,
-							badge: phaseStatus.planned.badge,
-							client: organization.name,
-							label: `${project.name} · ${phase.title}`,
-							amount: phase.cost,
-							currency: phase.currency,
-							component: null,
-							components,
-							phaseCost: phase.cost,
-							days: daysSince(phase.id),
-							link,
-						},
-					];
-				}
-
-				// Billing is derived from the invoice's Stripe status alone
-				// (D-phase-billing-truth): only an outstanding invoice reads "Unpaid".
-				// A delivered phase surfaces as "Awaiting acceptance" regardless of its
-				// invoice — acceptance is the next lifecycle step (S-005 R6; recorded
-				// by #285).
-				if (phase.state === "delivered") {
-					return [
-						{
-							priority: 4,
-							kind: phaseStatus.delivered.label,
-							badge: phaseStatus.delivered.badge,
-							client: organization.name,
-							label: `${project.name} · ${phase.title}`,
-							amount: phase.cost,
-							currency: phase.currency,
-							component: null,
-							components,
-							phaseCost: phase.cost,
-							days: daysSince(phase.id),
-							link,
-						},
-					];
-				}
-
-				const openInvoices = liveInvoices.filter(
-					(invoice) => invoice.stripe.status === "open",
-				);
-				if (openInvoices.length > 0) {
-					return openInvoices.map((invoice) => ({
-						priority: 3,
-						kind: invoiceStatus(invoice.stripe, now).label,
-						badge: invoiceStatus(invoice.stripe, now).badge,
-						client: organization.name,
-						label: `${project.name} · ${invoice.stripe.number}`,
-						amount: invoice.stripe.total,
-						currency: phase.currency,
-						component: invoice.component,
-						components,
-						phaseCost: phase.cost,
-						days: daysSince(invoice.id),
-						link,
-					}));
-				}
-
-				return [];
-			}),
-		),
+		deriveWorklist({
+			organizationId: organization.id,
+			projects: organization.projects,
+			latestStateEventIds,
+			now,
+		}).map((item) => ({ ...item, organization })),
 	)
-	.toSorted((a, b) => a.priority - b.priority || b.days - a.days);
+	.toSorted(compareWorklistItems);
 
 const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 	const activeProjects = organization.projects.filter(
@@ -297,7 +180,7 @@ const outstandingByPart = ["upfront", "delivery", "acceptance"].map(
 const outstandingPartItems = outstandingByPart
 	.filter((part) => part.amount !== 0)
 	.map((part) => ({ ...part, status: "not_due" as const }));
-const overdueCount = queue.filter((item) => item.priority === 0).length;
+const overdueCount = queue.filter((item) => item.status === "overdue").length;
 ---
 
 <Shell
@@ -360,35 +243,47 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 					{queue.length > 0 ? (
 						queue.map((item) => (
 							<article class="grid gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
-								<Badge type={item.badge}>{item.kind}</Badge>
+								<Badge type={item.badge}>{item.label}</Badge>
 								<div class="grid gap-1">
-									<h3 class="font-medium">{item.client}</h3>
-									<p class="text-sm text-fg-muted">{item.label}</p>
+									<h3 class="font-medium">{item.organization.name}</h3>
+									<p class="text-sm text-fg-muted">
+										{item.project.name} ·{" "}
+										{item.invoice
+											? item.invoice.stripe.number
+											: item.phase.title}
+									</p>
 								</div>
 								<div class="grid min-w-48 gap-1.5 sm:justify-items-end">
 									<div class="grid grid-flow-col items-center justify-start gap-2 sm:justify-end">
 										<p class="text-sm font-medium tabular-nums">
-											{formatMoney(item.amount, item.currency)}
+											{formatMoney(
+												item.invoice
+													? item.invoice.stripe.total
+													: item.phase.cost,
+												item.phase.currency,
+											)}
 										</p>
-										{item.component && (
-											<Badge type="info">{costPartLabel[item.component]}</Badge>
+										{item.invoice && (
+											<Badge type="info">
+												{costPartLabel[item.invoice.component]}
+											</Badge>
 										)}
 									</div>
-									{item.components.length > 0 && (
+									{buildPhaseComponents(item.phase).length > 0 && (
 										<div class="w-full max-w-56">
 											<CostSplit
-												items={item.components}
-												currency={item.currency}
-												total={item.phaseCost}
+												items={buildPhaseComponents(item.phase)}
+												currency={item.phase.currency}
+												total={item.phase.cost}
 												variant="compact"
-												highlight={item.component}
+												highlight={item.invoice?.component ?? null}
 											/>
 										</div>
 									)}
 								</div>
 								<div class="grid grid-flow-col items-center gap-3 sm:justify-self-end">
-									<p class="text-sm tabular-nums text-fg-muted">{item.days}d</p>
-									<Button href={item.link}>Open</Button>
+									<p class="text-sm tabular-nums text-fg-muted">{item.age}</p>
+									<Button href={item.href}>Open</Button>
 								</div>
 							</article>
 						))

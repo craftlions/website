@@ -31,3 +31,6 @@ export const sumByCurrency = (
 		.map(([currency, total]) => formatMoney(total, currency))
 		.join(" + ");
 };
+
+export const formatDays = (days: number) =>
+	`${days} ${days === 1 ? "day" : "days"}`;
