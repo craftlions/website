@@ -164,6 +164,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 - **Status Green**: success or paid state.
 - **Status Red**: error, cancelled, or budget-risk state. Its outline (`line-danger`) is the boundary of an invalid or destructive input, so it holds 3:1 on canvas.
 - **Status Info**: informational project and phase state.
+- **Status Warning** (amber, `text-fg-warning`): needs attention, not an error. It marks something the admin should check, such as an invoice total that differs from its cost part or attached invoices Stripe cannot return right now; text only, with no outline or fill.
 
 ### Neutral
 
@@ -180,7 +181,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 
 **The Line Before Color Rule.** Structure is drawn with neutral dashed lines before color is introduced. Color is reserved for links, status, focus, risk, progress, and categorical data in charts. Structural lines stay light; the line that alone marks a control is `line-control`, which holds 3:1 (WCAG 1.4.11).
 
-**The State Color Rule.** Blue, green, and red must map to information, success, and error/risk. Do not use state colors as decoration. The one exception is the spend chart's categorical hatch marks, which use the chart palette and encode data, not state (see Data Visualization).
+**The State Color Rule.** Blue, green, amber, and red must map to information, success, needs-attention, and error/risk. Amber means needs attention, not an error: use red when something is wrong or overdue. Do not use state colors as decoration. The one exception is the spend chart's categorical hatch marks, which use the chart palette and encode data, not state (see Data Visualization).
 
 ### Role Tokens
 
@@ -380,7 +381,7 @@ Progress is used for budget state and remains literal.
 - **Do** keep product data exact, scannable, and close to its label.
 - **Do** use neutral hover fills and visible focus outlines on interactive controls.
 - **Do** preserve reduced-motion behavior; view transitions are only enabled for users without reduced-motion preference.
-- **Do** keep semantic color rare and tied to state: blue for info/link, green for success, red for error/risk; only the spend chart adds muted ink hatch marks for data (see Data Visualization).
+- **Do** keep semantic color rare and tied to state: blue for info/link, green for success, amber for needs attention, red for error/risk; only the spend chart adds muted ink hatch marks for data (see Data Visualization).
 
 ### Don't:
 
