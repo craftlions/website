@@ -53,6 +53,8 @@ interface Props {
 
 const { items, canDecide, id = "worklist" } = Astro.props;
 
+// The client's own group always shows, since "nothing to do" answers their
+// first question; craftlions' group shows only when it holds work.
 const groups = [
 	{
 		id: `${id}-your-move`,
@@ -65,9 +67,9 @@ const groups = [
 		id: `${id}-waiting`,
 		label: "Waiting on craftlions",
 		items: items.filter((item) => item.actor === "craftlions"),
-		empty: "Nothing is waiting on craftlions.",
+		empty: null,
 	},
-];
+].filter((group) => group.empty || group.items.length > 0);
 ---
 
 {items.length > 0 ? (
