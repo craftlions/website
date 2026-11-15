@@ -251,8 +251,16 @@ Buttons are compact, transparent, and line-drawn.
 - **Disabled:** disabled buttons keep their shape, drop to 50% opacity with a not-allowed cursor, and do not react to hover.
 - **Component:** every action is `src/components/Button.astro`; `aubr design:lint` rejects a raw `<button>`. It renders `<a>` with `href` and `<summary>` with `as="summary"`.
 - **Danger:** `variant="danger"` draws the border and text in status red. It is for the one button that starts a destructive action, such as Delete client; inside dense rows a destructive trigger stays `quiet` and the danger style moves to the confirmation.
-- **Quiet:** `variant="quiet"` is a dashed underline for secondary actions in dense admin rows.
+- **Quiet:** `variant="quiet"` is a muted text link (see Links) for secondary actions in dense admin rows.
 - **Hint:** `variant="hint"` is the 1rem square that opens a tooltip.
+
+### Links
+
+A text link is its text with a dashed underline, never a box.
+
+- **Recipe:** the `link` class in `src/styles/global.css` draws the dashed underline (4px offset); do not spell it out with `underline decoration-dashed`. The quiet Button and the breadcrumbs use it too.
+- **Hover:** the underline turns solid and the text keeps its color, so primary, status and `text-fg-info` links keep their meaning. A link that can rest in muted text, including one that inherits it from a muted row, adds `hover:text-fg` as its only hover color. Only decoration and color change, so hovering never moves layout.
+- **Color:** a link inherits its text color or takes one role by ternary; `text-fg-info` marks links in public and account prose.
 
 ### Disclosure
 
@@ -312,7 +320,7 @@ A form action's outcome shows once, at the top of the page, below the page headi
 
 Navigation is a responsive grid with the logo on the left and compact session links on the right at larger widths. On small screens it stacks into a centered single-column grid. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like. It sits in the shared `max-w-6xl` (dashboard) or `max-w-3xl` (public/settings) header, matching the page column it leads.
 
-**Breadcrumbs** (`src/components/Breadcrumbs.astro`) lead admin pages below the navigation: muted dashed-underline links separated by slashes, with the current page in primary text and `aria-current="page"`. They render only when there is a parent to go back to.
+**Breadcrumbs** (`src/components/Breadcrumbs.astro`) lead admin pages below the navigation: muted links (`link hover:text-fg`) separated by slashes, with the current page in primary text and `aria-current="page"`. They render only when there is a parent to go back to.
 
 ### Tables
 

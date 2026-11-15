@@ -23,10 +23,7 @@ const { items } = Astro.props;
 						{item.label}
 					</span>
 				) : (
-					<a
-						href={item.href}
-						class="underline decoration-dashed underline-offset-4 hover:text-fg"
-					>
+					<a href={item.href} class="link hover:text-fg">
 						{item.label}
 					</a>
 				)}
