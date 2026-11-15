@@ -2,6 +2,16 @@
 import Button from "./Button.astro";
 import LogoutButton from "./LogoutButton.astro";
 
+interface Props {
+	organizationSlug?: string | undefined;
+	// Passed in because a deferred island sees its own URL, not the page's.
+	pathname: string;
+}
+
+const { pathname } = Astro.props;
+const current = (path: string) =>
+	pathname === path || pathname.startsWith(`${path}/`) ? "page" : undefined;
+
 const session =
 	Astro.locals.session === undefined
 		? await Astro.locals.auth.api.getSession({
@@ -15,17 +25,28 @@ const session =
 		{session ? (
 			<>
 				<li>
-					<Button href="/dash">Dashboard</Button>
+					<Button href="/dash" aria-current={current("/dash")}>
+						Dashboard
+					</Button>
 				</li>
 				<li>
-					<Button href="/settings/profile">Profile</Button>
+					<Button
+						href="/settings/profile"
+						aria-current={current("/settings/profile")}
+					>
+						Profile
+					</Button>
 				</li>
 				<li>
-					<Button href="/settings/api">API Keys</Button>
+					<Button href="/settings/api" aria-current={current("/settings/api")}>
+						API Keys
+					</Button>
 				</li>
 				{session.user.role === "admin" && (
 					<li>
-						<Button href="/admin">Admin</Button>
+						<Button href="/admin" aria-current={current("/admin")}>
+							Admin
+						</Button>
 					</li>
 				)}
 				{!session.session.impersonatedBy && (
@@ -36,7 +57,9 @@ const session =
 			</>
 		) : (
 			<li>
-				<Button href="/login">Login</Button>
+				<Button href="/login" aria-current={current("/login")}>
+					Login
+				</Button>
 			</li>
 		)}
 	</ul>
