@@ -12,3 +12,31 @@ fnox = { version = "1.48.0", workflow = "release.yml" }
 experimental = true
 
 [secrets.fnox]
+
+[tasks.dev]
+description = "Start the dev server with every secret from fnox (owner only)"
+secrets = [
+  "BETTER_AUTH_SECRETS",
+  "BETTER_AUTH_API_KEY",
+  "GITHUB_CLIENT_SECRET",
+  "CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE",
+]
+run = "aubr dev"
+
+[tasks."db:check"]
+description = "Check the Drizzle migrations with the database URL from fnox"
+secrets = ["CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE"]
+run = "aubx drizzle-kit check"
+
+[tasks.build]
+description = "Build the Worker without secrets"
+hide = true
+run = "aubr build"
+
+[tasks."secrets:push"]
+description = "Deploy the Worker with its runtime secrets from fnox (owner only)"
+usage = 'flag "--dry-run" help="Build and check without uploading"'
+depends = ["build"]
+confirm = "Deploy the Worker with the secrets from fnox?"
+secrets = ["BETTER_AUTH_SECRETS", "BETTER_AUTH_API_KEY", "GITHUB_CLIENT_SECRET"]
+run = "aubr cf deploy --prebuilt --secrets-file cloudflare.secrets.env{% if usage.dry_run %} --dry-run{% endif %}"
