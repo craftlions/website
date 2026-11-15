@@ -15,6 +15,11 @@ import {
 	phases,
 	projects,
 } from "./schema.ts";
+import {
+	type PhaseTransitionTarget,
+	phaseTransitions,
+	projectTransitions,
+} from "./status.ts";
 import { organizationStripeInvoices } from "./stripe.ts";
 
 export const toSlug = (value: string) =>
@@ -299,12 +304,6 @@ export const createProject = async (
 	});
 };
 
-const nextProjectEvents = {
-	active: "activated",
-	completed: "completed",
-	archived: "archived",
-} as const;
-
 export const transitionProject = async (
 	db: Db,
 	actorId: string,
@@ -345,14 +344,16 @@ export const transitionProject = async (
 					aggregateVersion: project.version,
 				},
 			});
+			const transitions = Object.values(projectTransitions)
+				.flat()
+				.filter((transition) => transition.nextState === input.nextState);
+			const transition =
+				transitions.find(({ event }) => event === recorded?.event) ??
+				transitions[0];
 
-			return {
-				idempotent: true,
-				event:
-					recorded?.event === "reopened"
-						? ("reopened" as const)
-						: nextProjectEvents[input.nextState],
-			};
+			if (transition) {
+				return { idempotent: true, event: transition.event };
+			}
 		}
 
 		if (project.version !== input.expectedVersion) {
@@ -362,13 +363,11 @@ export const transitionProject = async (
 			);
 		}
 
-		const valid =
-			(project.state === "draft" && input.nextState === "active") ||
-			(project.state === "active" && input.nextState === "completed") ||
-			(project.state === "completed" && input.nextState === "active") ||
-			(project.state === "completed" && input.nextState === "archived");
+		const transition = projectTransitions[project.state].find(
+			({ nextState }) => nextState === input.nextState,
+		);
 
-		if (!valid) {
+		if (!transition) {
 			throw new DomainError("InvalidTransition", "Invalid project transition.");
 		}
 
@@ -409,20 +408,15 @@ export const transitionProject = async (
 			);
 		}
 
-		const event =
-			project.state === "completed" && input.nextState === "active"
-				? ("reopened" as const)
-				: nextProjectEvents[input.nextState];
-
 		await insertEvent(tx, {
 			aggregateType: "project",
 			aggregateId: project.id,
 			aggregateVersion: input.expectedVersion + 1,
-			event,
+			event: transition.event,
 			actorId,
 		});
 
-		return { idempotent: false, event };
+		return { idempotent: false, event: transition.event };
 	});
 };
 
@@ -569,21 +563,12 @@ export const updatePhaseAmounts = async (
 	});
 };
 
-const phaseTransitions = {
-	planned: { from: ["submitted"], event: "planned" },
-	approved: { from: ["planned"], event: "approved_on_behalf" },
-	in_progress: { from: ["approved"], event: "started" },
-	// Acceptance is explicit: only a delivered phase can be accepted.
-	accepted: { from: ["delivered"], event: "accepted_on_behalf" },
-	cancelled: { from: ["submitted", "planned"], event: "cancelled" },
-} as const;
-
 const transitionPhase = async (
 	db: Db,
 	actorId: string,
 	phaseId: string,
 	expectedVersion: number,
-	nextState: "planned" | "approved" | "in_progress" | "accepted" | "cancelled",
+	nextState: PhaseTransitionTarget,
 	from: readonly string[],
 	event: string,
 	invalidTransitionMessage: string,
@@ -653,17 +638,13 @@ export const transitionPhaseAsAdmin = async (
 	actorId: string,
 	input: {
 		phaseId: string;
-		nextState:
-			| "planned"
-			| "approved"
-			| "in_progress"
-			| "accepted"
-			| "cancelled";
+		nextState: PhaseTransitionTarget;
 		expectedVersion: number;
 	},
 ) => {
 	await assertAdminUser(db, actorId);
 
+	// The same table the admin UI offers transitions from (status.ts).
 	const transition = phaseTransitions[input.nextState];
 
 	return transitionPhase(

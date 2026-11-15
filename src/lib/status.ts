@@ -46,18 +46,34 @@ export const phaseStateSummary = (
 		})
 		.join(", ");
 
-// Targets of the admin `transitionPhase` action, with the states each one
-// starts from (mirrors `phaseTransitions` in admin-mutations.ts). Delivery is
-// recorded by its own action, so `in_progress` has no transition here.
+// Targets of the admin `transitionPhase` action: the states each one starts
+// from, its button label and the event it records. `transitionPhaseAsAdmin`
+// (admin-mutations.ts) enforces this table and the UI offers it, so both
+// always agree. Delivery is recorded by its own action, so `in_progress` has
+// no transition here. This module has no runtime imports, so it stays safe
+// for browser scripts.
 export const phaseTransitions = {
-	planned: { from: ["submitted"], label: "Send to client" },
-	approved: { from: ["planned"], label: "Approve for client" },
-	in_progress: { from: ["approved"], label: "Start work" },
-	accepted: { from: ["delivered"], label: "Record acceptance" },
-	cancelled: { from: ["submitted", "planned"], label: "Cancel phase" },
+	planned: { from: ["submitted"], label: "Send to client", event: "planned" },
+	approved: {
+		from: ["planned"],
+		label: "Approve for client",
+		event: "approved_on_behalf",
+	},
+	in_progress: { from: ["approved"], label: "Start work", event: "started" },
+	// Acceptance is explicit: only a delivered phase can be accepted.
+	accepted: {
+		from: ["delivered"],
+		label: "Record acceptance",
+		event: "accepted_on_behalf",
+	},
+	cancelled: {
+		from: ["submitted", "planned"],
+		label: "Cancel phase",
+		event: "cancelled",
+	},
 } as const satisfies Record<
 	string,
-	{ from: readonly PhaseState[]; label: string }
+	{ from: readonly PhaseState[]; label: string; event: string }
 >;
 
 export type PhaseTransitionTarget = keyof typeof phaseTransitions;
@@ -81,16 +97,28 @@ export const projectStatus: Record<
 
 export type ProjectTransitionTarget = "active" | "completed" | "archived";
 
-// Mirrors the valid pairs in `transitionProject` (admin-mutations.ts).
+export type ProjectTransitionEvent =
+	| "activated"
+	| "completed"
+	| "reopened"
+	| "archived";
+
+// The project transitions open from each state, with the event each records.
+// `transitionProject` (admin-mutations.ts) accepts exactly these pairs and the
+// UI offers them, so both always agree.
 export const projectTransitions: Record<
 	ProjectState,
-	ReadonlyArray<{ nextState: ProjectTransitionTarget; label: string }>
+	ReadonlyArray<{
+		nextState: ProjectTransitionTarget;
+		label: string;
+		event: ProjectTransitionEvent;
+	}>
 > = {
-	draft: [{ nextState: "active", label: "Activate" }],
-	active: [{ nextState: "completed", label: "Complete" }],
+	draft: [{ nextState: "active", label: "Activate", event: "activated" }],
+	active: [{ nextState: "completed", label: "Complete", event: "completed" }],
 	completed: [
-		{ nextState: "active", label: "Reopen" },
-		{ nextState: "archived", label: "Archive" },
+		{ nextState: "active", label: "Reopen", event: "reopened" },
+		{ nextState: "archived", label: "Archive", event: "archived" },
 	],
 	archived: [],
 };
