@@ -53,7 +53,15 @@ const [organization, projects, latestStateEventIds, openInvoices, spendRows] =
 				data: {
 					columns: {
 						yearlyBudget: true,
+						stripeCustomerId: true,
 					},
+				},
+				// One row tells whether anyone can see the client dashboard.
+				members: {
+					columns: {
+						id: true,
+					},
+					limit: 1,
 				},
 			},
 			where: {
@@ -168,6 +176,24 @@ const activeProjects = projects
 			waitingOnClient: phaseStates("gray"),
 		};
 	});
+// Setup steps still missing, each listed only while it is.
+const setupGaps = [
+	organization.members.length === 0 && {
+		text: `Nobody at ${organization.name} can see their dashboard yet.`,
+		action: "Add member",
+		href: `/admin/org/${organization.id}/members`,
+	},
+	!organization.data?.stripeCustomerId && {
+		text: "No Stripe customer is linked, so no invoices or spend show up for this client.",
+		action: "Link Stripe customer",
+		href: `/admin/org/${organization.id}/settings#billing-heading`,
+	},
+	projects.length === 0 && {
+		text: "No projects yet.",
+		action: "Create project",
+		href: `/admin/org/${organization.id}/projects`,
+	},
+].filter((gap) => gap !== false);
 ---
 
 <AdminOrgShell
@@ -179,6 +205,23 @@ const activeProjects = projects
 	]}
 	fieldLabels={{ deliveryChoice: "Delivery", deliveryUrl: "Delivery URL" }}
 >
+	{setupGaps.length > 0 && (
+		<section class="grid min-w-0 gap-3" aria-labelledby="setup-heading">
+			<h2 id="setup-heading" class="text-label uppercase text-fg-muted">
+				Setup
+			</h2>
+			<ul class="grid border border-dashed border-line">
+				{setupGaps.map((gap) => (
+					<li class="grid min-w-0 gap-2 border-b border-dashed border-line p-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6">
+						<p class="text-sm wrap-break-word">{gap.text}</p>
+						<Button href={gap.href} variant="quiet">
+							{gap.action}
+						</Button>
+					</li>
+				))}
+			</ul>
+		</section>
+	)}
 	<section class="grid min-w-0 gap-3" aria-labelledby="worklist-heading">
 		<div class="grid gap-1">
 			<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
