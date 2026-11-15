@@ -7,6 +7,7 @@ import Badge from "../../../components/Badge.astro";
 import ClientPhaseBanner from "../../../components/ClientPhaseBanner.astro";
 import ClientWorklist from "../../../components/ClientWorklist.astro";
 import CostSplit from "../../../components/CostSplit.astro";
+import Progress from "../../../components/Progress.astro";
 import ClientOrgShell from "../../../layouts/ClientOrgShell.astro";
 import {
 	deriveBudgetConsumption,
@@ -189,20 +190,6 @@ const yearlyBudget = organization.data?.yearlyBudget ?? 0;
 const { currentYearTotal, remainingBudget, usagePercentage } =
 	deriveBudgetConsumption(spendRows, yearlyBudget);
 const budgetPacePercentage = ((now.getMonth() + 1) / 12) * 100;
-const budgetPaceGridLineClass = [
-	"col-start-2",
-	"col-start-3",
-	"col-start-4",
-	"col-start-5",
-	"col-start-6",
-	"col-start-7",
-	"col-start-8",
-	"col-start-9",
-	"col-start-10",
-	"col-start-11",
-	"col-start-12",
-	"col-start-13",
-][now.getMonth()];
 
 const projectStateToBadgeType = (projectState: projectSelectType["state"]) => {
 	switch (projectState) {
@@ -386,34 +373,12 @@ const worklist = deriveClientWorklist({
 					</dd>
 					{yearlyBudget > 0 && (
 						<dd class="grid gap-2">
-							<span class="relative grid">
-								<progress
-									aria-label="Budget used"
-									aria-valuetext={formatPercent(usagePercentage)}
-									aria-describedby="budget-pace"
-									max="100"
-									value={Math.min(Number(usagePercentage.toFixed(1)), 100)}
-									class:list={[
-										"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
-										usagePercentage > 100
-											? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
-											: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
-									]}
-								>
-									{`${formatPercent(usagePercentage)} used`}
-								</progress>
-								<span
-									aria-hidden="true"
-									class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
-								>
-									<span
-										class:list={[
-											"h-full w-0.75 justify-self-start border-x border-canvas bg-ink",
-											budgetPaceGridLineClass,
-										]}
-									/>
-								</span>
-							</span>
+							<Progress
+								percent={usagePercentage}
+								pace={now.getMonth() + 1}
+								aria-label="Budget used"
+								aria-describedby="budget-pace"
+							/>
 							<span id="budget-pace" class="text-xs text-fg-muted">
 								The marker shows calendar pace:{" "}
 								{formatPercent(budgetPacePercentage)}.

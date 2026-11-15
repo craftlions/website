@@ -5,6 +5,7 @@ import { actions } from "astro:actions";
 import AdminWorklist from "../../../components/AdminWorklist.astro";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
+import Progress from "../../../components/Progress.astro";
 import ProjectPhaseSummary from "../../../components/ProjectPhaseSummary.astro";
 import SpendByYear from "../../../components/SpendByYear.astro";
 import AdminOrgShell from "../../../layouts/AdminOrgShell.astro";
@@ -236,20 +237,7 @@ const setupGaps = [
 								{formatPercent(usagePercentage)}
 							</dd>
 							<dd class="grid">
-								<progress
-									aria-label="Budget used"
-									aria-valuetext={formatPercent(usagePercentage)}
-									max="100"
-									value={Math.min(Number(usagePercentage.toFixed(1)), 100)}
-									class:list={[
-										"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
-										usagePercentage > 100
-											? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
-											: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
-									]}
-								>
-									{`${formatPercent(usagePercentage)} used`}
-								</progress>
+								<Progress percent={usagePercentage} aria-label="Budget used" />
 							</dd>
 						</div>
 					)}

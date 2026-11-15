@@ -343,6 +343,7 @@ Tables are the main product surface for project, phase, invoice, and budget data
 
 Progress is used for budget state and remains literal.
 
+- **Component:** `src/components/Progress.astro` takes the used `percent` and, for the pace marker, the months elapsed as `pace`; pass the accessible name as `aria-label`.
 - **Track:** transparent track with dashed neutral border.
 - **Fill:** ink neutral by default, status red only when budget use exceeds the budget.
 - **Pace Marker:** a thin neutral marker may show calendar pace, but it must not compete with the actual value.

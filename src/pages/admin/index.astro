@@ -6,6 +6,7 @@ import AdminWorklist from "../../components/AdminWorklist.astro";
 import Button from "../../components/Button.astro";
 import DisclosureButton from "../../components/DisclosureButton.astro";
 import Field from "../../components/Field.astro";
+import Progress from "../../components/Progress.astro";
 import AdminShell from "../../layouts/AdminShell.astro";
 import {
 	clientDeletedMessage,
@@ -373,20 +374,10 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 											<span class="text-fg-muted">No budget</span>
 										) : (
 											<span class="grid gap-1">
-												<progress
-													class:list={[
-														"h-2 w-24 appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
-														client.budgetUsage > 100
-															? "[&::-moz-progress-bar]:bg-fill-danger [&::-webkit-progress-value]:bg-fill-danger"
-															: "[&::-moz-progress-bar]:bg-ink [&::-webkit-progress-value]:bg-ink",
-													]}
-													max="100"
-													value={Math.min(
-														Number(client.budgetUsage.toFixed(1)),
-														100,
-													)}
+												<Progress
+													class="w-24"
+													percent={client.budgetUsage}
 													aria-label={`Budget used by ${client.name}`}
-													aria-valuetext={formatPercent(client.budgetUsage)}
 												/>
 												<span
 													aria-hidden="true"

@@ -1,0 +1,63 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { formatPercent } from "../lib/format.ts";
+
+interface Props extends Omit<HTMLAttributes<"progress">, "value" | "max"> {
+	// Percent of the budget used; above 100 the bar fills red.
+	percent: number;
+	// Months of the year elapsed (1-12), drawn as the calendar pace marker.
+	pace?: number | undefined;
+}
+
+const { percent, pace, class: className, ...attrs } = Astro.props;
+
+// The marker sits on the left edge of the month after `pace`, so December
+// lands on the end of the track.
+const paceColumnClass =
+	pace === undefined
+		? undefined
+		: [
+				"col-start-2",
+				"col-start-3",
+				"col-start-4",
+				"col-start-5",
+				"col-start-6",
+				"col-start-7",
+				"col-start-8",
+				"col-start-9",
+				"col-start-10",
+				"col-start-11",
+				"col-start-12",
+				"col-start-13",
+			][pace - 1];
+---
+
+<span class:list={["relative grid", className]}>
+	<progress
+		{...attrs}
+		aria-valuetext={formatPercent(percent)}
+		max="100"
+		value={Math.min(Number(percent.toFixed(1)), 100)}
+		class:list={[
+			"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+			percent > 100
+				? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
+				: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
+		]}
+	>
+		{`${formatPercent(percent)} used`}
+	</progress>
+	{paceColumnClass && (
+		<span
+			aria-hidden="true"
+			class="pointer-events-none absolute -inset-y-1 left-0 grid w-full grid-cols-12"
+		>
+			<span
+				class:list={[
+					"h-full w-0.75 justify-self-start border-x border-canvas bg-ink",
+					paceColumnClass,
+				]}
+			/>
+		</span>
+	)}
+</span>

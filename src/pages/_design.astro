@@ -7,6 +7,7 @@ import Button from "../components/Button.astro";
 import ConfirmAction from "../components/ConfirmAction.astro";
 import DisclosureButton from "../components/DisclosureButton.astro";
 import Field from "../components/Field.astro";
+import Progress from "../components/Progress.astro";
 import Shell from "../layouts/Shell.astro";
 import tokensCss from "../styles/tokens.css?raw";
 
@@ -288,6 +289,17 @@ const typeRoles = [
 								<Badge type="error">Overdue</Badge>
 								<Badge type="gray">Awaiting approval</Badge>
 							</div>
+						</section>
+
+						<section class="grid gap-3">
+							<h3 class="text-title">Progress</h3>
+							<Progress percent={40} aria-label="Within budget" />
+							<Progress
+								percent={40}
+								pace={6}
+								aria-label="Within budget, with pace marker"
+							/>
+							<Progress percent={120} aria-label="Over budget" />
 						</section>
 
 						<section class="grid gap-3">
