@@ -4,6 +4,7 @@ export const prerender = false;
 import { actions } from "astro:actions";
 import { and, count, eq, ne } from "drizzle-orm";
 import Button from "../../../../components/Button.astro";
+import ConfirmAction from "../../../../components/ConfirmAction.astro";
 import Field from "../../../../components/Field.astro";
 import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
@@ -106,6 +107,7 @@ const settingsResult = Astro.getActionResult(
 		class="grid gap-6"
 	>
 		<input type="hidden" name="organizationId" value={organization.id}>
+		<input type="hidden" name="slug" value={organization.slug}>
 		<section aria-labelledby="identity-heading" class="grid gap-3">
 			<h2 id="identity-heading" class="text-label uppercase text-fg-muted">
 				Identity
@@ -133,31 +135,6 @@ const settingsResult = Astro.getActionResult(
 					value={organization.logo ?? ""}
 					placeholder="https://"
 					hint="Optional. The full address of an image. Leave empty for no logo."
-					result={settingsResult}
-				/>
-			</div>
-		</section>
-		<section aria-labelledby="client-url-heading" class="grid gap-3">
-			<h2 id="client-url-heading" class="text-label uppercase text-fg-muted">
-				Client URL
-			</h2>
-			<p class="max-w-prose text-sm text-fg-muted">
-				The address members of this client use to open their dashboard.
-			</p>
-			<div
-				class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(2,minmax(0,1fr))]"
-			>
-				<Field
-					label="Slug"
-					name="slug"
-					value={organization.slug}
-					required
-					pattern="[a-z0-9]+(-[a-z0-9]+)*"
-					title="Lowercase letters and digits, separated by single hyphens"
-					autocomplete="off"
-					spellcheck="false"
-					class="wrap-break-word"
-					hint={`Currently ${Astro.url.origin}/dash/org/${organization.slug}. Lowercase letters, digits and hyphens. Changing it breaks existing links and bookmarks to the dashboard.`}
 					result={settingsResult}
 				/>
 			</div>
@@ -216,6 +193,68 @@ const settingsResult = Astro.getActionResult(
 		</section>
 		<Button type="submit">Save settings</Button>
 	</form>
+	<section aria-labelledby="client-url-heading" class="grid gap-3">
+		<h2 id="client-url-heading" class="text-label uppercase text-fg-muted">
+			Client URL
+		</h2>
+		<p class="max-w-prose text-sm text-fg-muted">
+			The address members of this client use to open their dashboard. It is
+			changed on its own, with a confirmation, because existing links and
+			bookmarks stop working.
+		</p>
+		<form
+			method="POST"
+			action={actions.updateOrganizationSettings}
+			class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(2,minmax(0,1fr))]"
+			data-client-url-form
+		>
+			<input type="hidden" name="organizationId" value={organization.id}>
+			<input type="hidden" name="name" value={organization.name}>
+			<input type="hidden" name="logo" value={organization.logo ?? ""}>
+			<input
+				type="hidden"
+				name="yearlyBudget"
+				value={organization.data?.yearlyBudget ?? ""}
+			>
+			<input
+				type="hidden"
+				name="stripeCustomerId"
+				value={organization.data?.stripeCustomerId ?? ""}
+			>
+			<Field
+				id="client-slug"
+				label="Slug"
+				name="slug"
+				value={organization.slug}
+				required
+				pattern="[a-z0-9]+(-[a-z0-9]+)*"
+				title="Lowercase letters and digits, separated by single hyphens"
+				autocomplete="off"
+				spellcheck="false"
+				class="wrap-anywhere"
+				hint={`Currently ${Astro.url.origin}/dash/org/${organization.slug}. Lowercase letters, digits and single hyphens. Changing it breaks existing links and bookmarks to the dashboard.`}
+				result={settingsResult}
+			/>
+			<div class="grid md:col-span-2">
+				<ConfirmAction
+					id="confirm-client-url"
+					trigger="Change client URL"
+					title="Change the client URL?"
+					confirm="Change client URL"
+				>
+					The dashboard moves from
+					<span class="wrap-anywhere"
+						>{Astro.url.origin}/dash/org/{organization.slug}</span
+					>
+					to
+					<output for="client-slug" class="wrap-anywhere"
+						>{Astro.url.origin}/dash/org/{organization.slug}</output
+					>. Links and bookmarks to the old address stop working, so send the
+					new address to the client.
+				</ConfirmAction>
+			</div>
+		</form>
+	</section>
 	<section class="grid gap-3 border border-dashed border-line p-4">
 		<h3 class="font-semibold">Offboarding</h3>
 		<p class="text-sm text-fg-muted"
@@ -243,3 +282,40 @@ const settingsResult = Astro.getActionResult(
 		</form>
 	)}
 </AdminOrgShell>
+
+<script>
+	const form = document.querySelector<HTMLFormElement>(
+		"form[data-client-url-form]",
+	);
+	const slug = form?.elements.namedItem("slug");
+	const output = form?.querySelector("output");
+
+	if (form && slug instanceof HTMLInputElement && output) {
+		slug.addEventListener("input", () => {
+			slug.setCustomValidity(
+				slug.value === slug.defaultValue
+					? "Enter a new slug to change the client URL."
+					: "",
+			);
+			output.value = `${window.location.origin}/dash/org/${slug.value}`;
+		});
+		slug.setCustomValidity("Enter a new slug to change the client URL.");
+
+		// The open dialog makes the slug field inert, so the browser could not
+		// point at an invalid slug once it is open; check before it opens.
+		form.addEventListener(
+			"click",
+			(event) => {
+				if (
+					event.target instanceof Element &&
+					event.target.closest("[data-confirm-trigger]") &&
+					!form.reportValidity()
+				) {
+					event.preventDefault();
+					event.stopPropagation();
+				}
+			},
+			{ capture: true },
+		);
+	}
+</script>
