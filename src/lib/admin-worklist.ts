@@ -7,6 +7,7 @@ import { formatDays } from "./format.ts";
 import { events, phases, projects } from "./schema.ts";
 import {
 	type BadgeType,
+	daysOverdue,
 	invoiceStatus,
 	isInvoiceOverdue,
 	type PhaseState,
@@ -169,7 +170,7 @@ export const deriveWorklist = <Project extends WorklistProjectInput>(input: {
 					overdue: boolean,
 				): WorklistItem<Project> => {
 					const ageDays = overdue
-						? daysBetween(invoice.stripe.dueAt, now)
+						? daysOverdue(invoice.stripe, now)
 						: daysBetween(
 								invoice.stripe.invoicedAt ?? getUuidV7Date(invoice.id),
 								now,

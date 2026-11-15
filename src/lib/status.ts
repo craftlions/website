@@ -91,6 +91,19 @@ export const isInvoiceOverdue = (
 	now = new Date(),
 ) => invoice.status === "open" && invoice.dueAt !== null && invoice.dueAt < now;
 
+// Whole days an invoice is overdue, at least 1 once it is overdue, so an
+// invoice that fell due today never reads "0 days overdue"; 0 otherwise.
+export const daysOverdue = (
+	invoice: { status: string; dueAt: Date | null },
+	now = new Date(),
+) =>
+	isInvoiceOverdue(invoice, now) && invoice.dueAt
+		? Math.max(
+				1,
+				Math.floor((now.getTime() - invoice.dueAt.getTime()) / 86_400_000),
+			)
+		: 0;
+
 const invoiceStatusLabel: Record<string, string> = {
 	open: "Open",
 	paid: "Paid",
