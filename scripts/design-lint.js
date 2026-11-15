@@ -89,6 +89,13 @@ const rules = [
 		doc: "CLAUDE.md",
 		only: "src/components/",
 	},
+	{
+		id: "font-utility",
+		pattern: /(?<![\w-])font-(?:\[[^\]]*\]|\([^)]*\)|[\w-]+)/g,
+		classOnly: true,
+		use: "a type role such as text-label or text-caption for 600, or no class for 400",
+		doc: "DESIGN.md#3-typography",
+	},
 ];
 
 // Shadow, rounded and flex are also ordinary words, so those rules skip free text.
