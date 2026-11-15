@@ -290,14 +290,15 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 					{ledger.length} {ledger.length === 1 ? "client" : "clients"}
 				</p>
 				{ledger.length > 0 && (
-					<Field
-						label="Filter by name"
-						type="search"
-						autocomplete="off"
-						spellcheck="false"
-						class="sm:w-64"
-						data-client-filter
-					/>
+					<search class="sm:w-64">
+						<Field
+							label="Filter by name"
+							type="search"
+							autocomplete="off"
+							spellcheck="false"
+							data-client-filter
+						/>
+					</search>
 				)}
 			</div>
 			<section
