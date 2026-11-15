@@ -2,10 +2,12 @@
 export const prerender = false;
 
 import { actions } from "astro:actions";
+import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
+import { formatDate } from "../../../../lib/format.ts";
 
 const { id } = Astro.params;
 
@@ -93,51 +95,95 @@ if (!organization) {
 				<Button type="submit">Add user</Button>
 			</form>
 		</div>
-		<div class="grid border border-dashed border-line">
-			{members.length > 0 ? (
-				members.map((member) => (
-					<article class="grid gap-3 border-b border-dashed border-line p-4 last:border-b-0 md:grid-cols-[1fr_auto] md:items-center">
-						<div class="grid gap-1">
-							<h3 class="font-medium">{member.user.name}</h3>
-							<p class="text-sm text-fg-muted wrap-break-word">
-								{member.user.email} · {member.role}
-							</p>
-						</div>
-						<div class="grid justify-start gap-2 sm:grid-flow-col">
-							{member.user.lastActiveAt && (
-								<impersonate-user
-									data-user-id={member.userId}
-									data-organization-slug={organization.slug}
-								>
-									<Button type="button">Impersonate</Button>
-								</impersonate-user>
+		{members.length > 0 ? (
+			<div class="grid grid-cols-[minmax(0,1fr)] border border-dashed border-line md:grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,14rem)] md:gap-x-6">
+				<div
+					aria-hidden="true"
+					class="hidden border-b border-dashed border-line px-4 py-3 label-caps md:col-span-4 md:grid md:grid-cols-subgrid"
+				>
+					<span>Member</span>
+					<span>Role</span>
+					<span>Last active</span>
+					<span>Actions</span>
+				</div>
+				<ul class="grid grid-cols-[minmax(0,1fr)] md:col-span-4 md:grid-cols-subgrid">
+					{members.map((member) => (
+						<li class="grid grid-cols-[minmax(0,1fr)] gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:col-span-4 md:grid-cols-subgrid md:items-start">
+							<div class="grid gap-1">
+								<h3 class="font-medium wrap-break-word">{member.user.name}</h3>
+								<p class="text-sm text-fg-muted wrap-break-word">
+									{member.user.email}
+								</p>
+							</div>
+							<Badge type="gray">
+								{member.role === "owner"
+									? "Owner"
+									: member.role === "admin"
+										? "Admin"
+										: "Member"}
+							</Badge>
+							{member.user.lastActiveAt ? (
+								<p class="text-sm">
+									<span class="text-fg-muted md:sr-only">Last active </span>
+									<time datetime={member.user.lastActiveAt.toISOString()}>
+										{formatDate(member.user.lastActiveAt)}
+									</time>
+								</p>
+							) : (
+								<p class="text-sm text-fg-muted">Never logged in</p>
 							)}
-							<form method="POST" action={actions.resendWelcomeMail}>
-								<input type="hidden" name="email" value={member.user.email} />
-								<Button type="submit">Resend</Button>
-							</form>
-							<form method="POST" action={actions.removeOrganizationMember}>
-								<input
-									type="hidden"
-									name="organizationId"
-									value={organization.id}
-								/>
-								<input type="hidden" name="memberId" value={member.id} />
-								<Button type="submit">Remove member</Button>
-							</form>
-							{!member.user.lastActiveAt && (
-								<form method="POST" action={actions.removeNeverLoggedInUser}>
-									<input type="hidden" name="userId" value={member.userId} />
-									<Button type="submit">Remove user</Button>
+							<div class="grid content-start justify-items-start gap-2">
+								{member.user.lastActiveAt && (
+									<impersonate-user
+										class="grid max-w-full justify-items-start gap-1"
+										data-user-id={member.userId}
+										data-organization-slug={organization.slug}
+									>
+										<Button
+											class="max-w-full wrap-break-word"
+											aria-label={`View as ${member.user.name}`}
+											aria-describedby={`impersonate-error-${member.id}`}
+										>
+											View as {member.user.name.split(" ")[0]}
+										</Button>
+										<p
+											id={`impersonate-error-${member.id}`}
+											role="alert"
+											class="text-sm text-fg-danger"
+											hidden
+										/>
+									</impersonate-user>
+								)}
+								<form method="POST" action={actions.resendWelcomeMail}>
+									<input type="hidden" name="email" value={member.user.email} />
+									<Button type="submit">Resend</Button>
 								</form>
-							)}
-						</div>
-					</article>
-				))
-			) : (
-				<p class="p-4 text-sm text-fg-muted">No members.</p>
-			)}
-		</div>
+								<form method="POST" action={actions.removeOrganizationMember}>
+									<input
+										type="hidden"
+										name="organizationId"
+										value={organization.id}
+									/>
+									<input type="hidden" name="memberId" value={member.id} />
+									<Button type="submit">Remove member</Button>
+								</form>
+								{!member.user.lastActiveAt && (
+									<form method="POST" action={actions.removeNeverLoggedInUser}>
+										<input type="hidden" name="userId" value={member.userId} />
+										<Button type="submit">Remove user</Button>
+									</form>
+								)}
+							</div>
+						</li>
+					))}
+				</ul>
+			</div>
+		) : (
+			<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+				No members yet. Nobody at {organization.name} can see its dashboard
+				until you add one.
+			</p>
+		)}
 	</section>
 </AdminOrgShell>
 
@@ -146,35 +192,38 @@ if (!organization) {
 
 	class ImpersonateUser extends HTMLElement {
 		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
 			const button = this.querySelector("button");
-			const userId = this.dataset.userId;
-			const organizationSlug = this.dataset.organizationSlug;
+			const message = this.querySelector<HTMLElement>("[role=alert]");
+			const { userId, organizationSlug } = this.dataset;
 
-			if (
-				button &&
-				button instanceof HTMLButtonElement &&
-				userId &&
-				organizationSlug
-			) {
-				button.addEventListener("click", async () => {
-					button.disabled = true;
+			if (!button || !message || !userId || !organizationSlug) return;
 
-					try {
-						const { error } = await authClient.admin.impersonateUser({
-							userId,
-						});
+			button.addEventListener("click", async () => {
+				button.disabled = true;
+				message.hidden = true;
+				message.textContent = "";
 
-						if (error) {
-							throw error;
-						}
+				try {
+					const { error } = await authClient.admin.impersonateUser({
+						userId,
+					});
 
-						window.location.replace(`/dash/org/${organizationSlug}`);
-					} catch {
-						button.disabled = false;
-						alert("Unable to impersonate this user. Please try again.");
+					if (error) {
+						throw error;
 					}
-				});
-			}
+
+					window.location.replace(`/dash/org/${organizationSlug}`);
+				} catch {
+					button.disabled = false;
+					message.textContent =
+						"Could not open the client dashboard as this member. Try again.";
+					message.hidden = false;
+					button.focus();
+				}
+			});
 		}
 	}
 
