@@ -45,25 +45,36 @@ export const clientDeletedMessage = (client: { name: string }) =>
 	`Client ${client.name} deleted.`;
 
 /**
- * Where the middleware sends the admin after a successful form action: the
- * action's data may name a `next` path (e.g. the project it just created).
- * Only a path on this origin is accepted; anything else returns undefined and
- * the middleware falls back to the page the form was posted from.
+ * `path` as a redirect target on `url`'s origin, normalised; undefined when
+ * it is not a root-relative path or resolves elsewhere. Parsing strips tabs
+ * and newlines and reads backslashes as slashes, as browsers do, and the
+ * result is checked after that: a pathname that still starts with `//` (from
+ * `/.//host` or `/a/..//host`) would be read as another host in a Location
+ * header, so it is refused too.
  */
-export const nextPath = (data: unknown, url: URL) => {
-	if (
-		typeof data !== "object" ||
-		data === null ||
-		!("next" in data) ||
-		typeof data.next !== "string" ||
-		!data.next.startsWith("/")
-	) {
+export const sameOriginPath = (path: string, url: URL) => {
+	if (!path.startsWith("/")) {
 		return undefined;
 	}
 
-	const next = new URL(data.next, url);
+	const target = new URL(path, url);
 
-	return next.origin === url.origin
-		? `${next.pathname}${next.search}${next.hash}`
+	return target.origin === url.origin && !target.pathname.startsWith("//")
+		? `${target.pathname}${target.search}${target.hash}`
 		: undefined;
 };
+
+/**
+ * Where the middleware sends the admin after a successful form action: the
+ * action's data may name a `next` path (e.g. the project it just created).
+ * Only a path on this origin is accepted (see `sameOriginPath`); anything else
+ * returns undefined and the middleware falls back to the page the form was
+ * posted from.
+ */
+export const nextPath = (data: unknown, url: URL) =>
+	typeof data === "object" &&
+	data !== null &&
+	"next" in data &&
+	typeof data.next === "string"
+		? sameOriginPath(data.next, url)
+		: undefined;

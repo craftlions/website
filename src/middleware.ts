@@ -1,7 +1,7 @@
 import { getActionContext } from "astro:actions";
 import { defineMiddleware } from "astro:middleware";
 import { env } from "cloudflare:workers";
-import { nextPath } from "./lib/action-feedback.ts";
+import { nextPath, sameOriginPath } from "./lib/action-feedback.ts";
 import { createAuth } from "./lib/auth.ts";
 import { createDb } from "./lib/database.ts";
 import { submittedEntries } from "./lib/submitted-values.ts";
@@ -69,9 +69,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 			{ ttl: 60 },
 		);
 
+		// Every target goes through `sameOriginPath`, so a path like `//host`
+		// never reaches the Location header.
 		let redirectPath =
 			(!actionResult.error && nextPath(actionResult.data, context.url)) ||
-			context.originPathname;
+			sameOriginPath(context.originPathname, context.url) ||
+			"/";
 
 		if (actionResult.error) {
 			const referer = context.request.headers.get("Referer");
@@ -81,7 +84,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 				if (refererUrl.origin === context.url.origin) {
 					refererUrl.searchParams.delete("_action");
-					redirectPath = `${refererUrl.pathname}${refererUrl.search}`;
+					redirectPath =
+						sameOriginPath(
+							`${refererUrl.pathname}${refererUrl.search}`,
+							context.url,
+						) ?? redirectPath;
 				}
 			}
 		}
