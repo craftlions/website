@@ -1,0 +1,43 @@
+---
+import Button from "../components/Button.astro";
+import ClientShell from "./ClientShell.astro";
+
+interface Props {
+	activePage: "profile" | "api";
+}
+
+const { activePage } = Astro.props;
+const pages = [
+	{ id: "profile", label: "Profile", href: "/settings/profile" },
+	{ id: "api", label: "API Keys", href: "/settings/api" },
+] as const;
+const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
+---
+
+<ClientShell title={`${activeTab.label} · Account`}>
+	<header
+		slot="header"
+		class="grid gap-4 border-b border-dashed border-line pb-6"
+	>
+		<h1 class="border-l border-dashed border-line-strong pl-3 text-display">
+			Account
+		</h1>
+		<nav aria-label="Account sections">
+			<ul
+				class="-m-1 grid grid-flow-col auto-cols-max gap-2 overflow-x-auto p-1"
+			>
+				{pages.map((page) => (
+					<li>
+						<Button
+							href={page.href}
+							aria-current={activePage === page.id ? "page" : undefined}
+						>
+							{page.label}
+						</Button>
+					</li>
+				))}
+			</ul>
+		</nav>
+	</header>
+	<slot />
+</ClientShell>
