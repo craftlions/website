@@ -342,11 +342,11 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 										<a
 											href={`/admin/org/${client.id}`}
 											class:list={[
-												"underline decoration-dashed underline-offset-4",
+												"link",
 												client.yourMove === 0 &&
 												client.waiting === 0 &&
 												client.openInvoices.length === 0
-													? "text-fg-muted"
+													? "text-fg-muted hover:text-fg"
 													: "text-fg",
 											]}
 										>

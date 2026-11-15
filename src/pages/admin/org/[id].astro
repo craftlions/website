@@ -257,10 +257,7 @@ const setupGaps = [
 					>
 						<dt class="label-caps">Outstanding</dt>
 						<dd class="text-title tabular-nums wrap-break-word">
-							<a
-								href={`${invoicesHref}#invoices`}
-								class="underline decoration-dashed underline-offset-4"
-							>
+							<a href={`${invoicesHref}#invoices`} class="link">
 								{sumByCurrency(
 									openInvoices.map((invoice) => ({
 										amount: invoice.total,
@@ -281,10 +278,7 @@ const setupGaps = [
 								overdueInvoices.length > 0 && "text-fg-danger",
 							]}
 						>
-							<a
-								href={`${invoicesHref}#invoices`}
-								class="underline decoration-dashed underline-offset-4"
-							>
+							<a href={`${invoicesHref}#invoices`} class="link">
 								{sumByCurrency(
 									overdueInvoices.map((invoice) => ({
 										amount: invoice.total,
@@ -300,10 +294,7 @@ const setupGaps = [
 					>
 						<dt class="label-caps">To invoice</dt>
 						<dd class="text-title tabular-nums wrap-break-word">
-							<a
-								href={`${invoicesHref}#to-invoice`}
-								class="underline decoration-dashed underline-offset-4"
-							>
+							<a href={`${invoicesHref}#to-invoice`} class="link">
 								{sumByCurrency(
 									projects.flatMap((project) =>
 										project.phases.flatMap((phase) =>
@@ -349,7 +340,7 @@ const setupGaps = [
 							<h3 class="min-w-0 font-medium wrap-break-word">
 								<a
 									href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-									class="underline decoration-dashed underline-offset-4"
+									class="link"
 								>
 									{project.name}
 								</a>

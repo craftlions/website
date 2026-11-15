@@ -102,17 +102,11 @@ const groups = [
 								<div class="grid min-w-0 gap-1">
 									<h4 class="font-medium wrap-anywhere">
 										{item.kind === "phase" ? (
-											<a
-												href={item.href}
-												class="underline decoration-dashed underline-offset-4"
-											>
+											<a href={item.href} class="link">
 												{item.project.name} · {item.phase.title}
 											</a>
 										) : item.href && item.invoice.phase?.project ? (
-											<a
-												href={item.href}
-												class="underline decoration-dashed underline-offset-4"
-											>
+											<a href={item.href} class="link">
 												{item.invoice.phase.project.name} ·{" "}
 												{item.invoice.phase.title}
 											</a>

@@ -259,7 +259,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 										{invoice.phase?.project ? (
 											<a
 												href={`/dash/org/${slug}/project/${invoice.phase.project.publicId}#phase-${invoice.phase.publicId}`}
-												class="font-medium underline decoration-dashed underline-offset-4"
+												class="font-medium link"
 											>
 												{invoice.phase.project.name} · {invoice.phase.title}
 											</a>
@@ -278,7 +278,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 												target="_blank"
 												rel="noopener noreferrer"
 												aria-label={`Open Delivery for ${invoice.phase.project ? invoice.phase.title : "the invoice"}`}
-												class="underline decoration-dashed underline-offset-4"
+												class="link"
 											>
 												Open
 											</a>

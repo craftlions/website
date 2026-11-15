@@ -63,10 +63,7 @@ if (error?.code === "INTERNAL_SERVER_ERROR") {
 					{message.link && (
 						<>
 							{" "}
-							<a
-								href={message.link.href}
-								class="underline decoration-dashed underline-offset-4"
-							>
+							<a href={message.link.href} class="link">
 								{message.link.label}
 							</a>
 						</>

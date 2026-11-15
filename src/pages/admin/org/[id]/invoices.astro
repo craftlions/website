@@ -329,7 +329,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 					<li class="grid gap-x-6 gap-y-2 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
 						<div class="grid min-w-0 gap-1">
 							<a
-								class="w-fit max-w-full font-medium underline decoration-dashed underline-offset-4 wrap-break-word"
+								class="w-fit max-w-full font-medium link wrap-break-word"
 								href={phaseHref(part.project, part.phase)}
 							>
 								{part.project.name} · {part.phase.title}
@@ -404,7 +404,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 								<p class="label-caps">
 									Invoice{" "}
 									<a
-										class="text-fg underline decoration-dashed underline-offset-4"
+										class="text-fg link"
 										href={`${stripeDashboard}/invoices/${invoice.id}`}
 										target="_blank"
 										rel="noopener noreferrer"
@@ -555,7 +555,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 									<p class="label-caps">
 										Invoice{" "}
 										<a
-											class="text-fg underline decoration-dashed underline-offset-4"
+											class="text-fg link"
 											href={`${stripeDashboard}/invoices/${row.invoice.id}`}
 											target="_blank"
 											rel="noopener noreferrer"
@@ -591,7 +591,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 										<dt class="label-caps">Phase</dt>
 										<dd class="wrap-break-word">
 											<a
-												class="font-medium underline decoration-dashed underline-offset-4"
+												class="font-medium link"
 												href={phaseHref(row.project, row.phase)}
 											>
 												{row.project.name} · {row.phase.title}
@@ -607,7 +607,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 										<dd>
 											{row.invoice.paymentPage ? (
 												<a
-													class="underline decoration-dashed underline-offset-4"
+													class="link"
 													href={row.invoice.paymentPage}
 													target="_blank"
 													rel="noopener noreferrer"
