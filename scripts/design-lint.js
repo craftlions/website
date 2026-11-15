@@ -166,6 +166,23 @@ const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
 		),
 );
 
+// A live region that is revealed when its text is set is not announced reliably;
+// it must already be rendered, empty, so only its text changes. Tags span lines,
+// so this reads whole files.
+for (const file of globSync("src/**/*.astro")) {
+	const source = readFileSync(file, "utf8");
+	for (const { 0: tag, index } of source.matchAll(/<[\w-]+\s[^<>]*>/g)) {
+		if (
+			/\srole=["']?(?:alert|status)\b/.test(tag) &&
+			/(?<![\w-])hidden(?![\w-])/.test(tag)
+		) {
+			violations.push(
+				`${file}:${source.slice(0, index).split("\n").length}  hidden live region → render it empty and set only its text, with not-empty: spacing  (DESIGN.md#action-feedback)`,
+			);
+		}
+	}
+}
+
 // DESIGN.md frontmatter is what Impeccable reads, so it must keep up with tokens.css.
 const frontmatter = readFileSync("DESIGN.md", "utf8").split("---\n")[1] ?? "";
 if (!/^colors:\n {2}\S/m.test(frontmatter)) {

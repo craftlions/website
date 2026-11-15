@@ -365,6 +365,7 @@ A form action's outcome shows once, at the top of the page, below the page headi
 - **Component:** `src/components/ActionBanner.astro`, rendered by the admin shells from their `results` and `fieldLabels`. Pages never render their own result paragraph.
 - **Success:** a `role="status"` line in status green that says what happened, as a sentence ending in a period ("Phase sent to client."). An action reports the same text on every page; never a generic "Saved.".
 - **Error:** a `role="alert"` plane in status red. Input errors list each field by its label; server errors get a generic retry sentence instead of the raw message.
+- **Live regions:** a message set by a script lives in a `role="alert"` or `role="status"` element that is rendered from the start, empty; only its text changes, because a region revealed at the moment its text is set is not announced reliably. Space it with `not-empty:` utilities instead of hiding it; `aubr design:lint` rejects a live region that starts `hidden`.
 
 ### Navigation
 
