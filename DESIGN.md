@@ -130,7 +130,7 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 - System sans typography with clear weights instead of display styling.
 - Flat components with visible focus, hover, disabled, and loading states.
 
-**Layout:** Public pages and the settings area stay compact and single-column at a `max-w-3xl` container with a `pl-3` left gutter. The authenticated dashboard widens to `max-w-6xl`. Client pages render through `ClientShell` (navigation, breadcrumbs, a `header` slot, footer), the way admin pages use `AdminShell`; the organization overview is a two-column grid at `sm` and up — a narrow leading column (`1fr`) holds Overview and the Spend-by-Year chart, while a wider column (`3fr`) holds Projects and Invoices. Below `sm` the two columns stack into one. The page heading spans the full width above the split.
+**Layout:** Public pages and the settings area stay compact and single-column at a `max-w-3xl` container with a `pl-3` left gutter. The authenticated dashboard widens to `max-w-6xl`. Client pages render through `ClientShell` (navigation, breadcrumbs, a `header` slot, footer), the way admin pages use `AdminShell`; an organization's pages render through `ClientOrgShell`, which adds the organization heading and its section tabs (Overview, Invoices, Spend by year). The overview is a two-column grid at `sm` and up — a narrow leading column (`1fr`) holds the budget Overview, while a wider column (`3fr`) holds Projects. Below `sm` the two columns stack into one.
 
 ## 2. Colors
 
@@ -324,7 +324,7 @@ Navigation is a responsive grid with the logo on the left and compact session li
 - **Groups:** signed-in links form two groups. Work destinations (Dashboard, and Admin for admins) are default Buttons; the account group (Account, Logout) is quiet Buttons, set apart by a wider gap. A future Search trigger sits between the two groups. Logout is hidden while viewing as a client.
 - **Dashboard:** on a client page it leads to that organization's dashboard, otherwise to `/dash`, which lists the member's organizations.
 - **Current:** a link to the page itself carries `aria-current="page"`; a link to the section the page lies in carries `aria-current="true"`. Both draw the pressed style; a quiet link turns primary with a solid underline.
-- **Sections:** an area with several pages (an admin organization, the account settings) tabs them below its heading with default Buttons, in `AdminOrgShell` and `SettingsShell`.
+- **Sections:** an area with several pages (an admin organization, a client organization, the account settings) tabs them below its heading with default Buttons, in `AdminOrgShell`, `ClientOrgShell` and `SettingsShell`. A client organization's overview answers what waits on the client, where the projects stand and how much budget is used; the full invoice history and spend by year are reference pages behind their own tabs.
 
 **Breadcrumbs** (`src/components/Breadcrumbs.astro`) lead admin and client pages below the navigation: muted links (`link hover:text-fg`) separated by slashes, with the current page in primary text and `aria-current="page"`. They render only when there is a parent to go back to. Client pages start at the organization, with an Organizations crumb to `/dash` for members of several organizations.
 

@@ -1,0 +1,132 @@
+---
+export const prerender = false;
+
+import { isAPIError } from "better-auth/api";
+import InvoiceTable from "../../../../components/InvoiceTable.astro";
+import ClientOrgShell from "../../../../layouts/ClientOrgShell.astro";
+import {
+	organizationStripeInvoices,
+	stripeInvoiceFields,
+} from "../../../../lib/stripe.ts";
+
+const { slug } = Astro.params;
+
+if (!slug) {
+	return Astro.redirect("/dash");
+}
+
+const session = Astro.locals.session;
+
+if (!session) {
+	return Astro.redirect(
+		`/login?returnTo=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+	);
+}
+
+if (!session.session.activeOrganizationId) {
+	try {
+		await Astro.locals.auth.api.setActiveOrganization({
+			body: {
+				organizationSlug: slug,
+			},
+			headers: Astro.request.headers,
+		});
+	} catch (error) {
+		if (isAPIError(error) && error.body?.code === "ORGANIZATION_NOT_FOUND") {
+			return Astro.redirect("/dash");
+		}
+	}
+}
+
+// One read resolves the slug and checks this user's membership.
+const organization = await Astro.locals.db.query.organization.findFirst({
+	columns: {
+		id: true,
+		name: true,
+	},
+	with: {
+		members: {
+			columns: {
+				role: true,
+			},
+			where: {
+				userId: session.user.id,
+			},
+		},
+	},
+	where: {
+		slug,
+	},
+});
+const [currentMember] = organization?.members ?? [];
+
+if (!organization || !currentMember) {
+	return Astro.redirect("/dash");
+}
+
+const stripeRows = await Astro.locals.db.query.stripeInvoices.findMany({
+	...stripeInvoiceFields,
+	// S-003 R2: an attached invoice derives its project, phase, and Delivery
+	// from its one phase — nothing is copied onto the invoice row.
+	with: {
+		link: {
+			columns: {
+				component: true,
+			},
+			with: {
+				phase: {
+					columns: {
+						publicId: true,
+						title: true,
+						cost: true,
+						upfrontAmount: true,
+						deliveryAmount: true,
+						acceptanceAmount: true,
+						currency: true,
+						state: true,
+						deliveryState: true,
+						deliveryUrl: true,
+					},
+					with: {
+						project: {
+							columns: {
+								publicId: true,
+								name: true,
+							},
+						},
+						invoices: {
+							columns: {
+								component: true,
+							},
+							with: {
+								stripe: { columns: { status: true } },
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	where: organizationStripeInvoices(organization.id),
+	orderBy: {
+		invoicedAt: "desc",
+	},
+});
+---
+
+<ClientOrgShell
+	organization={{ name: organization.name, slug }}
+	activePage="invoices"
+>
+	<section aria-labelledby="invoices" class="grid content-start gap-3">
+		<h2 id="invoices" class="text-label uppercase text-fg-muted">Invoices</h2>
+		<InvoiceTable
+			invoices={stripeRows.map(({ link, ...invoice }) => ({
+				...invoice,
+				component: link?.component ?? null,
+				phase: link?.phase ?? null,
+			}))}
+			{slug}
+		/>
+	</section>
+</ClientOrgShell>

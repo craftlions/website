@@ -1,0 +1,66 @@
+---
+import Button from "../components/Button.astro";
+import ClientShell from "./ClientShell.astro";
+
+interface Props {
+	organization: { name: string; slug: string };
+	activePage: "overview" | "invoices" | "spend";
+}
+
+const { organization, activePage } = Astro.props;
+const pages = [
+	{
+		id: "overview",
+		label: "Overview",
+		href: `/dash/org/${organization.slug}`,
+	},
+	{
+		id: "invoices",
+		label: "Invoices",
+		href: `/dash/org/${organization.slug}/invoices`,
+	},
+	{
+		id: "spend",
+		label: "Spend by year",
+		href: `/dash/org/${organization.slug}/spend`,
+	},
+] as const;
+const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
+---
+
+<ClientShell
+	title={activePage === "overview"
+		? organization.name
+		: `${activeTab.label} · ${organization.name}`}
+	{organization}
+	breadcrumbs={activePage === "overview" ? [] : [activeTab]}
+	wide
+>
+	<header
+		slot="header"
+		class="grid gap-4 border-b border-dashed border-line pb-6"
+	>
+		<h1
+			class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
+		>
+			{organization.name}
+		</h1>
+		<nav aria-label="Organization sections">
+			<ul
+				class="-m-1 grid grid-flow-col auto-cols-max gap-2 overflow-x-auto p-1"
+			>
+				{pages.map((page) => (
+					<li>
+						<Button
+							href={page.href}
+							aria-current={activePage === page.id ? "page" : undefined}
+						>
+							{page.label}
+						</Button>
+					</li>
+				))}
+			</ul>
+		</nav>
+	</header>
+	<slot />
+</ClientShell>

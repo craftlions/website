@@ -8,9 +8,7 @@ import Button from "../../../components/Button.astro";
 import ClientPhaseBanner from "../../../components/ClientPhaseBanner.astro";
 import ClientWorklist from "../../../components/ClientWorklist.astro";
 import CostSplit from "../../../components/CostSplit.astro";
-import InvoiceTable from "../../../components/InvoiceTable.astro";
-import SpendByYear from "../../../components/SpendByYear.astro";
-import ClientShell from "../../../layouts/ClientShell.astro";
+import ClientOrgShell from "../../../layouts/ClientOrgShell.astro";
 import {
 	deriveBudgetConsumption,
 	getSpendByYear,
@@ -272,23 +270,14 @@ const worklist = deriveClientWorklist({
 });
 ---
 
-<ClientShell
-	title={`${organization.name}’s Dashboard`}
+<ClientOrgShell
 	organization={{ name: organization.name, slug }}
-	wide
+	activePage="overview"
 >
+	<ClientPhaseBanner />
 	<div
 		class="grid content-start gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,3fr)] sm:items-start"
 	>
-		<section class="grid gap-4 sm:col-span-2">
-			<h1
-				class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
-			>
-				{organization.name}’s Dashboard
-			</h1>
-			<ClientPhaseBanner />
-		</section>
-
 		<section
 			aria-labelledby="worklist-heading"
 			class="grid gap-3 sm:col-span-2"
@@ -421,8 +410,6 @@ const worklist = deriveClientWorklist({
 					)}
 				</div>
 			</section>
-
-			<SpendByYear rows={spendRows} />
 		</div>
 
 		<div class="grid min-w-0 content-start gap-6">
@@ -553,15 +540,6 @@ const worklist = deriveClientWorklist({
 					</table>
 				</div>
 			</section>
-			<section
-				aria-labelledby="invoices-heading"
-				class="grid content-start gap-3"
-			>
-				<h2 id="invoices-heading" class="text-label uppercase text-fg-muted">
-					Invoices
-				</h2>
-				<InvoiceTable {invoices} {slug} />
-			</section>
 		</div>
 	</div>
-</ClientShell>
+</ClientOrgShell>

@@ -1,0 +1,74 @@
+---
+export const prerender = false;
+
+import { isAPIError } from "better-auth/api";
+import SpendByYear from "../../../../components/SpendByYear.astro";
+import ClientOrgShell from "../../../../layouts/ClientOrgShell.astro";
+import { getSpendByYear } from "../../../../lib/budget-consumption.ts";
+
+const { slug } = Astro.params;
+
+if (!slug) {
+	return Astro.redirect("/dash");
+}
+
+const session = Astro.locals.session;
+
+if (!session) {
+	return Astro.redirect(
+		`/login?returnTo=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+	);
+}
+
+if (!session.session.activeOrganizationId) {
+	try {
+		await Astro.locals.auth.api.setActiveOrganization({
+			body: {
+				organizationSlug: slug,
+			},
+			headers: Astro.request.headers,
+		});
+	} catch (error) {
+		if (isAPIError(error) && error.body?.code === "ORGANIZATION_NOT_FOUND") {
+			return Astro.redirect("/dash");
+		}
+	}
+}
+
+// One read resolves the slug and checks this user's membership.
+const organization = await Astro.locals.db.query.organization.findFirst({
+	columns: {
+		id: true,
+		name: true,
+	},
+	with: {
+		members: {
+			columns: {
+				role: true,
+			},
+			where: {
+				userId: session.user.id,
+			},
+		},
+	},
+	where: {
+		slug,
+	},
+});
+const [currentMember] = organization?.members ?? [];
+
+if (!organization || !currentMember) {
+	return Astro.redirect("/dash");
+}
+
+// S-004 R2/R3: one shared-module read returns the full spend history for
+// this organization.
+const spendRows = await getSpendByYear(Astro.locals.db, organization.id);
+---
+
+<ClientOrgShell
+	organization={{ name: organization.name, slug }}
+	activePage="spend"
+>
+	<SpendByYear rows={spendRows} />
+</ClientOrgShell>
