@@ -19,6 +19,7 @@ import {
 } from "../../../../lib/phase-billing.ts";
 import {
 	costPartLabel,
+	daysOverdue,
 	invoiceStatus,
 	isInvoiceOverdue,
 	phaseStatus,
@@ -178,8 +179,8 @@ const statusDetail = (invoice: {
 }) =>
 	invoice.status === "paid" && invoice.paidAt
 		? `Paid ${formatDate(invoice.paidAt)}`
-		: isInvoiceOverdue(invoice, now) && invoice.dueAt
-			? `${formatDays(Math.floor((now.getTime() - invoice.dueAt.getTime()) / 86_400_000))} overdue`
+		: isInvoiceOverdue(invoice, now)
+			? `${formatDays(daysOverdue(invoice, now))} overdue`
 			: invoice.dueAt
 				? `Due ${formatDate(invoice.dueAt)}`
 				: `Issued ${formatDate(invoice.invoicedAt)}`;
