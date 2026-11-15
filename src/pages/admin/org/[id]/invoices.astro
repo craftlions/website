@@ -5,7 +5,6 @@ import { actions } from "astro:actions";
 import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import CostSplit from "../../../../components/CostSplit.astro";
-import DeliveryForm from "../../../../components/DeliveryForm.astro";
 import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
@@ -35,13 +34,6 @@ const { id } = Astro.params;
 if (!id) {
 	return Astro.redirect("/admin");
 }
-
-const actionResults = [
-	Astro.getActionResult(actions.attachInvoiceToPhase),
-	Astro.getActionResult(actions.updatePhaseDelivery),
-];
-const actionError = actionResults.find((result) => result?.error)?.error;
-const actionSucceeded = actionResults.some((result) => result && !result.error);
 
 const [organization, organizationData, projects, unattachedInvoices] =
 	await Promise.all([
@@ -326,13 +318,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 <AdminOrgShell
 	{organization}
 	activePage="invoices"
-	showSuccess={actionSucceeded}
+	results={[
+		[Astro.getActionResult(actions.attachInvoiceToPhase), "Invoice attached"],
+	]}
+	fieldLabels={{ stripeId: "Stripe invoice", target: "Attach to" }}
 >
-	{actionError && (
-		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
-			{actionError.message}
-		</p>
-	)}
 	<section class="grid gap-6" aria-labelledby="invoices-heading">
 		<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
 			<div class="grid gap-1">
@@ -672,16 +662,6 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 										</p>
 									)}
 								</div>
-								{target.component === "delivery" &&
-									(target.state === "delivered" ||
-										target.state === "accepted") && (
-										<details class="grid gap-3 md:col-span-3">
-											<Button as="summary" variant="quiet">
-												Edit delivery
-											</Button>
-											<DeliveryForm mode="edit" phase={target} />
-										</details>
-									)}
 							</li>
 						);
 					})
