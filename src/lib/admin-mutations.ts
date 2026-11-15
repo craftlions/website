@@ -1256,10 +1256,13 @@ export const updateOrganizationSettings = async (
 	db: Db,
 	auth: Auth,
 	actorId: string,
+	// Each setting left undefined keeps its stored value, so a form that owns
+	// some settings (the settings page saves the client URL on its own) never
+	// writes the others from a stale page.
 	input: {
 		organizationId: string;
-		name: string;
-		slug: string;
+		name?: string | undefined;
+		slug?: string | undefined;
 		logo?: string | null | undefined;
 		yearlyBudget?: number | null | undefined;
 		stripeCustomerId?: string | null | undefined;
@@ -1267,86 +1270,106 @@ export const updateOrganizationSettings = async (
 ) => {
 	await assertAdminUser(db, actorId);
 
-	const slug = toSlug(input.slug);
+	const slug = input.slug === undefined ? undefined : toSlug(input.slug);
 	const adapter = await getOrganizationAdapter(auth);
-	const slugCollision = await adapter.findOrganizationBySlug(slug);
 
-	if (slugCollision && slugCollision.id !== input.organizationId) {
-		throw new DomainError("AlreadyExists", "That organization slug is taken.");
-	}
+	if (slug !== undefined) {
+		const slugCollision = await adapter.findOrganizationBySlug(slug);
 
-	const stripeCustomerId = input.stripeCustomerId?.trim() || null;
-
-	const [metadata, attachedInvoice] = await Promise.all([
-		db.query.organizationMetadata.findFirst({
-			columns: { stripeCustomerId: true },
-			where: { organizationId: input.organizationId },
-		}),
-		db.query.invoices.findFirst({
-			columns: { id: true },
-			where: { organizationId: input.organizationId },
-		}),
-	]);
-
-	// Attached invoices belong to the current customer; moving it would show
-	// this organization's work on another organization's invoices.
-	if (
-		attachedInvoice &&
-		(metadata?.stripeCustomerId ?? null) !== stripeCustomerId
-	) {
-		throw new DomainError(
-			"Conflict",
-			"This organization has attached invoices, so its Stripe customer cannot change.",
-		);
-	}
-
-	// Invoice visibility follows the customer id, so it can only belong to one
-	// organization.
-	if (stripeCustomerId) {
-		const customerOwner = await db.query.organizationMetadata.findFirst({
-			columns: { organizationId: true },
-			where: { stripeCustomerId },
-		});
-
-		if (
-			customerOwner &&
-			customerOwner.organizationId !== input.organizationId
-		) {
+		if (slugCollision && slugCollision.id !== input.organizationId) {
 			throw new DomainError(
 				"AlreadyExists",
-				"That Stripe customer is linked to another organization.",
+				"That organization slug is taken.",
 			);
 		}
 	}
 
-	const updatedOrganization = await adapter.updateOrganization(
-		input.organizationId,
-		{
-			name: input.name.trim(),
-			slug,
-			logo: input.logo?.trim() || null,
-		},
-	);
+	const stripeCustomerId =
+		input.stripeCustomerId === undefined
+			? undefined
+			: input.stripeCustomerId?.trim() || null;
 
-	if (!updatedOrganization) {
+	if (stripeCustomerId !== undefined) {
+		const [metadata, attachedInvoice] = await Promise.all([
+			db.query.organizationMetadata.findFirst({
+				columns: { stripeCustomerId: true },
+				where: { organizationId: input.organizationId },
+			}),
+			db.query.invoices.findFirst({
+				columns: { id: true },
+				where: { organizationId: input.organizationId },
+			}),
+		]);
+
+		// Attached invoices belong to the current customer; moving it would show
+		// this organization's work on another organization's invoices.
+		if (
+			attachedInvoice &&
+			(metadata?.stripeCustomerId ?? null) !== stripeCustomerId
+		) {
+			throw new DomainError(
+				"Conflict",
+				"This organization has attached invoices, so its Stripe customer cannot change.",
+			);
+		}
+
+		// Invoice visibility follows the customer id, so it can only belong to
+		// one organization.
+		if (stripeCustomerId) {
+			const customerOwner = await db.query.organizationMetadata.findFirst({
+				columns: { organizationId: true },
+				where: { stripeCustomerId },
+			});
+
+			if (
+				customerOwner &&
+				customerOwner.organizationId !== input.organizationId
+			) {
+				throw new DomainError(
+					"AlreadyExists",
+					"That Stripe customer is linked to another organization.",
+				);
+			}
+		}
+	}
+
+	const organizationFields = {
+		...(input.name !== undefined && { name: input.name.trim() }),
+		...(slug !== undefined && { slug }),
+		...(input.logo !== undefined && { logo: input.logo?.trim() || null }),
+	};
+	const organization =
+		Object.keys(organizationFields).length > 0
+			? await adapter.updateOrganization(
+					input.organizationId,
+					organizationFields,
+				)
+			: await db.query.organization.findFirst({
+					columns: { id: true },
+					where: { id: input.organizationId },
+				});
+
+	if (!organization) {
 		throw new DomainError("NotFound", "Organization not found.");
 	}
 
+	const metadataFields = {
+		...(input.yearlyBudget !== undefined && {
+			yearlyBudget: input.yearlyBudget,
+		}),
+		...(stripeCustomerId !== undefined && { stripeCustomerId }),
+	};
+
 	await db.transaction(async (tx) => {
-		await tx
-			.insert(organizationMetadata)
-			.values({
-				organizationId: input.organizationId,
-				yearlyBudget: input.yearlyBudget ?? null,
-				stripeCustomerId,
-			})
-			.onConflictDoUpdate({
-				target: organizationMetadata.organizationId,
-				set: {
-					yearlyBudget: input.yearlyBudget ?? null,
-					stripeCustomerId,
-				},
-			});
+		if (Object.keys(metadataFields).length > 0) {
+			await tx
+				.insert(organizationMetadata)
+				.values({ organizationId: input.organizationId, ...metadataFields })
+				.onConflictDoUpdate({
+					target: organizationMetadata.organizationId,
+					set: metadataFields,
+				});
+		}
 		await insertEvent(tx, {
 			aggregateType: "organization",
 			aggregateId: input.organizationId,

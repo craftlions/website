@@ -406,17 +406,22 @@ export const server = {
 			return { success: true };
 		}),
 	}),
+	// The settings page saves the client URL with its own form and action, so
+	// neither form can overwrite the other's fields from a stale page.
 	updateOrganizationSettings: defineAction({
 		accept: "form",
 		input: z.object({
 			organizationId: z.string().trim().min(1),
 			name: z.string().trim().min(1).max(120),
-			slug: slugSchema,
 			logo: z.preprocess(
 				(value) => (value === "" ? null : value),
 				z.string().trim().pipe(z.url()).nullable().optional(),
 			),
-			yearlyBudget: optionalBudget,
+			// An empty field removes the budget.
+			yearlyBudget: z.preprocess(
+				(value) => (value === "" ? null : value),
+				z.coerce.number().int().positive().nullable(),
+			),
 			stripeCustomerId: z.preprocess(
 				(value) => (value === "" ? null : value),
 				z.string().trim().startsWith("cus_").nullable().optional(),
@@ -430,6 +435,22 @@ export const server = {
 				input,
 			);
 			return { success: true };
+		}),
+	}),
+	updateOrganizationSlug: defineAction({
+		accept: "form",
+		input: z.object({
+			organizationId: z.string().trim().min(1),
+			slug: slugSchema,
+		}),
+		handler: adminHandler(async (input, context, actorId) => {
+			await updateOrganizationSettings(
+				context.locals.db,
+				context.locals.auth,
+				actorId,
+				input,
+			);
+			return { slug: input.slug };
 		}),
 	}),
 	hardDeleteOrganization: defineAction({

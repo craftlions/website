@@ -84,11 +84,14 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
+// The settings form and the client URL form post separate actions that each
+// write only their own fields, so a stale tab cannot overwrite the other
+// form's fields. After a failed save, only the failed form shows what was
+// submitted.
 const settingsResult = Astro.getActionResult(
 	actions.updateOrganizationSettings,
 );
-// Both forms post every setting, so after a failed save each field shows what
-// was submitted (the other form's hidden copies equal the stored values).
+const slugResult = Astro.getActionResult(actions.updateOrganizationSlug);
 const submitted = submittedValues(Astro.locals, settingsResult);
 ---
 
@@ -96,7 +99,12 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 	{organization}
 	activePage="settings"
 	results={[
-		[settingsResult, `Settings for ${organization.name} saved.`],
+		[settingsResult, `Identity and billing for ${organization.name} saved.`],
+		successMessage(
+			slugResult,
+			({ slug }) =>
+				`Client URL changed to ${Astro.url.origin}/dash/org/${slug}. Send the new address to the client.`,
+		),
 		successMessage(
 			Astro.getActionResult(actions.hardDeleteOrganization),
 			clientDeletedMessage,
@@ -117,7 +125,6 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		class="grid gap-6"
 	>
 		<input type="hidden" name="organizationId" value={organization.id}>
-		<input type="hidden" name="slug" value={organization.slug}>
 		<section aria-labelledby="identity-heading" class="grid gap-3">
 			<h2 id="identity-heading" class="text-label uppercase text-fg-muted">
 				Identity
@@ -219,28 +226,17 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		</p>
 		<form
 			method="POST"
-			action={actions.updateOrganizationSettings}
+			action={actions.updateOrganizationSlug}
 			class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(2,minmax(0,1fr))]"
 			data-client-url-form
 		>
 			<input type="hidden" name="organizationId" value={organization.id}>
-			<input type="hidden" name="name" value={organization.name}>
-			<input type="hidden" name="logo" value={organization.logo ?? ""}>
-			<input
-				type="hidden"
-				name="yearlyBudget"
-				value={organization.data?.yearlyBudget ?? ""}
-			>
-			<input
-				type="hidden"
-				name="stripeCustomerId"
-				value={organization.data?.stripeCustomerId ?? ""}
-			>
 			<Field
 				id="client-slug"
 				label="Slug"
 				name="slug"
-				value={submitted?.get("slug") ?? organization.slug}
+				value={submittedValues(Astro.locals, slugResult)?.get("slug") ??
+					organization.slug}
 				data-current-slug={organization.slug}
 				required
 				pattern="[a-z0-9]+(-[a-z0-9]+)*"
@@ -249,7 +245,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 				spellcheck="false"
 				class="wrap-anywhere"
 				hint={`Currently ${Astro.url.origin}/dash/org/${organization.slug}. Lowercase letters, digits and single hyphens. Changing it breaks existing links and bookmarks to the dashboard.`}
-				result={settingsResult}
+				result={slugResult}
 			/>
 			<div class="grid md:col-span-2">
 				<ConfirmAction
