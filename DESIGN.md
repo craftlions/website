@@ -93,6 +93,7 @@ rounded:
 spacing:
   xs: "4px"
   sm: "6px"
+  sm2: "8px"
   md: "12px"
   lg: "16px"
   xl: "24px"
@@ -145,6 +146,8 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 - Flat components with visible focus, hover, disabled, and loading states.
 
 **Layout:** Public pages and the settings area stay compact and single-column at a `max-w-3xl` container with a `pl-3` left gutter. The authenticated dashboard widens to `max-w-6xl`. Client pages render through `ClientShell` (navigation, breadcrumbs, a `header` slot, footer), the way admin pages use `AdminShell`; an organization's pages render through `ClientOrgShell`, which adds the organization heading and its section tabs (Overview, Invoices, Spend by year). The overview puts the full-width Worklist first, then a two-column grid at `lg` and up: Projects in a wide leading column (`2fr`) and Budget in a narrow one (`1fr`). Below `lg` they stack in that order.
+
+**Spacing:** one scale: 4, 6, 8, 12, 16, 24 and 48px (`1`, `1.5`, `2`, `3`, `4`, `6` and `12` in Tailwind steps). 8px is the gap inside a control and between grouped controls (a Button's icon and label, a row of buttons, a checkbox and its label) and the vertical padding of an input.
 
 ## 2. Colors
 
