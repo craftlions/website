@@ -47,6 +47,13 @@ aubr design:lint
 aubx biome check --write
 ```
 
+## Secrets
+
+- Values move from `.env` into age-encrypted `fnox.toml` entries when the owner runs the migration in `docs/notes/secrets.md`; from then on they reach a process only through a mise task grant.
+- Never read, print, copy or write a secret value: no `.env` files, no `~/.config/fnox/`, no `fnox get`, `fnox export`, `fnox exec` or `op read`, no `--secrets` flags.
+- `mise run db:check` is the only secret-granted task for agents; it receives only the database URL and fails until the migration is done. `mise run dev` and `mise run secrets:push` are the owner's.
+- The pre-commit step `fnox-scan` rejects staged changes that contain a value from `fnox.toml`.
+
 ## Accessibility Scan
 
 - `aubr a11y` runs axe-core on the public pages and `/design` in light and dark, and fails on any violation. Run it on demand after UI changes; it is not part of Validation.
