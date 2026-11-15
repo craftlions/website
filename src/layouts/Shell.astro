@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import Button from "../components/Button.astro";
+import CommandPalette from "../components/CommandPalette.astro";
 
 const lang = Astro.currentLocale;
 
@@ -58,6 +59,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 				</aside>
 			)}
 			<slot name="body" />
+			{/* Only gated routes set a session, so public pages ship no palette. */}
+			{session && <CommandPalette />}
 		</body>
 	) : (
 		<slot name="body" />

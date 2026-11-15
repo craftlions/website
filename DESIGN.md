@@ -330,6 +330,17 @@ Every destructive or irreversible action is confirmed in a native modal dialog.
 - **Validity:** the trigger reports the form's first invalid field before the dialog opens, because the open dialog makes the form behind it inert.
 - **Focus and scroll:** the dialog opens with focus on the cancel action, so Enter never confirms by accident, and closing returns focus to the trigger. Scrolling inside the dialog or on its backdrop does not scroll the page behind it.
 
+### Command Palette
+
+Search across the signed-in person's own data opens in one modal, from the nav's Search button or Ctrl+K (Cmd+K on a Mac).
+
+- **Component:** `src/components/CommandPalette.astro`, mounted by `Shell` only when the page has a session, so public pages ship neither its markup nor its script. It reads `GET /api/search`, which loads the caller's slice from the session alone: the admin searches every client, anyone else (including an admin viewing as a client) their own organizations.
+- **Structure:** a native `<dialog>` with a `<search>` holding an `Input` that is an ARIA combobox, a quiet Close button, a `role="status"` line, and a listbox of groups headed in `label-caps`. Options are real links built with `textContent`, so middle-click and copying the link keep working; the listbox scrolls the active option into view, while focus stays in the field.
+- **Selection:** the active option takes the `bg-panel` fill and a dashed `currentColor` outline, which forced colors repaint, so selection never rests on the fill alone.
+- **Navigation only:** a result goes to the page that holds the record or form (`#invoice-…`, `#phase-…`, `#create-project`); nothing is changed from the palette.
+- **Keyboard:** arrows move through the options, Page Up and Page Down jump between groups, Enter opens the active one and Ctrl+Enter (Cmd+Enter) opens it in a new tab; Esc, Close, the backdrop or the shortcut again close it and focus returns to where it was. The shortcut does nothing while another dialog is open.
+- **Status:** the status line shows the parsed filters and the count ("Overdue · 2025 — 3 results."), "Searching…" after a pause, or why a search failed; only its text changes. Moving through options is announced through `aria-activedescendant`, not the status line.
+
 ### Chips
 
 Badges are state labels, not decoration.
@@ -383,7 +394,7 @@ A secret the server returns once, such as a new API key, shows once, in the page
 
 Navigation is a responsive grid with the logo on the left and compact session links on the right at larger widths. On small screens it stacks into a centered single-column grid. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like. It sits in the shared `max-w-6xl` (dashboard) or `max-w-3xl` (public/settings) header, matching the page column it leads.
 
-- **Groups:** signed-in links form two groups. Work destinations (Dashboard, and Admin for admins) are default Buttons; the account group (Account, Logout) is quiet Buttons, set apart by a wider gap. A future Search trigger sits between the two groups. Logout is hidden while viewing as a client.
+- **Groups:** signed-in links form two groups. Work destinations (Dashboard, and Admin for admins) are default Buttons; the account group (Account, Logout) is quiet Buttons, set apart by a wider gap. The Search button sits between the two groups and opens the command palette (Ctrl+K or Cmd+K). Logout is hidden while viewing as a client.
 - **Dashboard:** on a client page it leads to that organization's dashboard, otherwise to `/dash`, which lists the member's organizations.
 - **Current:** a link to the page itself carries `aria-current="page"`; a link to the section the page lies in carries `aria-current="true"`. Both draw the pressed style; a quiet link turns primary with a solid underline.
 - **Sections:** an area with several pages (an admin organization, a client organization, the account settings) tabs them below its heading with default Buttons, in `AdminOrgShell`, `ClientOrgShell` and `SettingsShell`. A client organization's overview answers what waits on the client, where the projects stand and how much budget is used; the full invoice history and spend by year are reference pages behind their own tabs.

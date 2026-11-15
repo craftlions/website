@@ -1,0 +1,373 @@
+---
+import Button from "./Button.astro";
+import Input from "./Input.astro";
+
+// The command palette: Ctrl+K (Cmd+K on a Mac) or the nav's Search button
+// opens a modal combobox over /api/search. Results are links; nothing is
+// executed from here. Shell renders it only for a signed-in session.
+const idleStatus =
+	"Type to search. Filters: open, paid, overdue, 2025, >1000 EUR.";
+---
+
+<command-palette data-idle-status={idleStatus}>
+	<dialog
+		id="command-palette"
+		aria-label="Search"
+		class="m-auto max-h-[min(36rem,calc(100dvh-4rem))] w-full max-w-[min(40rem,calc(100%-2rem))] grid-rows-[auto_auto_minmax(0,1fr)] gap-3 border border-dashed border-line bg-canvas p-4 text-fg overscroll-contain open:grid backdrop:overflow-hidden backdrop:overscroll-contain backdrop:bg-canvas/80"
+	>
+		<search class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+			<Input
+				type="text"
+				role="combobox"
+				aria-label="Search"
+				aria-expanded="false"
+				aria-controls="command-palette-results"
+				aria-autocomplete="list"
+				aria-describedby="command-palette-status"
+				autocomplete="off"
+				spellcheck="false"
+				enterkeyhint="go"
+				placeholder={Astro.locals.session?.user.role === "admin"
+					? "Clients, projects, phases, invoices…"
+					: "Projects, phases, invoices…"}
+				autofocus
+				class="w-full"
+			/>
+			<Button variant="quiet" data-command-palette-close>Close</Button>
+		</search>
+		<p id="command-palette-status" role="status" class="text-sm text-fg-muted">
+			{idleStatus}
+		</p>
+		<div
+			id="command-palette-results"
+			role="listbox"
+			aria-label="Results"
+			class="grid min-h-0 content-start gap-3 overflow-y-auto overscroll-contain"
+		></div>
+	</dialog>
+</command-palette>
+
+<script>
+	import type { SearchResponse } from "../lib/search-query.ts";
+
+	const optionClass =
+		"grid gap-0.5 px-3 py-2 text-sm aria-selected:bg-panel aria-selected:outline-1 aria-selected:outline-dashed aria-selected:-outline-offset-1";
+	// Ctrl+K stays the line-kill key in macOS text fields.
+	const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+
+	class CommandPalette extends HTMLElement {
+		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
+			const dialog = this.querySelector("dialog");
+			const input = this.querySelector<HTMLInputElement>("[role=combobox]");
+			const status = this.querySelector<HTMLElement>("[role=status]");
+			const listbox = this.querySelector<HTMLElement>("[role=listbox]");
+
+			if (!dialog || !input || !status || !listbox) return;
+
+			const idleStatus = this.dataset.idleStatus ?? "";
+			let opener: HTMLElement | null = null;
+			let controller: AbortController | undefined;
+			let debounce: ReturnType<typeof setTimeout> | undefined;
+			let busy: ReturnType<typeof setTimeout> | undefined;
+			let retry: ReturnType<typeof setTimeout> | undefined;
+
+			const options = () => [
+				...listbox.querySelectorAll<HTMLAnchorElement>("[role=option]"),
+			];
+			const active = () =>
+				listbox.querySelector<HTMLAnchorElement>("[aria-selected=true]");
+
+			const activate = (
+				option: HTMLAnchorElement | undefined,
+				scroll = true,
+			) => {
+				for (const other of options()) {
+					other.setAttribute("aria-selected", String(other === option));
+				}
+				if (option) {
+					input.setAttribute("aria-activedescendant", option.id);
+					if (scroll) option.scrollIntoView({ block: "nearest" });
+				} else {
+					input.removeAttribute("aria-activedescendant");
+				}
+			};
+
+			const option = (
+				id: number,
+				label: string,
+				sublabel: string,
+				href: string,
+			) => {
+				const link = document.createElement("a");
+				link.id = `command-palette-option-${id}`;
+				link.href = href;
+				link.tabIndex = -1;
+				link.setAttribute("role", "option");
+				link.setAttribute("aria-selected", "false");
+				link.className = optionClass;
+				const primary = document.createElement("span");
+				primary.className = "text-fg wrap-break-word";
+				primary.textContent = label;
+				const secondary = document.createElement("span");
+				secondary.className =
+					"text-xs text-fg-muted tabular-nums wrap-break-word";
+				secondary.textContent = sublabel;
+				link.replaceChildren(...(sublabel ? [primary, secondary] : [primary]));
+				return link;
+			};
+
+			// Labels hold client data, so options are built as text, never as HTML.
+			const render = (groups: SearchResponse["groups"]) => {
+				let id = 0;
+				listbox.replaceChildren(
+					...groups.map((group) => {
+						const element = document.createElement("div");
+						element.setAttribute("role", "group");
+						element.setAttribute(
+							"aria-labelledby",
+							`command-palette-group-${group.id}`,
+						);
+						element.className = "grid";
+						const heading = document.createElement("p");
+						heading.id = `command-palette-group-${group.id}`;
+						heading.setAttribute("role", "presentation");
+						heading.className = "label-caps px-3 py-1";
+						heading.textContent = group.label;
+						element.replaceChildren(
+							heading,
+							...group.items.map((item) =>
+								option(id++, item.label, item.sublabel, item.href),
+							),
+						);
+						return element;
+					}),
+				);
+				input.setAttribute("aria-expanded", String(id > 0));
+				activate(options()[0]);
+			};
+
+			const settle = () => {
+				clearTimeout(busy);
+				listbox.removeAttribute("aria-busy");
+			};
+
+			const search = async (query: string, retried = false) => {
+				controller?.abort();
+				clearTimeout(retry);
+				controller = new AbortController();
+				const { signal } = controller;
+				clearTimeout(busy);
+				busy = setTimeout(() => {
+					status.textContent = "Searching…";
+					listbox.setAttribute("aria-busy", "true");
+				}, 300);
+
+				try {
+					const response = await fetch(
+						`/api/search?q=${encodeURIComponent(query)}`,
+						{ signal, headers: { Accept: "application/json" } },
+					);
+					settle();
+
+					if (response.status === 401) {
+						listbox.replaceChildren(
+							option(
+								0,
+								"Sign in",
+								"",
+								`/login?returnTo=${encodeURIComponent(location.pathname)}`,
+							),
+						);
+						input.setAttribute("aria-expanded", "true");
+						activate(options()[0]);
+						status.textContent = "Your session ended. Sign in again.";
+						return;
+					}
+
+					if (response.status === 429) {
+						status.textContent = "Too many searches. Wait a few seconds.";
+						if (!retried) {
+							const seconds = Number(response.headers.get("Retry-After")) || 10;
+							retry = setTimeout(() => {
+								if (dialog.open && input.value.trim() === query) {
+									search(query, true);
+								}
+							}, seconds * 1000);
+						}
+						return;
+					}
+
+					if (!response.ok)
+						throw new Error(`Search answered ${response.status}`);
+
+					const data: SearchResponse = await response.json();
+					// A slower answer to an earlier query must not replace a newer one.
+					if (data.query !== input.value.trim()) return;
+
+					render(data.groups);
+					const shown = data.groups.reduce((sum, g) => sum + g.items.length, 0);
+					const total = data.groups.reduce((sum, g) => sum + g.total, 0);
+					const count = `${shown < total ? `${shown} of ${total}` : shown} ${total === 1 ? "result" : "results"}.`;
+					status.textContent =
+						data.query === ""
+							? idleStatus
+							: shown === 0
+								? `No results for “${data.query}”.`
+								: data.filters.length > 0
+									? `${data.filters.join(" · ")} — ${count}`
+									: count;
+				} catch {
+					if (signal.aborted) return;
+					settle();
+					status.textContent = "Search failed. Keep typing to try again.";
+				}
+			};
+
+			const open = () => {
+				opener =
+					document.activeElement instanceof HTMLElement
+						? document.activeElement
+						: null;
+				dialog.showModal();
+				search("");
+			};
+
+			dialog.addEventListener("close", () => {
+				controller?.abort();
+				clearTimeout(debounce);
+				clearTimeout(retry);
+				settle();
+				input.value = "";
+				listbox.replaceChildren();
+				input.setAttribute("aria-expanded", "false");
+				input.removeAttribute("aria-activedescendant");
+				status.textContent = idleStatus;
+				// Safari does not focus a clicked button, so focus would not return.
+				if (opener?.isConnected) opener.focus();
+			});
+
+			input.addEventListener("input", () => {
+				clearTimeout(debounce);
+				debounce = setTimeout(() => search(input.value.trim()), 150);
+			});
+
+			// Closing first empties the list, so the link is followed by hand.
+			const follow = (link: HTMLAnchorElement) => {
+				const href = link.href;
+				dialog.close();
+				location.assign(href);
+			};
+
+			input.addEventListener("keydown", (event) => {
+				if (event.isComposing) return;
+				const all = options();
+				const current = active();
+				const index = current ? all.indexOf(current) : -1;
+
+				if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+					if (all.length === 0) return;
+					event.preventDefault();
+					const step = event.key === "ArrowDown" ? 1 : -1;
+					activate(all[(index + step + all.length) % all.length]);
+				} else if (event.key === "PageDown" || event.key === "PageUp") {
+					const groups = [...listbox.querySelectorAll("[role=group]")];
+					if (groups.length === 0) return;
+					event.preventDefault();
+					const group = current?.closest("[role=group]");
+					const at = group ? groups.indexOf(group) : -1;
+					const step = event.key === "PageDown" ? 1 : -1;
+					const target = groups[(at + step + groups.length) % groups.length];
+					activate(
+						target?.querySelector<HTMLAnchorElement>("[role=option]") ??
+							undefined,
+					);
+				} else if (event.key === "Enter" && current) {
+					event.preventDefault();
+					if (isMac ? event.metaKey : event.ctrlKey) {
+						window.open(current.href, "_blank", "noopener");
+					} else {
+						follow(current);
+					}
+				}
+			});
+
+			listbox.addEventListener("pointermove", (event) => {
+				const link =
+					event.target instanceof Element
+						? event.target.closest<HTMLAnchorElement>("[role=option]")
+						: null;
+				if (link && link !== active()) activate(link, false);
+			});
+
+			listbox.addEventListener("click", (event) => {
+				const link =
+					event.target instanceof Element
+						? event.target.closest<HTMLAnchorElement>("[role=option]")
+						: null;
+				// A modified click opens a tab or window and keeps the palette open.
+				if (
+					!link ||
+					event.button !== 0 ||
+					event.ctrlKey ||
+					event.metaKey ||
+					event.shiftKey ||
+					event.altKey
+				) {
+					return;
+				}
+				event.preventDefault();
+				follow(link);
+			});
+
+			// A click on the backdrop lands on the dialog, outside its box.
+			dialog.addEventListener("click", (event) => {
+				if (event.target !== dialog) return;
+				const box = dialog.getBoundingClientRect();
+				if (
+					event.clientX < box.left ||
+					event.clientX > box.right ||
+					event.clientY < box.top ||
+					event.clientY > box.bottom
+				) {
+					dialog.close();
+				}
+			});
+
+			document.addEventListener("click", (event) => {
+				if (!(event.target instanceof Element)) return;
+				if (event.target.closest("[data-command-palette-open]")) {
+					open();
+				} else if (event.target.closest("[data-command-palette-close]")) {
+					dialog.close();
+				}
+			});
+
+			document.addEventListener("keydown", (event) => {
+				if (
+					event.isComposing ||
+					event.altKey ||
+					event.shiftKey ||
+					event.key.toLowerCase() !== "k" ||
+					!(isMac ? event.metaKey : event.ctrlKey)
+				) {
+					return;
+				}
+				// Another open dialog, such as a confirmation, keeps the keyboard.
+				if (!dialog.open && document.querySelector("dialog[open]")) return;
+				event.preventDefault();
+				if (dialog.open) {
+					dialog.close();
+				} else {
+					open();
+				}
+			});
+		}
+	}
+
+	if (!customElements.get("command-palette")) {
+		customElements.define("command-palette", CommandPalette);
+	}
+</script>

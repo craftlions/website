@@ -44,7 +44,19 @@ const session =
 				)}
 			</ul>
 		</li>
-		{/* A future Search (Ctrl+K) trigger sits here, between work and account. */}
+		{/* Only where Shell mounts the palette: a deferred island's request is not gated, so it has no session local. */}
+		{Astro.locals.session && (
+			<li>
+				<Button
+					aria-haspopup="dialog"
+					aria-controls="command-palette"
+					aria-keyshortcuts="Control+K Meta+K"
+					data-command-palette-open
+				>
+					Search
+				</Button>
+			</li>
+		)}
 		<li>
 			<ul class="grid grid-flow-col auto-cols-max items-center gap-3">
 				<li>
