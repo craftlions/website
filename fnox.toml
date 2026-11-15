@@ -1,0 +1,4 @@
+# Secrets for mise tasks, encrypted with age. See docs/notes/secrets.md.
+root = true
+env = "exec"
+if_missing = "error"
