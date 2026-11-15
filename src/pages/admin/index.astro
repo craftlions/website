@@ -137,7 +137,10 @@ const openInvoices = ledger.flatMap((client) => client.openInvoices);
 <AdminShell
 	title="Client workbench"
 	results={[
-		[onboardResult, "Client onboarded. It is listed in the client ledger."],
+		successMessage(onboardResult, (client) => ({
+			text: `${client.name} onboarded.`,
+			link: { label: "Open client", href: `/admin/org/${client.id}` },
+		})),
 		successMessage(
 			Astro.getActionResult(actions.transitionPhase),
 			(phase) => phaseTransitionMessage[phase.state],

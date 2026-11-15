@@ -1169,6 +1169,17 @@ export const addOrganizationMember = async (
 			body: { email, redirectTo: "/reset-password" },
 		});
 	}
+
+	// "invited": a new account was created and sent a password email;
+	// "added": an existing account became a member; "unchanged": it already was.
+	return {
+		email,
+		outcome: createdUser
+			? ("invited" as const)
+			: existingMember
+				? ("unchanged" as const)
+				: ("added" as const),
+	};
 };
 
 export const removeOrganizationMember = async (

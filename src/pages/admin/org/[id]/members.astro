@@ -7,6 +7,7 @@ import Button from "../../../../components/Button.astro";
 import ConfirmAction from "../../../../components/ConfirmAction.astro";
 import Field from "../../../../components/Field.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
+import { successMessage } from "../../../../lib/action-feedback.ts";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import { formatDate } from "../../../../lib/format.ts";
 
@@ -60,15 +61,23 @@ const otherClients = (count: number) =>
 	{organization}
 	activePage="members"
 	results={[
-		[addResult, "Member added"],
+		successMessage(
+			addResult,
+			(member) =>
+				({
+					invited: `${member.email} invited: the new account got an email to set a password.`,
+					added: `${member.email} added to ${organization.name}.`,
+					unchanged: `${member.email} is already a member of ${organization.name}. Nothing changed.`,
+				})[member.outcome],
+		),
 		[
 			Astro.getActionResult(actions.removeOrganizationMember),
 			`Member removed from ${organization.name}. Their account still exists.`,
 		],
-		[
+		successMessage(
 			Astro.getActionResult(actions.resendWelcomeMail),
-			"Password reset email sent",
-		],
+			(mail) => `Password reset sent to ${mail.email}`,
+		),
 		[Astro.getActionResult(actions.removeNeverLoggedInUser), "Account deleted"],
 	]}
 	fieldLabels={{ email: "Email", name: "Name", role: "Role" }}

@@ -198,13 +198,18 @@ export const server = {
 			yearlyBudget: optionalBudget,
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
-			await onboardOrganization(
+			const organization = await onboardOrganization(
 				context.locals.db,
 				context.locals.auth,
 				actorId,
 				input,
 			);
-			return { success: true };
+			// A repeated onboarding returns the existing client by id only.
+			return {
+				id: organization.id,
+				name:
+					"name" in organization ? organization.name : input.organizationName,
+			};
 		}),
 	}),
 	createProject: defineAction({
@@ -342,15 +347,14 @@ export const server = {
 			name: z.string().trim().min(1).max(120),
 			role: z.enum(["owner", "member"]).default("member"),
 		}),
-		handler: adminHandler(async (input, context, actorId) => {
-			await addOrganizationMember(
+		handler: adminHandler((input, context, actorId) =>
+			addOrganizationMember(
 				context.locals.db,
 				context.locals.auth,
 				actorId,
 				input,
-			);
-			return { success: true };
-		}),
+			),
+		),
 	}),
 	removeOrganizationMember: defineAction({
 		accept: "form",
@@ -375,7 +379,7 @@ export const server = {
 			await context.locals.auth.api.requestPasswordReset({
 				body: { email: input.email, redirectTo: "/reset-password" },
 			});
-			return { success: true };
+			return { email: input.email };
 		}),
 	}),
 	removeNeverLoggedInUser: defineAction({
