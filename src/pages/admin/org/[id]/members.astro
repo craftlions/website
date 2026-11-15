@@ -187,7 +187,7 @@ const otherClients = (count: number) =>
 							<div class="grid content-start justify-items-start gap-2">
 								{member.user.lastActiveAt && (
 									<impersonate-user
-										class="grid max-w-full justify-items-start gap-1"
+										class="grid max-w-full justify-items-start"
 										data-user-id={member.userId}
 										data-organization-slug={organization.slug}
 									>
@@ -201,8 +201,7 @@ const otherClients = (count: number) =>
 										<p
 											id={`impersonate-error-${member.id}`}
 											role="alert"
-											class="text-sm text-fg-danger"
-											hidden
+											class="text-sm text-fg-danger not-empty:mt-1"
 										/>
 									</impersonate-user>
 								)}
@@ -283,7 +282,6 @@ const otherClients = (count: number) =>
 
 			button.addEventListener("click", async () => {
 				button.disabled = true;
-				message.hidden = true;
 				message.textContent = "";
 
 				try {
@@ -300,7 +298,6 @@ const otherClients = (count: number) =>
 					button.disabled = false;
 					message.textContent =
 						"Could not open the client dashboard as this member. Try again.";
-					message.hidden = false;
 					button.focus();
 				}
 			});
