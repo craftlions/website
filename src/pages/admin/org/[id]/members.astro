@@ -10,6 +10,7 @@ import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { successMessage } from "../../../../lib/action-feedback.ts";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import { formatDate } from "../../../../lib/format.ts";
+import { memberRole } from "../../../../lib/status.ts";
 
 const { id } = Astro.params;
 
@@ -165,12 +166,8 @@ const otherClients = (count: number) =>
 									{member.user.email}
 								</p>
 							</div>
-							<Badge type="gray">
-								{member.role === "owner"
-									? "Owner"
-									: member.role === "admin"
-										? "Admin"
-										: "Member"}
+							<Badge type={memberRole(member.role).badge}>
+								{memberRole(member.role).label}
 							</Badge>
 							{member.user.lastActiveAt ? (
 								<p class="text-sm">
