@@ -334,10 +334,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 						{ledger.length > 0 ? (
 							ledger.map((client) => (
 								<tr data-client-name={client.name.toLocaleLowerCase("en")}>
-									<th
-										scope="row"
-										class="px-4 py-3 text-left font-medium wrap-break-word"
-									>
+									<th scope="row" class="px-4 py-3 text-left wrap-break-word">
 										<a
 											href={`/admin/org/${client.id}`}
 											class:list={[
@@ -433,14 +430,14 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 								<th scope="row" class="px-4 py-3 text-left label-caps">
 									All clients
 								</th>
-								<td class="px-4 py-3 text-right font-semibold tabular-nums">
+								<td class="px-4 py-3 text-right tabular-nums">
 									{worklist.filter((item) => item.actor === "admin").length}
 								</td>
-								<td class="px-4 py-3 text-right font-semibold tabular-nums">
+								<td class="px-4 py-3 text-right tabular-nums">
 									{worklist.filter((item) => item.actor === "client").length}
 								</td>
 								<td class="px-4 py-3" colspan="2"></td>
-								<td class="px-4 py-3 text-right font-semibold tabular-nums">
+								<td class="px-4 py-3 text-right tabular-nums">
 									{sumByCurrency(openInvoices)}
 								</td>
 							</tr>

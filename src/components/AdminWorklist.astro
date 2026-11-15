@@ -127,9 +127,9 @@ const groups = [
 								<li class="grid min-w-0 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid lg:items-center">
 									<Badge type={item.badge}>{item.label}</Badge>
 									<div class="grid min-w-0 gap-1">
-										<h4 class="grid gap-1 font-medium wrap-break-word">
+										<h4 class="grid gap-1 wrap-break-word">
 											{item.organization && (
-												<span class="text-sm font-normal text-fg-muted">
+												<span class="text-sm text-fg-muted">
 													{item.organization.name}
 												</span>
 											)}
@@ -159,8 +159,8 @@ const groups = [
 											)
 										)}
 									</div>
-									<p class="font-medium tabular-nums lg:text-right">
-										<span class="text-sm font-normal text-fg-muted lg:sr-only">
+									<p class="tabular-nums lg:text-right">
+										<span class="text-sm text-fg-muted lg:sr-only">
 											Amount{" "}
 										</span>
 										{item.invoice

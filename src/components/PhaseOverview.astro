@@ -183,7 +183,6 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							<div class="grid gap-1">
 								<h3
 									class:list={[
-										"font-medium",
 										phase.state === "cancelled" && "text-fg-muted line-through",
 									]}
 								>
@@ -200,9 +199,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							</Badge>
 							<div class="grid w-full gap-1.5 md:w-44 md:justify-items-end">
 								<p class="text-sm tabular-nums md:text-right">
-									<span class="font-medium">
-										{formatMoney(phase.cost, phase.currency)}
-									</span>
+									{formatMoney(phase.cost, phase.currency)}
 								</p>
 								{phase.parts.length > 0 && (
 									<ol
@@ -235,9 +232,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 								<p
 									class:list={[
 										"text-xs md:text-right",
-										phase.overdueCount > 0
-											? "font-medium text-fg-danger"
-											: "text-fg-muted",
+										phase.overdueCount > 0 ? "text-fg-danger" : "text-fg-muted",
 									]}
 								>
 									{phase.overdueCount > 0
@@ -344,9 +339,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 											{phase.parts.map((part) => (
 												<li class="grid gap-y-2 border-b border-dashed border-line p-3 text-sm last:border-b-0 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
 													<div class="grid gap-0.5">
-														<p class="font-medium capitalize">
-															{part.component}
-														</p>
+														<p class="capitalize">{part.component}</p>
 														<p class="text-xs text-fg-muted">
 															{billedOn[part.component]}
 														</p>

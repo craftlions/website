@@ -70,6 +70,12 @@ typography:
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "0"
+  body-small:
+    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.429
+    letterSpacing: "0"
   label:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.875rem"
@@ -109,7 +115,7 @@ components:
     textColor: "{colors.ink-neutral}"
     rounded: "{rounded.none}"
     padding: "8px 12px"
-    typography: "{typography.label}"
+    typography: "{typography.body-small}"
   badge-info:
     backgroundColor: "transparent"
     textColor: "{colors.status-info}"
@@ -223,7 +229,7 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 **Body Font:** system sans (`ui-sans-serif, system-ui, sans-serif`)
 **Label/Mono Font:** no distinct label or mono font; numeric data uses tabular numerals where needed.
 
-**Character:** The typography is utilitarian and exact. It uses a single system sans family, moderate weights, and small size steps so headings and tables stay readable without turning the client portal into a brand showpiece.
+**Character:** The typography is utilitarian and exact. It uses a single system sans family, two weights, and small size steps so headings and tables stay readable without turning the client portal into a brand showpiece.
 
 ### Hierarchy
 
@@ -231,6 +237,7 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 - **Headline** (`text-headline`; 600, 1.5rem, 1.333): major public-page section headings.
 - **Title** (`text-title`; 600, 1.25rem, 1.4): article titles, card headings, and compact section titles.
 - **Body** (400, 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.
+- **Small body** (`text-sm`; 400, 0.875rem): table cells, inputs, metadata, and helper text.
 - **Label** (`text-label` at 0.875rem, or `label-caps` for 0.75rem uppercase table and metric labels; 600): section labels, table headers, form labels, and buttons.
 - **Caption** (`text-caption`; 600, 0.75rem, 1.333): badges and other single-word state marks.
 
@@ -239,6 +246,8 @@ Each role carries its size, weight, and line height together, so do not add `fon
 ### Named Rules
 
 **The One-Family Rule.** Product UI stays in one system sans family. Do not introduce display fonts for labels, buttons, tables, or data.
+
+**The Two Weights Rule.** Text is 400 or 600; there is no 500. 600 comes only from a role class (`text-display`, `text-headline`, `text-title`, `text-label`, `text-caption`, `label-caps`). Row names, item headings in dense lists, amounts, and totals are body text at 400; they stand out by `text-fg` against muted text and by size, not by weight. Table header cells take their weight from `label-caps`; row header cells are body text, because the base layer resets the browser's bold `th`. A muted note next to a label sits outside the role: wrap the label text in `text-label` instead of overriding the weight of a child.
 
 **The Exact Numbers Rule.** Amounts, percentages, and invoice data use tabular numerals when they need comparison.
 
@@ -349,7 +358,7 @@ Tables are the main product surface for project, phase, invoice, and budget data
 - **Structure:** full-width tables with dashed outer borders and dashed row dividers.
 - **Density:** compact but readable cells (12-16px vertical rhythm).
 - **Headers:** semibold uppercase labels using the `label-caps` class.
-- **Rows:** hover fills are neutral and subtle; status is shown through badges.
+- **Rows:** hover fills are neutral and subtle; status is shown through badges. Row headers and amounts are body text in `text-fg` (see The Two Weights Rule).
 - **Overflow:** horizontal overflow is acceptable for dense data; do not crush columns until labels become ambiguous.
 
 ### Progress

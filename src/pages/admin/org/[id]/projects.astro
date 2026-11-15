@@ -214,7 +214,7 @@ const isCreateOpen =
 									archived ? "text-fg-muted" : "text-fg",
 								]}
 							>
-								<h3 class="min-w-0 font-medium wrap-break-word sm:col-span-2 lg:col-span-1">
+								<h3 class="min-w-0 wrap-break-word sm:col-span-2 lg:col-span-1">
 									<a
 										href={`/admin/org/${organization.id}/projects/${project.publicId}`}
 										class="link hover:text-fg"
@@ -231,7 +231,7 @@ const isCreateOpen =
 								/>
 								<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm sm:col-span-1">
 									<dt class="label-caps">Total</dt>
-									<dd class="text-right font-medium tabular-nums wrap-break-word">
+									<dd class="text-right tabular-nums wrap-break-word">
 										{project.total ?? "—"}
 									</dd>
 									<dt class="label-caps">Invoiced</dt>

@@ -69,6 +69,12 @@
 }
 
 @layer base {
+	/* Like headings after preflight, table cells take their weight from a role,
+	   not from the browser's bold th. */
+	th {
+		font-weight: inherit;
+	}
+
 	:focus-visible {
 		outline: 2px solid var(--focus);
 		outline-offset: 2px;

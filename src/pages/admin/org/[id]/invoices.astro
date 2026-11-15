@@ -312,7 +312,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 		{!organizationData?.stripeCustomerId && (
 			<div class="grid gap-3 border border-dashed border-line p-4 text-sm">
 				<p>
-					<span class="font-medium">No Stripe customer linked.</span>{" "}
+					No Stripe customer linked.{" "}
 					<span class="text-fg-muted">
 						Add the client's Stripe customer ID in settings to open the client
 						in Stripe from here.
@@ -329,7 +329,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 					<li class="grid gap-x-6 gap-y-2 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
 						<div class="grid min-w-0 gap-1">
 							<a
-								class="w-fit max-w-full font-medium link wrap-break-word"
+								class="w-fit max-w-full link wrap-break-word"
 								href={phaseHref(part.project, part.phase)}
 							>
 								{part.project.name} · {part.phase.title}
@@ -339,7 +339,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 								{phaseStatus[part.phase.state].label}
 							</p>
 						</div>
-						<p class="font-medium tabular-nums sm:text-right">
+						<p class="tabular-nums sm:text-right">
 							{formatMoney(part.amount, part.phase.currency)}
 						</p>
 						{organizationData?.stripeCustomerId && (
@@ -485,7 +485,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 								</form>
 							) : (
 								<p class="min-w-0 text-sm text-fg-muted wrap-break-word">
-									<span class="font-medium text-fg">Cannot attach yet.</span>{" "}
+									<span class="text-fg">Cannot attach yet.</span>{" "}
 									{attachBlocker(invoice)}
 								</p>
 							)}
@@ -590,10 +590,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 									<div class="grid min-w-0 content-start gap-1">
 										<dt class="label-caps">Phase</dt>
 										<dd class="wrap-break-word">
-											<a
-												class="font-medium link"
-												href={phaseHref(row.project, row.phase)}
-											>
+											<a class="link" href={phaseHref(row.project, row.phase)}>
 												{row.project.name} · {row.phase.title}
 											</a>
 										</dd>

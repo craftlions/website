@@ -368,7 +368,7 @@ const phases = project.phases
 							<div class="grid min-w-0 gap-1">
 								<h4
 									class:list={[
-										"font-medium wrap-break-word",
+										"wrap-break-word",
 										phase.settled ? "text-fg-muted" : undefined,
 										phase.state === "cancelled" && "line-through",
 									]}
@@ -415,7 +415,7 @@ const phases = project.phases
 							<div class="grid min-w-0 gap-1 lg:w-48 lg:justify-items-end lg:text-right">
 								<p
 									class:list={[
-										"font-medium tabular-nums wrap-break-word",
+										"tabular-nums wrap-break-word",
 										phase.settled ? "text-fg-muted" : undefined,
 									]}
 								>

@@ -42,7 +42,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 					aria-label="Impersonation"
 					class="sticky top-0 z-50 grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-dashed border-line-strong bg-panel p-3"
 				>
-					<p class="text-sm font-medium wrap-break-word">
+					<p class="text-label wrap-break-word">
 						Viewing as {session.user.name}
 					</p>
 					<stop-impersonating class="contents">
