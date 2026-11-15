@@ -357,6 +357,7 @@ Inputs follow the same line vocabulary as buttons.
 - **Placeholder / Disabled:** placeholder text is muted but must remain readable against the active surface.
 - **Read-only:** `Input` draws a `readonly` input's value in `text-fg-muted` inside the same dashed box, like a calculated output, so it reads as shown rather than editable; it stays focusable and its value selectable. Its hint says why it is locked.
 - **Error:** error text uses status red and should be placed near the field it explains.
+- **Show password:** `src/components/PasswordToggle.astro` is a quiet Button below a password field that switches the inputs named in `controls` between hidden and plain text, on sign-in and on both reset fields together ("Show passwords"). Its label stays the same and `aria-pressed` carries the state, so it reads "Show password, pressed" rather than a label and a state that contradict each other; pressed, the quiet text turns primary with a solid underline. Submitting hides the text again.
 - **Checkbox:** `src/components/Checkbox.astro` wraps a 1rem square with a dashed `line-control` outline and its `text-label` text in one label. Checked, the square fills with ink and shows a tick cut from `bg-canvas` with a mask, so the tick follows the scheme without a `dark:` variant or a fixed white or black.
 
 ### Action Feedback
