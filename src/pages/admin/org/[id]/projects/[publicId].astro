@@ -272,7 +272,7 @@ const phases = project.phases
 				id="add-phase"
 				method="POST"
 				action={actions.createPhase}
-				class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[repeat(3,minmax(0,1fr))]"
+				class="grid grid-cols-1 gap-4 border border-dashed border-line p-4 md:grid-cols-3"
 				aria-label="Add phase"
 				hidden={!isAddPhaseOpen}
 			>
@@ -284,7 +284,7 @@ const phases = project.phases
 					maxlength="180"
 					hint="Shown to the client in their project view."
 					result={createResult}
-					class="grid-cols-[minmax(0,1fr)] md:col-span-full"
+					class="grid-cols-1 md:col-span-full"
 				/>
 				<Field
 					as="select"
@@ -293,7 +293,7 @@ const phases = project.phases
 					required
 					hint="Every invoice of the phase bills in this currency."
 					result={createResult}
-					class="grid-cols-[minmax(0,1fr)]"
+					class="grid-cols-1"
 				>
 					{[
 						...new Set([
@@ -318,7 +318,7 @@ const phases = project.phases
 					required
 					hint="Total for the phase in the currency chosen, e.g. 4800.50."
 					result={createResult}
-					class="grid-cols-[minmax(0,1fr)]"
+					class="grid-cols-1"
 				/>
 				<Field
 					label="Due date"
@@ -326,7 +326,7 @@ const phases = project.phases
 					type="date"
 					hint="Optional target date shown to the client."
 					result={createResult}
-					class="grid-cols-[minmax(0,1fr)]"
+					class="grid-cols-1"
 				/>
 				<PhaseAmountCalculator
 					cost={Number(createInput?.get("cost")) || 0}

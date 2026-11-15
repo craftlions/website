@@ -40,7 +40,7 @@ const submitLabel = mode === "record" ? recordDeliveryLabel : "Update delivery";
 			? actions.recordDelivery
 			: actions.updatePhaseDelivery}
 		class:list={[
-			"grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line p-4 md:grid-cols-[auto_minmax(0,1fr)]",
+			"grid grid-cols-1 gap-4 border border-dashed border-line p-4 md:grid-cols-[auto_minmax(0,1fr)]",
 			className,
 		]}
 		{...attrs}

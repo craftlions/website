@@ -35,7 +35,7 @@ const slug = `${datetime}-${title
 	.replace(/^-|-$/g, "")}`;
 ---
 
-<li class="grid grid-cols-[1rem_1fr] gap-x-4">
+<li class="grid grid-cols-[1rem_minmax(0,1fr)] gap-x-4">
 	<div class="relative grid justify-items-center" aria-hidden="true">
 		{!last && (
 			<span
@@ -57,7 +57,7 @@ const slug = `${datetime}-${title
 		]}
 	>
 		<header class="grid gap-2">
-			<div class="grid grid-cols-[1fr_auto] items-center gap-2">
+			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
 				<a href={`#${slug}`} class="w-max link text-fg-muted hover:text-fg">
 					<time datetime={datetime} class="text-label">
 						{date}
@@ -71,7 +71,7 @@ const slug = `${datetime}-${title
 		{points.length > 0 && (
 			<ul class="grid gap-2 text-sm text-fg-muted">
 				{points.map((point) => (
-					<li class="grid grid-cols-[auto_1fr] items-start gap-2">
+					<li class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-2">
 						<span class="mt-2 h-1 w-1 bg-line-strong" aria-hidden="true"></span>
 						<span>{point}</span>
 					</li>
