@@ -20,7 +20,7 @@ The differentiator is the engineering and advisory work itself: careful, durable
 
 ## Operating Context
 
-- Alexander operates the admin side solo: creating organizations, projects, phases, and invoices, moving work through phase and project transitions, and using read-only view-as impersonation to verify what a client sees.
+- Alexander operates the admin side solo: creating organizations, projects, phases, and invoices, moving work through phase and project transitions, and using view-as impersonation to verify what a client sees; while viewing as a client user, the admin acts as that user, not read-only.
 - Clients are organization members. Today the portal is read-only for them apart from account settings (profile, API keys): they check project state, phases, budget use, and invoice history between meetings and validate cost details.
 - Stripe is the source of truth for invoices; the Stripe Data Pipeline writes them to the `stripe` schema and the app reads them live.
 - Client self-service write access is planned: an API over projects, phases, and invoices, plus CSV export. Future work should not assume the client portal stays read-only forever.
