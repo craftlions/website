@@ -42,11 +42,19 @@ const session = Astro.locals.session;
 			{session?.session.impersonatedBy && (
 				<aside
 					aria-label="Impersonation"
-					class="sticky top-0 z-50 grid w-full grid-cols-[1fr_auto] items-center gap-3 border-b border-dashed border-line-strong bg-panel p-3"
+					class="sticky top-0 z-50 grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-dashed border-line-strong bg-panel p-3"
 				>
-					<p class="text-sm font-medium">Viewing as {session.user.name}</p>
-					<stop-impersonating>
-						<Button type="button">Stop</Button>
+					<p class="text-sm font-medium wrap-break-word">
+						Viewing as {session.user.name}
+					</p>
+					<stop-impersonating class="contents">
+						<Button aria-describedby="stop-impersonating-error">Stop</Button>
+						<p
+							id="stop-impersonating-error"
+							role="alert"
+							class="col-span-2 text-sm text-fg-danger"
+							hidden
+						/>
 					</stop-impersonating>
 				</aside>
 			)}
@@ -62,26 +70,35 @@ const session = Astro.locals.session;
 
 	class StopImpersonating extends HTMLElement {
 		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
 			const button = this.querySelector("button");
+			const message = this.querySelector<HTMLElement>("[role=alert]");
 
-			if (button && button instanceof HTMLButtonElement) {
-				button.addEventListener("click", async () => {
-					button.disabled = true;
+			if (!button || !message) return;
 
-					try {
-						const { error } = await authClient.admin.stopImpersonating();
+			button.addEventListener("click", async () => {
+				button.disabled = true;
+				message.hidden = true;
+				message.textContent = "";
 
-						if (error) {
-							throw error;
-						}
+				try {
+					const { error } = await authClient.admin.stopImpersonating();
 
-						window.location.replace("/admin");
-					} catch {
-						button.disabled = false;
-						alert("Unable to stop impersonating. Please try again.");
+					if (error) {
+						throw error;
 					}
-				});
-			}
+
+					window.location.replace("/admin");
+				} catch {
+					button.disabled = false;
+					message.textContent =
+						"Could not return to the admin view. Try again.";
+					message.hidden = false;
+					button.focus();
+				}
+			});
 		}
 	}
 
