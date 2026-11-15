@@ -1,0 +1,72 @@
+---
+import type { ComponentProps } from "astro/types";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+import Footer from "../components/Footer.astro";
+import Nav from "../components/Nav.astro";
+import Shell from "./Shell.astro";
+
+interface Props {
+	title: string;
+	breadcrumbs?: ComponentProps<typeof Breadcrumbs>["items"];
+	success?: string | undefined;
+}
+
+const { title, breadcrumbs = [], success } = Astro.props;
+---
+
+<Shell
+	bodyClass="min-h-dvh grid gap-6 bg-canvas p-4 text-pretty text-fg antialiased"
+>
+	<Fragment slot="head"> <title>{title} · craftlions</title> </Fragment>
+	<Fragment slot="body">
+		<header class="mx-auto grid w-full max-w-6xl gap-6"> <Nav /> </header>
+		<main
+			class="mx-auto grid min-h-0 w-full max-w-6xl content-start gap-6 pl-3"
+		>
+			{breadcrumbs.length > 1 && <Breadcrumbs items={breadcrumbs} />}
+			<slot name="header" />
+			{success && (
+				<p
+					data-success-toast
+					role="status"
+					class="border border-dashed border-line p-3 text-sm text-fg-muted"
+				>
+					{success}
+				</p>
+			)}
+			<slot />
+		</main>
+		<Footer wide />
+	</Fragment>
+</Shell>
+
+<script>
+	const successToast = document.querySelector<HTMLElement>(
+		"[data-success-toast]",
+	);
+
+	if (successToast) {
+		window.setTimeout(() => successToast.remove(), 5000);
+	}
+
+	document.addEventListener("submit", (event) => {
+		if (
+			event.defaultPrevented ||
+			!(event.target instanceof HTMLFormElement) ||
+			!event.target.checkValidity()
+		) {
+			return;
+		}
+
+		// Disabling waits a task, because the form leaves a disabled submitter's
+		// name and value out of the data it sends.
+		const { elements } = event.target;
+		window.setTimeout(() => {
+			for (const element of elements) {
+				if (element instanceof HTMLButtonElement && element.type === "submit") {
+					element.disabled = true;
+				}
+			}
+		});
+	});
+</script>

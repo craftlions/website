@@ -1,8 +1,7 @@
 ---
+import type { ComponentProps } from "astro/types";
 import Button from "../components/Button.astro";
-import Footer from "../components/Footer.astro";
-import Nav from "../components/Nav.astro";
-import Shell from "./Shell.astro";
+import AdminShell from "./AdminShell.astro";
 
 interface Props {
 	organization: {
@@ -16,10 +15,18 @@ interface Props {
 		| "invoices"
 		| "members"
 		| "settings";
+	breadcrumbs?: ComponentProps<typeof AdminShell>["breadcrumbs"];
+	title?: string | undefined;
 	showSuccess?: boolean;
 }
 
-const { organization, activePage, showSuccess = false } = Astro.props;
+const {
+	organization,
+	activePage,
+	breadcrumbs = [],
+	title,
+	showSuccess = false,
+} = Astro.props;
 const pages = [
 	{
 		id: "overview",
@@ -52,84 +59,47 @@ const pages = [
 		href: `/admin/org/${organization.id}/settings`,
 	},
 ] as const;
+const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 ---
 
-<Shell
-	bodyClass="min-h-dvh grid gap-6 bg-canvas p-4 text-pretty text-fg antialiased"
+<AdminShell
+	title={`${title ?? breadcrumbs.at(-1)?.label ?? activeTab.label} · ${organization.name}`}
+	breadcrumbs={[
+		{ label: "Admin", href: "/admin" },
+		{ label: organization.name, href: pages[0].href },
+		...(activePage === "overview" ? [] : [activeTab]),
+		...breadcrumbs,
+	]}
+	success={showSuccess ? "Saved." : undefined}
 >
-	<Fragment slot="head">
-		<title>craftlions | {organization.name}</title>
-	</Fragment>
-	<Fragment slot="body">
-		<header class="grid w-full max-w-5xl gap-6 mx-auto">
-			<Nav />
-		</header>
-		<main class="grid w-full max-w-5xl content-start gap-6 mx-auto">
-			<header class="grid gap-4 border-b border-dashed border-line pb-6">
-				<Button href="/admin">Back to admin</Button>
-				<div class="grid gap-1">
-					<p class="text-label uppercase text-fg-muted">Client</p>
-					<h1
-						class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
-						>{organization.name}</h1
-					>
-				</div>
-				<nav
-					class="grid grid-flow-col justify-start gap-2 overflow-x-auto"
-					aria-label="Client sections"
-				>
-					{pages.map((page) => (
-						<a
-							class:list={[
-								"border border-dashed px-3 py-1 text-sm font-medium",
-								activePage === page.id
-									? "border-ink text-fg"
-									: "border-line text-fg-muted",
-							]}
+	<header
+		slot="header"
+		class="grid gap-4 border-b border-dashed border-line pb-6"
+	>
+		<div class="grid gap-1">
+			<p class="text-label uppercase text-fg-muted">Client</p>
+			<h1
+				class="border-l border-dashed border-line-strong pl-3 text-display wrap-break-word"
+			>
+				{organization.name}
+			</h1>
+		</div>
+		<nav aria-label="Client sections">
+			<ul
+				class="-m-1 grid grid-flow-col auto-cols-max gap-2 overflow-x-auto p-1"
+			>
+				{pages.map((page) => (
+					<li>
+						<Button
 							href={page.href}
 							aria-current={activePage === page.id ? "page" : undefined}
 						>
 							{page.label}
-						</a>
-					))}
-				</nav>
-			</header>
-			{showSuccess && (
-				<p
-					data-success-toast
-					role="status"
-					class="border border-dashed border-line p-3 text-sm text-fg-muted"
-				>
-					Saved.
-				</p>
-			)}
-			<slot />
-		</main>
-		<Footer />
-	</Fragment>
-</Shell>
-
-<script>
-	const successToast = document.querySelector<HTMLElement>(
-		"[data-success-toast]",
-	);
-
-	if (successToast) {
-		window.setTimeout(() => successToast.remove(), 5000);
-	}
-
-	document.addEventListener("submit", (event) => {
-		if (
-			!(event.target instanceof HTMLFormElement) ||
-			!event.target.checkValidity()
-		) {
-			return;
-		}
-
-		for (const button of event.target.querySelectorAll<HTMLButtonElement>(
-			'button[type="submit"]',
-		)) {
-			button.disabled = true;
-		}
-	});
-</script>
+						</Button>
+					</li>
+				))}
+			</ul>
+		</nav>
+	</header>
+	<slot />
+</AdminShell>

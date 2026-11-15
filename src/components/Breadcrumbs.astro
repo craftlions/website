@@ -1,0 +1,36 @@
+---
+interface Props {
+	items: { label: string; href?: string | undefined }[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav aria-label="Breadcrumb">
+	<ol class="text-sm text-fg-muted wrap-break-word">
+		{items.map((item, index) => (
+			<li class="inline">
+				{index > 0 && (
+					<span aria-hidden="true" class="px-2">
+						/
+					</span>
+				)}
+				{index === items.length - 1 || !item.href ? (
+					<span
+						aria-current={index === items.length - 1 ? "page" : undefined}
+						class:list={[index === items.length - 1 && "text-fg"]}
+					>
+						{item.label}
+					</span>
+				) : (
+					<a
+						href={item.href}
+						class="underline decoration-dashed underline-offset-4 hover:text-fg"
+					>
+						{item.label}
+					</a>
+				)}
+			</li>
+		))}
+	</ol>
+</nav>
