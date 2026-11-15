@@ -13,14 +13,7 @@ if (!id) {
 	return Astro.redirect("/admin");
 }
 
-const actionResults = [
-	Astro.getActionResult(actions.addOrganizationMember),
-	Astro.getActionResult(actions.removeOrganizationMember),
-	Astro.getActionResult(actions.resendWelcomeMail),
-	Astro.getActionResult(actions.removeNeverLoggedInUser),
-];
-const actionError = actionResults.find((result) => result?.error)?.error;
-const actionSucceeded = actionResults.some((result) => result && !result.error);
+const addResult = Astro.getActionResult(actions.addOrganizationMember);
 
 const [organization, members] = await Promise.all([
 	getAdminOrganizationCore(Astro.locals.db, id),
@@ -57,13 +50,20 @@ if (!organization) {
 <AdminOrgShell
 	{organization}
 	activePage="members"
-	showSuccess={actionSucceeded}
+	results={[
+		[addResult, "Member added"],
+		[
+			Astro.getActionResult(actions.removeOrganizationMember),
+			`Member removed from ${organization.name}. Their account still exists.`,
+		],
+		[
+			Astro.getActionResult(actions.resendWelcomeMail),
+			"Password reset email sent",
+		],
+		[Astro.getActionResult(actions.removeNeverLoggedInUser), "Account deleted"],
+	]}
+	fieldLabels={{ email: "Email", name: "Name", role: "Role" }}
 >
-	{actionError && (
-		<p class="border border-dashed border-line-danger p-3 text-sm text-fg-danger">
-			{actionError.message}
-		</p>
-	)}
 	<section class="grid gap-6" aria-labelledby="members-heading">
 		<div class="grid gap-3">
 			<h2 id="members-heading" class="text-label uppercase text-fg-muted"
