@@ -16,7 +16,10 @@ const inputClass = [
 ];
 
 // A select has no value attribute: a given `value` (one or, for `multiple`,
-// several) selects the matching options of the slot instead.
+// several) selects the slot's options whose `value` attribute matches instead.
+// Give every option an explicit `value`: an option without one submits its
+// text, which is never matched, so after a failed submit (Field restores the
+// value) the select falls back to the page's default.
 const options =
 	as === "select" && value != null
 		? selectOptions(
