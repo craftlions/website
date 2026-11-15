@@ -1,0 +1,63 @@
+---
+import type { ComponentProps } from "astro/types";
+import { isInputError, type SafeResult } from "astro:actions";
+import Input from "./Input.astro";
+
+interface Props extends Omit<ComponentProps<typeof Input>, "class"> {
+	label: string;
+	hint?: string | undefined;
+	error?: string | string[] | undefined;
+	result?: SafeResult<Record<string, unknown>, unknown> | undefined;
+	class?: string | undefined;
+}
+
+const {
+	label,
+	hint,
+	error,
+	result,
+	class: className,
+	id = `field-${crypto.randomUUID()}`,
+	danger,
+	...attrs
+} = Astro.props;
+
+// An explicit error wins; otherwise the action's input error for this field's name.
+const errors = [
+	error ??
+		(isInputError(result?.error) && attrs.name
+			? result.error.fields[attrs.name]
+			: undefined),
+]
+	.flat()
+	.filter(Boolean);
+---
+
+<div class:list={["grid content-start gap-1.5", className]}>
+	<label for={id} class="text-label text-fg-muted">{label}</label>
+	<Input
+		{...attrs}
+		{id}
+		danger={danger || errors.length > 0}
+		aria-invalid={errors.length > 0 ? "true" : undefined}
+		aria-describedby={[
+			attrs["aria-describedby"],
+			hint && `${id}-hint`,
+			errors.length > 0 && `${id}-error`,
+		]
+			.filter(Boolean)
+			.join(" ") || undefined}
+	>
+		<slot />
+	</Input>
+	{hint && (
+		<p id={`${id}-hint`} class="text-sm text-fg-muted">
+			{hint}
+		</p>
+	)}
+	{errors.length > 0 && (
+		<p id={`${id}-error`} class="text-sm text-fg-danger">
+			{errors.join(" ")}
+		</p>
+	)}
+</div>

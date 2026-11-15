@@ -1,7 +1,7 @@
 ---
 import Badge from "../components/Badge.astro";
 import Button from "../components/Button.astro";
-import Input from "../components/Input.astro";
+import Field from "../components/Field.astro";
 import Shell from "../layouts/Shell.astro";
 import tokensCss from "../styles/tokens.css?raw";
 
@@ -172,25 +172,24 @@ const typeRoles = [
 
 						<section class="grid gap-3">
 							<h3 class="text-title">Inputs</h3>
-							<label class="grid gap-1 text-sm">
-								<span class="font-medium">Text</span>
-								<Input placeholder="Placeholder" />
-							</label>
-							<label class="grid gap-1 text-sm">
-								<span class="font-medium">Danger</span>
-								<Input danger value="Type to confirm" />
-							</label>
-							<label class="grid gap-1 text-sm">
-								<span class="font-medium">Select</span>
-								<Input as="select">
-									<option>First option</option>
-									<option>Second option</option>
-								</Input>
-							</label>
-							<label class="grid gap-1 text-sm">
-								<span class="font-medium">Disabled</span>
-								<Input disabled value="Disabled" />
-							</label>
+							<Field label="Text" placeholder="Placeholder" />
+							<Field
+								label="With hint"
+								hint="Shown to the client on every invoice."
+							/>
+							<Field
+								label="With error"
+								name="email"
+								type="email"
+								value="not-an-email"
+								error="Enter a valid email address."
+							/>
+							<Field label="Danger" danger value="Type to confirm" />
+							<Field label="Select" as="select">
+								<option>First option</option>
+								<option>Second option</option>
+							</Field>
+							<Field label="Disabled" disabled value="Disabled" />
 						</section>
 
 						<section class="grid gap-3">
