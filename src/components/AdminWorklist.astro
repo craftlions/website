@@ -10,6 +10,7 @@ import {
 	costPartLabel,
 	type PhaseState,
 	phaseTransitionsFrom,
+	recordDeliveryLabel,
 } from "../lib/status.ts";
 import { submittedValues } from "../lib/submitted-values.ts";
 import Badge from "./Badge.astro";
@@ -199,9 +200,9 @@ const groups = [
 											<DisclosureButton
 												controls={`${id}-${item.key}-delivery`}
 												open={item.phase.id === failedDeliveryPhaseId}
-												aria-label={`Record delivery: ${item.phase.title}`}
+												aria-label={`${recordDeliveryLabel}: ${item.phase.title}`}
 											>
-												Record delivery
+												{recordDeliveryLabel}
 											</DisclosureButton>
 										) : (
 											phaseTransitionsFrom(item.phase.state).map(

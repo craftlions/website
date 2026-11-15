@@ -1,5 +1,6 @@
-// Admin status vocabulary: one label, badge type and action name per state,
-// used identically in badges, summaries, headings and copy.
+// Admin status vocabulary: one label and badge type per state, used
+// identically in badges, summaries, headings and copy. The admin's action
+// buttons are named by `phaseTransitions` and `recordDeliveryLabel`.
 //
 // Badge colour rule: info = the admin has to act, gray = waiting on the
 // client or inactive, success = done, error = overdue or cancelled.
@@ -12,23 +13,15 @@ export type ProjectState = projectSelectType["state"];
 
 export const phaseStatus: Record<
 	PhaseState,
-	{ label: string; badge: BadgeType; action: string | null }
+	{ label: string; badge: BadgeType }
 > = {
-	submitted: { label: "To send", badge: "info", action: "Send to client" },
-	planned: {
-		label: "Awaiting approval",
-		badge: "gray",
-		action: "Approve for client",
-	},
-	approved: { label: "Ready to start", badge: "info", action: "Start work" },
-	in_progress: { label: "In work", badge: "info", action: "Record delivery" },
-	delivered: {
-		label: "Awaiting acceptance",
-		badge: "gray",
-		action: "Record acceptance",
-	},
-	accepted: { label: "Accepted", badge: "success", action: null },
-	cancelled: { label: "Cancelled", badge: "error", action: null },
+	submitted: { label: "To send", badge: "info" },
+	planned: { label: "Awaiting approval", badge: "gray" },
+	approved: { label: "Ready to start", badge: "info" },
+	in_progress: { label: "In work", badge: "info" },
+	delivered: { label: "Awaiting acceptance", badge: "gray" },
+	accepted: { label: "Accepted", badge: "success" },
+	cancelled: { label: "Cancelled", badge: "error" },
 };
 
 // "To send (1), In work (2)": how many phases are in each state with this
@@ -77,6 +70,9 @@ export const phaseTransitions = {
 >;
 
 export type PhaseTransitionTarget = keyof typeof phaseTransitions;
+
+// The admin's action on an `in_progress` phase, done by `recordDelivery`.
+export const recordDeliveryLabel = "Record delivery";
 
 // Transitions open to the admin from a state, forward step first and
 // cancellation last.
