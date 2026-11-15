@@ -96,6 +96,14 @@ const rules = [
 		use: "a type role such as text-label or text-caption for 600, or no class for 400",
 		doc: "DESIGN.md#3-typography",
 	},
+	{
+		id: "line-height",
+		pattern:
+			/(?<![\w-])(?:leading-(?!none(?![\w-]))|text-(?:xs|sm|display|headline|title|label|caption)\/)(?:\[[^\]]*\]|\([^)]*\)|[\w.-]+)/g,
+		classOnly: true,
+		use: "the role's own line height, or leading-none in a tight metric row",
+		doc: "DESIGN.md#3-typography",
+	},
 ];
 
 // Shadow, rounded and flex are also ordinary words, so those rules skip free text.

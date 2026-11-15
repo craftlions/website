@@ -255,7 +255,7 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 - **Label caps** (`label-caps`; 600, 0.75rem, uppercase, muted): page section headings (h2 and the h3 that heads a section's list), table headers, and metric labels. It already sets the muted color, so do not rebuild it from `text-label uppercase text-fg-muted`.
 - **Caption** (`text-caption`; 600, 0.75rem, 1.333): badges and other single-word state marks.
 
-Each role carries its size, weight, and line height together, so do not add `font-*` to it; `aubr design:lint` rejects every `font-*` utility, weights and families alike. The one `leading-*` exception is `leading-none`, in tight metric rows and in boxes sized around a single line: the badge (`text-caption leading-none`) and the hint button. Add it as `leading-none`, never as a `/none` size modifier, which drops the role's weight. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
+Each role carries its size, weight, and line height together, so do not add `font-*` to it; `aubr design:lint` rejects every `font-*` utility, weights and families alike. The one `leading-*` exception is `leading-none`, in tight metric rows and in boxes sized around a single line: the badge (`text-caption leading-none`) and the hint button. Add it as `leading-none`, never as a `/none` size modifier, which drops the role's weight; `aubr design:lint` rejects every other `leading-*` and size modifier. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
 
 ### Named Rules
 
