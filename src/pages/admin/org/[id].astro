@@ -122,7 +122,7 @@ const setupGaps = [
 		href: `/admin/org/${organization.id}/members`,
 	},
 	!organization.data?.stripeCustomerId && {
-		text: "No Stripe customer is linked, so no invoices or spend show up for this client.",
+		text: "No Stripe customer is linked. Until it is, this client's Stripe invoices cannot be attached, spend and budget use stay at zero, and their dashboard lists no invoices.",
 		action: "Link Stripe customer",
 		href: `/admin/org/${organization.id}/settings#billing-heading`,
 	},
