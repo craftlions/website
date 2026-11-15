@@ -6,7 +6,6 @@ import { and, count, eq, ne } from "drizzle-orm";
 import Button from "../../../../components/Button.astro";
 import ConfirmAction from "../../../../components/ConfirmAction.astro";
 import Field from "../../../../components/Field.astro";
-import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { member, projects } from "../../../../lib/schema.ts";
 
@@ -255,32 +254,87 @@ const settingsResult = Astro.getActionResult(
 			</div>
 		</form>
 	</section>
-	<section class="grid gap-3 border border-dashed border-line p-4">
-		<h3 class="font-semibold">Offboarding</h3>
-		<p class="text-sm text-fg-muted"
-			>{organization.unarchivedProjectCount}
-			projects not yet archived, {organization.memberCount} members
-			remaining.</p
-		>
-		<div class="grid grid-flow-col justify-start gap-2">
-			<Button href={`/admin/org/${organization.id}/projects`}>Projects</Button>
-			<Button href={`/admin/org/${organization.id}/members`}>Members</Button>
-		</div>
+	<section
+		aria-labelledby="delete-heading"
+		class="grid gap-3 border-t border-dashed border-line pt-6"
+	>
+		<h2 id="delete-heading" class="text-label uppercase text-fg-muted">
+			Delete client
+		</h2>
+		<p class="max-w-prose text-sm text-fg-muted">
+			Deleting a client is permanent and cannot be undone.
+		</p>
+		{organization.projectCount === 0 ? (
+			<form
+				method="POST"
+				action={actions.hardDeleteOrganization}
+				class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line-danger p-4 wrap-anywhere"
+			>
+				<input type="hidden" name="organizationId" value={organization.id}>
+				<div class="grid gap-2 text-sm">
+					<p>Deleting {organization.name} removes:</p>
+					<ul class="grid list-disc gap-1 pl-5">
+						<li>the client with its name, client URL and logo</li>
+						<li>
+							its yearly budget and its link to the Stripe customer; the
+							customer and its invoices in Stripe are not touched
+						</li>
+						<li>
+							{organization.memberCount}
+							{organization.memberCount === 1 ? "membership" : "memberships"}
+							and any open invitations; the people keep their user accounts but
+							lose access to this client
+						</li>
+					</ul>
+				</div>
+				<ConfirmAction
+					id="confirm-delete-client"
+					trigger="Delete client"
+					triggerVariant="danger"
+					title="Delete this client?"
+					confirm="Delete client"
+					typeToConfirm={{ value: organization.name }}
+				>
+					<span class="wrap-anywhere">{organization.name}</span>, its settings,
+					budget, Stripe link and
+					{organization.memberCount}
+					{organization.memberCount === 1 ? "membership" : "memberships"} are
+					deleted for good.
+				</ConfirmAction>
+			</form>
+		) : (
+			<div class="grid grid-cols-[minmax(0,1fr)] gap-4 border border-dashed border-line-danger p-4 wrap-anywhere">
+				<p class="max-w-prose text-sm">
+					Only a client without projects can be deleted. Projects cannot be
+					deleted, archived ones included, so {organization.name} stays. To
+					offboard the client, archive its projects and remove its members.
+				</p>
+				<ul class="grid gap-2">
+					<li>
+						<Button
+							variant="quiet"
+							href={`/admin/org/${organization.id}/projects`}
+							class="max-w-full"
+						>
+							{organization.projectCount}
+							{organization.projectCount === 1 ? "project" : "projects"},
+							{organization.unarchivedProjectCount} not archived
+						</Button>
+					</li>
+					<li>
+						<Button
+							variant="quiet"
+							href={`/admin/org/${organization.id}/members`}
+							class="max-w-full"
+						>
+							{organization.memberCount}
+							{organization.memberCount === 1 ? "member" : "members"}
+						</Button>
+					</li>
+				</ul>
+			</div>
+		)}
 	</section>
-	{organization.projectCount === 0 && (
-		<form
-			method="POST"
-			action={actions.hardDeleteOrganization}
-			class="grid gap-3 border border-dashed border-line-danger p-4"
-		>
-			<input type="hidden" name="organizationId" value={organization.id} />
-			<label class="grid gap-1 text-sm">
-				<span class="font-medium">Type {organization.name} to delete</span>
-				<Input danger name="confirmation" required />
-			</label>
-			<Button type="submit">Delete organization</Button>
-		</form>
-	)}
 </AdminOrgShell>
 
 <script>
