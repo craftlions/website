@@ -11,6 +11,7 @@ import {
 	type PhaseState,
 	phaseTransitionsFrom,
 } from "../lib/status.ts";
+import { submittedValues } from "../lib/submitted-values.ts";
 import Badge from "./Badge.astro";
 import Button from "./Button.astro";
 import ConfirmAction from "./ConfirmAction.astro";
@@ -63,10 +64,13 @@ interface Props {
 
 const { items, limit, allHref, id = "worklist" } = Astro.props;
 
-// A failed delivery reopens the delivery forms, since the page reloads.
-const deliveryFailed = Boolean(
-	Astro.getActionResult(actions.recordDelivery)?.error,
-);
+// A failed delivery reopens the delivery form of the phase it was submitted
+// for, since the page reloads.
+const deliveryResult = Astro.getActionResult(actions.recordDelivery);
+const failedDeliveryPhaseId = submittedValues(
+	Astro.locals,
+	deliveryResult,
+)?.get("phaseId");
 const ordered = [
 	...items.filter((item) => item.actor === "admin"),
 	...items.filter((item) => item.actor === "client"),
@@ -195,7 +199,11 @@ const groups = [
 											) : item.phase.state === "in_progress" ? (
 												<Button
 													class="group"
-													aria-expanded={deliveryFailed ? "true" : "false"}
+													aria-expanded={
+														item.phase.id === failedDeliveryPhaseId
+															? "true"
+															: "false"
+													}
 													aria-controls={`${id}-${item.key}-delivery`}
 													aria-label={`Record delivery: ${item.phase.title}`}
 													data-delivery-toggle
@@ -315,9 +323,13 @@ const groups = [
 											<div
 												id={`${id}-${item.key}-delivery`}
 												class="grid min-w-0 lg:col-span-5"
-												hidden={!deliveryFailed}
+												hidden={item.phase.id !== failedDeliveryPhaseId}
 											>
-												<DeliveryForm mode="record" phase={item.phase} />
+												<DeliveryForm
+													mode="record"
+													phase={item.phase}
+													result={deliveryResult}
+												/>
 											</div>
 										)}
 									</li>

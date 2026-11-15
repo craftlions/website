@@ -2,6 +2,7 @@
 import type { ComponentProps, HTMLAttributes } from "astro/types";
 import type { phaseSelectType } from "../lib/schema.ts";
 import { actions } from "astro:actions";
+import { submittedValues } from "../lib/submitted-values.ts";
 import Button from "./Button.astro";
 import Field from "./Field.astro";
 
@@ -17,11 +18,17 @@ interface Props extends HTMLAttributes<"form"> {
 		deliveryState?: phaseSelectType["deliveryState"];
 		deliveryUrl?: string | null;
 	};
-	// The mode's action result, so each field shows its own input error.
+	// The mode's action result. Every phase's form posts the same action, so
+	// only the form whose phase was submitted shows its typed values and
+	// field errors.
 	result?: ComponentProps<typeof Field>["result"];
 }
 
 const { mode, phase, result, class: className, ...attrs } = Astro.props;
+const ownResult =
+	submittedValues(Astro.locals, result)?.get("phaseId") === phase.id
+		? result
+		: undefined;
 const submitLabel = mode === "record" ? "Record delivery" : "Update delivery";
 ---
 
@@ -44,7 +51,7 @@ const submitLabel = mode === "record" ? "Record delivery" : "Update delivery";
 			as="select"
 			name="deliveryChoice"
 			required
-			{result}
+			result={ownResult}
 			data-delivery-choice
 		>
 			<option value="url" selected={phase.deliveryState !== "none"}>
@@ -60,10 +67,10 @@ const submitLabel = mode === "record" ? "Record delivery" : "Update delivery";
 			type="url"
 			inputmode="url"
 			autocomplete="off"
-			value={phase.deliveryUrl ?? ""}
+			value={ownResult ? undefined : (phase.deliveryUrl ?? "")}
 			placeholder="https://github.com/…"
 			hint="HTTPS link to the pull or merge request that delivers the phase."
-			{result}
+			result={ownResult}
 			data-delivery-url
 		/>
 		<Button

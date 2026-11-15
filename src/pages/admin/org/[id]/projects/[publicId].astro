@@ -544,11 +544,21 @@ const phases = project.phases
 									data-phase-panel
 								>
 									{phase.state === "in_progress" && (
-										<DeliveryForm mode="record" {phase} />
+										<DeliveryForm
+											mode="record"
+											{phase}
+											result={Astro.getActionResult(actions.recordDelivery)}
+										/>
 									)}
 									{(phase.state === "delivered" ||
 										phase.state === "accepted") && (
-										<DeliveryForm mode="edit" {phase} />
+										<DeliveryForm
+											mode="edit"
+											{phase}
+											result={Astro.getActionResult(
+												actions.updatePhaseDelivery,
+											)}
+										/>
 									)}
 									{(phase.state === "submitted" ||
 										phase.state === "planned") && (
