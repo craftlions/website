@@ -17,6 +17,7 @@ import {
 	getSpendByYear,
 } from "../../../lib/budget-consumption.ts";
 import { buildPhaseComponents } from "../../../lib/phase-billing.ts";
+import { projectStatus } from "../../../lib/status.ts";
 import {
 	organizationStripeInvoices,
 	stripeInvoiceFields,
@@ -740,7 +741,7 @@ const worklist: WorklistItem[] = [
 											</th>
 											<td class="px-4 py-3">
 												<Badge type={projectStateToBadgeType(project.state)}>
-													{project.state ?? "—"}
+													{projectStatus[project.state].label}
 												</Badge>
 											</td>
 											<td

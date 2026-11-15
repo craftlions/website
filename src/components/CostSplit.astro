@@ -51,6 +51,13 @@ const statusBadgeType: Record<
 	paid: "success",
 };
 
+const statusLabel: Record<ComponentBillingStatus, string> = {
+	not_due: "Not due",
+	due: "Due",
+	invoiced: "Invoiced",
+	paid: "Paid",
+};
+
 const share = (amount: number) =>
 	total > 0 ? percentFormatter.format(amount / total) : "—";
 const accessibleSummary =
@@ -123,10 +130,10 @@ const accessibleSummary =
 					</span>
 					{showStatus ? (
 						<Badge type={statusBadgeType[item.status]}>
-							{item.status.replaceAll("_", " ")}
+							{statusLabel[item.status]}
 						</Badge>
 					) : highlight === item.component ? (
-						<Badge type="info">this invoice</Badge>
+						<Badge type="info">This invoice</Badge>
 					) : null}
 				</li>
 			))}

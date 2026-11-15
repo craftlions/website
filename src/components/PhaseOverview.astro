@@ -2,6 +2,7 @@
 import type { phaseSelectType } from "../lib/schema";
 import { actions } from "astro:actions";
 import { buildPhaseComponents } from "../lib/phase-billing";
+import { invoiceStatus } from "../lib/status.ts";
 import Badge from "./Badge.astro";
 import Button from "./Button.astro";
 
@@ -58,6 +59,17 @@ const billedOn = {
 	upfront: "Billed on approval",
 	delivery: "Billed on delivery",
 	acceptance: "Billed on acceptance",
+};
+
+// The client's own wording for a phase state, in sentence case.
+const phaseStateLabel: Record<phaseSelectType["state"], string> = {
+	submitted: "Submitted",
+	planned: "Planned",
+	approved: "Approved",
+	in_progress: "In progress",
+	delivered: "Delivered",
+	accepted: "Accepted",
+	cancelled: "Cancelled",
 };
 
 const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
@@ -206,7 +218,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 								</p>
 							</div>
 							<Badge type={phaseStateToBadgeType(phase.state)}>
-								{phase.state.replaceAll("_", " ")}
+								{phaseStateLabel[phase.state]}
 							</Badge>
 							<div class="grid w-full gap-1.5 md:w-44 md:justify-items-end">
 								<p class="text-sm tabular-nums md:text-right">
@@ -432,7 +444,9 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 														) : part.invoice?.status === "paid" ? (
 															<Badge type="success">Paid</Badge>
 														) : part.invoice?.status ? (
-															<Badge type="gray">{part.invoice.status}</Badge>
+															<Badge type="gray">
+																{invoiceStatus(part.invoice).label}
+															</Badge>
 														) : part.invoice ? (
 															<Badge type="info">Invoiced</Badge>
 														) : part.status === "due" ? (

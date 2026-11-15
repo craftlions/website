@@ -1,5 +1,6 @@
 ---
 import { buildPhaseComponents } from "../lib/phase-billing";
+import { invoiceStatus } from "../lib/status.ts";
 import Badge from "./Badge.astro";
 import Button from "./Button.astro";
 import CostSplit from "./CostSplit.astro";
@@ -247,7 +248,9 @@ const componentLabel: Record<string, string> = {
 											) : invoice.status === "paid" ? (
 												<Badge type="success">Paid</Badge>
 											) : invoice.status ? (
-												<Badge type="gray">{invoice.status}</Badge>
+												<Badge type="gray">
+													{invoiceStatus(invoice).label}
+												</Badge>
 											) : (
 												<span class="text-fg-muted">—</span>
 											)}
