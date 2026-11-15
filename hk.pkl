@@ -35,7 +35,12 @@ hooks {
 	["pre-commit"] {
 		fix = true
 		stash = "git"
-		steps = linters
+		steps = (linters) {
+			// Rejects staged content that holds a value from fnox.toml; decrypting needs the age key.
+			["fnox-scan"] {
+				check = "fnox scan --values --staged"
+			}
+		}
 	}
 	["check"] {
 		steps = online
