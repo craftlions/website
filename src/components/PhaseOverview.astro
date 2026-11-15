@@ -556,21 +556,3 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 
 	customElements.define("phase-overview", PhaseOverview);
 </script>
-
-<script>
-	document.addEventListener("submit", (event) => {
-		if (
-			event.defaultPrevented ||
-			!(event.target instanceof HTMLFormElement) ||
-			!event.target.checkValidity()
-		) {
-			return;
-		}
-
-		for (const button of event.target.querySelectorAll<HTMLButtonElement>(
-			'button[type="submit"]',
-		)) {
-			button.disabled = true;
-		}
-	});
-</script>

@@ -60,3 +60,26 @@ const trail = organization
 		<Footer {wide} />
 	</Fragment>
 </Shell>
+
+<script>
+	document.addEventListener("submit", (event) => {
+		if (
+			event.defaultPrevented ||
+			!(event.target instanceof HTMLFormElement) ||
+			!event.target.checkValidity()
+		) {
+			return;
+		}
+
+		// Disabling waits a task, because the form leaves a disabled submitter's
+		// name and value out of the data it sends.
+		const { elements } = event.target;
+		window.setTimeout(() => {
+			for (const element of elements) {
+				if (element instanceof HTMLButtonElement && element.type === "submit") {
+					element.disabled = true;
+				}
+			}
+		});
+	});
+</script>
