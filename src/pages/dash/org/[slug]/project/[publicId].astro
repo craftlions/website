@@ -3,6 +3,7 @@ export const prerender = false;
 
 import { isAPIError } from "better-auth/api";
 import Button from "../../../../../components/Button.astro";
+import ClientPhaseBanner from "../../../../../components/ClientPhaseBanner.astro";
 import Footer from "../../../../../components/Footer.astro";
 import Nav from "../../../../../components/Nav.astro";
 import PhaseOverview from "../../../../../components/PhaseOverview.astro";
@@ -132,6 +133,8 @@ const canApprovePhases =
 					{project.name}
 				</h1>
 			</section>
+
+			<ClientPhaseBanner />
 
 			<section class="grid gap-3" aria-labelledby="phases">
 				<h2 id="phases" class="text-label uppercase text-fg-muted">

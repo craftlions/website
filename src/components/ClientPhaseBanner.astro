@@ -1,0 +1,25 @@
+---
+// What happened after the client's Approve, Decline or Accept
+// (ClientPhaseActions). Neither action notifies craftlions; an approved phase
+// shows on craftlions' worklist as ready to start.
+import { actions } from "astro:actions";
+import ActionBanner from "./ActionBanner.astro";
+---
+
+<ActionBanner
+	results={[
+		[
+			Astro.getActionResult(actions.approvePhase),
+			"Phase approved. It is on craftlions’ worklist, ready to start.",
+		],
+		[
+			Astro.getActionResult(actions.declinePhase),
+			"Phase declined. It is cancelled and nothing is billed for it.",
+		],
+		[
+			Astro.getActionResult(actions.acceptPhase),
+			"Delivery accepted. The phase is closed.",
+		],
+	]}
+	fieldLabels={{ phaseId: "Phase", expectedVersion: "Phase version" }}
+/>

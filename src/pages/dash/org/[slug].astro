@@ -6,6 +6,7 @@ import { actions } from "astro:actions";
 import { isAPIError } from "better-auth/api";
 import Badge from "../../../components/Badge.astro";
 import Button from "../../../components/Button.astro";
+import ClientPhaseBanner from "../../../components/ClientPhaseBanner.astro";
 import CostSplit from "../../../components/CostSplit.astro";
 import Footer from "../../../components/Footer.astro";
 import InvoiceTable from "../../../components/InvoiceTable.astro";
@@ -359,6 +360,7 @@ const worklist: WorklistItem[] = [
 				>
 					{organization.name}’s Dashboard
 				</h1>
+				<ClientPhaseBanner />
 			</section>
 
 			<section
