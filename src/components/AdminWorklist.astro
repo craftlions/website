@@ -14,7 +14,6 @@ import {
 import { submittedValues } from "../lib/submitted-values.ts";
 import Badge from "./Badge.astro";
 import Button from "./Button.astro";
-import ConfirmAction from "./ConfirmAction.astro";
 import DeliveryForm from "./DeliveryForm.astro";
 import DisclosureButton from "./DisclosureButton.astro";
 import PhaseTransitionForm from "./PhaseTransitionForm.astro";
@@ -205,87 +204,8 @@ const groups = [
 												Record delivery
 											</DisclosureButton>
 										) : (
-											phaseTransitionsFrom(item.phase.state).map((nextState) =>
-												nextState === "cancelled" ? (
-													<form method="POST" action={actions.transitionPhase}>
-														<input
-															type="hidden"
-															name="phaseId"
-															value={item.phase.id}
-														>
-														<input
-															type="hidden"
-															name="nextState"
-															value={nextState}
-														>
-														<input
-															type="hidden"
-															name="expectedVersion"
-															value={item.phase.version}
-														>
-														<ConfirmAction
-															id={`${id}-${item.key}-cancel`}
-															trigger="Cancel phase"
-															triggerLabel={`Cancel phase: ${item.phase.title}`}
-															triggerVariant="quiet"
-															title={`Cancel ${item.phase.title}?`}
-															confirm="Cancel phase"
-															cancel="Keep phase"
-														>
-															Cancelling is final: the phase cannot be reopened
-															or started again. Add a new phase if the work
-															comes back.
-														</ConfirmAction>
-													</form>
-												) : nextState === "approved" ||
-													nextState === "accepted" ? (
-													<form method="POST" action={actions.transitionPhase}>
-														<input
-															type="hidden"
-															name="phaseId"
-															value={item.phase.id}
-														>
-														<input
-															type="hidden"
-															name="nextState"
-															value={nextState}
-														>
-														<input
-															type="hidden"
-															name="expectedVersion"
-															value={item.phase.version}
-														>
-														{nextState === "approved" ? (
-															<ConfirmAction
-																id={`${id}-${item.key}-approve`}
-																trigger="Approve for client"
-																triggerLabel={`Approve for client: ${item.phase.title}`}
-																title={`Approve ${item.phase.title} for the client?`}
-																confirm="Approve for client"
-																confirmVariant="default"
-															>
-																You approve this phase on the client's behalf,
-																as if they had approved it themselves. The phase
-																becomes ready to start and its upfront payment
-																becomes due.
-															</ConfirmAction>
-														) : (
-															<ConfirmAction
-																id={`${id}-${item.key}-accept`}
-																trigger="Record acceptance"
-																triggerLabel={`Record acceptance: ${item.phase.title}`}
-																title={`Record acceptance of ${item.phase.title}?`}
-																confirm="Record acceptance"
-																confirmVariant="default"
-															>
-																You accept the delivery on the client's behalf,
-																as if they had accepted it themselves. The phase
-																is closed as accepted and its acceptance payment
-																becomes due.
-															</ConfirmAction>
-														)}
-													</form>
-												) : (
+											phaseTransitionsFrom(item.phase.state).map(
+												(nextState) => (
 													<PhaseTransitionForm phase={item.phase} {nextState} />
 												),
 											)

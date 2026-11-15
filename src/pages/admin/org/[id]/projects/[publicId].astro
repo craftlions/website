@@ -23,11 +23,11 @@ import {
 	formatMoney,
 	formatPercent,
 } from "../../../../../lib/format.ts";
-import { buildPhaseComponents } from "../../../../../lib/phase-billing";
+import { buildPhaseComponents } from "../../../../../lib/phase-billing.ts";
 import {
 	costPartLabel,
 	phaseStatus,
-	phaseTransitions,
+	phaseTransitionsFrom,
 	projectStatus,
 } from "../../../../../lib/status.ts";
 import { submittedValues } from "../../../../../lib/submitted-values.ts";
@@ -441,62 +441,15 @@ const phases = project.phases
 									<p class="text-xs text-fg-muted">Nothing to bill</p>
 								)}
 							</div>
-							{(phase.state === "submitted" || phase.state === "approved") && (
-								<PhaseTransitionForm
-									{phase}
-									nextState={
-										phase.state === "submitted" ? "planned" : "in_progress"
-									}
-									class="lg:col-start-4 lg:justify-self-end"
-								/>
-							)}
-							{(phase.state === "planned" || phase.state === "delivered") && (
-								<form
-									method="POST"
-									action={actions.transitionPhase}
-									class="lg:col-start-4 lg:justify-self-end"
-								>
-									<input type="hidden" name="phaseId" value={phase.id}>
-									<input
-										type="hidden"
-										name="nextState"
-										value={phase.state === "planned" ? "approved" : "accepted"}
-									>
-									<input
-										type="hidden"
-										name="expectedVersion"
-										value={phase.version}
-									>
-									{phase.state === "planned" ? (
-										<ConfirmAction
-											id={`approve-${phase.publicId}`}
-											trigger={phaseTransitions.approved.label}
-											triggerLabel={`${phaseTransitions.approved.label}: ${phase.title}`}
-											title={`Approve ${phase.title} for the client?`}
-											confirm={phaseTransitions.approved.label}
-											cancel="Go back"
-										>
-											You approve on the client's behalf, as if they had
-											approved it themselves. The phase becomes ready to start,
-											its cost split locks, and any Upfront part becomes due for
-											invoicing.
-										</ConfirmAction>
-									) : (
-										<ConfirmAction
-											id={`accept-${phase.publicId}`}
-											trigger={phaseTransitions.accepted.label}
-											triggerLabel={`${phaseTransitions.accepted.label}: ${phase.title}`}
-											title={`Record acceptance of ${phase.title}?`}
-											confirm={phaseTransitions.accepted.label}
-											cancel="Go back"
-										>
-											You accept the delivery on the client's behalf, as if they
-											had accepted it themselves. The phase becomes accepted and
-											any Acceptance part becomes due for invoicing.
-										</ConfirmAction>
-									)}
-								</form>
-							)}
+							{phaseTransitionsFrom(phase.state)
+								.filter((nextState) => nextState !== "cancelled")
+								.map((nextState) => (
+									<PhaseTransitionForm
+										{phase}
+										{nextState}
+										class="lg:col-start-4 lg:justify-self-end"
+									/>
+								))}
 							{phase.state === "in_progress" && (
 								<DisclosureButton
 									controls={`phase-${phase.publicId}-more`}
@@ -574,28 +527,7 @@ const phases = project.phases
 													Save cost split
 												</Button>
 											</form>
-											<form method="POST" action={actions.transitionPhase}>
-												<input type="hidden" name="phaseId" value={phase.id}>
-												<input type="hidden" name="nextState" value="cancelled">
-												<input
-													type="hidden"
-													name="expectedVersion"
-													value={phase.version}
-												>
-												<ConfirmAction
-													id={`cancel-${phase.publicId}`}
-													trigger={phaseTransitions.cancelled.label}
-													triggerLabel={`${phaseTransitions.cancelled.label}: ${phase.title}`}
-													triggerVariant="quiet"
-													title={`Cancel ${phase.title}?`}
-													confirm={phaseTransitions.cancelled.label}
-													cancel="Keep phase"
-												>
-													Cancelling is final: the phase cannot be restarted,
-													the client can no longer approve it, and it stops
-													counting toward the project's estimated cost.
-												</ConfirmAction>
-											</form>
+											<PhaseTransitionForm {phase} nextState="cancelled" />
 										</>
 									)}
 								</div>

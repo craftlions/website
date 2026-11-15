@@ -1,32 +1,64 @@
 ---
-import type { ComponentProps, HTMLAttributes } from "astro/types";
+import type { HTMLAttributes } from "astro/types";
 import { actions } from "astro:actions";
 import { type PhaseTransitionTarget, phaseTransitions } from "../lib/status.ts";
 import Button from "./Button.astro";
+import ConfirmAction from "./ConfirmAction.astro";
 
 interface Props extends HTMLAttributes<"form"> {
 	phase: { id: string; title: string; version: number };
 	nextState: PhaseTransitionTarget;
-	// Defaults to the status vocabulary's action name for `nextState`.
-	label?: string;
-	// Passed through to the submit Button, e.g. `variant` or data attributes.
-	button?: Omit<ComponentProps<typeof Button>, "as" | "href" | "type">;
 }
 
-const {
-	phase,
-	nextState,
-	label = phaseTransitions[nextState].label,
-	button,
-	...attrs
-} = Astro.props;
+const { phase, nextState, ...attrs } = Astro.props;
+const { label } = phaseTransitions[nextState];
+
+// Acting for the client and cancelling are confirmed first, naming what
+// happens; the other transitions submit directly.
+const confirmation = {
+	approved: {
+		title: `Approve ${phase.title} for the client?`,
+		text: "You approve on the client's behalf, as if they had approved it themselves. The phase becomes ready to start, its cost split locks, and any Upfront amount becomes due for invoicing.",
+		cancel: "Go back",
+		destructive: false,
+	},
+	accepted: {
+		title: `Record acceptance of ${phase.title}?`,
+		text: "You accept the delivery on the client's behalf, as if they had accepted it themselves. The phase becomes accepted and any Acceptance amount becomes due for invoicing.",
+		cancel: "Go back",
+		destructive: false,
+	},
+	cancelled: {
+		title: `Cancel ${phase.title}?`,
+		text: "Cancelling is final: the phase cannot be restarted, the client can no longer approve it, and it stops counting toward the project's estimated cost. Add a new phase if the work comes back.",
+		cancel: "Keep phase",
+		destructive: true,
+	},
+	planned: undefined,
+	in_progress: undefined,
+}[nextState];
 ---
 
 <form method="POST" action={actions.transitionPhase} {...attrs}>
 	<input type="hidden" name="phaseId" value={phase.id}>
 	<input type="hidden" name="nextState" value={nextState}>
 	<input type="hidden" name="expectedVersion" value={phase.version}>
-	<Button type="submit" aria-label={`${label}: ${phase.title}`} {...button}>
-		{label}
-	</Button>
+	{confirmation ? (
+		<ConfirmAction
+			id={`confirm-${nextState}-${phase.id}`}
+			trigger={label}
+			triggerLabel={`${label}: ${phase.title}`}
+			triggerVariant={confirmation.destructive ? "quiet" : "default"}
+			title={confirmation.title}
+			confirm={label}
+			confirmVariant={confirmation.destructive ? "danger" : "default"}
+			cancel={confirmation.cancel}
+		>
+			{confirmation.text}
+		</ConfirmAction>
+	) : (
+		<Button type="submit" aria-label={`${label}: ${phase.title}`}>
+			{label}
+		</Button>
+	)}
 </form>
