@@ -13,13 +13,11 @@ interface Props {
 		  ])[]
 		| undefined;
 	fieldLabels?: Record<string, string> | undefined;
-	success?: string | undefined;
 }
 
-const { results = [], fieldLabels = {}, success } = Astro.props;
+const { results = [], fieldLabels = {} } = Astro.props;
 const error = results.find(([result]) => result?.error)?.[0]?.error;
-const message =
-	results.find(([result]) => result && !result.error)?.[1] ?? success;
+const message = results.find(([result]) => result && !result.error)?.[1];
 
 if (error?.code === "INTERNAL_SERVER_ERROR") {
 	console.error(error);

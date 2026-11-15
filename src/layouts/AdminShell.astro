@@ -11,7 +11,7 @@ interface Props extends ComponentProps<typeof ActionBanner> {
 	breadcrumbs?: ComponentProps<typeof Breadcrumbs>["items"];
 }
 
-const { title, breadcrumbs = [], results, fieldLabels, success } = Astro.props;
+const { title, breadcrumbs = [], results, fieldLabels } = Astro.props;
 ---
 
 <Shell
@@ -25,7 +25,7 @@ const { title, breadcrumbs = [], results, fieldLabels, success } = Astro.props;
 		>
 			{breadcrumbs.length > 1 && <Breadcrumbs items={breadcrumbs} />}
 			<slot name="header" />
-			<ActionBanner {results} {fieldLabels} {success} />
+			<ActionBanner {results} {fieldLabels} />
 			<slot />
 		</main>
 		<Footer wide />

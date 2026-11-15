@@ -18,8 +18,6 @@ interface Props
 		| "settings";
 	breadcrumbs?: ComponentProps<typeof AdminShell>["breadcrumbs"];
 	title?: string | undefined;
-	/** @deprecated Pass `results` with a message per action, or `success`. */
-	showSuccess?: boolean;
 }
 
 const {
@@ -27,10 +25,8 @@ const {
 	activePage,
 	breadcrumbs = [],
 	title,
-	showSuccess = false,
 	results,
 	fieldLabels,
-	success,
 } = Astro.props;
 const pages = [
 	{
@@ -77,7 +73,6 @@ const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 	]}
 	{results}
 	{fieldLabels}
-	success={success ?? (showSuccess ? "Saved." : undefined)}
 >
 	<header
 		slot="header"
