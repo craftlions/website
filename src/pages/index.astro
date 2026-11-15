@@ -23,6 +23,44 @@ import Shell from "../layouts/Shell.astro";
 			content="Focused IT services and technical expertise for teams that value clarity, maintainability, and long-term software decisions."
 		>
 		<meta property="og:type" content="website">
+		{/* Only facts the imprint and footer already state; no ratings or reviews. */}
+		<script
+			type="application/ld+json"
+			set:html={JSON.stringify({
+				"@context": "https://schema.org",
+				"@graph": [
+					{
+						"@type": "Organization",
+						"@id": "https://craftlions.com/#organization",
+						name: "craftlions",
+						legalName: "craftlions UG (haftungsbeschränkt)",
+						url: "https://craftlions.com/",
+						email: "alexander@craftlions.com",
+						description:
+							"Freelance software development, technical advisory, and workshops.",
+						address: {
+							"@type": "PostalAddress",
+							streetAddress: "Amandus-Voigt-Str. 8",
+							postalCode: "23617",
+							addressLocality: "Stockelsdorf",
+							addressCountry: "DE",
+						},
+						sameAs: [
+							"https://github.com/craftlions",
+							"https://www.linkedin.com/company/craftlions",
+						],
+					},
+					{
+						"@type": "WebSite",
+						"@id": "https://craftlions.com/#website",
+						name: "craftlions",
+						url: "https://craftlions.com/",
+						inLanguage: "en",
+						publisher: { "@id": "https://craftlions.com/#organization" },
+					},
+				],
+			})}
+		/>
 	</Fragment>
 	<Fragment slot="body">
 		<body
