@@ -39,7 +39,6 @@ if (!id) {
 const actionResults = [
 	Astro.getActionResult(actions.attachInvoiceToPhase),
 	Astro.getActionResult(actions.updatePhaseDelivery),
-	Astro.getActionResult(actions.transitionPhase),
 ];
 const actionError = actionResults.find((result) => result?.error)?.error;
 const actionSucceeded = actionResults.some((result) => result && !result.error);
