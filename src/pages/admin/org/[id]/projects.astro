@@ -9,6 +9,7 @@ import Input from "../../../../components/Input.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import { formatMoney } from "../../../../lib/format.ts";
+import { phaseStatus, projectStatus } from "../../../../lib/status.ts";
 
 const { id } = Astro.params;
 
@@ -51,20 +52,21 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-const attentionLabels = {
-	submitted: "to send",
-	planned: "awaiting approval",
-	approved: "ready to start",
-	in_progress: "in work",
-	delivered: "awaiting acceptance",
-} as const;
+// Phase states that still need someone to act, in lifecycle order.
+const attentionStates = [
+	"submitted",
+	"planned",
+	"approved",
+	"in_progress",
+	"delivered",
+] as const;
 
 const summarize = (project: (typeof projects)[number]) => {
 	const totals = new Map<
 		string,
 		{ total: number; upfront: number; delivery: number; acceptance: number }
 	>();
-	const attention = new Map<keyof typeof attentionLabels, number>();
+	const attention = new Map<(typeof attentionStates)[number], number>();
 	for (const phase of project.phases) {
 		if (phase.state === "cancelled") continue;
 		const entry = totals.get(phase.currency) ?? {
@@ -78,10 +80,8 @@ const summarize = (project: (typeof projects)[number]) => {
 		entry.delivery += phase.deliveryAmount ?? 0;
 		entry.acceptance += phase.acceptanceAmount ?? 0;
 		totals.set(phase.currency, entry);
-		if (phase.state in attentionLabels) {
-			const state = phase.state as keyof typeof attentionLabels;
-			attention.set(state, (attention.get(state) ?? 0) + 1);
-		}
+		const state = attentionStates.find((state) => state === phase.state);
+		if (state) attention.set(state, (attention.get(state) ?? 0) + 1);
 	}
 	return {
 		splits: [...totals].map(([currency, entry]) => ({
@@ -96,7 +96,10 @@ const summarize = (project: (typeof projects)[number]) => {
 				.map((item) => ({ ...item, status: "not_due" as const })),
 		})),
 		attention: [...attention]
-			.map(([state, count]) => `${count} ${attentionLabels[state]}`)
+			.map(
+				([state, count]) =>
+					`${count} ${phaseStatus[state].label.toLowerCase()}`,
+			)
 			.join(" · "),
 	};
 };
@@ -152,10 +155,8 @@ const archivedProjects = projects.filter(
 							>
 								<div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
 									<h3 class="text-title wrap-break-word">{project.name}</h3>
-									<Badge
-										type={project.state === "completed" ? "success" : "info"}
-									>
-										{project.state}
+									<Badge type={projectStatus[project.state].badge}>
+										{projectStatus[project.state].label}
 									</Badge>
 								</div>
 								<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">

@@ -18,6 +18,13 @@ import {
 	phases,
 	projects as projectsTable,
 } from "../../../../lib/schema.ts";
+import {
+	type BadgeType,
+	costPartLabel,
+	invoiceStatus,
+	isInvoiceOverdue,
+	phaseStatus,
+} from "../../../../lib/status.ts";
 import { hasStripeRow, stripeInvoiceFields } from "../../../../lib/stripe.ts";
 import { getUuidV7Date } from "../../../../lib/uuid.ts";
 
@@ -137,6 +144,7 @@ type WorklistInvoice = WorklistPhase["invoices"][number] & {
 type WorklistItem = {
 	priority: number;
 	kind: string;
+	badge: BadgeType;
 	phase: WorklistPhase;
 	invoice?: WorklistInvoice;
 	upfrontUnpaid?: boolean;
@@ -156,16 +164,14 @@ const worklist = allPhases
 	.flatMap((phase): WorklistItem[] => {
 		const upfrontUnpaid = isUpfrontUnpaid(phase);
 		const liveInvoices = phase.invoices.filter(hasStripeRow);
-		const overdueInvoices = liveInvoices.filter(
-			(invoice) =>
-				invoice.stripe.status === "open" &&
-				invoice.stripe.dueAt &&
-				invoice.stripe.dueAt < now,
+		const overdueInvoices = liveInvoices.filter((invoice) =>
+			isInvoiceOverdue(invoice.stripe, now),
 		);
 		if (overdueInvoices.length > 0) {
 			return overdueInvoices.map((invoice) => ({
 				priority: 0,
-				kind: "Overdue",
+				kind: invoiceStatus(invoice.stripe, now).label,
+				badge: invoiceStatus(invoice.stripe, now).badge,
 				phase,
 				invoice,
 				upfrontUnpaid,
@@ -173,22 +179,44 @@ const worklist = allPhases
 		}
 
 		if (phase.state === "submitted") {
-			return [{ priority: 1, kind: "To plan", phase }];
+			return [
+				{
+					priority: 1,
+					kind: phaseStatus.submitted.label,
+					badge: phaseStatus.submitted.badge,
+					phase,
+				},
+			];
 		}
 
 		if (phase.state === "planned") {
-			return [{ priority: 2, kind: "Awaiting client", phase }];
+			return [
+				{
+					priority: 2,
+					kind: phaseStatus.planned.label,
+					badge: phaseStatus.planned.badge,
+					phase,
+				},
+			];
 		}
 
 		if (phase.state === "approved") {
-			return [{ priority: 3, kind: "Ready to start", phase }];
+			return [
+				{
+					priority: 3,
+					kind: phaseStatus.approved.label,
+					badge: phaseStatus.approved.badge,
+					phase,
+				},
+			];
 		}
 
 		if (phase.state === "in_progress") {
 			return [
 				{
 					priority: 4,
-					kind: "In work",
+					kind: phaseStatus.in_progress.label,
+					badge: phaseStatus.in_progress.badge,
 					phase,
 					upfrontUnpaid,
 				},
@@ -200,7 +228,8 @@ const worklist = allPhases
 			return [
 				{
 					priority: 5,
-					kind: "Awaiting acceptance",
+					kind: phaseStatus.delivered.label,
+					badge: phaseStatus.delivered.badge,
 					phase,
 					upfrontUnpaid,
 				},
@@ -211,7 +240,8 @@ const worklist = allPhases
 			.filter((invoice) => invoice.stripe.status === "open")
 			.map((invoice) => ({
 				priority: 6,
-				kind: "Unpaid",
+				kind: invoiceStatus(invoice.stripe, now).label,
+				badge: invoiceStatus(invoice.stripe, now).badge,
 				phase,
 				invoice,
 				upfrontUnpaid,
@@ -222,11 +252,6 @@ const worklist = allPhases
 			a.priority - b.priority ||
 			daysInPhaseState(b.phase.id) - daysInPhaseState(a.phase.id),
 	);
-const componentLabel: Record<string, string> = {
-	upfront: "Upfront part",
-	delivery: "Delivery part",
-	acceptance: "Acceptance part",
-};
 ---
 
 <AdminOrgShell
@@ -249,9 +274,7 @@ const componentLabel: Record<string, string> = {
 			{worklist.length > 0 ? (
 				worklist.map((item) => (
 					<article class="grid gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:col-span-4 md:grid-cols-subgrid md:items-center">
-						<Badge type={item.priority === 0 ? "error" : "info"}>
-							{item.kind}
-						</Badge>
+						<Badge type={item.badge}>{item.kind}</Badge>
 						<div class="grid gap-1 md:place-items-start">
 							<h3 class="font-medium">
 								<a
@@ -262,7 +285,7 @@ const componentLabel: Record<string, string> = {
 								</a>{" "}
 								· {item.phase.title}
 							</h3>
-							{item.upfrontUnpaid && <Badge type="error">unpaid upfront</Badge>}
+							{item.upfrontUnpaid && <Badge type="error">Upfront unpaid</Badge>}
 						</div>
 						<div class="grid min-w-48 gap-1.5 md:justify-items-end">
 							{item.invoice ? (
@@ -274,12 +297,9 @@ const componentLabel: Record<string, string> = {
 												item.phase.currency,
 											)}
 										</p>
-										{item.invoice.component &&
-											componentLabel[item.invoice.component] && (
-												<Badge type="info">
-													{componentLabel[item.invoice.component]}
-												</Badge>
-											)}
+										<Badge type="info">
+											{costPartLabel[item.invoice.component]}
+										</Badge>
 									</div>
 									<div class="w-full max-w-56">
 										<CostSplit
@@ -293,13 +313,7 @@ const componentLabel: Record<string, string> = {
 											currency={item.phase.currency}
 											total={item.phase.cost}
 											variant="compact"
-											highlight={
-												item.invoice.component === "upfront" ||
-												item.invoice.component === "delivery" ||
-												item.invoice.component === "acceptance"
-													? item.invoice.component
-													: null
-											}
+											highlight={item.invoice.component}
 										/>
 									</div>
 								</>

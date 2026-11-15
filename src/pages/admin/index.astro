@@ -14,7 +14,16 @@ import {
 	getSpendByYear,
 } from "../../lib/budget-consumption.ts";
 import { formatMoney, formatPercent } from "../../lib/format.ts";
-import { buildPhaseComponents } from "../../lib/phase-billing.ts";
+import {
+	buildPhaseComponents,
+	type InvoiceComponent,
+} from "../../lib/phase-billing.ts";
+import {
+	costPartLabel,
+	invoiceStatus,
+	isInvoiceOverdue,
+	phaseStatus,
+} from "../../lib/status.ts";
 import { hasStripeRow, stripeInvoiceFields } from "../../lib/stripe.ts";
 import { getUuidV7Date } from "../../lib/uuid.ts";
 
@@ -85,11 +94,6 @@ const organizationsWithSpend = await Promise.all(
 );
 
 const now = new Date();
-const componentLabel: Record<string, string> = {
-	upfront: "Upfront",
-	delivery: "Delivery",
-	acceptance: "Acceptance",
-};
 const daysSince = (id: string) => {
 	const date = getUuidV7Date(id);
 	return date
@@ -110,22 +114,20 @@ const queue = organizations
 					invoices: phase.invoices,
 				});
 				const liveInvoices = phase.invoices.filter(hasStripeRow);
-				const overdueInvoices = liveInvoices.filter(
-					(invoice) =>
-						invoice.stripe.status === "open" &&
-						invoice.stripe.dueAt &&
-						invoice.stripe.dueAt < now,
+				const overdueInvoices = liveInvoices.filter((invoice) =>
+					isInvoiceOverdue(invoice.stripe, now),
 				);
 
 				if (overdueInvoices.length > 0) {
 					return overdueInvoices.map((invoice) => ({
 						priority: 0,
-						kind: "Overdue",
+						kind: invoiceStatus(invoice.stripe, now).label,
+						badge: invoiceStatus(invoice.stripe, now).badge,
 						client: organization.name,
 						label: `${project.name} · ${invoice.stripe.number}`,
 						amount: invoice.stripe.total,
 						currency: phase.currency,
-						component: invoice.component as string | null,
+						component: invoice.component as InvoiceComponent | null,
 						components,
 						phaseCost: phase.cost,
 						days: Math.floor(
@@ -141,7 +143,8 @@ const queue = organizations
 					return [
 						{
 							priority: 1,
-							kind: "To plan",
+							kind: phaseStatus.submitted.label,
+							badge: phaseStatus.submitted.badge,
 							client: organization.name,
 							label: `${project.name} · ${phase.title}`,
 							amount: phase.cost,
@@ -159,7 +162,8 @@ const queue = organizations
 					return [
 						{
 							priority: 2,
-							kind: "Awaiting client",
+							kind: phaseStatus.planned.label,
+							badge: phaseStatus.planned.badge,
 							client: organization.name,
 							label: `${project.name} · ${phase.title}`,
 							amount: phase.cost,
@@ -182,7 +186,8 @@ const queue = organizations
 					return [
 						{
 							priority: 4,
-							kind: "Awaiting acceptance",
+							kind: phaseStatus.delivered.label,
+							badge: phaseStatus.delivered.badge,
 							client: organization.name,
 							label: `${project.name} · ${phase.title}`,
 							amount: phase.cost,
@@ -202,7 +207,8 @@ const queue = organizations
 				if (openInvoices.length > 0) {
 					return openInvoices.map((invoice) => ({
 						priority: 3,
-						kind: "Unpaid",
+						kind: invoiceStatus(invoice.stripe, now).label,
+						badge: invoiceStatus(invoice.stripe, now).badge,
 						client: organization.name,
 						label: `${project.name} · ${invoice.stripe.number}`,
 						amount: invoice.stripe.total,
@@ -251,12 +257,7 @@ const ledger = organizationsWithSpend.map(({ organization, spendRows }) => {
 		.flatMap((project) => project.phases)
 		.flatMap((phase) => phase.invoices)
 		.filter(hasStripeRow)
-		.filter(
-			(invoice) =>
-				invoice.stripe.status === "open" &&
-				invoice.stripe.dueAt &&
-				invoice.stripe.dueAt < now,
-		).length;
+		.filter((invoice) => isInvoiceOverdue(invoice.stripe, now)).length;
 	// S-004 R1/R5: budget usage is the shared module's current-year percentage
 	// (D-budget-consumption-definition, uncapped); null when there is no
 	// positive yearly budget (R7 "No budget").
@@ -359,17 +360,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 					{queue.length > 0 ? (
 						queue.map((item) => (
 							<article class="grid gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
-								<Badge
-									type={
-										item.priority === 0
-											? "error"
-											: item.priority === 1
-												? "info"
-												: "gray"
-									}
-								>
-									{item.kind}
-								</Badge>
+								<Badge type={item.badge}>{item.kind}</Badge>
 								<div class="grid gap-1">
 									<h3 class="font-medium">{item.client}</h3>
 									<p class="text-sm text-fg-muted">{item.label}</p>
@@ -379,10 +370,8 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 										<p class="text-sm font-medium tabular-nums">
 											{formatMoney(item.amount, item.currency)}
 										</p>
-										{item.component && componentLabel[item.component] && (
-											<Badge type="info">
-												{componentLabel[item.component]}
-											</Badge>
+										{item.component && (
+											<Badge type="info">{costPartLabel[item.component]}</Badge>
 										)}
 									</div>
 									{item.components.length > 0 && (
@@ -392,13 +381,7 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 												currency={item.currency}
 												total={item.phaseCost}
 												variant="compact"
-												highlight={
-													item.component === "upfront" ||
-													item.component === "delivery" ||
-													item.component === "acceptance"
-														? item.component
-														: null
-												}
+												highlight={item.component}
 											/>
 										</div>
 									)}
@@ -460,10 +443,14 @@ const overdueCount = queue.filter((item) => item.priority === 0).length;
 													<Badge type="error">Overdue</Badge>
 												)}
 												{organization.submitted > 0 && (
-													<Badge type="info">To plan</Badge>
+													<Badge type={phaseStatus.submitted.badge}>
+														{phaseStatus.submitted.label}
+													</Badge>
 												)}
 												{organization.planned > 0 && (
-													<Badge type="gray">Awaiting client</Badge>
+													<Badge type={phaseStatus.planned.badge}>
+														{phaseStatus.planned.label}
+													</Badge>
 												)}
 												{organization.overdue === 0 &&
 													organization.submitted === 0 &&

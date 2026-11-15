@@ -11,6 +11,7 @@ import AdminOrgShell from "../../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../../lib/admin-org.ts";
 import { formatDate, formatMoney } from "../../../../../lib/format.ts";
 import { buildPhaseComponents } from "../../../../../lib/phase-billing";
+import { phaseStatus, projectStatus } from "../../../../../lib/status.ts";
 
 const { id, publicId } = Astro.params;
 
@@ -117,13 +118,8 @@ const phases = project.phases.map((phase) => ({
 						<h2 id="project-heading" class="text-headline wrap-break-word"
 							>{project.name}</h2
 						>
-						<Badge
-							type={project.state === "completed"
-								? "success"
-								: project.state === "archived"
-									? "gray"
-									: "info"}
-							>{project.state}</Badge
+						<Badge type={projectStatus[project.state].badge}
+							>{projectStatus[project.state].label}</Badge
 						>
 					</div>
 					<a
@@ -226,16 +222,8 @@ const phases = project.phases.map((phase) => ({
 									<p class="text-sm text-fg-muted">Delivered without PR/MR</p>
 								)}
 							</div>
-							<Badge
-								type={
-									phase.state === "accepted"
-										? "success"
-										: phase.state === "cancelled"
-											? "error"
-											: "info"
-								}
-							>
-								{phase.state.replaceAll("_", " ")}
+							<Badge type={phaseStatus[phase.state].badge}>
+								{phaseStatus[phase.state].label}
 							</Badge>
 							<div class="grid min-w-52 gap-1.5 md:justify-items-end md:text-right">
 								<p class="font-medium tabular-nums">

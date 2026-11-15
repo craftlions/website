@@ -19,6 +19,12 @@ import {
 	isInvoiceComponentDue,
 } from "../../../../lib/phase-billing.ts";
 import {
+	costPartLabel,
+	invoiceStatus,
+	isInvoiceOverdue,
+	phaseStatus,
+} from "../../../../lib/status.ts";
+import {
 	organizationStripeInvoices,
 	stripeInvoiceFields,
 } from "../../../../lib/stripe.ts";
@@ -177,9 +183,8 @@ const totalOutstanding = sumByCurrency(
 		})),
 	defaultCurrency,
 );
-const overdueTargets = recordedTargets.filter(
-	(t) =>
-		t.invoice.status === "open" && t.invoice.dueAt && t.invoice.dueAt < now,
+const overdueTargets = recordedTargets.filter((t) =>
+	isInvoiceOverdue(t.invoice, now),
 );
 const totalOverdue = sumByCurrency(
 	overdueTargets.map((t) => ({
@@ -249,11 +254,6 @@ const invoicedByPart = groupByPartAndCurrency(
 	})),
 );
 const dueByPart = groupByPartAndCurrency(attachableTargets);
-const componentLabel: Record<string, string> = {
-	upfront: "Upfront part",
-	delivery: "Delivery part",
-	acceptance: "Acceptance part",
-};
 const phaseSplit = (target: (typeof componentTargets)[number]) =>
 	buildPhaseComponents({
 		upfrontAmount: target.upfrontAmount,
@@ -269,33 +269,6 @@ const paidCount = recordedTargets.filter(
 	(t) => t.invoice.status === "paid",
 ).length;
 const showRecordedFilter = openCount > 0 && paidCount > 0;
-
-const getInvoiceStatus = (invoice: { status: string; dueAt: Date | null }) => {
-	if (invoice.status === "paid") {
-		return { label: "Paid", type: "success" as const, isOverdue: false };
-	}
-	if (invoice.status === "open") {
-		if (invoice.dueAt && invoice.dueAt < now) {
-			return { label: "Overdue", type: "error" as const, isOverdue: true };
-		}
-		return { label: "Open", type: "info" as const, isOverdue: false };
-	}
-	if (invoice.status === "void" || invoice.status === "uncollectible") {
-		return {
-			label: invoice.status,
-			type: "error" as const,
-			isOverdue: false,
-		};
-	}
-	if (invoice.status === "draft") {
-		return { label: "Draft", type: "gray" as const, isOverdue: false };
-	}
-	return {
-		label: invoice.status,
-		type: "info" as const,
-		isOverdue: false,
-	};
-};
 
 const getAttachmentGuidance = (
 	invoice: (typeof unattachedInvoices)[number],
@@ -315,7 +288,7 @@ const getAttachmentGuidance = (
 			.slice(0, 2)
 			.map(
 				(t) =>
-					`"${t.project.name} · ${t.title}" (${t.component}, state: ${t.state.replace("_", " ")})`,
+					`"${t.project.name} · ${t.title}" (${costPartLabel[t.component]}, ${phaseStatus[t.state].label})`,
 			)
 			.join(", ");
 		const extra =
@@ -480,15 +453,12 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 												<span> · </span>
 												<span
 													class:list={[
-														invoice.status === "open" &&
-															invoice.dueAt < now &&
+														isInvoiceOverdue(invoice, now) &&
 															"font-semibold text-fg-danger",
 													]}
 												>
 													due {formatDate(invoice.dueAt)}
-													{invoice.status === "open" &&
-														invoice.dueAt < now &&
-														" (overdue)"}
+													{isInvoiceOverdue(invoice, now) && " (overdue)"}
 												</span>
 											</>
 										)}
@@ -522,7 +492,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 													selected={targetValue(target) === suggested}
 												>
 													{target.project.name} · {target.title} ·{" "}
-													{target.component} ·{" "}
+													{costPartLabel[target.component]} ·{" "}
 													{formatMoney(target.amount, target.currency)}
 													{targetValue(target) === suggested
 														? " (suggested)"
@@ -575,11 +545,9 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 								<p class="font-medium tabular-nums">
 									{formatMoney(target.amount, target.currency)}
 								</p>
-								<Badge type="info">
-									{componentLabel[target.component] ?? target.component}
-								</Badge>
+								<Badge type="info">{costPartLabel[target.component]}</Badge>
 							</div>
-							<Badge type="info">due</Badge>
+							<Badge type="info">Due</Badge>
 						</li>
 					))}
 				</ul>
@@ -618,7 +586,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 			<ul class="grid border border-dashed border-line">
 				{recordedTargets.length > 0 ? (
 					recordedTargets.map((target) => {
-						const status = getInvoiceStatus(target.invoice);
+						const status = invoiceStatus(target.invoice, now);
 						const rowCategory =
 							target.invoice.status === "paid" ? "paid" : "open";
 						return (
@@ -635,9 +603,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 										>
 											{target.invoice.number}
 										</a>
-										<Badge type="info">
-											{componentLabel[target.component] ?? target.component}
-										</Badge>
+										<Badge type="info">{costPartLabel[target.component]}</Badge>
 									</div>
 									<p class="text-sm">
 										<a
@@ -664,11 +630,11 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 												<span> · </span>
 												<span
 													class:list={[
-														status.isOverdue && "font-semibold text-fg-danger",
+														status.overdue && "font-semibold text-fg-danger",
 													]}
 												>
 													due {formatDate(target.invoice.dueAt)}
-													{status.isOverdue && " (overdue)"}
+													{status.overdue && " (overdue)"}
 												</span>
 											</>
 										)}
@@ -697,7 +663,7 @@ const sectionLabelClass = "text-label uppercase text-fg-muted";
 											</p>
 										))}
 								</div>
-								<Badge type={status.type}>{status.label}</Badge>
+								<Badge type={status.badge}>{status.label}</Badge>
 								<div class="grid gap-1 md:text-right">
 									<p class="font-medium tabular-nums">
 										{formatMoney(target.invoice.total, target.currency)}
