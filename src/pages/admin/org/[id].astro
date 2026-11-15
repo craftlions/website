@@ -1,10 +1,15 @@
 ---
 export const prerender = false;
 
+import { actions } from "astro:actions";
 import { and, count, eq, type SQLWrapper, sql, sum } from "drizzle-orm";
+import AdminWorklist from "../../../components/AdminWorklist.astro";
 import CostSplit from "../../../components/CostSplit.astro";
 import AdminOrgShell from "../../../layouts/AdminOrgShell.astro";
-import { deriveWorklist } from "../../../lib/admin-worklist.ts";
+import {
+	deriveWorklist,
+	getLatestPhaseStateEventIds,
+} from "../../../lib/admin-worklist.ts";
 import {
 	deriveBudgetConsumption,
 	getSpendByYear,
@@ -12,13 +17,16 @@ import {
 import { formatMoney, formatPercent } from "../../../lib/format.ts";
 import {
 	invoices,
-	member,
 	organizationMetadata,
 	organization as organizationTable,
 	phases,
 	projects,
 } from "../../../lib/schema.ts";
-import { liveInvoices, stripeInvoiceTotal } from "../../../lib/stripe.ts";
+import {
+	liveInvoices,
+	stripeInvoiceFields,
+	stripeInvoiceTotal,
+} from "../../../lib/stripe.ts";
 
 const { id } = Astro.params;
 
@@ -31,113 +39,115 @@ const scalar = (query: SQLWrapper) => sql<number>`(${query})`;
 // S-004 R4: one full-history module read per organization; deriveBudget
 // selects the current-year rows. Any read failure aborts this page — no
 // fallback or alternate calculation (R8).
-const [[organization], openAttachedInvoices, spendRows, worklistProjects] =
-	await Promise.all([
-		Astro.locals.db
-			.select({
-				id: organizationTable.id,
-				name: organizationTable.name,
-				yearlyBudget: organizationMetadata.yearlyBudget,
-				openInvoiceTotal: scalar(
-					Astro.locals.db
-						.select({
-							value: sum(stripeInvoiceTotal(liveInvoices)),
-						})
-						.from(phases)
-						.innerJoin(projects, eq(phases.projectId, projects.id))
-						.innerJoin(invoices, eq(invoices.phaseId, phases.id))
-						.innerJoin(liveInvoices, eq(liveInvoices.id, invoices.stripeId))
-						.where(
-							and(
-								eq(projects.organizationId, organizationTable.id),
-								eq(liveInvoices.status, "open"),
-							),
+const [
+	[organization],
+	openAttachedInvoices,
+	spendRows,
+	projectRows,
+	latestStateEventIds,
+] = await Promise.all([
+	Astro.locals.db
+		.select({
+			id: organizationTable.id,
+			name: organizationTable.name,
+			yearlyBudget: organizationMetadata.yearlyBudget,
+			openInvoiceTotal: scalar(
+				Astro.locals.db
+					.select({
+						value: sum(stripeInvoiceTotal(liveInvoices)),
+					})
+					.from(phases)
+					.innerJoin(projects, eq(phases.projectId, projects.id))
+					.innerJoin(invoices, eq(invoices.phaseId, phases.id))
+					.innerJoin(liveInvoices, eq(liveInvoices.id, invoices.stripeId))
+					.where(
+						and(
+							eq(projects.organizationId, organizationTable.id),
+							eq(liveInvoices.status, "open"),
 						),
-				),
-				activeProjectCount: scalar(
-					Astro.locals.db
-						.select({
-							value: count(),
-						})
-						.from(projects)
-						.where(
-							and(
-								eq(projects.organizationId, organizationTable.id),
-								eq(projects.state, "active"),
-							),
+					),
+			),
+			activeProjectCount: scalar(
+				Astro.locals.db
+					.select({
+						value: count(),
+					})
+					.from(projects)
+					.where(
+						and(
+							eq(projects.organizationId, organizationTable.id),
+							eq(projects.state, "active"),
 						),
-				),
-				openInvoiceCount: scalar(
-					Astro.locals.db
-						.select({
-							value: count(),
-						})
-						.from(liveInvoices)
-						.innerJoin(
-							organizationMetadata,
-							eq(organizationMetadata.stripeCustomerId, liveInvoices.customer),
-						)
-						.where(
-							and(
-								eq(organizationMetadata.organizationId, organizationTable.id),
-								eq(liveInvoices.status, "open"),
-							),
-						),
-				),
-				memberCount: scalar(
-					Astro.locals.db
-						.select({
-							value: count(),
-						})
-						.from(member)
-						.where(eq(member.organizationId, organizationTable.id)),
-				),
-			})
-			.from(organizationTable)
-			.leftJoin(
-				organizationMetadata,
-				eq(organizationMetadata.organizationId, organizationTable.id),
-			)
-			.where(eq(organizationTable.id, id))
-			.limit(1),
-		// Open attached invoices grouped by cost part so the overview shows all
-		// three types, matching the openInvoiceTotal scope (attached only).
-		Astro.locals.db.query.invoices.findMany({
-			columns: { component: true },
-			with: {
-				stripe: {
-					columns: { status: true },
-					extras: { total: stripeInvoiceTotal },
+					),
+			),
+		})
+		.from(organizationTable)
+		.leftJoin(
+			organizationMetadata,
+			eq(organizationMetadata.organizationId, organizationTable.id),
+		)
+		.where(eq(organizationTable.id, id))
+		.limit(1),
+	// Open attached invoices grouped by cost part so the overview shows all
+	// three types, matching the openInvoiceTotal scope (attached only).
+	Astro.locals.db.query.invoices.findMany({
+		columns: { component: true },
+		with: {
+			stripe: {
+				columns: { status: true },
+				extras: { total: stripeInvoiceTotal },
+			},
+		},
+		where: {
+			organizationId: id,
+			stripe: { status: "open" },
+		},
+	}),
+	getSpendByYear(Astro.locals.db, id),
+	// The worklist page's query, so the preview lists the same items.
+	Astro.locals.db.query.projects.findMany({
+		columns: {
+			id: true,
+			publicId: true,
+			name: true,
+		},
+		with: {
+			phases: {
+				columns: {
+					id: true,
+					publicId: true,
+					title: true,
+					cost: true,
+					upfrontAmount: true,
+					currency: true,
+					state: true,
+					version: true,
 				},
-			},
-			where: {
-				organizationId: id,
-				stripe: { status: "open" },
-			},
-		}),
-		getSpendByYear(Astro.locals.db, id),
-		// Only what the shared worklist derivation reads, so the count matches the
-		// worklist page; the count needs no age, so no event read.
-		Astro.locals.db.query.projects.findMany({
-			columns: { publicId: true },
-			with: {
-				phases: {
-					columns: { id: true, publicId: true, state: true },
-					with: {
-						invoices: {
-							columns: { id: true },
-							with: {
-								stripe: {
-									columns: { status: true, dueAt: true, invoicedAt: true },
-								},
-							},
+				with: {
+					invoices: {
+						columns: {
+							id: true,
+							component: true,
+						},
+						with: {
+							stripe: stripeInvoiceFields,
 						},
 					},
 				},
+				orderBy: {
+					id: "asc",
+				},
 			},
-			where: { organizationId: id },
-		}),
-	]);
+		},
+		where: {
+			organizationId: id,
+		},
+		orderBy: {
+			name: "asc",
+		},
+	}),
+	getLatestPhaseStateEventIds(Astro.locals.db, id),
+]);
 
 if (!organization) {
 	return Astro.redirect("/admin");
@@ -157,36 +167,38 @@ const { usagePercentage } = deriveBudgetConsumption(spendRows, yearlyBudget);
 // R7: "Budget used" shows a one-decimal uncapped percentage only when there
 // is a positive yearly budget; otherwise "No budget" with no percentage.
 const hasBudget = yearlyBudget > 0;
-const sections = [
-	{
-		label: "Worklist",
-		detail: `${deriveWorklist({ organizationId: organization.id, projects: worklistProjects }).length} need action`,
-		href: `/admin/org/${organization.id}/worklist`,
-	},
-	{
-		label: "Projects",
-		detail: `${organization.activeProjectCount} active`,
-		href: `/admin/org/${organization.id}/projects`,
-	},
-	{
-		label: "Invoices",
-		detail: `${organization.openInvoiceCount} open`,
-		href: `/admin/org/${organization.id}/invoices`,
-	},
-	{
-		label: "Members",
-		detail: `${organization.memberCount}`,
-		href: `/admin/org/${organization.id}/members`,
-	},
-	{
-		label: "Settings",
-		detail: null,
-		href: `/admin/org/${organization.id}/settings`,
-	},
-] as const;
 ---
 
-<AdminOrgShell {organization} activePage="overview">
+<AdminOrgShell
+	{organization}
+	activePage="overview"
+	results={[
+		[Astro.getActionResult(actions.transitionPhase), "Phase status changed"],
+		[Astro.getActionResult(actions.recordDelivery), "Delivery recorded"],
+	]}
+	fieldLabels={{ deliveryChoice: "Delivery", deliveryUrl: "Delivery URL" }}
+>
+	<section class="grid min-w-0 gap-3" aria-labelledby="worklist-heading">
+		<div class="grid gap-1">
+			<h2 id="worklist-heading" class="text-label uppercase text-fg-muted">
+				Worklist
+			</h2>
+			<p class="max-w-prose text-sm text-fg-muted">
+				Phases that need a step from you or the client, and invoices waiting for
+				payment.
+			</p>
+		</div>
+		<AdminWorklist
+			items={deriveWorklist({
+				organizationId: organization.id,
+				projects: projectRows,
+				latestStateEventIds,
+			})}
+			limit={5}
+			allHref={`/admin/org/${organization.id}/worklist`}
+			id="overview-worklist"
+		/>
+	</section>
 	<section class="grid gap-4" aria-labelledby="overview-heading">
 		<h2 id="overview-heading" class="sr-only">Overview</h2>
 		<dl class="grid gap-3 md:grid-cols-3">
@@ -224,18 +236,5 @@ const sections = [
 				>
 			</div>
 		</dl>
-		<div class="grid gap-3 md:grid-cols-2">
-			{sections.map((section) => (
-				<a
-					class="grid gap-1 border border-dashed border-line p-4 transition-colors hover:border-line-active hover:bg-panel"
-					href={section.href}
-				>
-					<h3 class="font-semibold">{section.label}</h3>
-					{section.detail && (
-						<p class="text-sm tabular-nums text-fg-muted">{section.detail}</p>
-					)}
-				</a>
-			))}
-		</div>
 	</section>
 </AdminOrgShell>
