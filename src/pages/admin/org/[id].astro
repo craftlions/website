@@ -2,9 +2,9 @@
 export const prerender = false;
 
 import { actions } from "astro:actions";
-import { and, count, eq, type SQLWrapper, sql, sum } from "drizzle-orm";
 import AdminWorklist from "../../../components/AdminWorklist.astro";
-import CostSplit from "../../../components/CostSplit.astro";
+import Button from "../../../components/Button.astro";
+import SpendByYear from "../../../components/SpendByYear.astro";
 import AdminOrgShell from "../../../layouts/AdminOrgShell.astro";
 import {
 	deriveWorklist,
@@ -14,18 +14,19 @@ import {
 	deriveBudgetConsumption,
 	getSpendByYear,
 } from "../../../lib/budget-consumption.ts";
-import { formatMoney, formatPercent } from "../../../lib/format.ts";
 import {
-	invoices,
-	organizationMetadata,
-	organization as organizationTable,
-	phases,
-	projects,
-} from "../../../lib/schema.ts";
+	formatMoney,
+	formatPercent,
+	sumByCurrency,
+} from "../../../lib/format.ts";
 import {
-	liveInvoices,
+	invoiceComponents,
+	isInvoiceComponentDue,
+} from "../../../lib/phase-billing.ts";
+import { isInvoiceOverdue } from "../../../lib/status.ts";
+import {
+	organizationStripeInvoices,
 	stripeInvoiceFields,
-	stripeInvoiceTotal,
 } from "../../../lib/stripe.ts";
 
 const { id } = Astro.params;
@@ -34,139 +35,105 @@ if (!id) {
 	return Astro.redirect("/admin");
 }
 
-const scalar = (query: SQLWrapper) => sql<number>`(${query})`;
-
-// S-004 R4: one full-history module read per organization; deriveBudget
-// selects the current-year rows. Any read failure aborts this page — no
-// fallback or alternate calculation (R8).
-const [
-	[organization],
-	openAttachedInvoices,
-	spendRows,
-	projectRows,
-	latestStateEventIds,
-] = await Promise.all([
-	Astro.locals.db
-		.select({
-			id: organizationTable.id,
-			name: organizationTable.name,
-			yearlyBudget: organizationMetadata.yearlyBudget,
-			openInvoiceTotal: scalar(
-				Astro.locals.db
-					.select({
-						value: sum(stripeInvoiceTotal(liveInvoices)),
-					})
-					.from(phases)
-					.innerJoin(projects, eq(phases.projectId, projects.id))
-					.innerJoin(invoices, eq(invoices.phaseId, phases.id))
-					.innerJoin(liveInvoices, eq(liveInvoices.id, invoices.stripeId))
-					.where(
-						and(
-							eq(projects.organizationId, organizationTable.id),
-							eq(liveInvoices.status, "open"),
-						),
-					),
-			),
-			activeProjectCount: scalar(
-				Astro.locals.db
-					.select({
-						value: count(),
-					})
-					.from(projects)
-					.where(
-						and(
-							eq(projects.organizationId, organizationTable.id),
-							eq(projects.state, "active"),
-						),
-					),
-			),
-		})
-		.from(organizationTable)
-		.leftJoin(
-			organizationMetadata,
-			eq(organizationMetadata.organizationId, organizationTable.id),
-		)
-		.where(eq(organizationTable.id, id))
-		.limit(1),
-	// Open attached invoices grouped by cost part so the overview shows all
-	// three types, matching the openInvoiceTotal scope (attached only).
-	Astro.locals.db.query.invoices.findMany({
-		columns: { component: true },
-		with: {
-			stripe: {
-				columns: { status: true },
-				extras: { total: stripeInvoiceTotal },
+const [organization, projects, latestStateEventIds, openInvoices, spendRows] =
+	await Promise.all([
+		Astro.locals.db.query.organization.findFirst({
+			columns: {
+				id: true,
+				name: true,
 			},
-		},
-		where: {
-			organizationId: id,
-			stripe: { status: "open" },
-		},
-	}),
-	getSpendByYear(Astro.locals.db, id),
-	// The worklist page's query, so the preview lists the same items.
-	Astro.locals.db.query.projects.findMany({
-		columns: {
-			id: true,
-			publicId: true,
-			name: true,
-		},
-		with: {
-			phases: {
-				columns: {
-					id: true,
-					publicId: true,
-					title: true,
-					cost: true,
-					upfrontAmount: true,
-					currency: true,
-					state: true,
-					version: true,
-				},
-				with: {
-					invoices: {
-						columns: {
-							id: true,
-							component: true,
-						},
-						with: {
-							stripe: stripeInvoiceFields,
-						},
+			with: {
+				data: {
+					columns: {
+						yearlyBudget: true,
 					},
 				},
-				orderBy: {
-					id: "asc",
+			},
+			where: {
+				id,
+			},
+		}),
+		// The worklist page's query, so the preview lists the same items, plus
+		// the delivery and acceptance amounts that "To invoice" adds up.
+		Astro.locals.db.query.projects.findMany({
+			columns: {
+				id: true,
+				publicId: true,
+				name: true,
+			},
+			with: {
+				phases: {
+					columns: {
+						id: true,
+						publicId: true,
+						title: true,
+						cost: true,
+						upfrontAmount: true,
+						deliveryAmount: true,
+						acceptanceAmount: true,
+						currency: true,
+						state: true,
+						version: true,
+					},
+					with: {
+						invoices: {
+							columns: {
+								id: true,
+								component: true,
+							},
+							with: {
+								stripe: stripeInvoiceFields,
+							},
+						},
+					},
+					orderBy: {
+						id: "asc",
+					},
 				},
 			},
-		},
-		where: {
-			organizationId: id,
-		},
-		orderBy: {
-			name: "asc",
-		},
-	}),
-	getLatestPhaseStateEventIds(Astro.locals.db, id),
-]);
+			where: {
+				organizationId: id,
+			},
+			orderBy: {
+				name: "asc",
+			},
+		}),
+		getLatestPhaseStateEventIds(Astro.locals.db, id),
+		// Attached and unattached, as in the Invoices tab's summary.
+		Astro.locals.db.query.stripeInvoices.findMany({
+			columns: {
+				status: true,
+				currency: true,
+				dueAt: true,
+			},
+			extras: {
+				total: stripeInvoiceFields.extras.total,
+			},
+			where: {
+				...organizationStripeInvoices(id),
+				status: "open",
+			},
+		}),
+		// The client dashboard's spend history: the one grouped aggregate here,
+		// since the relational API cannot group by year.
+		getSpendByYear(Astro.locals.db, id),
+	]);
 
 if (!organization) {
 	return Astro.redirect("/admin");
 }
-const openByPart = ["upfront", "delivery", "acceptance"]
-	.map((component) => ({
-		component: component as "upfront" | "delivery" | "acceptance",
-		amount: openAttachedInvoices
-			.filter((invoice) => invoice.component === component)
-			.reduce((total, invoice) => total + (invoice.stripe?.total ?? 0), 0),
-	}))
-	.filter((part) => part.amount !== 0)
-	.map((part) => ({ ...part, status: "not_due" as const }));
 
-const yearlyBudget = organization.yearlyBudget ?? 0;
-const { usagePercentage } = deriveBudgetConsumption(spendRows, yearlyBudget);
-// R7: "Budget used" shows a one-decimal uncapped percentage only when there
-// is a positive yearly budget; otherwise "No budget" with no percentage.
-const hasBudget = yearlyBudget > 0;
+const now = new Date();
+const yearlyBudget = organization.data?.yearlyBudget ?? 0;
+const { currentYearTotal, usagePercentage } = deriveBudgetConsumption(
+	spendRows,
+	yearlyBudget,
+	now,
+);
+const overdueInvoices = openInvoices.filter((invoice) =>
+	isInvoiceOverdue(invoice, now),
+);
+const invoicesHref = `/admin/org/${organization.id}/invoices`;
 ---
 
 <AdminOrgShell
@@ -191,50 +158,149 @@ const hasBudget = yearlyBudget > 0;
 		<AdminWorklist
 			items={deriveWorklist({
 				organizationId: organization.id,
-				projects: projectRows,
+				projects,
 				latestStateEventIds,
+				now,
 			})}
 			limit={5}
 			allHref={`/admin/org/${organization.id}/worklist`}
 			id="overview-worklist"
 		/>
 	</section>
-	<section class="grid gap-4" aria-labelledby="overview-heading">
-		<h2 id="overview-heading" class="sr-only">Overview</h2>
-		<dl class="grid gap-3 md:grid-cols-3">
+	<div class="grid min-w-0 content-start gap-6">
+		<section class="grid content-start gap-4" aria-labelledby="money-heading">
 			<div class="grid gap-1">
-				<dt class="label-caps">Budget used</dt>
-				<dd
-					class:list={[
-						"text-title tabular-nums",
-						hasBudget && usagePercentage > 100 && "text-fg-danger",
-					]}
-					>{hasBudget ? formatPercent(usagePercentage) : "No budget"}</dd
-				>
+				<h2 id="money-heading" class="text-label uppercase text-fg-muted">
+					Money
+				</h2>
+				<p class="max-w-prose text-sm text-fg-muted">
+					Budget for the current calendar year, and invoices waiting for payment
+					or to be sent.
+				</p>
 			</div>
-			<div class="grid content-start gap-1">
-				<dt class="label-caps">Open invoices</dt>
-				<dd class="text-title tabular-nums"
-					>{formatMoney(organization.openInvoiceTotal, "EUR")}</dd
-				>
-				{openByPart.length > 0 && (
-					<dd>
-						<CostSplit
-							items={openByPart}
-							currency="EUR"
-							total={organization.openInvoiceTotal}
-							variant="compact"
-							showStatus={false}
-						/>
+			<dl class="grid border-t border-dashed border-line">
+				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
+					<dt class="label-caps">Yearly budget</dt>
+					{yearlyBudget > 0 ? (
+						<dd class="text-title tabular-nums wrap-break-word">
+							{formatMoney(yearlyBudget, "EUR")}
+						</dd>
+					) : (
+						<dd class="grid gap-1 text-sm">
+							<span class="text-fg-muted">No yearly budget set.</span>
+							<Button
+								href={`/admin/org/${organization.id}/settings#billing-heading`}
+								variant="quiet"
+							>
+								Set a budget in settings
+							</Button>
+						</dd>
+					)}
+				</div>
+				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
+					<dt class="label-caps">Invoiced this year</dt>
+					<dd class="text-title tabular-nums wrap-break-word">
+						{formatMoney(currentYearTotal, "EUR")}
 					</dd>
+				</div>
+				{yearlyBudget > 0 && (
+					<div class="grid min-w-0 gap-2 border-b border-dashed border-line p-4">
+						<dt class="label-caps">Budget used</dt>
+						<dd
+							class:list={[
+								"text-title tabular-nums",
+								usagePercentage > 100 && "text-fg-danger",
+							]}
+						>
+							{formatPercent(usagePercentage)}
+						</dd>
+						<dd class="grid">
+							<progress
+								aria-label="Budget used"
+								max="100"
+								value={Math.min(usagePercentage, 100)}
+								class:list={[
+									"h-2 w-full appearance-none border border-dashed border-line bg-transparent [&::-webkit-progress-bar]:bg-transparent",
+									usagePercentage > 100
+										? "[&::-webkit-progress-value]:bg-fill-danger [&::-moz-progress-bar]:bg-fill-danger"
+										: "[&::-webkit-progress-value]:bg-ink [&::-moz-progress-bar]:bg-ink",
+								]}
+							>
+								{`${formatPercent(usagePercentage)} used`}
+							</progress>
+						</dd>
+					</div>
 				)}
-			</div>
-			<div class="grid gap-1">
-				<dt class="label-caps">Active projects</dt>
-				<dd class="text-title tabular-nums"
-					>{organization.activeProjectCount}</dd
-				>
-			</div>
-		</dl>
-	</section>
+				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
+					<dt class="label-caps">Outstanding</dt>
+					<dd class="text-title tabular-nums wrap-break-word">
+						<a
+							href={`${invoicesHref}#invoices`}
+							class="underline decoration-dashed underline-offset-4"
+						>
+							{sumByCurrency(
+								openInvoices.map((invoice) => ({
+									amount: invoice.total,
+									currency: invoice.currency,
+								})),
+							)}
+							<span class="sr-only"> outstanding, see invoices</span>
+						</a>
+					</dd>
+				</div>
+				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
+					<dt class="label-caps">Overdue</dt>
+					<dd
+						class:list={[
+							"text-title tabular-nums wrap-break-word",
+							overdueInvoices.length > 0 && "text-fg-danger",
+						]}
+					>
+						<a
+							href={`${invoicesHref}#invoices`}
+							class="underline decoration-dashed underline-offset-4"
+						>
+							{sumByCurrency(
+								overdueInvoices.map((invoice) => ({
+									amount: invoice.total,
+									currency: invoice.currency,
+								})),
+							)}
+							<span class="sr-only"> overdue, see invoices</span>
+						</a>
+					</dd>
+				</div>
+				<div class="grid min-w-0 gap-1 border-b border-dashed border-line p-4">
+					<dt class="label-caps">To invoice</dt>
+					<dd class="text-title tabular-nums wrap-break-word">
+						<a
+							href={`${invoicesHref}#to-invoice`}
+							class="underline decoration-dashed underline-offset-4"
+						>
+							{sumByCurrency(
+								projects.flatMap((project) =>
+									project.phases.flatMap((phase) =>
+										invoiceComponents.flatMap((component) => {
+											// A due, priced cost part without an invoice, as
+											// on the Invoices tab.
+											const amount = phase[`${component}Amount`];
+											return amount &&
+												isInvoiceComponentDue(component, phase.state) &&
+												phase.invoices.every(
+													(invoice) => invoice.component !== component,
+												)
+												? [{ amount, currency: phase.currency }]
+												: [];
+										}),
+									),
+								),
+							)}
+							<span class="sr-only"> to invoice, see due cost parts</span>
+						</a>
+					</dd>
+				</div>
+			</dl>
+		</section>
+		<SpendByYear rows={spendRows} />
+	</div>
 </AdminOrgShell>
