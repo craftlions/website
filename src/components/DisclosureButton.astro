@@ -19,7 +19,13 @@ const { controls, open = false, class: className, ...attrs } = Astro.props;
 
 <Button
 	{...attrs}
-	class:list={["group", className]}
+	class:list={[
+		"group",
+		// The quiet variant is inline text; this keeps the chevron on the
+		// label's line (default and danger already lay out as this grid).
+		attrs.variant === "quiet" && "inline-grid grid-flow-col items-center gap-1",
+		className,
+	]}
 	aria-expanded={open ? "true" : "false"}
 	aria-controls={controls}
 	data-disclosure-toggle
