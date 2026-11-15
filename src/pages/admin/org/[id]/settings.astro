@@ -184,7 +184,9 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 					<Field
 						label="Stripe customer ID"
 						name="stripeCustomerId"
-						value={submitted?.get("stripeCustomerId") ??
+						value={(organization.invoices.length > 0
+							? undefined
+							: submitted?.get("stripeCustomerId")) ??
 							organization.data?.stripeCustomerId ??
 							""}
 						placeholder="cus_…"
