@@ -202,9 +202,9 @@ export const deriveWorklist = <Project extends WorklistProjectInput>(input: {
 					return overdueInvoices.map((invoice) => invoiceItem(invoice, true));
 				}
 
-				const stateIndex = worklistPhaseStates.findIndex(
-					(state) => state === phase.state,
-				);
+				const stateIndex = (
+					worklistPhaseStates as readonly PhaseState[]
+				).indexOf(phase.state);
 				const state = worklistPhaseStates[stateIndex];
 				if (state) {
 					const ageDays = daysBetween(
