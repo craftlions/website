@@ -14,8 +14,8 @@ import {
 	sumByCurrency,
 } from "../../../../lib/format.ts";
 import {
+	costPartsToInvoice,
 	invoiceComponents,
-	isInvoiceComponentDue,
 } from "../../../../lib/phase-billing.ts";
 import {
 	costPartLabel,
@@ -139,8 +139,10 @@ const parts = projects.flatMap((project) =>
 const unbilledParts = parts.filter(
 	(part) => !part.link && part.phase.state !== "cancelled",
 );
-const dueParts = unbilledParts.filter((part) =>
-	isInvoiceComponentDue(part.component, part.phase.state),
+const dueParts = projects.flatMap((project) =>
+	project.phases.flatMap((phase) =>
+		costPartsToInvoice(phase).map((part) => ({ ...part, project, phase })),
+	),
 );
 const recorded = parts
 	.flatMap((part) =>

@@ -25,10 +25,7 @@ import {
 	formatPercent,
 	sumByCurrency,
 } from "../../../lib/format.ts";
-import {
-	invoiceComponents,
-	isInvoiceComponentDue,
-} from "../../../lib/phase-billing.ts";
+import { costPartsToInvoice } from "../../../lib/phase-billing.ts";
 import {
 	type BadgeType,
 	isInvoiceOverdue,
@@ -332,18 +329,10 @@ const setupGaps = [
 								{sumByCurrency(
 									projects.flatMap((project) =>
 										project.phases.flatMap((phase) =>
-											invoiceComponents.flatMap((component) => {
-												// A due, priced cost part without an invoice, as
-												// on the Invoices tab.
-												const amount = phase[`${component}Amount`];
-												return amount &&
-													isInvoiceComponentDue(component, phase.state) &&
-													phase.invoices.every(
-														(invoice) => invoice.component !== component,
-													)
-													? [{ amount, currency: phase.currency }]
-													: [];
-											}),
+											costPartsToInvoice(phase).map((part) => ({
+												amount: part.amount,
+												currency: phase.currency,
+											})),
 										),
 									),
 								)}

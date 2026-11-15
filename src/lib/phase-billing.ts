@@ -73,3 +73,9 @@ export const buildPhaseComponents = (input: {
 		})
 		.filter((item): item is PhaseComponentItem => item !== null);
 };
+
+// What the admin still has to invoice: the phase's priced cost parts that are
+// due and have no linked invoice.
+export const costPartsToInvoice = (
+	phase: Parameters<typeof buildPhaseComponents>[0],
+) => buildPhaseComponents(phase).filter((part) => part.status === "due");
