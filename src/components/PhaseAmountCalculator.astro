@@ -67,9 +67,9 @@ const percentages = [
 		</p>
 		{parts.map((part, index) => (
 			<div class="grid grid-cols-[minmax(0,1fr)_7rem] items-center gap-x-3 gap-y-0.5">
-				<label for={`${id}-${part.key}`} class="text-label wrap-break-word">
-					{part.label}{" "}
-					<span class="font-normal text-fg-muted">{part.when}</span>
+				<label for={`${id}-${part.key}`} class="text-sm wrap-break-word">
+					<span class="text-label">{part.label}</span>{" "}
+					<span class="text-fg-muted">{part.when}</span>
 				</label>
 				<span class="row-span-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-line-control px-3 py-2 text-sm transition-colors focus-within:border-line-active">
 					<input
@@ -95,11 +95,9 @@ const percentages = [
 		<div
 			class="grid grid-cols-[minmax(0,1fr)_7rem] items-center gap-x-3 gap-y-0.5"
 		>
-			<p class="text-label wrap-break-word">
-				Acceptance{" "}
-				<span class="font-normal text-fg-muted"
-					>billed on acceptance · remainder</span
-				>
+			<p class="text-sm wrap-break-word">
+				<span class="text-label">Acceptance</span>{" "}
+				<span class="text-fg-muted">billed on acceptance · remainder</span>
 			</p>
 			<output
 				class="row-span-2 border border-dashed border-line-control px-3 py-2 text-sm tabular-nums text-fg-muted"
