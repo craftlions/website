@@ -204,7 +204,7 @@ Biome is excluded from this file because it flattens the YAML frontmatter that I
 | `bg-info-subtle`                                  | Tinted highlight of a linked target                                          |
 | `outline-fill-info`                               | Dashed outline of a linked target, with `bg-info-subtle`                     |
 | `border-line`                                     | Default structure, also `divide-line`                                        |
-| `border-line-strong`                              | Headline rules, gray badges, also `bg-` and `decoration-`                    |
+| `border-line-strong`                              | Headline rules, gray badges, the current year in the spend chart, also `bg-` |
 | `border-line-control`                             | Input, select and checkbox outlines and the progress track (3:1)             |
 | `border-line-active`                              | Hover, focus, and pressed borders                                            |
 | `border-line-danger`, `-success`, `-info`         | Status outlines                                                              |
@@ -233,7 +233,7 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 - **Categorical series** (`chart-categorical`, dark `chart-categorical-dark`): project segments render as **diagonal hatching** (a 135° repeating linear gradient) in muted ink colors at reduced opacity (70% light, 80% dark), cycled in stable order; repeat when a year holds more projects than the palette. The hatch pattern, not a solid fill, separates one project from another.
 - **Unassigned** (`chart-unassigned`): phase-less spend stays a neutral gray so it reads as "not a project" and is drawn open (no fill).
 - **State colors keep their meaning everywhere, including the chart**: never use status hues for segments or fills.
-- **Color is never the only code**: bars carry their exact year total as text, each bar labels its year, the legend maps a hatch swatch to its project name, and the exact-amounts table holds the numbers.
+- **Color is never the only code**: bars carry their exact year total as text (the current year's total sits on a dashed `line-strong` rule, never a text underline, which is reserved for links), each bar labels its year, the legend maps a hatch swatch to its project name, and the exact-amounts table holds the numbers.
 - **Negative adjustments**: the chart cannot draw them. When any bar holds negative spend, a note appears and directs the reader to the exact amounts for the complete breakdown.
 
 ## 3. Typography
