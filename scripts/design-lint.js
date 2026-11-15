@@ -82,6 +82,13 @@ const rules = [
 		doc: "DESIGN.md#buttons",
 		ignore: "src/components/Button.astro",
 	},
+	{
+		id: "style-block",
+		pattern: /<style\b/g,
+		use: "inline Tailwind utilities, or a global rule in src/styles/",
+		doc: "CLAUDE.md",
+		only: "src/components/",
+	},
 ];
 
 // Shadow, rounded and flex are also ordinary words, so those rules skip free text.
@@ -95,7 +102,10 @@ const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
 			/^\s*(?:\/\/|\/\*|\*)/.test(line)
 				? []
 				: rules
-						.filter(({ ignore }) => ignore !== file)
+						.filter(
+							({ ignore, only }) =>
+								ignore !== file && (!only || file.startsWith(only)),
+						)
 						.flatMap(({ pattern, use, doc, classOnly }) =>
 							[...(classOnly ? classText(line) : line).matchAll(pattern)].map(
 								([match]) =>
