@@ -47,5 +47,21 @@
 				color: var(--fg-muted);
 			}
 		}
+
+		/* The imprint column: its text indented to the heading's rule, inside
+		   the page column rather than beside it. */
+		& .imprint {
+			inline-size: 100%;
+			max-inline-size: var(--column);
+			margin-inline: auto;
+			padding-inline-start: var(--space-xs);
+
+			& .intro {
+				max-inline-size: var(--measure);
+			}
+		}
+		& address {
+			font-style: normal;
+		}
 	}
 }

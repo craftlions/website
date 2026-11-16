@@ -10,23 +10,19 @@ import Shell from "../layouts/Shell.astro";
 <Shell>
 	<Fragment slot="head"> <title>craftlions | Impressum</title> </Fragment>
 	<Fragment slot="body">
-		<body
-			class="min-h-dvh grid grid-rows-[auto_1fr_auto] gap-region p-gutter text-pretty"
-		>
-			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+		<body class="public">
+			<header class="stack center" data-space="m">
 				<Nav deferSessionLinks />
 			</header>
 
-			<main
-				class="w-full grid content-start min-h-0 pl-3 max-w-3xl mx-auto gap-6"
-			>
-				<div class="grid gap-4">
+			<main class="stack imprint" data-space="m">
+				<div class="stack">
 					<PageHeading> Impressum </PageHeading>
-					<p class="max-w-[65ch] text-sm text-fg-muted">
+					<p class="intro text-sm text-fg-muted">
 						Diese Seite enthält die gesetzlich vorgeschriebenen Angaben zur
 						Betreiberin der Website und die wichtigsten Kontaktinformationen.
 					</p>
-					<div class="grid gap-2 border border-dashed border-line p-4">
+					<div class="stack box" style="--stack-space: var(--space-2xs)">
 						<p class="text-label">Fragen zur Website?</p>
 						<p class="text-sm text-fg-muted">
 							Schreiben Sie mir direkt an&nbsp;
@@ -39,27 +35,27 @@ import Shell from "../layouts/Shell.astro";
 						</p>
 					</div>
 				</div>
-				<section class="grid gap-4">
-					<article class="grid gap-4 border border-dashed border-line p-4">
-						<div class="grid gap-1">
+				<section class="stack">
+					<article class="stack box">
+						<div class="stack" data-space="3xs">
 							<h2 class="text-title">Angaben gemäß § 5 DDG</h2>
 							<p class="text-sm text-fg-muted">
 								craftlions UG (haftungsbeschränkt)
 							</p>
 						</div>
-						<dl class="grid gap-3 text-sm text-fg-muted">
-							<div class="grid gap-1">
+						<dl class="stack text-sm text-fg-muted" data-space="xs">
+							<div class="stack" data-space="3xs">
 								<dt class="text-label text-fg"> Postanschrift </dt>
-								<dd class="not-italic">
-									<address class="not-italic">
+								<dd>
+									<address>
 										Amandus-Voigt-Str. 8<br>
 										23617 Stockelsdorf
 									</address>
 								</dd>
 							</div>
-							<div class="grid gap-1">
+							<div class="stack" data-space="3xs">
 								<dt class="text-label text-fg"> Kontakt </dt>
-								<dd class="grid gap-1 not-italic">
+								<dd class="stack" data-space="3xs">
 									<span>Telefon: auf Anfrage</span>
 									<a
 										href="mailto:alexander@craftlions.com"
@@ -69,13 +65,13 @@ import Shell from "../layouts/Shell.astro";
 									</a>
 								</dd>
 							</div>
-							<div class="grid gap-1">
+							<div class="stack" data-space="3xs">
 								<dt class="text-label text-fg"> Vertreten durch </dt>
-								<dd class="not-italic">Geschäftsführer: Alexander Niebuhr</dd>
+								<dd>Geschäftsführer: Alexander Niebuhr</dd>
 							</div>
 						</dl>
 					</article>
-					<article class="grid gap-3 border border-dashed border-line p-4">
+					<article class="stack box" style="--stack-space: var(--space-xs)">
 						<h2 class="text-title">
 							Verantwortlich für journalistisch-redaktionelle Inhalte
 						</h2>
@@ -83,7 +79,7 @@ import Shell from "../layouts/Shell.astro";
 							Alexander Niebuhr, Amandus-Voigt-Str. 8, 23617 Stockelsdorf
 						</p>
 					</article>
-					<article class="grid gap-3 border border-dashed border-line p-4">
+					<article class="stack box" style="--stack-space: var(--space-xs)">
 						<h2 class="text-title">Information gemäß § 36 VSBG</h2>
 						<p class="text-sm text-fg-muted">
 							Gemäß § 36 VSBG (Verbraucherstreitbeilegungsgesetz – Gesetz über
@@ -94,7 +90,7 @@ import Shell from "../layouts/Shell.astro";
 							Wir sind bereit, an Streitbeilegungsverfahren bei der folgenden
 							Verbraucherschlichtungsstelle teilzunehmen.
 						</p>
-						<address class="grid gap-1 text-sm text-fg-muted not-italic">
+						<address class="stack text-sm text-fg-muted" data-space="3xs">
 							<span>
 								Universalschlichtungsstelle des Bundes<br>
 								Zentrum für Schlichtung e. V.<br>
