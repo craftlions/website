@@ -57,14 +57,12 @@ const { items, canDecide, id = "worklist" } = Astro.props;
 // first question; craftlions' group shows only when it holds work.
 const groups = [
 	{
-		id: `${id}-your-move`,
 		label: "Your move",
 		items: items.filter((item) => item.actor === "client"),
 		empty:
 			"Nothing to do: no phase waits for your decision and no invoice is open.",
 	},
 	{
-		id: `${id}-waiting`,
 		label: "Waiting on craftlions",
 		items: items.filter((item) => item.actor === "craftlions"),
 		empty: null,
@@ -73,26 +71,34 @@ const groups = [
 ---
 
 {items.length > 0 ? (
-	<div class="client-worklist">
-		<div aria-hidden="true" class="client-worklist-head label-caps">
-			<span>Status</span>
-			<span>Item</span>
-			<span>Amount</span>
-			<span>Due</span>
-			<span>Action</span>
-		</div>
-		{groups.map((group) => (
-			<section aria-labelledby={group.id} class="client-worklist-group">
-				<h3 id={group.id} class="text-label">
-					{group.label}{" "}
-					<span class="tabular-nums text-fg-muted">· {group.items.length}</span>
-				</h3>
-				{group.items.length > 0 ? (
-					<ul>
-						{group.items.map((item) => (
+	<div
+		class="rows client-worklist"
+		data-at="60"
+		style="--rows-columns: auto minmax(0, 1fr) auto auto auto"
+	>
+		<ul>
+			<li aria-hidden="true" class="label-caps" data-head>
+				<span>Status</span>
+				<span>Item</span>
+				<span>Amount</span>
+				<span>Due</span>
+				<span>Action</span>
+			</li>
+			{groups.map((group) => (
+				<>
+					<li>
+						<h3 class="text-label">
+							{group.label}{" "}
+							<span class="tabular-nums text-fg-muted">
+								· {group.items.length}
+							</span>
+						</h3>
+					</li>
+					{group.items.length > 0 ? (
+						group.items.map((item) => (
 							<li>
 								<Badge type={item.badge}>{item.label}</Badge>
-								<div class="client-worklist-subject">
+								<div class="stack" data-space="3xs">
 									<h4 class="wrap-anywhere">
 										{item.kind === "phase" ? (
 											<a href={item.href} class="link">
@@ -116,8 +122,10 @@ const groups = [
 										</p>
 									)}
 								</div>
-								<p class="client-worklist-amount text-sm tabular-nums">
-									<span class="text-fg-muted">Amount </span>
+								<p class="client-worklist-end text-sm tabular-nums">
+									<span class="text-fg-muted" data-label>
+										Amount{" "}
+									</span>
 									{formatMoney(item.amount, item.currency)}
 								</p>
 								<p
@@ -129,7 +137,7 @@ const groups = [
 									{item.due}
 								</p>
 								{item.kind === "invoice" ? (
-									<div class="client-worklist-action">
+									<div class="client-worklist-action cluster">
 										<Button
 											href={item.invoice.paymentPage}
 											target="_blank"
@@ -140,7 +148,7 @@ const groups = [
 										</Button>
 									</div>
 								) : item.actor === "client" && canDecide ? (
-									<div class="client-worklist-action">
+									<div class="client-worklist-action cluster">
 										<ClientPhaseActions
 											phase={item.phase}
 											name={`${item.project.name} · ${item.phase.title}`}
@@ -151,21 +159,21 @@ const groups = [
 									</div>
 								) : (
 									item.actor === "client" && (
-										<p class="client-worklist-note text-sm text-fg-muted">
+										<p class="client-worklist-end text-sm text-fg-muted">
 											An owner or admin decides
 										</p>
 									)
 								)}
 							</li>
-						))}
-					</ul>
-				) : (
-					<p class="client-worklist-empty text-sm text-fg-muted">
-						{group.empty}
-					</p>
-				)}
-			</section>
-		))}
+						))
+					) : (
+						<li>
+							<p class="text-sm text-fg-muted">{group.empty}</p>
+						</li>
+					)}
+				</>
+			))}
+		</ul>
 	</div>
 ) : (
 	<p class="box text-sm text-fg-muted">

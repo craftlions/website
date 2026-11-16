@@ -1,131 +1,34 @@
 @layer components {
-	/* src/components/ClientWorklist.astro: groups of items in one dashed plane,
-	   stacked below lg and a table from lg, where every row lines up on the
-	   plane's five columns (status, item, amount, due, action) through
-	   subgrid. */
+	/* src/components/ClientWorklist.astro: a rows list whose groups are
+	   introduced by a heading row; from 60rem of its own width a table on five
+	   columns (status, item, amount, due, action). */
 	.client-worklist {
-		display: grid;
-		border: var(--rule) var(--line);
+		& [data-head] {
+			padding-block: var(--space-xs);
 
-		@media (width >= 64rem) {
-			grid-template-columns: auto minmax(0, 1fr) auto auto auto;
-			column-gap: var(--space-m);
+			& > :nth-child(3),
+			& > :nth-child(5) {
+				text-align: end;
+			}
+		}
+
+		/* A group's heading, or the note that it is empty, spans the row. */
+		& li > :only-child {
+			grid-column: 1 / -1;
+		}
+		& li:has(> h3) {
+			padding-block: var(--space-2xs);
 		}
 	}
 
-	/* Column names, shown only as a table. */
-	.client-worklist-head {
-		display: none;
-		border-block-end: var(--rule) var(--line);
-		padding: var(--space-xs) var(--space-s);
-
-		@media (width >= 64rem) {
-			grid-column: span 5 / span 5;
-			display: grid;
-			grid-template-columns: subgrid;
-		}
-
-		& > :nth-child(3),
-		& > :nth-child(5) {
+	/* Amount, actions and the "who decides" note sit at the column's end in
+	   the table. */
+	@container (inline-size >= 60rem) {
+		.client-worklist-end {
 			text-align: end;
 		}
-	}
-
-	.client-worklist-group {
-		display: grid;
-		min-inline-size: 0;
-		border-block-end: var(--rule) var(--line);
-
-		&:last-child {
-			border-block-end-width: 0;
-		}
-
-		& > h3 {
-			border-block-end: var(--rule) var(--line);
-			padding: var(--space-2xs) var(--space-s);
-		}
-
-		& > ul {
-			display: grid;
-			min-inline-size: 0;
-		}
-
-		& > ul > li {
-			display: grid;
-			min-inline-size: 0;
-			grid-template-columns: repeat(1, minmax(0, 1fr));
-			row-gap: var(--space-xs);
-			border-block-end: var(--rule) var(--line);
-			padding: var(--space-s);
-
-			&:last-child {
-				border-block-end-width: 0;
-			}
-		}
-
-		@media (width >= 64rem) {
-			grid-column: span 5 / span 5;
-			grid-template-columns: subgrid;
-
-			& > h3 {
-				grid-column: span 5 / span 5;
-			}
-
-			& > ul,
-			& > ul > li {
-				grid-column: span 5 / span 5;
-				grid-template-columns: subgrid;
-			}
-
-			& > ul > li {
-				align-items: center;
-			}
-		}
-	}
-
-	/* The item's name and invoice number. */
-	.client-worklist-subject {
-		display: grid;
-		min-inline-size: 0;
-		gap: var(--space-3xs);
-	}
-
-	/* Amount and the "who decides" note sit at the column's end in the table,
-	   where the amount's label is only read out. */
-	@media (width >= 64rem) {
-		.client-worklist-amount,
-		.client-worklist-note {
-			text-align: end;
-		}
-
-		.client-worklist-amount > span {
-			position: absolute;
-			inline-size: 1px;
-			block-size: 1px;
-			padding: 0;
-			margin: calc(-1 * var(--hairline));
-			overflow: hidden;
-			clip-path: inset(50%);
-			white-space: nowrap;
-			border-width: 0;
-		}
-	}
-
-	.client-worklist-action {
-		display: grid;
-		justify-items: start;
-		gap: var(--space-2xs);
-
-		@media (width >= 64rem) {
-			justify-items: end;
-		}
-	}
-
-	.client-worklist-empty {
-		padding: var(--space-s);
-
-		@media (width >= 64rem) {
-			grid-column: span 5 / span 5;
+		.client-worklist-action {
+			justify-content: flex-end;
 		}
 	}
 }
