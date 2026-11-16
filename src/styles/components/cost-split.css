@@ -1,27 +1,20 @@
 @layer components {
-	/* src/components/CostSplit.astro: a phase's cost parts, one row each with
-	   the amount at the end; data-variant="compact" keeps a row on one line. */
+	/* src/components/CostSplit.astro: a phase's cost parts, one line each with
+	   the amount at the end. */
 	.cost-split {
 		display: grid;
 		min-inline-size: 0;
 		gap: var(--space-3xs);
 
-		&[data-variant="full"] {
-			gap: var(--space-2xs);
-		}
-
 		& li {
 			display: grid;
 			grid-template-columns: minmax(0, 1fr) auto;
-			align-items: center;
+			align-items: baseline;
 			column-gap: var(--space-2xs);
 
 			& > :first-child {
 				min-inline-size: 0;
 			}
-		}
-		&[data-variant="compact"] li {
-			align-items: baseline;
 		}
 	}
 
@@ -32,14 +25,6 @@
 		& > span {
 			text-transform: none;
 		}
-	}
-
-	.cost-split-name {
-		display: grid;
-		grid-auto-flow: column;
-		align-items: baseline;
-		justify-content: start;
-		column-gap: var(--space-2xs);
 	}
 
 	.cost-split-amount {

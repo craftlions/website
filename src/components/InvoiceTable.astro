@@ -140,7 +140,6 @@ const partSummaryTotal = partSummaryItems.reduce(
 							items={partSummaryItems}
 							currency={partSummaryCurrency}
 							total={partSummaryTotal}
-							variant="compact"
 							showStatus={false}
 							caption={
 								unassignedTotal > 0
@@ -210,7 +209,6 @@ const partSummaryTotal = partSummaryItems.reduce(
 											items={invoice.components}
 											currency={invoice.phase.currency}
 											total={invoice.phase.cost}
-											variant="compact"
 											highlight={
 												invoice.component === "upfront" ||
 												invoice.component === "delivery" ||

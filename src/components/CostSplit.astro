@@ -1,16 +1,13 @@
 ---
 import type {
-	ComponentBillingStatus,
 	InvoiceComponent,
 	PhaseComponentItem,
 } from "../lib/phase-billing";
-import Badge from "./Badge.astro";
 
 interface Props {
 	items: PhaseComponentItem[];
 	currency: string;
 	total: number;
-	variant?: "full" | "compact";
 	showStatus?: boolean;
 	highlight?: InvoiceComponent | null;
 	caption?: string | null;
@@ -20,7 +17,6 @@ const {
 	items,
 	currency,
 	total,
-	variant = "full",
 	showStatus = true,
 	highlight = null,
 	caption = null,
@@ -41,23 +37,6 @@ const dueHint: Record<InvoiceComponent, string> = {
 	acceptance: "on acceptance",
 };
 
-const statusBadgeType: Record<
-	ComponentBillingStatus,
-	"info" | "success" | "error" | "gray"
-> = {
-	not_due: "gray",
-	due: "info",
-	invoiced: "info",
-	paid: "success",
-};
-
-const statusLabel: Record<ComponentBillingStatus, string> = {
-	not_due: "Not due",
-	due: "Due",
-	invoiced: "Invoiced",
-	paid: "Paid",
-};
-
 const share = (amount: number) =>
 	total > 0 ? percentFormatter.format(amount / total) : "—";
 const accessibleSummary =
@@ -75,8 +54,8 @@ const accessibleSummary =
 	<p class="text-xs text-fg-muted">
 		No chargeable parts · {formatter.format(total)}
 	</p>
-) : variant === "compact" ? (
-	<figure class="cost-split" data-variant="compact">
+) : (
+	<figure class="cost-split">
 		<figcaption class="sr-only">{accessibleSummary}</figcaption>
 		<ul class="stack" data-space="3xs" aria-label="Cost split">
 			{items.map((item) => (
@@ -106,54 +85,6 @@ const accessibleSummary =
 		{items.length === 1 && !caption && (
 			<p class="text-xs text-fg-muted">
 				Single payment {dueHint[items[0]?.component ?? "acceptance"]}
-			</p>
-		)}
-	</figure>
-) : (
-	<figure class="cost-split" data-variant="full">
-		<figcaption class="sr-only">{accessibleSummary}</figcaption>
-		<ul class="stack" data-space="3xs" aria-label="Cost split">
-			{items.map((item) => (
-				<li>
-					<span class="stack" data-space="3xs">
-						<span class="cost-split-name text-xs">
-							<span class="cost-split-part">{item.component}</span>
-							<span class="truncate text-fg-muted">
-								{dueHint[item.component]}
-							</span>
-						</span>
-						<span
-							class:list={[
-								"text-xs tabular-nums",
-								highlight && item.component !== highlight
-									? "text-fg-muted"
-									: "text-fg",
-							]}
-						>
-							{formatter.format(item.amount)}
-							<span class="text-fg-muted"> · {share(item.amount)}</span>
-						</span>
-					</span>
-					{showStatus ? (
-						<Badge type={statusBadgeType[item.status]}>
-							{statusLabel[item.status]}
-						</Badge>
-					) : highlight === item.component ? (
-						<Badge type="info">This invoice</Badge>
-					) : null}
-				</li>
-			))}
-		</ul>
-		{caption ? (
-			<p class="text-xs text-fg-muted">{caption}</p>
-		) : items.length === 1 ? (
-			<p class="text-xs text-fg-muted">
-				Single payment {dueHint[items[0]?.component ?? "acceptance"]} ·{" "}
-				{formatter.format(total)} total
-			</p>
-		) : (
-			<p class="text-xs tabular-nums text-fg-muted">
-				{formatter.format(total)} total in {items.length} parts
 			</p>
 		)}
 	</figure>
