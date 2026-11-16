@@ -1,4 +1,5 @@
-/* Role tokens: values live here as plain CSS, so they outlast Tailwind. */
+/* Role tokens (DESIGN.md#role-tokens): the colours, space and type steps as
+   custom properties, which every other stylesheet reads. */
 @layer tokens {
 	:root {
 		color-scheme: light dark;
