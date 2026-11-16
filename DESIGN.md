@@ -222,7 +222,7 @@ Biome is excluded from this file because it flattens the YAML frontmatter that `
 | `border-canvas`                                   | Pace marker edge                                                             |
 | `text-chart-1`…`6`, `text-chart-unassigned`       | Spend chart only                                                             |
 
-A new token is a design decision: add it to `tokens.css`, `global.css`, and this table together. The dev-only `/design` page reads `tokens.css`, so it shows the new token with its contrast ratios automatically; add new primitives to it by hand.
+A new token is a design decision: add it to `tokens.css`, `global.css`, and this table together. The public design reference at `/brand/system` (`src/pages/brand/system.astro`) reads `tokens.css`, so it shows the new token with its contrast ratios automatically; add new primitives to it by hand. It is public, so its demos stay presentational: no actions, data, sessions, or logged errors.
 
 Give an element one role per property, and choose between roles with a ternary. Tailwind orders utilities itself, not by class order, so stacking `text-fg-muted` with a conditional `text-fg-danger` lets the wrong one win.
 
