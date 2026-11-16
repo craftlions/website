@@ -13,25 +13,32 @@ aubx astro sync
 
 ## Hard Requirements
 
-- Never start `astro dev` (`aubr dev`, `mise run dev`): the dev server is the owner's and runs against real data. Assume none is running; `aubr a11y`, `aubr design:test` and `aubr e2e` build and serve their own preview on port 4322, or on `TEST_PORT`.
+- Never start `astro dev` (`aubr dev`, `mise run dev`): the dev server is the owner's and runs against real data. The test suites build and serve their own preview.
 - For analysis-only requests, do not modify files, branches, staging, or commits.
-- Style with inline Tailwind utility classes built on the role tokens in `DESIGN.md` while the site moves to native CSS. Standalone CSS lives in `src/styles/`: `global.css` declares the layer order (`theme, reset, tokens, base, layout, components, page, utilities`; Tailwind's theme and utilities fill `theme` and `utilities` until it is removed) and imports the other files, each inside one layer: `reset.css` replaces Tailwind's Preflight, `tokens.css` holds the tokens, `base.css` the element defaults, `layout.css` the layout primitives, `components/<name>.css` one component or page area each (all of them are imported already, so a change never touches `global.css`), and `utilities.css` the role utilities. Avoid `<style>` blocks in components; a page may keep its one-off layout in one scoped `<style>` that holds a single `@layer page { … }`.
-- Lay out with CSS grid where grid and flexbox behave the same, to match the existing layouts; use flexbox where it behaves better, such as a row whose items wrap at their own widths.
-- Keep markup minimal and semantic.
+- Use the element that carries the meaning (`nav`, `ul`, `dl`, `table`) before a `div`, and add no wrapper without a style or a role.
 - Prefer accessing values directly where they are used instead of creating one-off aliases or derived variables. Add variables only when reused, needed for type narrowing, or when they remove real complexity.
 - Use Drizzle Relational Query Builder v2 (`db.query.*`) for reads when relations or simple table lookups are involved.
-- For schema changes, update `src/lib/schema.ts`; **never** run `aubx drizzle-kit generate` or create or edit migrations or snapshots. Leave generation to the user because it can prompt interactively and a blind answer can accept a wrong rename.
-- Reuse `src/components/Button.astro` components
+- For schema changes, update `src/lib/schema.ts`; never run `aubx drizzle-kit generate` or create or edit migrations or snapshots. Leave generation to the user because it can prompt interactively and a blind answer can accept a wrong rename.
+
+## Styling
+
+- Style with the native CSS in `src/styles/`; `global.css` imports every file and declares the cascade layers. Read `DESIGN.md#vocabulary` before writing CSS: it lists the tokens, element defaults, layout primitives, the lines pattern and the role utilities.
+- Compose layouts from the primitives in `src/styles/layout.css` before writing layout CSS, and let them switch on their own width rather than the window's.
+- Put a component's rules in its own `src/styles/components/<name>.css`, never in a `<style>` in a component; a page keeps only its one-off layout in a scoped `<style>` holding `@layer page { … }`.
+- Show a list of things to find and act on as lines (`DESIGN.md#lines`), with no column heads; keep a real `<table>` only for data compared across rows, in a labelled scroll region with `tabindex="0"`.
+- Set a variant with a `data-*` attribute from the owning component and a state with ARIA or a native pseudo-class; a class says what a thing is.
+- `aubr design:lint` enforces the tokens, layers, vocabulary and primitives; its message names what to use instead.
 
 ## Browser Support
 
-- The target is Baseline Widely available: `browserslist("baseline widely available")` in `astro.config.ts` sets the lightningcss targets.
-- Use features in that set without fallbacks. A newer feature needs a fallback that keeps the page working, as `ConfirmAction` opens its dialog with `showModal()` where invoker commands are missing.
+- What a page needs to work is Baseline Widely available: `browserslist("baseline widely available")` in `astro.config.ts` sets the lightningcss targets; use those features without fallbacks.
+- Use a newer feature only where a browser without it still works: mark it `/* enhancement: what is lost without it */` when only polish is lost, as `hidden="until-found"` loses find in page, or keep the Widely available way beside it and mark it `/* fallback: … */`, as `ConfirmAction` opens its dialog with `showModal()` where invoker commands are missing. In markup write `{/* … */}`, in scripts `// …`.
+- Never put layout in a rule that browsers without the feature drop whole (`@scope`, style queries, `@function`) without that fallback; a dropped rule is a broken page, not lost polish.
+- Check a feature's status in `web-features` or the modern-web-guidance guide, not from memory.
 
 ## Visual Style
 
-- Aim for a professional minimal look that could be sketched with a pen on a piece of paper
-- Match existing design patterns of the project
+- Aim for a professional minimal look that could be sketched with a pen on a piece of paper: match `DESIGN.md` and the components on `/brand/specimen`.
 
 ## Validation
 
@@ -66,23 +73,13 @@ aubx biome check --write
 - `mise run db:check` is the only secret-granted task for agents; it receives only the database URL. `mise run dev` and `mise run secrets:push` are the owner's.
 - The pre-commit step `fnox-scan` rejects staged changes that contain a value from `fnox.toml`.
 
-## Accessibility Scan
+## Tests
 
-- `aubr a11y` runs Playwright Test with axe-core on the public pages, the component specimen at `/brand/specimen` included, in light and dark, and fails on any violation. Run it on demand after UI changes; it is not part of Validation, but the Test workflow runs it on every pull request and push to `main`.
-- It needs no dev server, secrets or database: `scripts/a11y-server.js` builds the Worker and serves it with Astro's preview API on `http://localhost:4322`, or on the port in `TEST_PORT` so several runs can share a machine; the `astro preview` CLI would detach from Playwright. `A11Y_BASE_URL` scans a running site instead. The browser comes from `aubx playwright install chromium`, once.
-- Fix violations instead of excluding them. An exclusion names its rule with a one-line reason in `tests/a11y.spec.ts`.
-
-## Design Tests
-
-- `aubr design:test` runs Playwright Test on `tests/design/`, over the routes in `tests/routes.ts` in light and dark. `reflow.spec.ts` fails when a page scrolls sideways at 320px, 768px or 1024px, at 640px with a device scale factor of 2 (200% zoom) or with a 32px default font size (200% text), when text sits in a zero-width box, or when a control clips its text outside `.truncate`. `targets.spec.ts` fails on a target below 24×24px that misses the spacing exception of WCAG 2.5.8; links inside a sentence are exempt. `defaults.spec.ts` fails when a section or a description list's group without a class is not a stack at its step (xs, 3xs). `layout.spec.ts` checks each layout primitive on its `/brand/specimen` fixtures in a narrow and a wide frame (wrapping, switching, edges, columns) and reports, without failing, any Button wider than its text. `logo.spec.ts` fails when the header or footer logo leaves the brand rule: its mark in the ink in the light scheme, the gradient in the dark, and the wordmark's system color in forced colors. Run it on demand after UI changes; it is not part of Validation, but the Test workflow runs it on every pull request and push to `main`.
-- It shares `playwright.config.ts` with the accessibility scan, so it builds and serves the Worker on `http://localhost:4322` (or `TEST_PORT`) and needs no dev server, secrets or database; `aubr a11y` runs only `tests/a11y.spec.ts`. `A11Y_BASE_URL` points both at a running site.
-- Pages behind login have no harness: `/brand/specimen` renders the primitives they use, and the owner reviews the pages themselves by eye.
-
-## End-to-End Tests
-
-- `aubr e2e` runs Playwright Test on `tests/e2e/`: the public pages, their links and headers, the indexing rules, the login redirects and return paths for a signed-out visitor, the sign-in and password forms up to the auth API, the dialogs and disclosures on `/brand/specimen`, and the logo files `/brand` offers for download and the SVG favicon, which must stand alone and draw only paths of the source logo. Run it on demand after changes to those; it is not part of Validation, but the Test workflow runs it on every pull request and push to `main`.
-- It shares `playwright.config.ts` and its server on `http://localhost:4322` (or `TEST_PORT`), so it needs no dev server, secrets or database. It runs once, in its own `e2e` project, since the colour scheme does not change behaviour; `aubr a11y` and `aubr design:test` leave it out.
-- Test only what a signed-out visitor gets without the database: anything that signs in, sends mail or reads data waits for a test database. Never mock the backend or add test-only paths to `src/`.
+- `aubr e2e` checks behaviour a signed-out visitor gets: the public pages and their headers, the login redirects, the auth forms up to the API, the dialogs and disclosures on `/brand/specimen`, and the logo files.
+- `aubr design:test` checks rendering in `tests/design/` over `tests/routes.ts` in light and dark: reflow, target sizes, the element defaults, the fluid scales, the primitives and the lines on their specimen fixtures, the logo and contrast.
+- `aubr a11y` runs axe-core on the public pages and `/brand/specimen` in light and dark. Fix a violation instead of excluding it; an exclusion names its rule with a one-line reason in `tests/a11y.spec.ts`.
+- Run them after UI or behaviour changes; the Test workflow runs all three on every pull request and push to `main`. They build and serve the Worker on port 4322 (or `TEST_PORT`, so runs can share a machine) and need no dev server, secrets or database; `A11Y_BASE_URL` points them at a running site. The browser comes from `aubx playwright install chromium`, once.
+- Test only what works without the database: anything that signs in, sends mail or reads data waits for a test database. Never mock the backend or add test-only paths to `src/`. Pages behind login have no harness; `/brand/specimen` renders what they use, and the owner reviews them by eye.
 
 ## PlanetScale Database
 
