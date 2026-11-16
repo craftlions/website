@@ -1,3 +1,15 @@
 @layer components {
-	/* src/components/NavSessionLinks.astro; filled by conversion package S5b. */
+	/* src/components/NavSessionLinks.astro: a row of grouped links, closer
+	   together than the groups themselves. */
+	.nav-group {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: max-content;
+		align-items: center;
+		gap: var(--space-2xs);
+
+		&[data-space="xs"] {
+			gap: var(--space-xs);
+		}
+	}
 }

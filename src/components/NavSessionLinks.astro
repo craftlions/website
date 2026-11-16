@@ -29,7 +29,7 @@ const session =
 {session ? (
 	<>
 		<li>
-			<ul class="grid grid-flow-col auto-cols-max items-center gap-2">
+			<ul class="nav-group">
 				<li>
 					<Button href={dashboard} aria-current={current(dashboard, "/dash")}>
 						Dashboard
@@ -58,7 +58,7 @@ const session =
 			</li>
 		)}
 		<li>
-			<ul class="grid grid-flow-col auto-cols-max items-center gap-3">
+			<ul class="nav-group" data-space="xs">
 				<li>
 					<Button
 						href="/settings/profile"
