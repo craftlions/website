@@ -6,16 +6,6 @@ interface Props {
 const { type } = Astro.props;
 ---
 
-<span
-	class="inline-grid w-max place-items-center whitespace-nowrap border border-dashed bg-transparent px-2.5 py-1 text-caption leading-none"
-	class:list={[
-		{
-			"border-line-success text-fg-success": type === "success",
-			"border-line-danger text-fg-danger": type === "error",
-			"border-line-info text-fg-info": type === "info",
-			"border-line-strong text-fg-muted": type === "gray",
-		},
-	]}
->
+<span class="badge text-caption leading-none" data-type={type}>
 	<slot />
 </span>

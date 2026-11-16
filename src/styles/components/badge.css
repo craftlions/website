@@ -1,3 +1,31 @@
 @layer components {
-	/* src/components/Badge.astro; filled by conversion package S5a. */
+	/* src/components/Badge.astro: a one-line status in a dashed box, colored by
+	   data-type. */
+	.badge {
+		display: inline-grid;
+		inline-size: max-content;
+		place-items: center;
+		padding-block: var(--space-3xs);
+		padding-inline: 0.625rem; /* constant: the badge's own inset, off the steps */
+		border: var(--rule) currentcolor;
+		background-color: transparent;
+		white-space: nowrap;
+
+		&[data-type="info"] {
+			border-color: var(--line-info);
+			color: var(--fg-info);
+		}
+		&[data-type="success"] {
+			border-color: var(--line-success);
+			color: var(--fg-success);
+		}
+		&[data-type="error"] {
+			border-color: var(--line-danger);
+			color: var(--fg-danger);
+		}
+		&[data-type="gray"] {
+			border-color: var(--line-strong);
+			color: var(--fg-muted);
+		}
+	}
 }
