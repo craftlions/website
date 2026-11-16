@@ -221,11 +221,8 @@ const attachBlocker = (invoice: { currency: string }) => {
 >
 	<section aria-labelledby="summary-heading" class="stack" data-space="xs">
 		<h2 id="summary-heading" class="label-caps"> Summary </h2>
-		<dl
-			class="auto-grid"
-			style="--grid-min: 10rem; --grid-space: var(--space-xs) var(--space-l)"
-		>
-			<div class="invoice-metric">
+		<dl class="cluster" data-space="metrics" data-align="start">
+			<div class="stack" data-space="3xs">
 				<dt class="label-caps">Outstanding</dt>
 				<dd class="text-title tabular-nums wrap-break-word">
 					{sumByCurrency(
@@ -239,7 +236,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 					)}
 				</dd>
 			</div>
-			<div class="invoice-metric">
+			<div class="stack" data-space="3xs">
 				<dt class="label-caps">Overdue</dt>
 				<dd
 					class:list={[
@@ -260,7 +257,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 					)}
 				</dd>
 			</div>
-			<div class="invoice-metric">
+			<div class="stack" data-space="3xs">
 				<dt class="label-caps">To invoice</dt>
 				<dd class="text-title tabular-nums wrap-break-word">
 					{sumByCurrency(
@@ -274,7 +271,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 			</div>
 		</dl>
 		<nav aria-label="On this page">
-			<ul class="invoices-toc">
+			<ul class="cluster">
 				<li>
 					<Button href="#to-invoice" variant="quiet">
 						To invoice ({dueParts.length})
@@ -324,7 +321,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 		{dueParts.length > 0 ? (
 			<ul class="invoice-list">
 				{dueParts.map((part) => (
-					<li class="due-row">
+					<li class="with-sidebar due-row" data-side="end" data-align="center">
 						<div class="stack" data-space="3xs">
 							<a
 								class="link wrap-break-word"
@@ -337,19 +334,21 @@ const attachBlocker = (invoice: { currency: string }) => {
 								{phaseStatus[part.phase.state].label}
 							</p>
 						</div>
-						<p class="tabular-nums">
-							{formatMoney(part.amount, part.phase.currency)}
-						</p>
-						{organizationData?.stripeCustomerId && (
-							<Button
-								href={`${stripeDashboard}/customers/${organizationData.stripeCustomerId}`}
-								target="_blank"
-								rel="noopener noreferrer"
-								aria-label={`Create in Stripe: ${part.project.name} · ${part.phase.title} · ${costPartLabel[part.component]} (opens in a new tab)`}
-							>
-								Create in Stripe
-							</Button>
-						)}
+						<div class="cluster" data-space="s">
+							<p class="tabular-nums">
+								{formatMoney(part.amount, part.phase.currency)}
+							</p>
+							{organizationData?.stripeCustomerId && (
+								<Button
+									href={`${stripeDashboard}/customers/${organizationData.stripeCustomerId}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={`Create in Stripe: ${part.project.name} · ${part.phase.title} · ${costPartLabel[part.component]} (opens in a new tab)`}
+								>
+									Create in Stripe
+								</Button>
+							)}
+						</div>
 					</li>
 				))}
 			</ul>
@@ -398,7 +397,11 @@ const attachBlocker = (invoice: { currency: string }) => {
 							part.component === pickedComponent,
 					);
 					return (
-						<li id={`invoice-${invoice.id}`} class="target attach-row">
+						<li
+							id={`invoice-${invoice.id}`}
+							class="switcher target attach-row"
+							style="--switcher-threshold: 40rem"
+						>
 							<div class="stack" data-space="3xs">
 								<p class="label-caps">
 									Invoice{" "}
@@ -431,6 +434,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 									action={actions.attachInvoiceToPhase}
 									class="stack"
 									data-space="2xs"
+									style="flex-grow: 1.5"
 								>
 									<input type="hidden" name="stripeId" value={invoice.id} />
 									<Field
@@ -484,7 +488,10 @@ const attachBlocker = (invoice: { currency: string }) => {
 									</ConfirmAction>
 								</form>
 							) : (
-								<p class="text-sm text-fg-muted wrap-break-word">
+								<p
+									class="text-sm text-fg-muted wrap-break-word"
+									style="flex-grow: 1.5"
+								>
 									<span class="text-fg">Cannot attach yet.</span>{" "}
 									{attachBlocker(invoice)}
 								</p>
@@ -521,7 +528,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 		)}
 		{recorded.length > 0 ? (
 			<admin-invoice-list class="stack" data-space="xs">
-				<nav aria-label="Filter invoices" class="invoice-filter">
+				<nav aria-label="Filter invoices" class="cluster">
 					<Button type="button" data-invoice-filter="all" aria-pressed="true">
 						All
 					</Button>
@@ -573,7 +580,10 @@ const attachBlocker = (invoice: { currency: string }) => {
 										</p>
 									)}
 								</div>
-								<dl class="invoice-facts text-sm">
+								<dl
+									class="auto-grid text-sm"
+									style="--grid-min: 12rem; --grid-space: var(--space-xs) var(--space-m)"
+								>
 									<div class="stack" data-space="3xs">
 										<dt class="label-caps">Status</dt>
 										<dd class="stack invoice-status" data-space="3xs">

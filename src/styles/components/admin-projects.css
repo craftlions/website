@@ -135,20 +135,7 @@
 		justify-items: start;
 	}
 
-	/* Invoices: a summary figure. Its label and value share the height of the
-	   tallest figure in the row, as a stack's would not. */
-	.invoice-metric {
-		display: grid;
-		gap: var(--space-3xs);
-	}
-
-	/* The page index and the three sections. */
-	.invoices-toc {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-		gap: var(--space-2xs) var(--space-m);
-	}
-
+	/* Invoices: the three sections the page index jumps to. */
 	.invoices-section {
 		scroll-margin-block-start: var(--space-2xl);
 	}
@@ -163,49 +150,24 @@
 		}
 	}
 
-	/* To invoice: the cost part, its amount and the Stripe button in a row
-	   from sm. */
+	/* To invoice: the cost part beside its amount and the Stripe button, which
+	   move below it together when the part would get less than half the row. */
 	.due-row {
-		display: grid;
-		gap: var(--space-2xs) var(--space-m);
 		padding: var(--space-s);
 
-		& > :first-child {
-			min-inline-size: 0;
-
-			& > a {
-				inline-size: fit-content;
-				max-inline-size: 100%;
-			}
-		}
-
-		@media (width >= 40rem) {
-			grid-template-columns: minmax(0, 1fr) auto auto;
-			align-items: center;
-
-			& > p {
-				text-align: end;
-			}
+		& > :first-child > a {
+			inline-size: fit-content;
+			max-inline-size: 100%;
 		}
 	}
 
-	/* To attach: the invoice beside the cost part to attach it to, from md. */
+	/* To attach: the invoice beside the cost part to attach it to, or both
+	   stacked. */
 	.attach-row {
-		display: grid;
-		gap: var(--space-xs) var(--space-m);
 		padding: var(--space-s);
-
-		& > * {
-			min-inline-size: 0;
-		}
 
 		& > :first-child {
 			justify-items: start;
-		}
-
-		@media (width >= 48rem) {
-			grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-			align-items: start;
 		}
 	}
 
@@ -217,32 +179,6 @@
 		& select {
 			inline-size: 100%;
 			min-inline-size: 0;
-		}
-	}
-
-	.invoice-filter {
-		display: grid;
-		grid-auto-flow: column;
-		justify-content: start;
-		gap: var(--space-2xs);
-	}
-
-	/* Status, phase, cost part and payment: two columns from sm, four from
-	   lg. */
-	.invoice-facts {
-		display: grid;
-		gap: var(--space-xs) var(--space-m);
-
-		& > * {
-			min-inline-size: 0;
-		}
-
-		@media (width >= 40rem) {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-
-		@media (width >= 64rem) {
-			grid-template-columns: repeat(4, minmax(0, 1fr));
 		}
 	}
 
