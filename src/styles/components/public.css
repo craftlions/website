@@ -1,21 +1,7 @@
 @layer components {
-	/* The body of the public pages: header, main and footer rows, the main row
-	   taking the rest of the viewport. The sign-in pages space them wider. */
+	/* The parts of the public pages, whose body is a .cover: header, main and
+	   footer, the main taking the rest of the viewport. */
 	.public {
-		display: grid;
-		grid-template-rows: auto 1fr auto;
-		gap: var(--space-m-l);
-		min-block-size: 100dvh;
-		padding: var(--space-s-m);
-
-		&[data-variant="auth"] {
-			gap: var(--space-xl);
-		}
-
-		& > main {
-			min-block-size: 0;
-		}
-
 		/* The landing page: its intro lines up with the heading's rule, and the
 		   page ends with room under the last section. */
 		& .landing {
