@@ -28,7 +28,7 @@ if (organizations.length === 1 && organizations[0]) {
 			{organizations
 				.toSorted((a, b) => a.name.localeCompare(b.name))
 				.map((organization) => (
-					<li class="wrap-break-word">
+					<li class="wrap-anywhere">
 						<a href={`/dash/org/${organization.slug}`} class="link">
 							{organization.name}
 						</a>
