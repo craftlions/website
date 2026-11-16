@@ -1,22 +1,9 @@
 @layer components {
-	/* src/components/DeliveryForm.astro: the delivery choice and URL side by
-	   side from 48rem, the choice as wide as its longest option; the note and
-	   the submit button below them across both columns. */
+	/* src/components/DeliveryForm.astro: a stack whose delivery choice keeps
+	   its width beside the URL (with-sidebar) and moves above it when the URL
+	   would get less than half the row; the note and the submit button below
+	   them. */
 	delivery-form {
 		display: grid;
-
-		& > form {
-			display: grid;
-			grid-template-columns: repeat(1, minmax(0, 1fr));
-			gap: var(--space-s);
-
-			@media (width >= 48rem) {
-				grid-template-columns: auto minmax(0, 1fr);
-
-				& > :is(p, button) {
-					grid-column: span 2 / span 2;
-				}
-			}
-		}
 	}
 }

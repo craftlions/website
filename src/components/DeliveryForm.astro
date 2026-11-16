@@ -39,38 +39,40 @@ const submitLabel = mode === "record" ? recordDeliveryLabel : "Update delivery";
 		action={mode === "record"
 			? actions.recordDelivery
 			: actions.updatePhaseDelivery}
-		class:list={["box", className]}
+		class:list={["box stack", className]}
 		{...attrs}
 	>
 		<input type="hidden" name="phaseId" value={phase.id}>
 		<input type="hidden" name="expectedVersion" value={phase.version}>
-		<Field
-			label="Delivery"
-			as="select"
-			name="deliveryChoice"
-			required
-			result={ownResult}
-			data-delivery-choice
-		>
-			<option value="url" selected={phase.deliveryState !== "none"}>
-				Delivery link
-			</option>
-			<option value="none" selected={phase.deliveryState === "none"}>
-				No delivery PR/MR
-			</option>
-		</Field>
-		<Field
-			label="Delivery URL"
-			name="deliveryUrl"
-			type="url"
-			inputmode="url"
-			autocomplete="off"
-			value={ownResult ? undefined : (phase.deliveryUrl ?? "")}
-			placeholder="https://github.com/…"
-			hint="HTTPS link to the pull or merge request that delivers the phase."
-			result={ownResult}
-			data-delivery-url
-		/>
+		<div class="with-sidebar">
+			<Field
+				label="Delivery"
+				as="select"
+				name="deliveryChoice"
+				required
+				result={ownResult}
+				data-delivery-choice
+			>
+				<option value="url" selected={phase.deliveryState !== "none"}>
+					Delivery link
+				</option>
+				<option value="none" selected={phase.deliveryState === "none"}>
+					No delivery PR/MR
+				</option>
+			</Field>
+			<Field
+				label="Delivery URL"
+				name="deliveryUrl"
+				type="url"
+				inputmode="url"
+				autocomplete="off"
+				value={ownResult ? undefined : (phase.deliveryUrl ?? "")}
+				placeholder="https://github.com/…"
+				hint="HTTPS link to the pull or merge request that delivers the phase."
+				result={ownResult}
+				data-delivery-url
+			/>
+		</div>
 		{mode === "record" && (
 			<p
 				id={`delivery-${phase.id}-consequence`}
