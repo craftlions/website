@@ -406,12 +406,12 @@ for (const {
 				`${where} → (inline-size >= 36rem), 44rem or 60rem, the only thresholds outside a page's own <style>; or with-sidebar or switcher, which switch without one  (${layoutDoc})`,
 			);
 		}
-		if (
-			/^@media\b.*width/.test(text) &&
-			!/^@media \(width >= (?:40|48|64)rem\)$/.test(text)
-		) {
+		// The window's width says nothing about the room a component has; @media
+		// stays for what only the device knows (hover, forced-colors,
+		// prefers-reduced-motion).
+		if (/^@media\b.*width/.test(text)) {
 			violations.push(
-				`${where} → (width >= 40rem), 48rem or 64rem, today's sm, md and lg, until the primitives replace them  (${layoutDoc})`,
+				`${where} → a primitive that switches by its own width (with-sidebar, switcher, auto-grid, cluster), the rows thresholds, or in a page's own <style> an @container (inline-size >= Nrem) on a container it declares; no window-width media queries  (${layoutDoc})`,
 			);
 		}
 	}
