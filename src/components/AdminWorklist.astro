@@ -96,38 +96,29 @@ const groups = [
 ---
 
 {items.length > 0 ? (
-	<div class="grid border border-dashed border-line lg:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] lg:gap-x-6">
-		<div
-			aria-hidden="true"
-			class="hidden border-b border-dashed border-line px-4 py-3 label-caps lg:col-span-5 lg:grid lg:grid-cols-subgrid"
-		>
+	<div class="worklist">
+		<div aria-hidden="true" class="worklist-head label-caps">
 			<span>Status</span>
 			<span>Item</span>
-			<span class="text-right">Amount</span>
+			<span>Amount</span>
 			<span>Waiting</span>
-			<span class="text-right">Action</span>
+			<span>Action</span>
 		</div>
 		{groups
 			.filter((group) => group.total === 0 || group.items.length > 0)
 			.map((group) => (
-				<section
-					aria-labelledby={group.id}
-					class="grid min-w-0 border-b border-dashed border-line last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid"
-				>
-					<h3
-						id={group.id}
-						class="border-b border-dashed border-line px-4 py-2 text-label lg:col-span-5"
-					>
+				<section aria-labelledby={group.id} class="worklist-group">
+					<h3 id={group.id} class="text-label">
 						{group.label}{" "}
 						<span class="tabular-nums text-fg-muted">· {group.total}</span>
 					</h3>
 					{group.items.length > 0 ? (
-						<ul class="grid min-w-0 lg:col-span-5 lg:grid-cols-subgrid">
+						<ul>
 							{group.items.map((item) => (
-								<li class="grid min-w-0 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid lg:items-center">
+								<li>
 									<Badge type={item.badge}>{item.label}</Badge>
-									<div class="grid min-w-0 gap-1">
-										<h4 class="grid gap-1 wrap-break-word">
+									<div class="worklist-item">
+										<h4 class="stack wrap-break-word" data-space="3xs">
 											{item.organization && (
 												<span class="text-sm text-fg-muted">
 													{item.organization.name}
@@ -159,8 +150,8 @@ const groups = [
 											)
 										)}
 									</div>
-									<p class="tabular-nums lg:text-right">
-										<span class="text-sm text-fg-muted lg:sr-only">
+									<p class="worklist-amount tabular-nums">
+										<span class="worklist-label text-sm text-fg-muted">
 											Amount{" "}
 										</span>
 										{item.invoice
@@ -179,11 +170,11 @@ const groups = [
 										]}
 									>
 										{item.status !== "overdue" && (
-											<span class="lg:sr-only">Waiting </span>
+											<span class="worklist-label">Waiting </span>
 										)}
 										{item.age}
 									</p>
-									<div class="grid justify-items-start gap-2 lg:justify-items-end">
+									<div class="worklist-actions">
 										{item.invoice ? (
 											<Button
 												href={`https://dashboard.stripe.com/invoices/${item.invoice.stripe.id}`}
@@ -212,7 +203,7 @@ const groups = [
 									{item.phase.state === "in_progress" && !item.invoice && (
 										<div
 											id={`${id}-${item.key}-delivery`}
-											class="grid min-w-0 lg:col-span-5"
+											class="worklist-delivery"
 											hidden={item.phase.id !== failedDeliveryPhaseId}
 										>
 											<DeliveryForm
@@ -226,13 +217,13 @@ const groups = [
 							))}
 						</ul>
 					) : (
-						<p class="p-4 text-sm text-fg-muted lg:col-span-5">{group.empty}</p>
+						<p class="text-sm text-fg-muted">{group.empty}</p>
 					)}
 				</section>
 			))}
 	</div>
 ) : (
-	<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+	<p class="box text-sm text-fg-muted">
 		The worklist is empty: no phase waits on you or the client, and no invoice
 		is open.
 	</p>
