@@ -1250,6 +1250,95 @@ const frames = [
 							</figure>
 						))}
 					</section>
+
+					<section
+						aria-labelledby="lines-projects"
+						class="stack"
+						data-space="xs"
+						data-fixture="lines-projects"
+					>
+						<h3 id="lines-projects" class="text-title">
+							Lines without actions: projects
+						</h3>
+						<p class="text-sm text-fg-muted">
+							No line has actions, so no slot is reserved: every figure and the
+							total end on the line's own edge; a line without a figure has
+							none.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="lines" data-actions="none">
+										<h4>
+											<span id={`lines-${frame}-current`} class="text-label">
+												Current <span class="text-fg-muted">· 3</span>
+											</span>
+											<span class="line-figure text-sm text-fg-muted">
+												<span class="sr-only">total </span>160.750,00 €
+											</span>
+										</h4>
+										<ul aria-labelledby={`lines-${frame}-current`}>
+											<li>
+												<div class="line-text">
+													<h5>
+														<a href="#lines" class="link">
+															Hafenwerk Kiel Website · Relaunch
+														</a>
+													</h5>
+													<p class="cluster text-sm text-fg-muted">
+														<Badge type="info">Active</Badge>
+														<span>2 of 4 phases accepted</span>
+														<span class="text-fg-info">
+															Your move: Delivery
+														</span>
+													</p>
+												</div>
+												<p class="line-figure">
+													<span>148.750,00 €</span>
+													<span class="text-sm text-fg-muted">
+														12.000,00 € open
+													</span>
+												</p>
+											</li>
+											<li>
+												<div class="line-text">
+													<h5>
+														<a href="#lines" class="link">
+															Fleet Telemetry Platform Rebuild
+														</a>
+													</h5>
+													<p class="cluster text-sm text-fg-muted">
+														<Badge type="error">Overdue</Badge>
+														<span>1 of 3 phases accepted</span>
+													</p>
+												</div>
+												<p class="line-figure">
+													<span>12.000,00 €</span>
+													<span class="text-sm text-fg-danger">
+														12.000,00 € overdue
+													</span>
+												</p>
+											</li>
+											<li>
+												<div class="line-text">
+													<h5>
+														<a href="#lines" class="link">
+															Intranet
+														</a>
+													</h5>
+													<p class="cluster text-sm text-fg-muted">
+														<Badge type="gray">Draft</Badge>
+														<span>no phases yet</span>
+													</p>
+												</div>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
 				</section>
 			</main>
 			{/* One palette for both sections: signed out, it offers only Sign in. */}

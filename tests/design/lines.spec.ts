@@ -7,7 +7,12 @@ import { readFileSync } from "node:fs";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 const widths = [320, 360, 400, 480, 560, 640, 704, 768, 880, 960];
-const fixtures = ["lines-worklist", "lines-phases", "lines-invoices"];
+const fixtures = [
+	"lines-worklist",
+	"lines-phases",
+	"lines-invoices",
+	"lines-projects",
+];
 
 test.beforeEach(async ({ page }, info) => {
 	test.skip(
@@ -194,7 +199,7 @@ for (const fixture of fixtures) {
 			description: mixed.join("; ") || "none",
 		});
 		// The sweep crosses the threshold of every inbox list.
-		if (fixture !== "lines-invoices") {
+		if (fixture === "lines-worklist" || fixture === "lines-phases") {
 			expect([...seen]).toEqual(
 				expect.arrayContaining(["false-beside", "false-below"]),
 			);
@@ -286,6 +291,27 @@ for (const fixture of fixtures) {
 		}
 	});
 }
+
+// A list without actions reserves no slot: every figure and the group
+// total end on the line's own end edge at every width.
+test("a list without actions ends its figures on the line's edge", async ({
+	page,
+}) => {
+	for (const width of widths) {
+		await resize(frame(page, "lines-projects"), width);
+		for (const list of await measure(frame(page, "lines-projects"))) {
+			for (const line of list.lines) {
+				expect(line.actions, `${width}px`).toBeNull();
+				if (line.figure) {
+					expect(
+						Math.abs(line.figure.right - line.content.right),
+						`${width}px`,
+					).toBeLessThan(0.5);
+				}
+			}
+		}
+	}
+});
 
 test("a long unbroken name wraps inside its text", async ({ page }) => {
 	for (const width of [320, 400, 480]) {
