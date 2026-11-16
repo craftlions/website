@@ -19,7 +19,6 @@ const {
 	result,
 	class: className,
 	id = `field-${crypto.randomUUID()}`,
-	danger,
 	...attrs
 } = Astro.props;
 
@@ -65,7 +64,6 @@ const errors = [
 		{...attrs}
 		{...restored}
 		{id}
-		danger={danger || errors.length > 0}
 		aria-invalid={errors.length > 0 ? "true" : undefined}
 		aria-describedby={[
 			attrs["aria-describedby"],
@@ -74,6 +72,7 @@ const errors = [
 		]
 			.filter(Boolean)
 			.join(" ") || undefined}
+		data-error={`${id}-error`}
 	>
 		<slot />
 	</Input>
@@ -82,9 +81,135 @@ const errors = [
 			{hint}
 		</p>
 	)}
-	{errors.length > 0 && (
-		<p id={`${id}-error`} class="text-sm text-fg-danger">
-			{errors.join(" ")}
-		</p>
-	)}
+	{/* Rendered empty as well, for the script to show a constraint error in. */}
+	<p
+		id={`${id}-error`}
+		class="text-sm text-fg-danger empty:hidden"
+		set:text={errors.join(" ")}
+	/>
 </div>
+
+<script>
+	// A field shows its constraint error once the user has changed and left it,
+	// or tried to submit (:user-invalid), and drops it once the value is valid:
+	// aria-invalid, the danger line and the message (listed in aria-describedby)
+	// follow that state. A server error rendered with the page stays until the
+	// user changes the value. Without this script the browser still blocks the
+	// submit with its own message, and server errors render as before.
+	type Control = HTMLInputElement | HTMLSelectElement;
+
+	const control = (target: unknown) =>
+		(target instanceof HTMLInputElement ||
+			target instanceof HTMLSelectElement) &&
+		target.dataset.error
+			? target
+			: undefined;
+	const server = new WeakSet<Control>();
+	const announced = new WeakSet<Control>();
+	// One polite region announces an error that appears on leaving a field.
+	const announcer = document.createElement("p");
+	announcer.className = "sr-only";
+	announcer.setAttribute("aria-live", "polite");
+	document.body.appendChild(announcer);
+	let timer: number | undefined;
+	let announcing: Control | undefined;
+
+	const sync = (field: Control, announce = false) => {
+		const error = document.getElementById(field.dataset.error ?? "");
+		if (!error || server.has(field)) return;
+
+		const invalid = field.matches(":user-invalid");
+		const described = (field.getAttribute("aria-describedby") ?? "")
+			.split(" ")
+			.filter((id) => id && id !== error.id)
+			.concat(invalid ? error.id : [])
+			.join(" ");
+		if (described) field.setAttribute("aria-describedby", described);
+		else field.removeAttribute("aria-describedby");
+		field.setAttribute("aria-invalid", String(invalid));
+		error.textContent = invalid ? field.validationMessage : "";
+
+		if (!invalid) {
+			announced.delete(field);
+			// A corrected field's message is not left behind to be found later.
+			if (announcing === field) {
+				window.clearTimeout(timer);
+				announcer.textContent = "";
+			}
+			return;
+		}
+		if (!announce || announced.has(field)) return;
+		announced.add(field);
+		announcing = field;
+		window.clearTimeout(timer);
+		announcer.textContent = "";
+		// Waits until the field that takes focus next has been read out.
+		timer = window.setTimeout(() => {
+			announcer.textContent = `${field.labels?.[0]?.textContent?.trim()}: ${error.textContent}`;
+		}, 500);
+	};
+
+	for (const field of document.querySelectorAll("[data-error]")) {
+		const found = control(field);
+		if (found?.getAttribute("aria-invalid") === "true") server.add(found);
+		else if (found) sync(found);
+	}
+
+	// Leaving a field by pressing a button shows its message after the click,
+	// so the message cannot push the button out from under the pointer.
+	let pressed: (() => void)[] | undefined;
+	const release = () => {
+		const tasks = pressed ?? [];
+		pressed = undefined;
+		window.setTimeout(() => {
+			for (const task of tasks) task();
+		});
+	};
+	document.addEventListener("pointerdown", () => (pressed = []), true);
+	document.addEventListener("pointerup", release, true);
+	document.addEventListener("pointercancel", release, true);
+	const afterPress = (task: () => void) =>
+		pressed ? pressed.push(task) : task();
+
+	document.addEventListener("input", (event) => {
+		const field = control(event.target);
+		if (field) sync(field);
+	});
+	document.addEventListener("change", (event) => {
+		const field = control(event.target);
+		if (!field) return;
+		afterPress(() => {
+			server.delete(field);
+			sync(field, true);
+		});
+	});
+	document.addEventListener("focusout", (event) => {
+		const field = control(event.target);
+		if (field) afterPress(() => sync(field, true));
+	});
+	// A failed submit fires invalid on each failing field, untouched ones too,
+	// and focuses the first, which reads out its error: none is announced.
+	document.addEventListener(
+		"invalid",
+		(event) => {
+			const field = control(event.target);
+			if (!field) return;
+			announced.add(field);
+			sync(field);
+		},
+		true,
+	);
+	// A reset clears :user-invalid only after its event.
+	document.addEventListener("reset", (event) => {
+		const form = event.target;
+		if (!(form instanceof HTMLFormElement)) return;
+		window.setTimeout(() => {
+			for (const element of form.elements) {
+				const field = control(element);
+				if (!field) continue;
+				server.delete(field);
+				sync(field);
+			}
+		});
+	});
+</script>

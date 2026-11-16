@@ -1,6 +1,9 @@
 @layer components {
 	/* src/components/Input.astro: a text input or select on a dashed line that
-	   darkens on focus; data-variant="danger" marks an invalid value. */
+	   darkens on focus. A danger line marks a destructive confirmation
+	   (data-variant="danger") or an invalid value (aria-invalid, which Field
+	   sets for a server error and, through its script, while :user-invalid
+	   matches). */
 	.input {
 		padding: var(--space-2xs) var(--space-xs);
 		border: var(--rule) var(--line-control);
@@ -21,7 +24,7 @@
 			color: var(--fg-muted);
 		}
 
-		&[data-variant="danger"] {
+		&:is([data-variant="danger"], [aria-invalid="true"]) {
 			border-color: var(--line-danger);
 		}
 
