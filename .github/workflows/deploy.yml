@@ -100,4 +100,4 @@ jobs:
         with:
           experimental: true
       - run: aube ci
-      - run: aubr cf previews delete "$PREVIEW_NAME" --worker craftlions-website
+      - run: aubr cf previews delete "$PREVIEW_NAME" --worker craftlions-website --force
