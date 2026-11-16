@@ -23,7 +23,7 @@ aubx astro sync
 ## Styling
 
 - Style with the native CSS in `src/styles/`; `global.css` imports every file and declares the cascade layers. Read `DESIGN.md#vocabulary` before writing CSS: it lists the tokens, element defaults, layout primitives, the lines pattern and the role utilities.
-- Compose layouts from the primitives in `src/styles/layout.css` before writing layout CSS, and let them switch on their own width rather than the window's.
+- Compose layouts from the primitives in `src/styles/layout.css` before writing layout CSS, and let them switch on their own width rather than the window's: no container queries and no window-width media queries.
 - Put a component's rules in its own `src/styles/components/<name>.css`, never in a `<style>` in a component; a page keeps only its one-off layout in a scoped `<style>` holding `@layer page { … }`.
 - Show a list of things to find and act on as lines (`DESIGN.md#lines`), with no column heads; keep a real `<table>` only for data compared across rows, in a labelled scroll region with `tabindex="0"`.
 - Set a variant with a `data-*` attribute from the owning component and a state with ARIA or a native pseudo-class; a class says what a thing is.
@@ -33,7 +33,7 @@ aubx astro sync
 
 - What a page needs to work is Baseline Widely available: `browserslist("baseline widely available")` in `astro.config.ts` sets the lightningcss targets; use those features without fallbacks.
 - Use a newer feature only where a browser without it still works: mark it `/* enhancement: what is lost without it */` when only polish is lost, as `hidden="until-found"` loses find in page, or keep the Widely available way beside it and mark it `/* fallback: … */`, as `ConfirmAction` opens its dialog with `showModal()` where invoker commands are missing. In markup write `{/* … */}`, in scripts `// …`.
-- Never put layout in a rule that browsers without the feature drop whole (`@scope`, style queries, `@function`) without that fallback; a dropped rule is a broken page, not lost polish.
+- Never put layout in a rule that browsers without the feature drop whole (`@scope`, `@function`) without that fallback; a dropped rule is a broken page, not lost polish.
 - Check a feature's status in `web-features` or the modern-web-guidance guide, not from memory.
 
 ## Visual Style
