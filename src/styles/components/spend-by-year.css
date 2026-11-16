@@ -1,3 +1,139 @@
 @layer components {
-	/* src/components/SpendByYear.astro; filled by conversion package S5e. */
+	/* src/components/SpendByYear.astro: a hatched bar per year stacked from the
+	   projects' segments, a status line and the legend. Pointing at a segment
+	   or a legend entry marks that project data-state="active" and every other
+	   one "dimmed". */
+	.spend-chart {
+		display: grid;
+		grid-template-columns: repeat(1, minmax(0, 1fr));
+		gap: var(--space-xs);
+	}
+
+	/* Scrolls sideways from the end, so the current year shows first. */
+	.spend-scroll {
+		display: grid;
+		gap: var(--space-3xs);
+		overflow-x: auto;
+	}
+
+	.spend-bars {
+		display: grid;
+		inline-size: 100%;
+		min-inline-size: max-content;
+		gap: var(--space-2xs);
+	}
+
+	.spend-bar {
+		display: grid;
+		min-inline-size: 0;
+	}
+
+	.spend-plot {
+		display: grid;
+		block-size: 9rem;
+		align-items: flex-end;
+		border-block-end: var(--rule) var(--line);
+	}
+
+	.spend-stack {
+		display: grid;
+		gap: var(--hairline);
+	}
+
+	/* Hatching in the project's chart colour, which a text-chart-* role sets. */
+	.spend-segment,
+	.spend-swatch {
+		background-image: repeating-linear-gradient(
+			135deg,
+			transparent 0 3px,
+			currentColor 3px 4px
+		);
+
+		/* Forced colors drop the hatching; the mark keeps it in CanvasText. */
+		@media (forced-colors: active) {
+			forced-color-adjust: none;
+			color: CanvasText !important;
+			border-color: CanvasText !important;
+		}
+	}
+
+	.spend-segment {
+		transition-property: filter, opacity;
+		transition-duration: 150ms;
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+		&[data-state="active"] {
+			filter: brightness(125%);
+		}
+		&[data-state="dimmed"] {
+			opacity: 0.3;
+		}
+	}
+
+	.spend-label {
+		display: grid;
+		gap: var(--space-3xs);
+		padding-block-start: var(--space-3xs);
+		text-align: center;
+	}
+
+	.spend-total {
+		white-space: nowrap;
+
+		/* The current year's total is underlined by a dashed rule. */
+		&[data-current] {
+			justify-self: center;
+			border-block-end: var(--rule) var(--line-strong);
+		}
+	}
+
+	/* Two status lines of fixed height, so a longer name never moves the chart. */
+	.spend-line {
+		display: block;
+		block-size: 1.25rem;
+	}
+
+	.spend-legend {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr));
+		column-gap: var(--space-s);
+		row-gap: var(--space-2xs);
+	}
+
+	.spend-key {
+		display: grid;
+		min-inline-size: 0;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-content: flex-start;
+		align-items: center;
+		column-gap: var(--space-2xs);
+		padding: var(--space-3xs);
+		transition-property:
+			color, background-color, border-color, outline-color,
+			text-decoration-color, fill, stroke;
+		transition-duration: 150ms;
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+		&[data-state="active"] {
+			background-color: var(--panel);
+		}
+		&[data-state="dimmed"] {
+			color: var(--fg-muted);
+		}
+	}
+
+	.spend-swatch {
+		inline-size: 0.75rem;
+		block-size: 0.75rem;
+		border: var(--hairline) dashed currentColor;
+	}
+
+	.spend-name {
+		min-inline-size: 0;
+	}
+
+	.spend-amount {
+		grid-column-start: 2;
+		min-inline-size: 0;
+	}
 }

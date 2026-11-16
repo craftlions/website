@@ -110,45 +110,40 @@ const hasNegativeSpend = bars.some((bar) =>
 );
 ---
 
-<section aria-labelledby="spend-heading" class="grid content-start gap-3">
+<section aria-labelledby="spend-heading" class="stack" data-space="xs">
 	<h2 id="spend-heading" class="label-caps"> Spend by year </h2>
 
 	{rows.length === 0 ? (
-		<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
-			No invoices yet.
-		</p>
+		<p class="box text-sm text-fg-muted">No invoices yet.</p>
 	) : validRows.length === 0 ? (
-		<p class="border border-dashed border-line-danger p-4 text-sm text-fg-danger">
+		<p class="box border-line-danger text-sm text-fg-danger">
 			Invoice spend could not be summarized. Please reload the page and try
 			again.
 		</p>
 	) : (
 		<>
 			{validRows.length < rows.length && (
-				<p class="border border-dashed border-line-danger p-4 text-sm text-fg-danger">
+				<p class="box border-line-danger text-sm text-fg-danger">
 					Some invoice amounts could not be included. Please reload the page; if
 					the problem persists, contact craftlions.
 				</p>
 			)}
 
 			{hasNegativeSpend ? (
-				<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+				<p class="box text-sm text-fg-muted">
 					The chart cannot represent negative invoice adjustments. See the
 					invoice list for the complete breakdown.
 				</p>
 			) : (
-				<div
-					class="grid grid-cols-1 gap-3 border border-dashed border-line p-4"
-					data-spend-chart
-				>
+				<div class="box spend-chart" data-spend-chart>
 					<section
-						class="grid gap-1 overflow-x-auto"
+						class="spend-scroll"
 						dir="rtl"
 						tabindex="0"
 						aria-labelledby="spend-heading"
 					>
 						<div
-							class="grid w-full min-w-max gap-2"
+							class="spend-bars"
 							dir="ltr"
 							style={`grid-template-columns: repeat(${bars.length}, minmax(6.5rem, 1fr))`}
 						>
@@ -157,19 +152,16 @@ const hasNegativeSpend = bars.some((bar) =>
 									.filter((segment) => segment.total > 0)
 									.reverse();
 								return (
-									<div class="grid min-w-0">
-										<div class="grid h-36 items-end border-b border-dashed border-line">
+									<div class="spend-bar">
+										<div class="spend-plot">
 											<div
-												class="grid gap-px"
+												class="spend-stack"
 												style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total / bar.total}fr`).join(" ")}`}
 												aria-hidden="true"
 											>
 												{reversed.map((segment) => (
 													<div
-														class:list={[
-															"bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] transition-[filter,opacity] duration-150 forced-line",
-															segment.mark,
-														]}
+														class:list={["spend-segment", segment.mark]}
 														data-project={segment.id}
 														data-name={segment.name}
 														data-amount={currencyFormatter.format(
@@ -180,13 +172,10 @@ const hasNegativeSpend = bars.some((bar) =>
 												))}
 											</div>
 										</div>
-										<div class="grid gap-0.5 pt-1 text-center">
+										<div class="spend-label">
 											<span
-												class:list={[
-													"whitespace-nowrap text-sm tabular-nums",
-													bar.year === currentYear &&
-														"justify-self-center border-b border-dashed border-line-strong",
-												]}
+												class="spend-total text-sm tabular-nums"
+												data-current={bar.year === currentYear || undefined}
 											>
 												{currencyFormatter.format(bar.total)}
 											</span>
@@ -204,21 +193,18 @@ const hasNegativeSpend = bars.some((bar) =>
 					</section>
 
 					<p class="text-sm" data-spend-status>
-						<span class="block h-5 truncate" dir="auto">
+						<span class="spend-line truncate" dir="auto">
 							All projects
 						</span>
-						<span class="block h-5 truncate tabular-nums text-fg-muted">
+						<span class="spend-line truncate tabular-nums text-fg-muted">
 							{`${currencyFormatter.format(bars.reduce((sum, bar) => sum + bar.total, 0))} · ${period}`}
 						</span>
 					</p>
 
-					<ul
-						aria-label="Spend by project"
-						class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,9rem),1fr))] gap-x-4 gap-y-2 text-sm"
-					>
+					<ul aria-label="Spend by project" class="spend-legend text-sm">
 						{projectKeys.map((project) => (
 							<li
-								class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start items-center gap-x-2 px-1 py-0.5 transition-colors duration-150"
+								class="spend-key"
 								data-project={project.id}
 								data-name={project.name}
 								data-amount={currencyFormatter.format(project.total)}
@@ -226,15 +212,12 @@ const hasNegativeSpend = bars.some((bar) =>
 							>
 								<span
 									aria-hidden="true"
-									class:list={[
-										"size-3 border border-dashed border-current bg-[repeating-linear-gradient(135deg,transparent_0_3px,currentColor_3px_4px)] forced-line",
-										project.mark,
-									]}
+									class:list={["spend-swatch", project.mark]}
 								/>
-								<span class="min-w-0 wrap-break-word" dir="auto">
+								<span class="spend-name wrap-break-word" dir="auto">
 									{project.name}
 								</span>
-								<span class="col-start-2 min-w-0 text-xs tabular-nums text-fg-muted wrap-break-word">
+								<span class="spend-amount text-xs tabular-nums text-fg-muted wrap-break-word">
 									{currencyFormatter.format(project.total)}
 								</span>
 							</li>
@@ -263,19 +246,14 @@ const hasNegativeSpend = bars.some((bar) =>
 		);
 		const defaults = [name?.textContent, figure?.textContent];
 
-		// Only colour, opacity, filter and text change here; no class affects
+		// Only colour, opacity, filter and text change here; no state affects
 		// an element's box.
 		const setActive = (active: HTMLElement | null) => {
 			for (const item of items) {
 				const match = item.dataset.project === active?.dataset.project;
-				const dimmed = active !== null && !match;
-				if (item instanceof HTMLLIElement) {
-					item.classList.toggle("text-fg-muted", dimmed);
-					item.classList.toggle("bg-panel", match);
-				} else {
-					item.classList.toggle("opacity-30", dimmed);
-					item.classList.toggle("brightness-125", match);
-				}
+				if (match) item.dataset.state = "active";
+				else if (active) item.dataset.state = "dimmed";
+				else delete item.dataset.state;
 			}
 			if (!name || !figure) return;
 			name.textContent = active?.dataset.name ?? defaults[0] ?? "";
