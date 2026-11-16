@@ -113,29 +113,29 @@ const partSummaryTotal = partSummaryItems.reduce(
 );
 ---
 
-<invoice-table class="grid gap-3">
+<invoice-table class="stack" data-space="xs">
 	{rows.length > 0 && (
-		<div class="grid gap-3">
-			<dl class="grid grid-flow-col justify-start gap-8 text-sm">
-				<div class="grid gap-1">
+		<div class="stack" data-space="xs">
+			<dl class="invoice-table-metrics text-sm">
+				<div class="stack" data-space="3xs">
 					<dt class="label-caps">Outstanding</dt>
 					<dd class="tabular-nums">{totalWhere(["open", "overdue"])}</dd>
 				</div>
-				<div class="grid gap-1">
+				<div class="stack" data-space="3xs">
 					<dt class="label-caps">Overdue</dt>
 					<dd class:list={["tabular-nums", hasOverdue && "text-fg-danger"]}>
 						{totalWhere(["overdue"])}
 					</dd>
 				</div>
-				<div class="grid gap-1">
+				<div class="stack" data-space="3xs">
 					<dt class="label-caps">Paid</dt>
 					<dd class="tabular-nums">{totalWhere(["paid"])}</dd>
 				</div>
 			</dl>
 			{partSummaryItems.length > 0 && (
-				<div class="grid gap-2 border border-dashed border-line p-3">
+				<div class="box invoice-table-parts" data-space="xs">
 					<p class="label-caps">Invoiced by cost part</p>
-					<div class="max-w-md">
+					<div>
 						<CostSplit
 							items={partSummaryItems}
 							currency={partSummaryCurrency}
@@ -154,10 +154,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 		</div>
 	)}
 	{showFilter && (
-		<nav
-			aria-label="Filter invoices"
-			class="grid grid-flow-col justify-start gap-2"
-		>
+		<nav aria-label="Filter invoices" class="invoice-table-filter">
 			<Button type="button" data-invoice-filter="all" aria-pressed="true">
 				All
 			</Button>
@@ -170,11 +167,11 @@ const partSummaryTotal = partSummaryItems.reduce(
 		</nav>
 	)}
 	{rows.length > 0 ? (
-		<ul class="grid gap-3">
+		<ul class="stack" data-space="xs">
 			{rows.map((invoice) => (
 				<li
 					id={`invoice-${invoice.id}`}
-					class="grid scroll-mt-20 gap-2 border border-dashed border-line p-4 target:bg-info-subtle target:outline-2 target:-outline-offset-2 target:outline-dashed target:outline-fill-info/70"
+					class="box invoice-table-item"
 					data-invoice-item
 					data-category={
 						invoice.status === "paid"
@@ -184,11 +181,11 @@ const partSummaryTotal = partSummaryItems.reduce(
 								: "other"
 					}
 				>
-					<div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-						<div class="grid gap-2">
-							<div class="grid gap-1">
+					<div class="invoice-table-columns">
+						<div class="stack" data-space="2xs">
+							<div class="stack" data-space="3xs">
 								<p class="label-caps leading-none">Invoice {invoice.number}</p>
-								<div class="grid grid-flow-col items-center justify-start gap-2">
+								<div class="invoice-table-amount">
 									<p class="text-title tabular-nums leading-none">
 										{formatMoney(invoice.total, invoice.currency)}
 									</p>
@@ -202,7 +199,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 									)}
 								</div>
 								{invoice.phase && invoice.components.length > 0 && (
-									<div class="mt-1 max-w-sm">
+									<div class="invoice-table-split">
 										<CostSplit
 											items={invoice.components}
 											currency={invoice.phase.currency}
@@ -219,8 +216,8 @@ const partSummaryTotal = partSummaryItems.reduce(
 									</div>
 								)}
 							</div>
-							<dl class="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto]">
-								<div class="grid gap-1">
+							<dl class="invoice-table-facts text-sm">
+								<div>
 									<dt class="label-caps leading-none">Due</dt>
 									<dd
 										class:list={[
@@ -230,10 +227,10 @@ const partSummaryTotal = partSummaryItems.reduce(
 										{invoice.dueAt ? formatDate(invoice.dueAt) : "—"}
 									</dd>
 								</div>
-								<div class="grid gap-1">
+								<div>
 									<dt class="label-caps leading-none">Status</dt>
 									<dd>
-										<div class="grid grid-flow-col items-center justify-start gap-2 whitespace-nowrap">
+										<div class="invoice-table-status">
 											{invoice.status === "overdue" ? (
 												<Badge type="error">Overdue</Badge>
 											) : invoice.status === "open" ? (
@@ -255,7 +252,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 										</div>
 									</dd>
 								</div>
-								<div class="grid gap-1">
+								<div>
 									<dt class="label-caps leading-none">Work</dt>
 									<dd>
 										{invoice.phase?.project ? (
@@ -270,7 +267,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 										)}
 									</dd>
 								</div>
-								<div class="grid gap-1">
+								<div>
 									<dt class="label-caps leading-none">Delivery</dt>
 									<dd>
 										{invoice.phase?.deliveryState === "url" &&
@@ -295,7 +292,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 								</div>
 							</dl>
 						</div>
-						<div class="grid justify-start sm:justify-self-end">
+						<div class="invoice-table-action">
 							<Button
 								href={invoice.paymentPage}
 								target="_blank"
@@ -312,9 +309,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 			))}
 		</ul>
 	) : (
-		<p class="border border-dashed border-line bg-transparent p-4 text-sm text-fg-muted">
-			No invoices yet.
-		</p>
+		<p class="box text-sm text-fg-muted">No invoices yet.</p>
 	)}
 </invoice-table>
 
