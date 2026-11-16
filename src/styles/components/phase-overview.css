@@ -176,22 +176,6 @@
 		}
 	}
 
-	.phase-chevron {
-		inline-size: 0.75rem;
-		block-size: 0.75rem;
-		transition-property: transform, translate, scale, rotate;
-		transition-duration: var(--duration);
-		transition-timing-function: var(--ease);
-
-		[aria-expanded="true"] > & {
-			rotate: 180deg;
-		}
-
-		@media (prefers-reduced-motion: reduce) {
-			transition-property: none;
-		}
-	}
-
 	.phase-details {
 		display: grid;
 		gap: var(--space-s);
