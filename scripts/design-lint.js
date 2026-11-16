@@ -391,19 +391,17 @@ for (const {
 				`${where} → a token with light-dark() in src/styles/tokens.css, which follows the scheme by itself  (DESIGN.md#role-tokens)`,
 			);
 		}
-		// A page's scoped style may switch its own one-off layout at any rem
-		// width of a container it declares; shared stylesheets keep the rows
-		// thresholds.
+		// A container query changes structure only: a rows list turning into a
+		// table at one of its three thresholds, declared in layout.css, plus
+		// companion rules for the table form of a rows list in a component
+		// stylesheet. Anything that only resizes or reflows is intrinsic.
 		if (
 			text.startsWith("@container") &&
-			!/^@container \(inline-size >= (?:36|44|60)rem\)$/.test(text) &&
-			!(
-				file.startsWith("src/pages/") &&
-				/^@container \(inline-size >= \d+(?:\.\d+)?rem\)$/.test(text)
-			)
+			(!/^@container \(inline-size >= (?:36|44|60)rem\)$/.test(text) ||
+				!(file === layoutDoc || file.startsWith("src/styles/components/")))
 		) {
 			violations.push(
-				`${where} → (inline-size >= 36rem), 44rem or 60rem, the only thresholds outside a page's own <style>; or with-sidebar or switcher, which switch without one  (${layoutDoc})`,
+				`${where} → container queries are for structure only: a rows list (data-at="36", "44" or "60") and, in a component stylesheet, its table form at that threshold; for anything that resizes or reflows use with-sidebar, switcher, cluster, auto-grid, clamp() or wrapping  (${layoutDoc})`,
 			);
 		}
 		// The window's width says nothing about the room a component has; @media
@@ -686,6 +684,51 @@ for (const [name, files] of definitions) {
 		violations.push(
 			`${file}:${line}  ${name} is also defined in ${shared[0][0]}:${shared[0][1]} → rename this one after its own component, or style the element under your own class (\`.your-area ${name}\`); every stylesheet loads on every page, so both rules reach both pages  (AGENTS.md#hard-requirements)`,
 		);
+	}
+}
+
+// A component's @container rule is a companion of a rows list in table form:
+// each rule in it styles a class or element that markup with a rows list uses.
+// Only the rows primitive declares a container.
+const rowsMarkup = new Set(
+	globSync("src/**/*.astro")
+		.map((file) => readFileSync(file, "utf8"))
+		.filter((source) => /\sclass="(?:[^"]*\s)?rows(?:\s[^"]*)?"/.test(source))
+		.flatMap((source) => [
+			...[
+				...source.matchAll(/\sclass(?::list)?=(?:"([^"]*)"|\{([^}]*)\})/g),
+			].flatMap(({ 1: plain, 2: list }) =>
+				(plain ?? list.match(/"[^"]*"/g)?.join(" ") ?? "")
+					.replaceAll('"', "")
+					.split(/\s+/)
+					.map((name) => `.${name}`),
+			),
+			...[...source.matchAll(/<([a-z][\w]*-[\w-]*)/g)].map(([, tag]) => tag),
+		]),
+);
+for (const { file, blocks, declarations } of stylesheets) {
+	for (const block of blocks) {
+		if (
+			!file.startsWith("src/styles/components/") ||
+			block.prelude.startsWith("@") ||
+			block.parents.every(({ prelude }) => !prelude.startsWith("@container"))
+		) {
+			continue;
+		}
+		for (const name of definedBy(block)) {
+			if (!rowsMarkup.has(name)) {
+				violations.push(
+					`${file}:${block.line}  ${block.prelude} → inside @container only rules for a rows list's table form, on markup that renders the rows list; ${name} is not in one. Lay it out intrinsically with with-sidebar, switcher, cluster or auto-grid  (${layoutDoc})`,
+				);
+			}
+		}
+	}
+	for (const { property, value, line } of declarations) {
+		if (/^container(?:-type|-name)?$/.test(property) && file !== layoutDoc) {
+			violations.push(
+				`${file}:${line}  ${property}: ${value} → only the rows primitive declares a container; use .rows, or an intrinsic primitive  (${layoutDoc})`,
+			);
+		}
 	}
 }
 
