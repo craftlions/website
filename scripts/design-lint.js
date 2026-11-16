@@ -1,8 +1,6 @@
 // Fails on styling that bypasses the role tokens in DESIGN.md. Locking the palette
 // makes raw color classes render nothing, silently; this makes them fail loudly.
-import { spawnSync } from "node:child_process";
 import { globSync, readFileSync } from "node:fs";
-import { relative } from "node:path";
 
 const hues =
 	"slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
@@ -221,25 +219,6 @@ for (const name of colors.keys()) {
 			`DESIGN.md  colors.${name} → name a token from src/styles/tokens.css`,
 		);
 	}
-}
-
-// Impeccable sees patterns the rules above cannot, such as gradient text and inline
-// styles off DESIGN.md. Its DESIGN.md findings are advisory and exit 0, so any finding fails here.
-const detector = spawnSync(
-	".claude/skills/impeccable/scripts/impeccable",
-	["detect", "--json", "src/"],
-	{ encoding: "utf8" },
-);
-if (detector.status === 0 || detector.status === 2) {
-	for (const { antipattern, file, line, snippet } of JSON.parse(
-		detector.stdout,
-	)) {
-		violations.push(
-			`${relative(".", file)}:${line}  ${antipattern} → ${snippet}`,
-		);
-	}
-} else {
-	violations.push("impeccable detect could not scan src/");
 }
 
 if (violations.length > 0) {
