@@ -116,7 +116,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 <invoice-table class="stack" data-space="xs">
 	{rows.length > 0 && (
 		<div class="stack" data-space="xs">
-			<dl class="invoice-table-metrics text-sm">
+			<dl class="cluster text-sm" data-space="metrics" data-align="baseline">
 				<div class="stack" data-space="3xs">
 					<dt class="label-caps">Outstanding</dt>
 					<dd class="tabular-nums">{totalWhere(["open", "overdue"])}</dd>
@@ -133,9 +133,9 @@ const partSummaryTotal = partSummaryItems.reduce(
 				</div>
 			</dl>
 			{partSummaryItems.length > 0 && (
-				<div class="box invoice-table-parts" data-padding="xs">
+				<div class="box stack" data-padding="xs" data-space="2xs">
 					<p class="label-caps">Invoiced by cost part</p>
-					<div>
+					<div class="invoice-table-parts">
 						<CostSplit
 							items={partSummaryItems}
 							currency={partSummaryCurrency}
@@ -154,7 +154,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 		</div>
 	)}
 	{showFilter && (
-		<nav aria-label="Filter invoices" class="invoice-table-filter">
+		<nav aria-label="Filter invoices" class="cluster">
 			<Button type="button" data-invoice-filter="all" aria-pressed="true">
 				All
 			</Button>
@@ -182,11 +182,16 @@ const partSummaryTotal = partSummaryItems.reduce(
 								: "other"
 					}
 				>
-					<div class="invoice-table-columns">
+					<div
+						class="with-sidebar"
+						data-side="end"
+						data-align="start"
+						style="--sidebar-width: 6rem; --content-min: 66%"
+					>
 						<div class="stack" data-space="2xs">
 							<div class="stack" data-space="3xs">
 								<p class="label-caps leading-none">Invoice {invoice.number}</p>
-								<div class="invoice-table-amount">
+								<div class="cluster">
 									<p class="text-title tabular-nums leading-none">
 										{formatMoney(invoice.total, invoice.currency)}
 									</p>
@@ -217,8 +222,12 @@ const partSummaryTotal = partSummaryItems.reduce(
 									</div>
 								)}
 							</div>
-							<dl class="invoice-table-facts text-sm">
-								<div>
+							<dl
+								class="cluster text-sm"
+								data-space="metrics"
+								data-align="baseline"
+							>
+								<div class="stack" data-space="3xs">
 									<dt class="label-caps leading-none">Due</dt>
 									<dd
 										class:list={[
@@ -228,10 +237,10 @@ const partSummaryTotal = partSummaryItems.reduce(
 										{invoice.dueAt ? formatDate(invoice.dueAt) : "—"}
 									</dd>
 								</div>
-								<div>
+								<div class="stack" data-space="3xs">
 									<dt class="label-caps leading-none">Status</dt>
 									<dd>
-										<div class="invoice-table-status">
+										<div class="cluster">
 											{invoice.status === "overdue" ? (
 												<Badge type="error">Overdue</Badge>
 											) : invoice.status === "open" ? (
@@ -253,7 +262,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 										</div>
 									</dd>
 								</div>
-								<div>
+								<div class="stack" data-space="3xs">
 									<dt class="label-caps leading-none">Work</dt>
 									<dd>
 										{invoice.phase?.project ? (
@@ -268,7 +277,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 										)}
 									</dd>
 								</div>
-								<div>
+								<div class="stack" data-space="3xs">
 									<dt class="label-caps leading-none">Delivery</dt>
 									<dd>
 										{invoice.phase?.deliveryState === "url" &&

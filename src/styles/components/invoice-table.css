@@ -1,51 +1,8 @@
 @layer components {
 	/* src/components/InvoiceTable.astro: the client's invoices as planes, with
 	   their totals and a filter above. */
-	.invoice-table-metrics {
-		display: grid;
-		grid-auto-flow: column;
-		justify-content: start;
-		gap: var(--space-l);
-	}
-
 	.invoice-table-parts {
-		display: grid;
-		gap: var(--space-2xs);
-
-		& > div {
-			max-inline-size: 28rem;
-		}
-	}
-
-	.invoice-table-filter {
-		display: grid;
-		grid-auto-flow: column;
-		justify-content: start;
-		gap: var(--space-2xs);
-	}
-
-	/* The details, with the button beside them from sm. */
-	.invoice-table-columns {
-		display: grid;
-		gap: var(--space-2xs);
-
-		@media (width >= 40rem) {
-			grid-template-columns: minmax(0, 1fr) auto;
-			align-items: start;
-		}
-	}
-
-	.invoice-table-amount,
-	.invoice-table-status {
-		display: grid;
-		grid-auto-flow: column;
-		align-items: center;
-		justify-content: start;
-		gap: var(--space-2xs);
-	}
-
-	.invoice-table-status {
-		white-space: nowrap;
+		max-inline-size: 28rem;
 	}
 
 	.invoice-table-split {
@@ -53,28 +10,10 @@
 		margin-block-start: var(--space-3xs);
 	}
 
-	.invoice-table-facts {
-		display: grid;
-		gap: var(--space-xs) var(--space-m);
-
-		@media (width >= 40rem) {
-			grid-template-columns: minmax(0, 1fr) auto;
-		}
-
-		/* A grid, not a stack: a fact stretched to the height of the one
-		   beside it spreads the extra space between its label and value. */
-		& > div {
-			display: grid;
-			gap: var(--space-3xs);
-		}
-	}
-
+	/* The Pay or Details button at the plane's end, beside the details or
+	   below them. */
 	.invoice-table-action {
 		display: grid;
-		justify-content: start;
-
-		@media (width >= 40rem) {
-			justify-self: end;
-		}
+		justify-content: end;
 	}
 }
