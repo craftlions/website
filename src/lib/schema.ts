@@ -182,42 +182,6 @@ export const rateLimit = t.pgTable("rate_limit", {
 	lastRequest: t.bigint("last_request", { mode: "number" }).notNull(),
 });
 
-export const apikey = t.pgTable(
-	"apikey",
-	{
-		id: t.text("id"),
-		configId: t.text("config_id").default("default").notNull(),
-		name: t.text("name"),
-		start: t.text("start"),
-		prefix: t.text("prefix"),
-		key: t.text("key").notNull(),
-		referenceId: t.text("reference_id").notNull(),
-		refillInterval: t.integer("refill_interval"),
-		refillAmount: t.integer("refill_amount"),
-		lastRefillAt: t.timestamp("last_refill_at", { withTimezone: true }),
-		enabled: t.boolean("enabled").default(true),
-		rateLimitEnabled: t.boolean("rate_limit_enabled").default(true),
-		rateLimitTimeWindow: t.integer("rate_limit_time_window").default(86400000),
-		rateLimitMax: t.integer("rate_limit_max").default(10),
-		requestCount: t.integer("request_count").default(0),
-		remaining: t.integer("remaining"),
-		lastRequest: t.timestamp("last_request", { withTimezone: true }),
-		expiresAt: t.timestamp("expires_at", { withTimezone: true }),
-		createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
-		updatedAt: t.timestamp("updated_at", { withTimezone: true }).notNull(),
-		permissions: t.text("permissions"),
-		metadata: t.text("metadata"),
-	},
-	(table) => [
-		t.primaryKey({
-			columns: [table.id],
-		}),
-		t.unique().on(table.key),
-		t.index().on(table.configId),
-		t.index().on(table.referenceId),
-	],
-);
-
 /**
  * APPLICATION-SPECIFIC TABLES
  */
