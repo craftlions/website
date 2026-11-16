@@ -44,16 +44,11 @@
 		display: grid;
 	}
 
-	/* The client count, and the filter beside it from 40rem. */
+	/* The client count, and the 16rem filter beside it while the count keeps
+	   half the row (a with-sidebar); the count sits on the filter's baseline
+	   row. */
 	.ledger-toolbar {
-		@media (width >= 40rem) {
-			grid-template-columns: minmax(0, 1fr) auto;
-			align-items: end;
-
-			& > search {
-				inline-size: 16rem;
-			}
-		}
+		align-items: end;
 	}
 
 	/* The ledger table scrolls sideways inside its dashed line below 48rem. */

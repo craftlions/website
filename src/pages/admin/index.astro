@@ -279,7 +279,11 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 					<Button variant="quiet" data-disclosure-cancel> Cancel </Button>
 				</div>
 			</form>
-			<div class="stack ledger-toolbar" data-space="xs">
+			<div
+				class="with-sidebar ledger-toolbar"
+				data-side="end"
+				style="--sidebar-width: 16rem; --sidebar-space: var(--space-xs)"
+			>
 				<p role="status" class="text-sm text-fg-muted" data-client-count>
 					{ledger.length} {ledger.length === 1 ? "client" : "clients"}
 				</p>
