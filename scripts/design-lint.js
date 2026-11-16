@@ -738,10 +738,30 @@ for (const file of globSync("src/**/*.astro")) {
 	}
 }
 
-// Report-only until the markup is converted (`--report` lists them): a page's
-// scoped <style> holds one-off layout only; a rule that redoes a primitive
-// should use it; every class markup uses is defined, and every defined one used.
-const reports = [];
+// A page's scoped <style> holds one-off layout only (page-style); a rule that
+// redoes a primitive uses it instead (layout-one-off); every class markup or a
+// script uses is defined, and every defined one used (vocabulary).
+//
+// Deliberate exceptions, each with its reason:
+// - the specimen's page artwork, sized and drawn by the page itself: the
+//   probe the design tests measure, the token swatches and the divider
+//   between demos;
+const pageArtwork = new Map([
+	["src/pages/brand/specimen.astro", [".probe", ".swatch", ".divided"]],
+]);
+// - control outlines, which look like a box but are not planes: their
+//   padding and line are the control's own size and boundary (a Button, an
+//   Input, the nav's stand-in drawn like a Button, the cost split's % boxes
+//   drawn like an Input);
+// - the line of the lines pattern, which wraps like a cluster but sizes its
+//   first part to take the room the figure and the actions leave.
+const oneOffExceptions = new Map([
+	["src/styles/components/button.css", /^\.button:is\(/],
+	["src/styles/components/input.css", /^\.input$/],
+	["src/styles/components/nav.css", /^& \.nav-placeholder$/],
+	["src/styles/components/phase-amount-calculator.css", /^\.split-share,/],
+	["src/styles/components/lines.css", /^:is\(\s*\.lines > li,/],
+]);
 const native = new Set(
 	stylesheets
 		.filter(({ file }) => file.startsWith("src/styles/"))
@@ -766,8 +786,8 @@ for (const {
 } of stylesheets) {
 	if (file.startsWith("src/pages/")) {
 		const report = (line, text, use) =>
-			reports.push(
-				`${file}:${line}  ${text} → ${use}  (AGENTS.md#hard-requirements)`,
+			violations.push(
+				`${file}:${line}  ${text} → ${use}  (DESIGN.md#page-styles)`,
 			);
 		const local = new Set(blocks.flatMap(({ prelude }) => classesIn(prelude)));
 		const top = [...blocks, ...statements, ...declarations].filter(
@@ -818,7 +838,17 @@ for (const {
 				}
 			}
 		}
-		for (const { property, value, important, line } of declarations) {
+		for (const { property, value, important, line, parents } of declarations) {
+			if (
+				pageArtwork
+					.get(file)
+					?.includes(
+						parents.findLast(({ prelude }) => !prelude.startsWith("@"))
+							?.prelude,
+					)
+			) {
+				continue;
+			}
 			if (!pageProperty.test(property)) {
 				report(
 					line,
@@ -845,8 +875,8 @@ for (const {
 	if (file === layoutDoc) {
 		for (const name of primitives.keys()) {
 			if (!vocabulary.includes(name)) {
-				reports.push(
-					`${file}  .${name} → compose the nine primitives (${vocabulary.join(", ")}) instead of adding a tenth  (${layoutDoc})`,
+				violations.push(
+					`${file}  .${name} → compose the primitives (${vocabulary.join(", ")}) instead of adding a tenth  (${layoutDoc})`,
 				);
 			}
 		}
@@ -884,9 +914,9 @@ for (const {
 			(/var\(--rule\)/.test(values.get("border")) &&
 				values.has("padding") &&
 				"box");
-		if (primitive) {
-			reports.push(
-				`${file}:${line}  ${prelude} → use .${primitive} with its custom properties instead of repeating it  (${layoutDoc})`,
+		if (primitive && !oneOffExceptions.get(file)?.test(prelude)) {
+			violations.push(
+				`${file}:${line}  ${prelude} → use .${primitive} with its custom properties instead of repeating it  (DESIGN.md#vocabulary)`,
 			);
 		}
 	}
@@ -907,6 +937,8 @@ for (const file of globSync("src/**/*.astro")) {
 	for (const { 0: match, 1: text, index } of source.matchAll(
 		/(?<![\w-])(?:class|\w*Class)(?::list)?=(?:"([^"]*)"|\{)|className = |classList\.\w+\(/g,
 	)) {
+		// A script's className and classList take class names only.
+		const script = !match.endsWith("{");
 		if (text !== undefined) {
 			strings.push([text, index, true]);
 			continue;
@@ -931,11 +963,11 @@ for (const file of globSync("src/**/*.astro")) {
 		for (const [, ...quoted] of source
 			.slice(index, end)
 			.matchAll(/"([^"]*)"|'([^']*)'|`([^`$]*)`/g)) {
-			strings.push([quoted.find((part) => part !== undefined), index, false]);
+			strings.push([quoted.find((part) => part !== undefined), index, script]);
 		}
 	}
-	// Strings inside an expression are only counted as used: they can be
-	// values such as a variant name.
+	// Strings inside a class expression are only counted as used: they can be
+	// values such as a variant name compared in it.
 	for (const [text, index, attribute] of strings) {
 		for (const name of text
 			.split(/\s+/)
@@ -944,8 +976,8 @@ for (const file of globSync("src/**/*.astro")) {
 					/[a-z]/i.test(name) && /^[\w@:[\]().%/#,&=>*+!-]+$/.test(name),
 			)) {
 			if (attribute && !native.has(name) && !local.has(name)) {
-				reports.push(
-					`${file}:${source.slice(0, index).split("\n").length}  ${name} → a class defined in src/styles/ or in this page's <style>; this one renders nothing  (AGENTS.md#hard-requirements)`,
+				violations.push(
+					`${file}:${source.slice(0, index).split("\n").length}  ${name} → a class from DESIGN.md#vocabulary, the component's own stylesheet in src/styles/components/, or this page's <style>; this one renders nothing  (DESIGN.md#vocabulary)`,
 				);
 			}
 		}
@@ -958,8 +990,8 @@ const markup = globSync("src/**/*.{astro,ts}")
 	.join("\n");
 for (const name of native) {
 	if (!new RegExp(`(?<![\\w-])${name}(?![\\w-])`).test(markup)) {
-		reports.push(
-			`src/styles  .${name} is used nowhere → use it or remove its rule  (AGENTS.md#hard-requirements)`,
+		violations.push(
+			`src/styles  .${name} is used nowhere → use it or remove its rule  (DESIGN.md#vocabulary)`,
 		);
 	}
 }
@@ -1183,13 +1215,6 @@ for (const { name, fontSize, fontWeight, lineHeight } of roles) {
 	}
 }
 
-if (process.argv.includes("--report")) {
-	console.log(reports.join("\n"));
-} else if (reports.length > 0) {
-	console.log(
-		`design:lint  ${reports.length} report-only findings (page-style, layout-one-off, vocabulary) → node scripts/design-lint.js --report`,
-	);
-}
 if (violations.length > 0) {
 	console.error(violations.join("\n"));
 	process.exit(1);
