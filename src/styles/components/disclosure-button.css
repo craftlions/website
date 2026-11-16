@@ -1,3 +1,30 @@
 @layer components {
-	/* src/components/DisclosureButton.astro; filled by conversion package S5a. */
+	/* src/components/DisclosureButton.astro: a Button with a chevron that turns
+	   while its panel is open. */
+	.disclosure {
+		/* The quiet variant is inline text; this keeps the chevron on the
+		   label's line (default and danger already lay out as this grid). */
+		&[data-variant="quiet"] {
+			display: inline-grid;
+			grid-auto-flow: column;
+			align-items: center;
+			gap: var(--space-3xs);
+		}
+
+		& > svg {
+			inline-size: 0.75rem;
+			block-size: 0.75rem;
+			transition-property: transform, translate, scale, rotate;
+			transition-duration: 150ms;
+			transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+			@media (prefers-reduced-motion: reduce) {
+				transition-property: none;
+			}
+		}
+
+		&[aria-expanded="true"] > svg {
+			rotate: 180deg;
+		}
+	}
 }
