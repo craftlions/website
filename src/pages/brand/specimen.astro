@@ -88,6 +88,13 @@ const typeSteps = [
 	["text-sm", "Small body", "step--1"],
 	["text-xs", "Extra small body", "step--2"],
 ] as const;
+
+// Each layout primitive renders in a narrow and a wide frame, so the design
+// tests and a reader see what it does with the room it gets.
+const frames = [
+	["narrow", "20rem"],
+	["wide", "60rem"],
+] as const;
 ---
 
 <Shell>
@@ -403,7 +410,435 @@ const typeSteps = [
 						</section>
 					</section>
 				))}
+				<section
+					aria-labelledby="layout"
+					class="layout box stack"
+					data-space="l"
+				>
+					<header class="stack" data-space="2xs">
+						<h2 id="layout" class="text-headline">Layout</h2>
+						<p class="text-sm text-fg-muted">
+							The layout primitives in src/styles/layout.css, each in a 20rem
+							and a 60rem frame, or as wide as the screen allows. Their content
+							decides when they wrap or switch.
+						</p>
+					</header>
+
+					<section
+						aria-labelledby="layout-stack"
+						class="stack"
+						data-space="xs"
+						data-fixture="stack"
+					>
+						<h3 id="layout-stack" class="text-title">Stack</h3>
+						<p class="text-sm text-fg-muted">
+							The space between siblings comes from the parent; each nested
+							stack keeps its own.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="stack" data-space="l">
+										<article class="stack" data-space="2xs">
+											<h4 class="text-title">Website relaunch</h4>
+											<p class="text-sm text-fg-muted">Phase 2 of 4 · Design</p>
+											<p class="text-sm">
+												Templates, navigation and a content migration plan for
+												the new site.
+											</p>
+										</article>
+										<article class="stack">
+											<h4 class="text-title">Billing API</h4>
+											<p class="text-sm text-fg-muted">Done · Paid in full</p>
+										</article>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="layout-box"
+						class="stack"
+						data-space="xs"
+						data-fixture="box"
+					>
+						<h3 id="layout-box" class="text-title">Box</h3>
+						<p class="text-sm text-fg-muted">
+							The dashed plane: padding inside a dashed line.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="stack" data-space="xs">
+										<p class="box text-sm text-fg-muted">
+											No invoices yet. The first one appears here once a phase
+											is accepted.
+										</p>
+										<p class="box text-sm" data-space="xs">
+											Dense cell: 4,000 € due 2026-12-01
+										</p>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="layout-center"
+						class="stack"
+						data-space="xs"
+						data-fixture="center"
+					>
+						<h3 id="layout-center" class="text-title">Center</h3>
+						<p class="text-sm text-fg-muted">
+							A column capped at its width token and centred, here the 32rem
+							column of the sign-in forms.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="center" data-width="narrow">
+										<p class="box text-sm">
+											Sign in with the email address your invitation went to.
+										</p>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="layout-cluster"
+						class="stack"
+						data-space="xs"
+						data-fixture="cluster"
+					>
+						<h3 id="layout-cluster" class="text-title">Cluster</h3>
+						<p class="text-sm text-fg-muted">
+							Peers at their own width that wrap like words, with the same gap
+							between rows.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="cluster">
+										<Button>Send to client</Button>
+										<Button>Edit</Button>
+										<Button>Record payment</Button>
+										<Button variant="danger">Delete phase</Button>
+										<Badge type="info">Sent</Badge>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="layout-heading-row"
+						class="stack"
+						data-space="xs"
+						data-fixture="heading-row"
+					>
+						<h3 id="layout-heading-row" class="text-title">
+							Sidebar: heading and action
+						</h3>
+						<p class="text-sm text-fg-muted">
+							The action keeps its own width beside the heading; when the
+							heading would get less than half the row, the action moves below
+							it.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="with-sidebar" data-side="end" data-align="center">
+										<h4 class="label-caps">
+											Projects in Example client organisation
+										</h4>
+										<Button>Create project</Button>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="layout-sidebar"
+						class="stack"
+						data-space="xs"
+						data-fixture="sidebar"
+					>
+						<h3 id="layout-sidebar" class="text-title">Sidebar: dashboard</h3>
+						<p class="text-sm text-fg-muted">
+							Projects and a 20rem Budget side by side while Projects keeps at
+							least 60% of the row; stacked otherwise.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div
+										class="with-sidebar"
+										data-side="end"
+										style="--sidebar-width: 20rem; --content-min: 60%"
+									>
+										<div class="stack" data-space="xs">
+											<h4 class="label-caps">Projects</h4>
+											<ul class="stack" data-space="2xs">
+												<li class="box text-sm">Website relaunch · Design</li>
+												<li class="box text-sm">Billing API · Done</li>
+											</ul>
+										</div>
+										<div class="stack" data-space="xs">
+											<h4 class="label-caps">Budget</h4>
+											<p class="box text-sm tabular-nums">
+												8,200 € of 12,400 € used
+											</p>
+										</div>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="layout-switcher"
+						class="stack"
+						data-space="xs"
+						data-fixture="switcher"
+					>
+						<h3 id="layout-switcher" class="text-title">Switcher</h3>
+						<p class="text-sm text-fg-muted">
+							All in one row above the threshold, all stacked below it, never in
+							between: an invoice and its cost split at 40rem, the split taking
+							1.5 shares of the room, and three metrics at 30rem.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="stack">
+										<div class="switcher" style="--switcher-threshold: 40rem">
+											<div class="box stack" data-space="2xs">
+												<p class="text-title">INV-0042</p>
+												<p class="text-sm text-fg-muted tabular-nums">
+													Issued 2026-11-02 · due 2026-12-01
+												</p>
+											</div>
+											<div
+												class="box stack"
+												data-space="2xs"
+												style="flex-grow: 1.5"
+											>
+												<p class="label-caps">Cost split</p>
+												<p class="text-sm tabular-nums">
+													Website relaunch 8,000 € · Billing API 4,400 €
+												</p>
+											</div>
+										</div>
+										<dl class="switcher" style="--switcher-threshold: 30rem">
+											<div class="box stack" data-space="3xs">
+												<dt class="label-caps">Used</dt>
+												<dd class="tabular-nums">8,200 €</dd>
+											</div>
+											<div class="box stack" data-space="3xs">
+												<dt class="label-caps">Left</dt>
+												<dd class="tabular-nums">4,200 €</dd>
+											</div>
+											<div class="box stack" data-space="3xs">
+												<dt class="label-caps">Budget</dt>
+												<dd class="tabular-nums">12,400 €</dd>
+											</div>
+										</dl>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="layout-cover"
+						class="stack"
+						data-space="xs"
+						data-fixture="cover"
+					>
+						<h3 id="layout-cover" class="text-title">Cover</h3>
+						<p class="text-sm text-fg-muted">
+							The page shell at a 12rem minimum height: the main part grows, so
+							the first part sits at the top and the last at the bottom, with or
+							without the impersonation bar.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="stack">
+										<div
+											class="cover box"
+											style="--cover-min: 12rem; --cover-pad: var(--space-xs); --cover-space: var(--space-xs)"
+										>
+											<p class="text-sm">craftlions · Dashboard</p>
+											<p class="box text-sm text-fg-muted" data-cover="grow">
+												Main
+											</p>
+											<p class="text-sm text-fg-muted">© 2026 craftlions</p>
+										</div>
+										<div
+											class="cover box"
+											style="--cover-min: 12rem; --cover-pad: var(--space-xs); --cover-space: var(--space-xs)"
+										>
+											<p class="box text-label bg-panel">
+												Viewing as Example client
+											</p>
+											<p class="text-sm">craftlions · Dashboard</p>
+											<p class="box text-sm text-fg-muted" data-cover="grow">
+												Main
+											</p>
+											<p class="text-sm text-fg-muted">© 2026 craftlions</p>
+										</div>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="layout-auto-grid"
+						class="stack"
+						data-space="xs"
+						data-fixture="auto-grid"
+					>
+						<h3 id="layout-auto-grid" class="text-title">Grid</h3>
+						<p class="text-sm text-fg-muted">
+							Equal cells of at least 16rem that wrap, one column when the frame
+							is narrower.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<dl class="auto-grid">
+										{[
+											["Status", "Active"],
+											["Budget", "12,400 €"],
+											["Spent", "8,200 €"],
+											["Phases", "2 of 4"],
+											["Started", "2026-03-02"],
+											["Delivery", "2026-12-15"],
+										].map(([term, detail]) => (
+											<div class="box stack" data-space="3xs">
+												<dt class="label-caps">{term}</dt>
+												<dd class="tabular-nums">{detail}</dd>
+											</div>
+										))}
+									</dl>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="layout-rows"
+						class="stack"
+						data-space="xs"
+						data-fixture="rows"
+					>
+						<h3 id="layout-rows" class="text-title">Rows</h3>
+						<p class="text-sm text-fg-muted">
+							A list that becomes a table from 44rem of its own width, in a
+							30rem and a 64rem frame: the header row appears and the cell
+							labels are only read out.
+						</p>
+						{[
+							["rows-narrow", "30rem"],
+							["rows-wide", "64rem"],
+						].map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div
+										class="rows"
+										style="--rows-columns: minmax(0, 1fr) auto auto auto"
+									>
+										<ul>
+											<li aria-hidden="true" class="label-caps" data-head>
+												<span>Phase</span>
+												<span>Status</span>
+												<span>Amount</span>
+												<span>Action</span>
+											</li>
+											{(
+												[
+													["May release", "info", "Sent", "4,000 €", "Accept"],
+													[
+														"Discovery",
+														"success",
+														"Paid",
+														"2,400 €",
+														"Details",
+													],
+												] as const
+											).map(([phase, type, status, amount, action]) => (
+												<li>
+													<p class="text-sm">
+														<span class="text-fg-muted" data-label>
+															Phase{" "}
+														</span>
+														{phase}
+													</p>
+													<p class="text-sm">
+														<span class="text-fg-muted" data-label>
+															Status{" "}
+														</span>
+														<Badge type={type}>{status}</Badge>
+													</p>
+													<p class="text-sm tabular-nums">
+														<span class="text-fg-muted" data-label>
+															Amount{" "}
+														</span>
+														{amount}
+													</p>
+													<Button
+														variant={type === "info" ? "default" : "quiet"}
+													>
+														{action}
+													</Button>
+												</li>
+											))}
+										</ul>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+				</section>
 			</main>
 		</body>
 	</Fragment>
 </Shell>
+
+<style>
+	@layer page {
+		.layout {
+			grid-column: 1 / -1;
+			min-inline-size: 0;
+		}
+		.frame {
+			inline-size: min(100%, 20rem);
+		}
+		.frame[data-frame="wide"] {
+			inline-size: min(100%, 60rem);
+		}
+		.frame[data-frame="rows-narrow"] {
+			inline-size: min(100%, 30rem);
+		}
+		.frame[data-frame="rows-wide"] {
+			inline-size: min(100%, 64rem);
+		}
+	}
+</style>
