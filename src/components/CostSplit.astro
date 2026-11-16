@@ -82,14 +82,20 @@ const accessibleSummary =
 			{items.map((item) => (
 				<li
 					class="text-xs"
-					data-dimmed={(highlight && item.component !== highlight) || undefined}
 					title={`${dueHint[item.component]}${showStatus ? ` · ${item.status.replaceAll("_", " ")}` : ""}`}
 				>
 					<span class="cost-split-part truncate text-fg-muted">
 						{item.component}
 						<span> · {dueHint[item.component]}</span>
 					</span>
-					<span class="cost-split-amount tabular-nums text-fg">
+					<span
+						class:list={[
+							"cost-split-amount tabular-nums",
+							highlight && item.component !== highlight
+								? "text-fg-muted"
+								: "text-fg",
+						]}
+					>
 						{formatter.format(item.amount)}
 						<span class="text-fg-muted"> · {share(item.amount)}</span>
 					</span>
@@ -108,9 +114,7 @@ const accessibleSummary =
 		<figcaption class="sr-only">{accessibleSummary}</figcaption>
 		<ul class="stack" data-space="3xs" aria-label="Cost split">
 			{items.map((item) => (
-				<li
-					data-dimmed={(highlight && item.component !== highlight) || undefined}
-				>
+				<li>
 					<span class="stack" data-space="3xs">
 						<span class="cost-split-name text-xs">
 							<span class="cost-split-part">{item.component}</span>
@@ -118,7 +122,14 @@ const accessibleSummary =
 								{dueHint[item.component]}
 							</span>
 						</span>
-						<span class="text-xs tabular-nums text-fg">
+						<span
+							class:list={[
+								"text-xs tabular-nums",
+								highlight && item.component !== highlight
+									? "text-fg-muted"
+									: "text-fg",
+							]}
+						>
 							{formatter.format(item.amount)}
 							<span class="text-fg-muted"> · {share(item.amount)}</span>
 						</span>

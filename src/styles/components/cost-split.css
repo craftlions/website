@@ -23,11 +23,6 @@
 		&[data-variant="compact"] li {
 			align-items: baseline;
 		}
-
-		/* The other parts, beside the one an invoice bills. */
-		& [data-dimmed] {
-			opacity: 0.6;
-		}
 	}
 
 	/* The part's name is capitalized, its due hint is not. */
