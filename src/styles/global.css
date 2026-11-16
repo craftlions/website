@@ -6,6 +6,7 @@
 @import "./reset.css";
 @import "./tokens.css";
 @import "./base.css";
+@import "./layout.css";
 @import "tailwindcss/utilities.css" layer(utilities);
 
 /* Each role exists only on the utility it belongs to: `text-fg` works, `bg-fg` does not. */
