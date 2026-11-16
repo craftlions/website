@@ -363,7 +363,7 @@ for (const {
 		// prefers-reduced-motion).
 		if (/^@media\b.*width/.test(text)) {
 			violations.push(
-				`${where} → a primitive that switches by its own width (with-sidebar, switcher, auto-grid, cluster), the rows thresholds, or in a page's own <style> an @container (inline-size >= Nrem) on a container it declares; no window-width media queries  (${layoutDoc})`,
+				`${where} → a primitive that switches by its own width (with-sidebar, switcher, auto-grid, cluster) or the lines pattern; no window-width media queries  (${layoutDoc})`,
 			);
 		}
 	}
@@ -858,7 +858,7 @@ for (const {
 				report(
 					line,
 					prelude,
-					"no @media in a page; a primitive or a container threshold",
+					"no @media in a page; a primitive that switches by its own width",
 				);
 			} else if (!prelude.startsWith("@")) {
 				for (const selector of prelude.split(",")) {
