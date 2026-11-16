@@ -101,10 +101,9 @@ const feedback = [
 			],
 		}),
 	},
-	{
-		data: undefined,
-		error: new ActionError({ code: "INTERNAL_SERVER_ERROR", message: "raw" }),
-	},
+	// Without a message the banner shows its generic server-error text, as it
+	// does for INTERNAL_SERVER_ERROR, but nothing is logged.
+	{ data: undefined, error: new ActionError({ code: "BAD_GATEWAY" }) },
 ];
 
 const typeRoles = [
