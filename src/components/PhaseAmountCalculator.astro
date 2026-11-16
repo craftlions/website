@@ -55,26 +55,27 @@ const percentages = [
 ---
 
 <phase-amount-calculator
-	class:list={["grid gap-3", className]}
+	class:list={["stack", className]}
+	data-space="xs"
 	data-cost={cost}
 	data-currency={currency}
 >
-	<fieldset class="grid gap-3" aria-describedby={`${id}-rule`}>
+	<fieldset class="stack" data-space="xs" aria-describedby={`${id}-rule`}>
 		<legend class="label-caps">Cost split</legend>
-		<p id={`${id}-rule`} class="max-w-prose text-sm text-fg-muted">
+		<p id={`${id}-rule`} class="split-note text-sm text-fg-muted">
 			Set the shares billed upfront and on delivery; Acceptance always takes the
 			remainder, so the default of 0% and 0% bills the whole cost on acceptance.
 		</p>
 		{parts.map((part, index) => (
-			<div class="grid grid-cols-[minmax(0,1fr)_7rem] items-center gap-x-3 gap-y-0.5">
+			<div class="split-part">
 				<label for={`${id}-${part.key}`} class="text-sm wrap-break-word">
 					<span class="text-label">{part.label}</span>{" "}
 					<span class="text-fg-muted">{part.when}</span>
 				</label>
-				<span class="row-span-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border border-dashed border-line-control px-3 py-2 text-sm transition-colors focus-within:border-line-active">
+				<span class="split-share text-sm">
 					<input
 						id={`${id}-${part.key}`}
-						class="min-w-0 bg-transparent tabular-nums"
+						class="tabular-nums"
 						data-split-percent
 						min="0"
 						max="100"
@@ -92,15 +93,13 @@ const percentages = [
 				></output>
 			</div>
 		))}
-		<div
-			class="grid grid-cols-[minmax(0,1fr)_7rem] items-center gap-x-3 gap-y-0.5"
-		>
+		<div class="split-part">
 			<p class="text-sm wrap-break-word">
 				<span class="text-label">Acceptance</span>{" "}
 				<span class="text-fg-muted">billed on acceptance · remainder</span>
 			</p>
 			<output
-				class="row-span-2 border border-dashed border-line-control px-3 py-2 text-sm tabular-nums text-fg-muted"
+				class="split-remainder text-sm tabular-nums text-fg-muted"
 				aria-label="Acceptance share, calculated"
 				data-split-remainder
 			></output>
@@ -109,14 +108,14 @@ const percentages = [
 				data-split-amount-output
 			></output>
 		</div>
-		<div class="grid">
+		<div class="split-result">
 			<p
-				class="border-t border-dashed border-line pt-2 text-sm tabular-nums text-fg-muted wrap-break-word"
+				class="split-total text-sm tabular-nums text-fg-muted wrap-break-word"
 				data-split-total
 				role="status"
 			></p>
 			<p
-				class="text-sm text-fg-danger not-empty:mt-3"
+				class="split-error text-sm text-fg-danger"
 				data-split-error
 				role="alert"
 			></p>

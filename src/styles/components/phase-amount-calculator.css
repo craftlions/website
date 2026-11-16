@@ -1,3 +1,56 @@
 @layer components {
-	/* src/components/PhaseAmountCalculator.astro; filled by conversion package S5g. */
+	/* The cost split of a phase form: Upfront and Delivery shares typed in a %
+	   box, Acceptance the calculated remainder, each with its amount below the
+	   label and the total under them. */
+	.split-note {
+		max-inline-size: var(--measure);
+	}
+
+	.split-part {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 7rem;
+		align-items: center;
+		gap: var(--space-3xs) var(--space-xs);
+	}
+
+	/* The share box spans the label and amount rows, drawn like an Input. */
+	.split-share,
+	.split-remainder {
+		grid-row: span 2 / span 2;
+		padding: var(--space-2xs) var(--space-xs);
+		border: var(--rule) var(--line-control);
+	}
+
+	.split-share {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: var(--space-3xs);
+		transition-property:
+			color, background-color, border-color, outline-color,
+			text-decoration-color, fill, stroke;
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+		transition-duration: 150ms;
+
+		&:focus-within {
+			border-color: var(--line-active);
+		}
+
+		& input {
+			min-inline-size: 0;
+		}
+	}
+
+	.split-result {
+		display: grid;
+	}
+
+	.split-total {
+		padding-block-start: var(--space-2xs);
+		border-block-start: var(--rule) var(--line);
+	}
+
+	.split-error:not(:empty) {
+		margin-block-start: var(--space-xs);
+	}
 }
