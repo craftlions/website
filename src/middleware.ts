@@ -21,6 +21,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	const needsSession = ["/admin", "/dash", "/settings"].some(matches);
 	const isPersonalized = needsSession || matches("/api");
+	// Every answer on these paths carries the headers, the admin gate's
+	// redirects included.
+	const withHeaders = (response: Response) => {
+		if (isPersonalized) {
+			response.headers.set("Cache-Control", "no-store");
+		}
+
+		if (isPrivatePath(pathname)) {
+			response.headers.set("X-Robots-Tag", "noindex");
+		}
+
+		return response;
+	};
 
 	if (needsSession) {
 		context.locals.session = await context.locals.auth.api.getSession({
@@ -30,11 +43,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	if (matches("/admin")) {
 		if (!context.locals.session) {
-			return context.redirect("/login");
+			return withHeaders(context.redirect("/login"));
 		}
 
 		if (context.locals.session.user.role !== "admin") {
-			return context.redirect("/dash");
+			return withHeaders(context.redirect("/dash"));
 		}
 	}
 
@@ -118,13 +131,5 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		context.session?.delete(actionResultSessionKey);
 	}
 
-	if (isPersonalized) {
-		response.headers.set("Cache-Control", "no-store");
-	}
-
-	if (isPrivatePath(pathname)) {
-		response.headers.set("X-Robots-Tag", "noindex");
-	}
-
-	return response;
+	return withHeaders(response);
 });
