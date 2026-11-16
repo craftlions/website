@@ -1,35 +1,17 @@
 @layer components {
-	/* The shells in src/layouts/. The body of AdminShell and ClientShell:
-	   header, main and footer in rows, the impersonation bar above them. */
-	.shell {
-		display: grid;
-		min-block-size: 100dvh;
-		grid-template-rows: auto 1fr auto;
-		gap: var(--space-m-l);
-		padding: var(--space-s-m);
-
-		&:has(> .impersonation) {
-			grid-template-rows: auto auto 1fr auto;
-		}
-
-		/* The page column, a .center; its indent to the heading's rule sits
-		   inside the width. */
-		& > main {
-			display: grid;
-			min-block-size: 0;
-			align-content: start;
-			gap: var(--space-m);
-			padding-inline-start: var(--space-xs);
-		}
+	/* The body of AdminShell and ClientShell, a .cover: the page column, a
+	   .center, indented to the heading's rule inside its width. */
+	.shell > main {
+		padding-inline-start: var(--space-xs);
 	}
 
-	/* Shell.astro: the bar that stays on top while an admin views as a client. */
+	/* Shell.astro: the bar that stays on top while an admin views as a client,
+	   the first child of the .cover body. */
 	.impersonation {
 		position: sticky;
 		inset-block-start: 0;
 		z-index: 50;
 		display: grid;
-		inline-size: 100%;
 		grid-template-columns: minmax(0, 1fr) auto;
 		align-items: center;
 		column-gap: var(--space-xs);

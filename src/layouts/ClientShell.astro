@@ -34,7 +34,7 @@ const trail = organization
 	: breadcrumbs;
 ---
 
-<Shell bodyClass="shell">
+<Shell bodyClass="cover shell">
 	<Fragment slot="head"> <title>{title} · craftlions</title> </Fragment>
 	<Fragment slot="body">
 		<header
@@ -44,7 +44,11 @@ const trail = organization
 		>
 			<Nav organizationSlug={organization?.slug} />
 		</header>
-		<main class="center" data-width={wide ? "wide" : undefined}>
+		<main
+			class="center stack"
+			data-width={wide ? "wide" : undefined}
+			data-space="m"
+		>
 			{trail.length > 1 && <Breadcrumbs items={trail} />}
 			<slot name="header" />
 			<slot />
