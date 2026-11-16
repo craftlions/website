@@ -24,11 +24,11 @@ if (organizations.length === 1 && organizations[0]) {
 <ClientShell title="Organizations" wide>
 	<PageHeading> Organizations </PageHeading>
 	{organizations.length > 0 ? (
-		<ul class="grid divide-y divide-dashed divide-line border border-dashed border-line">
+		<ul class="client-orgs">
 			{organizations
 				.toSorted((a, b) => a.name.localeCompare(b.name))
 				.map((organization) => (
-					<li class="px-4 py-3 wrap-break-word">
+					<li class="wrap-break-word">
 						<a href={`/dash/org/${organization.slug}`} class="link">
 							{organization.name}
 						</a>
@@ -36,7 +36,7 @@ if (organizations.length === 1 && organizations[0]) {
 				))}
 		</ul>
 	) : (
-		<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+		<p class="box text-sm text-fg-muted">
 			Your account does not belong to an organization yet.
 		</p>
 	)}

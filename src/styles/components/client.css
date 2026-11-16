@@ -1,3 +1,145 @@
 @layer components {
-	/* Classes shared by the client pages under src/pages/dash/; filled by conversion package S5d. */
+	/* The client pages under src/pages/dash/. */
+
+	/* /dash: the organizations to choose from, one per row. */
+	.client-orgs {
+		display: grid;
+		border: var(--rule) var(--line);
+
+		& > li {
+			padding: var(--space-xs) var(--space-s);
+		}
+		& > :not(:last-child) {
+			border-block-end: var(--rule) var(--line);
+		}
+	}
+
+	/* /dash/org/[slug]: projects beside the budget from lg. */
+	.client-overview {
+		display: grid;
+		align-content: start;
+		gap: var(--space-m);
+
+		& > * {
+			min-inline-size: 0;
+		}
+
+		@media (width >= 64rem) {
+			grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+			align-items: start;
+		}
+	}
+
+	/* A section's heading with its control at the end. */
+	.client-section-head {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	/* "Hide completed" hides the completed projects; when that hides all of
+	   them, a note says so. */
+	.client-projects:has(:checked) [data-state="completed"] {
+		display: none;
+	}
+
+	/* The projects table scrolls sideways inside its plane. */
+	.client-projects-table {
+		overflow-x: auto;
+		border: var(--rule) var(--line);
+
+		& table {
+			inline-size: 100%;
+			min-inline-size: 28rem;
+		}
+		& thead tr,
+		& tbody > :not(:last-child) {
+			border-block-end: var(--rule) var(--line);
+		}
+		& :is(th, td) {
+			padding: var(--space-xs) var(--space-s);
+		}
+		& th {
+			text-align: start;
+		}
+		/* Total cost */
+		& :is(th, td):nth-child(3) {
+			text-align: end;
+		}
+		& tbody th a {
+			@media (hover: hover) {
+				&:hover {
+					color: var(--fg);
+				}
+			}
+		}
+	}
+
+	/* After the table's cells, which it overrides. */
+	.client-projects-note {
+		display: none;
+
+		.client-projects:has(:checked) & {
+			display: table-row;
+		}
+
+		& > td {
+			padding-block: var(--space-m);
+			text-align: center;
+		}
+	}
+
+	/* A project's cost per currency, each with its parts. */
+	.client-splits {
+		display: grid;
+		justify-items: end;
+		gap: var(--space-2xs);
+	}
+
+	.client-split {
+		display: grid;
+		inline-size: 100%;
+		min-inline-size: 12rem;
+		max-inline-size: 16rem;
+		gap: var(--space-3xs);
+
+		& > p {
+			white-space: nowrap;
+		}
+	}
+
+	/* The budget: the share used across the top, then label and amount
+	   rows on the plane's two columns. */
+	.client-budget {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		border: var(--rule) var(--line);
+
+		& > div {
+			grid-column: span 2 / span 2;
+			display: grid;
+		}
+		& > :first-child {
+			gap: var(--space-2xs);
+			border-block-end: var(--rule) var(--line);
+			padding: var(--space-s);
+		}
+		& > :not(:first-child) {
+			grid-template-columns: subgrid;
+			column-gap: var(--space-xs);
+			padding-inline: var(--space-s);
+			padding-block-start: var(--space-2xs);
+
+			& > dd {
+				text-align: end;
+			}
+		}
+		& > :nth-child(2) {
+			padding-block-start: var(--space-s);
+		}
+		& > :last-child {
+			padding-block-end: var(--space-s);
+		}
+	}
 }
