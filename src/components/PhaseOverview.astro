@@ -112,12 +112,12 @@ const invoicesWhere = (statuses: string[]) =>
 const hasOverdue = rows.some((row) => row.overdueCount > 0);
 ---
 
-<phase-overview>
+<phase-overview class="stack" data-space="xs">
 	{rows.length > 0 ? (
 		<>
-			<div class="phase-head">
-				<dl class="phase-metrics text-sm">
-					<div>
+			<div class="with-sidebar" data-side="end" data-align="center">
+				<dl class="cluster text-sm" data-space="metrics" data-align="baseline">
+					<div class="stack" data-space="3xs">
 						<dt class="label-caps">Est. Cost</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(
@@ -128,13 +128,13 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							)}
 						</dd>
 					</div>
-					<div>
+					<div class="stack" data-space="3xs">
 						<dt class="label-caps">Paid</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(invoicesWhere(["paid"]), phases[0]?.currency)}
 						</dd>
 					</div>
-					<div>
+					<div class="stack" data-space="3xs">
 						<dt class="label-caps">Outstanding</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(
@@ -143,14 +143,14 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							)}
 						</dd>
 					</div>
-					<div>
+					<div class="stack" data-space="3xs">
 						<dt class="label-caps">Overdue</dt>
 						<dd class:list={["tabular-nums", hasOverdue && "text-fg-danger"]}>
 							{sumByCurrency(invoicesWhere(["overdue"]), phases[0]?.currency)}
 						</dd>
 					</div>
 				</dl>
-				<nav aria-label="Phase view" class="phase-views">
+				<nav aria-label="Phase view" class="cluster">
 					<Button type="button" data-phase-view="compact" aria-pressed="true">
 						Compact
 					</Button>
@@ -160,17 +160,21 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 				</nav>
 			</div>
 
-			<div class="phase-table">
-				<div aria-hidden="true" class="phase-table-head label-caps">
-					<span>Phase</span>
-					<span>State</span>
-					<span>Billing</span>
-					<span>Actions</span>
-				</div>
-				<ul class="phase-list">
+			<div
+				class="rows"
+				data-at="60"
+				style="--rows-columns: minmax(0, 1fr) auto auto auto auto"
+			>
+				<ul>
+					<li aria-hidden="true" class="label-caps" data-head>
+						<span>Phase</span>
+						<span>State</span>
+						<span>Billing</span>
+						<span>Actions</span>
+					</li>
 					{rows.map((phase) => (
-						<li id={`phase-${phase.publicId}`} data-phase>
-							<div class="phase-name">
+						<li id={`phase-${phase.publicId}`} class="target" data-phase>
+							<div class="stack" data-space="3xs">
 								<h3 data-state={phase.state}>{phase.title}</h3>
 								<p class="text-sm text-fg-muted">
 									{phase.dueAt
@@ -178,11 +182,19 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 										: "Not scheduled"}
 								</p>
 							</div>
-							<Badge type={phaseStateToBadgeType(phase.state)}>
-								{clientPhaseLabel[phase.state]}
-							</Badge>
-							<div class="phase-billing">
+							<p class="text-sm">
+								<span class="text-fg-muted" data-label>
+									State{" "}
+								</span>
+								<Badge type={phaseStateToBadgeType(phase.state)}>
+									{clientPhaseLabel[phase.state]}
+								</Badge>
+							</p>
+							<div class="phase-billing stack" data-space="2xs">
 								<p class="text-sm tabular-nums">
+									<span class="text-fg-muted" data-label>
+										Billing{" "}
+									</span>
 									{formatMoney(phase.cost, phase.currency)}
 								</p>
 								{phase.parts.length > 0 && (
@@ -231,7 +243,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 														: "Not invoiced yet"}
 								</p>
 							</div>
-							<div class="phase-actions">
+							<div class="phase-actions cluster" data-space="xs">
 								<ClientPhaseActions
 									{phase}
 									id="phase"
@@ -241,7 +253,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							</div>
 							<Button
 								type="button"
-								class="disclosure"
+								class="phase-toggle disclosure"
 								aria-expanded="false"
 								aria-controls={`phase-${phase.publicId}-details`}
 								data-phase-toggle
@@ -259,11 +271,15 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 
 							<div
 								id={`phase-${phase.publicId}-details`}
-								class="phase-details"
+								class="phase-details stack"
 								hidden
 							>
-								<dl class="phase-metrics text-sm">
-									<div>
+								<dl
+									class="cluster text-sm"
+									data-space="metrics"
+									data-align="baseline"
+								>
+									<div class="stack" data-space="3xs">
 										<dt class="label-caps">Epic</dt>
 										<dd>
 											{phase.externalUrl ? (
@@ -281,7 +297,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 											)}
 										</dd>
 									</div>
-									<div>
+									<div class="stack" data-space="3xs">
 										<dt class="label-caps">Delivery</dt>
 										<dd>
 											{phase.deliveryState === "url" && phase.deliveryUrl ? (
@@ -304,7 +320,8 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 								</dl>
 
 								<section
-									class="phase-schedule"
+									class="stack"
+									data-space="2xs"
 									aria-labelledby={`phase-${phase.publicId}-schedule`}
 								>
 									<h4
@@ -314,94 +331,102 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 										Payment Schedule
 									</h4>
 									{phase.parts.length > 0 ? (
-										<ol class="phase-parts">
-											{phase.parts.map((part) => (
-												<li class="text-sm">
-													<div class="phase-part">
-														<p>{part.component}</p>
-														<p class="text-xs text-fg-muted">
-															{billedOn[part.component]}
-														</p>
-													</div>
-													<p class="tabular-nums">
-														{formatMoney(part.amount, phase.currency)}
-														<span class="text-fg-muted">
-															{" "}
-															·{" "}
-															{phase.cost > 0
-																? percentFormatter.format(
-																		part.amount / phase.cost,
-																	)
-																: "—"}
-														</span>
-													</p>
-													<div class="phase-part-status">
-														{part.invoice?.status === "overdue" ? (
-															<Badge type="error">Overdue</Badge>
-														) : part.invoice?.status === "open" ? (
-															<Badge type="info">Open</Badge>
-														) : part.invoice?.status === "paid" ? (
-															<Badge type="success">Paid</Badge>
-														) : part.invoice?.status ? (
-															<Badge type="gray">
-																{invoiceStatus(part.invoice).label}
-															</Badge>
-														) : part.invoice ? (
-															<Badge type="info">Invoiced</Badge>
-														) : part.status === "due" ? (
-															<Badge type="gray">Invoice pending</Badge>
-														) : (
-															<Badge type="gray">Not due</Badge>
-														)}
-														<span
-															class:list={[
-																"text-xs",
-																part.invoice?.status === "overdue"
-																	? "text-fg-danger"
-																	: "text-fg-muted",
-															]}
-														>
-															{part.invoice?.status === "paid" &&
-															part.invoice.paidAt
-																? `on ${formatDate(part.invoice.paidAt)}`
-																: part.invoice?.dueAt &&
-																		(part.invoice.status === "open" ||
-																			part.invoice.status === "overdue")
-																	? `due ${formatDate(part.invoice.dueAt)}`
-																	: null}
-														</span>
-													</div>
-													{part.invoice ? (
-														<div class="phase-part-invoice">
-															<span class="text-xs tabular-nums text-fg-muted">
-																Invoice {part.invoice.number} ·{" "}
-																{formatMoney(
-																	part.invoice.total,
-																	part.invoice.currency,
-																)}
-															</span>
-															<Button
-																href={part.invoice.paymentPage}
-																target="_blank"
-																rel="noopener noreferrer"
-																aria-label={`${part.invoice.status === "open" || part.invoice.status === "overdue" ? "Pay" : "View"} invoice ${part.invoice.number}`}
-															>
-																{part.invoice.status === "open" ||
-																part.invoice.status === "overdue"
-																	? "Pay"
-																	: "View"}
-															</Button>
+										<div
+											class="rows"
+											style="--rows-columns: 9rem 10rem auto minmax(0, 1fr)"
+										>
+											<ol>
+												{phase.parts.map((part) => (
+													<li class="text-sm">
+														<div class="stack" data-space="3xs">
+															<p class="capitalize">{part.component}</p>
+															<p class="text-xs text-fg-muted">
+																{billedOn[part.component]}
+															</p>
 														</div>
-													) : (
-														<span class="phase-part-note text-xs text-fg-muted">
-															{part.status === "invoiced"
-																? "Invoice unavailable"
-																: "No invoice yet"}
-														</span>
-													)}
-												</li>
-											))}
-										</ol>
+														<p class="tabular-nums">
+															{formatMoney(part.amount, phase.currency)}
+															<span class="text-fg-muted">
+																{" "}
+																·{" "}
+																{phase.cost > 0
+																	? percentFormatter.format(
+																			part.amount / phase.cost,
+																		)
+																	: "—"}
+															</span>
+														</p>
+														<div class="cluster">
+															{part.invoice?.status === "overdue" ? (
+																<Badge type="error">Overdue</Badge>
+															) : part.invoice?.status === "open" ? (
+																<Badge type="info">Open</Badge>
+															) : part.invoice?.status === "paid" ? (
+																<Badge type="success">Paid</Badge>
+															) : part.invoice?.status ? (
+																<Badge type="gray">
+																	{invoiceStatus(part.invoice).label}
+																</Badge>
+															) : part.invoice ? (
+																<Badge type="info">Invoiced</Badge>
+															) : part.status === "due" ? (
+																<Badge type="gray">Invoice pending</Badge>
+															) : (
+																<Badge type="gray">Not due</Badge>
+															)}
+															<span
+																class:list={[
+																	"text-xs",
+																	part.invoice?.status === "overdue"
+																		? "text-fg-danger"
+																		: "text-fg-muted",
+																]}
+															>
+																{part.invoice?.status === "paid" &&
+																part.invoice.paidAt
+																	? `on ${formatDate(part.invoice.paidAt)}`
+																	: part.invoice?.dueAt &&
+																			(part.invoice.status === "open" ||
+																				part.invoice.status === "overdue")
+																		? `due ${formatDate(part.invoice.dueAt)}`
+																		: null}
+															</span>
+														</div>
+														{part.invoice ? (
+															<div
+																class="phase-part-invoice cluster"
+																data-space="xs"
+															>
+																<span class="text-xs tabular-nums text-fg-muted">
+																	Invoice {part.invoice.number} ·{" "}
+																	{formatMoney(
+																		part.invoice.total,
+																		part.invoice.currency,
+																	)}
+																</span>
+																<Button
+																	href={part.invoice.paymentPage}
+																	target="_blank"
+																	rel="noopener noreferrer"
+																	aria-label={`${part.invoice.status === "open" || part.invoice.status === "overdue" ? "Pay" : "View"} invoice ${part.invoice.number}`}
+																>
+																	{part.invoice.status === "open" ||
+																	part.invoice.status === "overdue"
+																		? "Pay"
+																		: "View"}
+																</Button>
+															</div>
+														) : (
+															<span class="phase-part-note text-xs text-fg-muted">
+																{part.status === "invoiced"
+																	? "Invoice unavailable"
+																	: "No invoice yet"}
+															</span>
+														)}
+													</li>
+												))}
+											</ol>
+										</div>
 									) : (
 										<p class="text-sm text-fg-muted">
 											No chargeable parts ·{" "}

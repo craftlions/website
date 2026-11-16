@@ -1,128 +1,22 @@
 @layer components {
 	/* src/components/PhaseOverview.astro: totals and the view switch, then one
-	   row per phase that lines up as a table from md, each with a hidden
-	   payment schedule that lines up from sm. */
-	phase-overview {
-		display: grid;
-		gap: var(--space-xs);
-	}
+	   row per phase on a rows list (a table from 60rem of its own width), each
+	   with a hidden payment schedule on a rows list of its own (from 44rem). */
 
-	.phase-head {
-		display: grid;
-		gap: var(--space-s);
-
-		@media (width >= 40rem) {
-			grid-template-columns: minmax(0, 1fr) auto;
-			align-items: flex-end;
-		}
-	}
-
-	/* Two columns of figures on a phone, one row from sm. */
-	.phase-metrics {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		column-gap: var(--space-l);
-		row-gap: var(--space-xs);
-
-		@media (width >= 40rem) {
-			grid-auto-flow: column;
-			grid-template-columns: none;
-			justify-content: flex-start;
-		}
-
-		& > div {
-			display: grid;
-			gap: var(--space-3xs);
-		}
-	}
-
-	.phase-views {
-		display: grid;
-		grid-auto-flow: column;
-		justify-content: flex-start;
-		gap: var(--space-2xs);
-	}
-
-	.phase-table {
-		display: grid;
-		border: var(--rule) var(--line);
-
-		@media (width >= 48rem) {
-			grid-template-columns: minmax(0, 1fr) auto auto auto auto;
-			column-gap: var(--space-m);
-		}
-	}
-
-	/* Column names, shown once the rows line up. */
-	.phase-table-head {
-		display: none;
-		padding: var(--space-xs) var(--space-s);
-		border-block-end: var(--rule) var(--line);
-
-		@media (width >= 48rem) {
-			grid-column: span 5 / span 5;
-			display: grid;
-			grid-template-columns: subgrid;
-		}
-
+	/* The header's Billing column lines up with its figures, and Actions
+	   covers the actions and the Details toggle. */
+	phase-overview [data-head] {
 		& > :nth-child(3) {
 			text-align: end;
 		}
 		& > :last-child {
-			grid-column: span 2 / span 2;
+			grid-column: span 2;
 		}
 	}
 
-	.phase-list {
-		display: grid;
-
-		@media (width >= 48rem) {
-			grid-column: span 5 / span 5;
-			grid-template-columns: subgrid;
-		}
-
-		& > li {
-			display: grid;
-			scroll-margin-block-start: var(--space-2xl);
-			row-gap: var(--space-xs);
-			padding: var(--space-s);
-			border-block-end: var(--rule) var(--line);
-
-			&:last-child {
-				border-block-end-width: 0;
-			}
-
-			@media (width >= 48rem) {
-				grid-column: span 5 / span 5;
-				grid-template-columns: subgrid;
-				align-items: center;
-			}
-		}
-	}
-
-	.phase-name {
-		display: grid;
-		gap: var(--space-3xs);
-
-		& > h3[data-state="cancelled"] {
-			color: var(--fg-muted);
-			text-decoration-line: line-through;
-		}
-	}
-
-	.phase-billing {
-		display: grid;
-		inline-size: 100%;
-		gap: var(--space-2xs);
-
-		@media (width >= 48rem) {
-			inline-size: 11rem;
-			justify-items: end;
-
-			& > p {
-				text-align: end;
-			}
-		}
+	phase-overview h3[data-state="cancelled"] {
+		color: var(--fg-muted);
+		text-decoration-line: line-through;
 	}
 
 	/* One mark per cost part. Shape carries the state without colour: paid is
@@ -159,97 +53,35 @@
 		}
 	}
 
-	/* Hidden below md while it holds no action. */
-	.phase-actions {
-		display: grid;
-		grid-auto-flow: column;
-		align-items: center;
-		justify-content: flex-start;
-		gap: var(--space-xs);
-
-		&:empty {
-			display: none;
-
-			@media (width >= 48rem) {
-				display: grid;
-			}
-		}
+	/* A phase without actions leaves no empty cell; in the table the Details
+	   toggle keeps the last column by itself. */
+	.phase-actions:empty {
+		display: none;
 	}
 
 	.phase-details {
-		display: grid;
-		gap: var(--space-s);
+		grid-column: 1 / -1;
 		padding-block-start: var(--space-s);
 		border-block-start: var(--rule) var(--line);
+	}
 
-		@media (width >= 48rem) {
-			grid-column: span 5 / span 5;
+	/* In the table the billing figures sit at the end of their column. */
+	@container (inline-size >= 60rem) {
+		.phase-billing {
+			inline-size: 11rem;
+			justify-items: end;
+			text-align: end;
+		}
+		.phase-toggle {
+			grid-column: -2;
 		}
 	}
 
-	.phase-schedule {
-		display: grid;
-		gap: var(--space-2xs);
-	}
-
-	.phase-parts {
-		display: grid;
-		border: var(--rule) var(--line);
-
-		@media (width >= 40rem) {
-			grid-template-columns: 9rem 10rem minmax(0, 1fr) auto;
-			column-gap: var(--space-m);
-		}
-
-		& > li {
-			display: grid;
-			row-gap: var(--space-2xs);
-			padding: var(--space-xs);
-			border-block-end: var(--rule) var(--line);
-
-			&:last-child {
-				border-block-end-width: 0;
-			}
-
-			@media (width >= 40rem) {
-				grid-column: span 4 / span 4;
-				grid-template-columns: subgrid;
-				align-items: center;
-			}
-		}
-	}
-
-	.phase-part {
-		display: grid;
-		gap: var(--space-3xs);
-
-		& > :first-child {
-			text-transform: capitalize;
-		}
-	}
-
-	.phase-part-status,
-	.phase-part-invoice {
-		display: grid;
-		grid-auto-flow: column;
-		align-items: center;
-		justify-content: flex-start;
-	}
-
-	.phase-part-status {
-		gap: var(--space-2xs);
-	}
-
-	.phase-part-invoice {
-		gap: var(--space-xs);
-
-		@media (width >= 40rem) {
+	@container (inline-size >= 44rem) {
+		.phase-part-invoice {
 			justify-content: flex-end;
 		}
-	}
-
-	.phase-part-note {
-		@media (width >= 40rem) {
+		.phase-part-note {
 			text-align: end;
 		}
 	}
