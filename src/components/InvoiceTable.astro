@@ -171,7 +171,8 @@ const partSummaryTotal = partSummaryItems.reduce(
 			{rows.map((invoice) => (
 				<li
 					id={`invoice-${invoice.id}`}
-					class="box target invoice-table-item"
+					class="box stack target"
+					data-space="2xs"
 					data-invoice-item
 					data-category={
 						invoice.status === "paid"

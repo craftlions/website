@@ -24,12 +24,6 @@
 		gap: var(--space-2xs);
 	}
 
-	/* An invoice, a .target for its #invoice-… link. */
-	.invoice-table-item {
-		display: grid;
-		gap: var(--space-2xs);
-	}
-
 	/* The details, with the button beside them from sm. */
 	.invoice-table-columns {
 		display: grid;
