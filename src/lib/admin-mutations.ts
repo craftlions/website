@@ -46,27 +46,8 @@ const phaseAmountUnits = (amount: number) => {
 	return Math.round(amount * 10_000);
 };
 
-const resolvePhaseAmounts = (
-	cost: number,
-	input: PhaseAmountInput,
-	defaultToAcceptance = false,
-) => {
+const resolvePhaseAmounts = (cost: number, input: PhaseAmountInput) => {
 	const costUnits = phaseAmountUnits(cost);
-	const hasAmountInput =
-		input.upfrontAmount !== undefined ||
-		input.deliveryAmount !== undefined ||
-		input.acceptanceAmount !== undefined;
-
-	// Keep callers of the existing API compatible: omitted component amounts
-	// retain the legacy all-at-acceptance billing shape.
-	if (!hasAmountInput && defaultToAcceptance) {
-		return {
-			upfrontAmount: null,
-			deliveryAmount: null,
-			acceptanceAmount: costUnits / 10_000,
-		};
-	}
-
 	const amounts = {
 		upfrontAmount: input.upfrontAmount ?? null,
 		deliveryAmount: input.deliveryAmount ?? null,
@@ -435,7 +416,7 @@ export const createPhase = async (
 	},
 ) => {
 	await assertAdminUser(db, actorId);
-	const amounts = resolvePhaseAmounts(input.cost, input, true);
+	const amounts = resolvePhaseAmounts(input.cost, input);
 
 	return db.transaction(async (tx) => {
 		const [project] = await tx
@@ -1204,8 +1185,8 @@ export const removeNeverLoggedInUser = async (
 	auth: Auth,
 	actorId: string,
 	// The admin form passes the typed confirmation, which must be the
-	// account's email; the JSON API has its own explicit request and omits it.
-	input: { userId: string; confirmation?: string | undefined },
+	// account's email.
+	input: { userId: string; confirmation: string },
 ) => {
 	const [, selectedUser] = await Promise.all([
 		assertAdminUser(db, actorId),
@@ -1220,10 +1201,7 @@ export const removeNeverLoggedInUser = async (
 		throw new DomainError("NotFound", "User not found.");
 	}
 
-	if (
-		input.confirmation !== undefined &&
-		input.confirmation !== selectedUser.email
-	) {
+	if (input.confirmation !== selectedUser.email) {
 		throw new DomainError("Validation", "Type the account's email to confirm.");
 	}
 
