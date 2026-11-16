@@ -3,6 +3,7 @@ export const prerender = true;
 
 import { ActionError } from "astro:actions";
 import designMd from "../../../DESIGN.md?raw";
+import { px, tokens as scale } from "../../../scripts/fluid-scale.js";
 import ActionBanner from "../../components/ActionBanner.astro";
 import Badge from "../../components/Badge.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
@@ -67,6 +68,26 @@ const typeRoles = [
 	["text-xs", "Extra small body"],
 	["label-caps", "Label caps"],
 ];
+
+// A step's size at 320px and from 1280px, between which a fluid step grows.
+// The design tests measure each probe against scripts/fluid-scale.js.
+const range = (token: (typeof scale)[number]) =>
+	[
+		...new Set(
+			[320, 1280].map((width) => Math.round(px(token, width) * 100) / 100),
+		),
+	]
+		.map((size) => `${size}px`)
+		.join(" → ");
+
+const typeSteps = [
+	["text-display", "Display", "step-3"],
+	["text-headline", "Headline", "step-2"],
+	["text-title", "Title", "step-1"],
+	[undefined, "Body", "step-0"],
+	["text-sm", "Small body", "step--1"],
+	["text-xs", "Extra small body", "step--2"],
+] as const;
 ---
 
 <Shell>
@@ -81,6 +102,60 @@ const typeRoles = [
 				</p>
 			</header>
 			<main class="mx-auto grid w-full max-w-6xl gap-4 md:grid-cols-2">
+				<section
+					aria-labelledby="scale"
+					class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-8 border border-dashed border-line p-4 md:col-span-2"
+				>
+					<header class="grid gap-2">
+						<h2 id="scale" class="text-headline">Scale</h2>
+						<p class="text-sm text-fg-muted">
+							Fluid steps grow with the window from 320px to 1280px and hold
+							outside it; resize to watch them.
+						</p>
+					</header>
+
+					<section class="grid gap-3">
+						<h3 class="text-title">Type</h3>
+						<ul class="grid gap-3">
+							{typeSteps.map(([role, label, name]) => {
+								const token = scale.find((step) => step.name === name);
+								return (
+									token && (
+										<li class="grid gap-1">
+											<p class={role} data-probe={name}>
+												{label}
+											</p>
+											<p class="text-xs tabular-nums text-fg-muted">
+												<code>--{name}</code> · {range(token)}
+											</p>
+										</li>
+									)
+								);
+							})}
+						</ul>
+					</section>
+
+					<section class="grid gap-3">
+						<h3 class="text-title">Space</h3>
+						<ul class="grid gap-3">
+							{scale
+								.filter(({ name }) => name.startsWith("space-"))
+								.map((token) => (
+									<li class="grid gap-1">
+										<span
+											aria-hidden="true"
+											class="block h-2 bg-ink forced-ink"
+											style={`width: var(--${token.name})`}
+											data-probe={token.name}
+										/>
+										<p class="text-xs tabular-nums text-fg-muted">
+											<code>--{token.name}</code> · {range(token)}
+										</p>
+									</li>
+								))}
+						</ul>
+					</section>
+				</section>
 				{schemes.map(({ scheme, style, swatches }) => (
 					<section
 						aria-labelledby={`scheme-${scheme}`}
