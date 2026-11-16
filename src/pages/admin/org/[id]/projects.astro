@@ -140,8 +140,12 @@ const isCreateOpen =
 			({ archived, rows: groupRows }) => !archived || groupRows.length > 0,
 		)
 		.map(({ id: groupId, archived, rows: groupRows }) => (
-			<section class="grid gap-3" aria-labelledby={`${groupId}-heading`}>
-				<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+			<section
+				class="stack"
+				data-space="xs"
+				aria-labelledby={`${groupId}-heading`}
+			>
+				<div class="projects-head">
 					<h2 id={`${groupId}-heading`} class="label-caps">
 						{archived ? "Archived" : "Projects"}
 					</h2>
@@ -162,7 +166,7 @@ const isCreateOpen =
 				</div>
 				{!archived && (
 					<>
-						<p class="max-w-prose text-sm text-fg-muted">
+						<p class="projects-note text-sm text-fg-muted">
 							Projects where it is your move come first, then active, draft and
 							completed ones.
 						</p>
@@ -172,7 +176,7 @@ const isCreateOpen =
 							action={actions.createProject}
 							aria-label="Create project"
 							hidden={!isCreateOpen}
-							class="grid grid-cols-1 gap-4 border border-dashed border-line p-4"
+							class="box stack project-form"
 						>
 							<input
 								type="hidden"
@@ -187,9 +191,9 @@ const isCreateOpen =
 								autocomplete="off"
 								hint="Starts as a draft. Add its phases on the project page, then activate it."
 								result={actionResult}
-								class="max-w-md"
+								class="project-name-field"
 							/>
-							<div class="grid grid-cols-[auto_auto] items-center justify-start gap-3">
+							<div class="projects-actions">
 								<Button type="submit">Create project</Button>
 								<Button variant="quiet" data-disclosure-cancel>
 									Cancel
@@ -202,19 +206,19 @@ const isCreateOpen =
 					<ul
 						id={archived ? groupId : undefined}
 						hidden={archived}
-						class="grid border border-dashed border-line lg:grid-cols-[minmax(10rem,1fr)_auto_auto_auto] lg:gap-x-6"
+						class="project-list"
 					>
 						{groupRows.map((project) => (
 							<li
 								class:list={[
-									"grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line p-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:col-span-4 lg:grid-cols-subgrid lg:gap-x-6",
+									"project-row",
 									archived ? "text-fg-muted" : "text-fg",
 								]}
 							>
-								<h3 class="min-w-0 wrap-break-word sm:col-span-2 lg:col-span-1">
+								<h3 class="project-name wrap-break-word">
 									<a
 										href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-										class="link hover:text-fg"
+										class="link"
 									>
 										{project.name}
 									</a>
@@ -224,21 +228,21 @@ const isCreateOpen =
 								</Badge>
 								<ProjectPhaseSummary
 									phases={project.phases}
-									class="col-span-2 sm:col-span-1"
+									class="project-summary"
 								/>
-								<dl class="col-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm sm:col-span-1">
+								<dl class="project-totals text-sm">
 									<dt class="label-caps">Total</dt>
-									<dd class="text-right tabular-nums wrap-break-word">
+									<dd class="tabular-nums wrap-break-word">
 										{project.total ?? "—"}
 									</dd>
 									<dt class="label-caps">Invoiced</dt>
-									<dd class="text-right tabular-nums wrap-break-word">
+									<dd class="tabular-nums wrap-break-word">
 										{project.invoiced ?? "—"}
 									</dd>
 									{project.open && (
 										<>
 											<dt class="label-caps">Open</dt>
-											<dd class="text-right tabular-nums wrap-break-word">
+											<dd class="tabular-nums wrap-break-word">
 												{project.open}
 											</dd>
 										</>
@@ -246,7 +250,7 @@ const isCreateOpen =
 									{project.overdue && (
 										<>
 											<dt class="label-caps">Overdue</dt>
-											<dd class="text-right tabular-nums wrap-break-word text-fg-danger">
+											<dd class="tabular-nums wrap-break-word text-fg-danger">
 												{project.overdue}
 											</dd>
 										</>
@@ -256,7 +260,7 @@ const isCreateOpen =
 						))}
 					</ul>
 				) : (
-					<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+					<p class="box text-sm text-fg-muted">
 						{groups[1]?.rows.length
 							? "No current projects. Archived projects are listed below."
 							: "No projects yet. Name the first one above to start it as a draft."}

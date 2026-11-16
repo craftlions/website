@@ -1,3 +1,109 @@
 @layer components {
-	/* Classes shared by the admin project and invoice pages; filled by conversion package S5g. */
+	/* The admin project list, project page and invoices page. Rows take their
+	   columns at today's sm, md and lg widths until the primitives replace the
+	   media queries. */
+
+	/* A section heading with its action at the end. */
+	.projects-head {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	/* The explanation under a heading. */
+	.projects-note {
+		max-inline-size: var(--measure);
+	}
+
+	/* A form's submit and cancel buttons. */
+	.projects-actions {
+		display: grid;
+		grid-template-columns: auto auto;
+		align-items: center;
+		justify-content: start;
+		gap: var(--space-xs);
+	}
+
+	/* Project list. */
+	.project-form {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.project-name-field {
+		max-inline-size: 28rem;
+	}
+
+	.project-list {
+		display: grid;
+		border: var(--rule) var(--line);
+
+		@media (width >= 64rem) {
+			grid-template-columns: minmax(10rem, 1fr) auto auto auto;
+			column-gap: var(--space-m);
+		}
+	}
+
+	.project-row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: start;
+		gap: var(--space-xs);
+		padding: var(--space-s);
+		border-block-end: var(--rule) var(--line);
+
+		&:last-child {
+			border-block-end: 0;
+		}
+
+		@media (width >= 40rem) {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+		}
+
+		@media (width >= 64rem) {
+			grid-column: span 4 / span 4;
+			grid-template-columns: subgrid;
+			column-gap: var(--space-m);
+		}
+	}
+
+	.project-name {
+		min-inline-size: 0;
+
+		/* An archived row is muted; its link turns primary under the pointer. */
+		@media (hover: hover) {
+			& a:hover {
+				color: var(--fg);
+			}
+		}
+
+		@media (width >= 40rem) {
+			grid-column: span 2 / span 2;
+		}
+
+		@media (width >= 64rem) {
+			grid-column: span 1 / span 1;
+		}
+	}
+
+	.project-summary,
+	.project-totals {
+		grid-column: span 2 / span 2;
+
+		@media (width >= 40rem) {
+			grid-column: span 1 / span 1;
+		}
+	}
+
+	.project-totals {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-content: start;
+		gap: var(--space-3xs) var(--space-xs);
+		min-inline-size: 0;
+
+		& dd {
+			text-align: end;
+		}
+	}
 }
