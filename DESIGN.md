@@ -201,7 +201,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 
 Classes say what something is, never how it looks. Values live in `src/styles/tokens.css` as plain custom properties with `light-dark()`, so one class covers both color schemes and `aubr design:lint` rejects `dark:` variants; `src/styles/global.css` maps them to Tailwind utilities. Each role exists only on its own utility, so `text-fg` works and `bg-fg` does not. The Tailwind color palette is removed: a class such as `text-neutral-500` renders nothing, and `aubr design:lint` rejects it. That command also fails unless this file's frontmatter names every `tokens.css` token with its light value and its `-dark` value, and names nothing else, so token changes land in both places.
 
-Biome is excluded from this file because it flattens the YAML frontmatter that Impeccable reads.
+Biome is excluded from this file because it flattens the YAML frontmatter that `aubr design:lint` reads.
 
 | Utility                                           | Use for                                                                      |
 | ------------------------------------------------- | ---------------------------------------------------------------------------- |

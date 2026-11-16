@@ -181,7 +181,7 @@ for (const file of globSync("src/**/*.astro")) {
 	}
 }
 
-// DESIGN.md frontmatter is what Impeccable reads, so it must keep up with tokens.css.
+// DESIGN.md frontmatter is what design:lint reads, so it must keep up with tokens.css.
 const frontmatter = readFileSync("DESIGN.md", "utf8").split("---\n")[1] ?? "";
 if (!/^colors:\n {2}\S/m.test(frontmatter)) {
 	violations.push(
