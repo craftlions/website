@@ -47,6 +47,18 @@ aubr design:lint
 aubx biome check --write
 ```
 
+## Git
+
+- Never commit on `main`. Work on a branch in a worktree at `../.worktrees/website/<name>` beside the owner's checkout, which stays untouched: `git worktree add -b <branch> ../.worktrees/website/<name> origin/main`.
+- Make each commit one logical change that reverts on its own and leaves Validation passing.
+- Write Conventional Commit subjects as in `git log`: `type(scope): lowercase imperative summary`.
+- Add no attribution to commits or pull requests: no `Co-Authored-By` trailer, no "Generated with" line.
+- Let the hk pre-commit hooks run and fix what they report; never bypass them with `--no-verify` or `HK_SKIP_STEPS`.
+- Open one pull request per logical change, always against `main`; it deploys a preview Worker. Never base one on another branch, because GitHub closes it when that branch is deleted on merge; keep work that depends on an unmerged pull request local until that one lands.
+- Merge only after the owner approves on the pull request (e.g. "lgtm ff no merge commit"), and only by fast-forward from the command line, never a merge commit or a squash. If `main` has moved, rebase the branch and push it with `--force-with-lease=<branch>:<sha you expect on the remote>`; then `git push origin <branch>:main`, which deploys production and marks the pull request merged.
+- Force-push only branches an agent created, always with `--force-with-lease`; never force-push `main`.
+- This repository is public: commit messages and pull request text never describe an unfixed security weakness. Add the reasoning once the fix is live.
+
 ## Secrets
 
 - Secret values live age-encrypted in `fnox.toml` and reach a process only through a mise task grant; `docs/notes/secrets.md` describes the setup.
