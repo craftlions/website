@@ -260,7 +260,7 @@ Biome is excluded from this file because it flattens the YAML frontmatter that `
 | `bg-ink`                                          | Solid marks: progress fill, checked controls, pace marker                    |
 | `bg-fill-danger`, `-success`, `-info`             | Status fills; also on `border-`                                              |
 | `bg-info-subtle`                                  | Tinted highlight of a linked target                                          |
-| `outline-fill-info`                               | Dashed outline of a linked target, with `bg-info-subtle`                     |
+| `target`                                          | An element a link points at: scroll room, then tint and dashed `fill-info` outline while targeted or `data-highlight` (`base.css`) |
 | `border-line`                                     | Default structure, also `divide-line`                                        |
 | `border-line-strong`                              | Headline rules, gray badges, the current year in the spend chart, also `bg-` |
 | `border-line-control`                             | Control and state outlines: inputs, checkbox, hint, progress track (3:1)     |

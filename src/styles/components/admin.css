@@ -240,18 +240,9 @@
 			row-gap: var(--space-xs);
 			border-block-end: var(--rule) var(--line);
 			padding: var(--space-s);
-			scroll-margin-block-start: var(--space-2xl);
 
 			&:last-child {
 				border-block-end-width: 0;
-			}
-
-			/* The member a link points at. */
-			&:target {
-				outline: 2px dashed
-					color-mix(in oklab, var(--fill-info) 70%, transparent);
-				outline-offset: -2px;
-				background-color: var(--info-subtle);
 			}
 		}
 

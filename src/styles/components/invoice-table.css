@@ -24,18 +24,10 @@
 		gap: var(--space-2xs);
 	}
 
-	/* An invoice a link points at (#invoice-…) is marked, and scrolls into
-	   view with space above it. */
+	/* An invoice, a .target for its #invoice-… link. */
 	.invoice-table-item {
 		display: grid;
 		gap: var(--space-2xs);
-		scroll-margin-block-start: var(--space-2xl);
-
-		&:target {
-			background-color: var(--info-subtle);
-			outline: 2px dashed color-mix(in oklab, var(--fill-info) 70%, transparent);
-			outline-offset: -2px;
-		}
 	}
 
 	/* The details, with the button beside them from sm. */

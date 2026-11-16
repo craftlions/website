@@ -97,15 +97,6 @@
 				grid-template-columns: subgrid;
 				align-items: center;
 			}
-
-			/* The phase a link points at: a tint and a dashed outline, so the
-			   mark does not rely on colour alone. */
-			&[data-highlight] {
-				outline: 2px dashed
-					color-mix(in oklab, var(--fill-info) 70%, transparent);
-				outline-offset: -2px;
-				background-color: var(--info-subtle);
-			}
 		}
 	}
 

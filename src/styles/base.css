@@ -35,4 +35,19 @@
 		outline: 2px solid var(--focus);
 		outline-offset: 2px;
 	}
+
+	/* An element a link points at (#id) scrolls into view with room above it
+	   and is marked while it is the target; [data-highlight] marks the one a
+	   script points at instead. A tint and a dashed outline, so the mark does
+	   not rely on colour alone; forced colors keep the outline. */
+	.target {
+		scroll-margin-block-start: var(--space-2xl);
+	}
+
+	.target:target,
+	[data-highlight] {
+		outline: 2px dashed color-mix(in oklab, var(--fill-info) 70%, transparent);
+		outline-offset: -2px;
+		background-color: var(--info-subtle);
+	}
 }
