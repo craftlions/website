@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import Button from "../components/Button.astro";
 import CommandPalette from "../components/CommandPalette.astro";
+import { isPrivatePath } from "../lib/indexing.ts";
 
 const lang = Astro.currentLocale;
 
@@ -24,6 +25,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<meta name="generator" content={Astro.generator}>
 
 		<slot name="head" />
+		{/* Prerendered pages skip the middleware's X-Robots-Tag, so this carries it. */}
+		{isPrivatePath(Astro.url.pathname) && (
+			<meta name="robots" content="noindex">
+		)}
 		<link rel="canonical" href={canonical}>
 		<meta property="og:url" content={canonical}>
 		<meta property="og:site_name" content="craftlions">
