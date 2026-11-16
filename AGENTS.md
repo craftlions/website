@@ -56,9 +56,9 @@ aubx biome check --write
 
 ## Accessibility Scan
 
-- `aubr a11y` runs axe-core on the public pages and `/design` in light and dark, and fails on any violation. Run it on demand after UI changes; it is not part of Validation.
-- It needs the already-running dev server at `http://localhost:4321` (`A11Y_BASE_URL` overrides it) and never starts one. The browser comes from `aubx playwright install chromium`, once.
-- Fix violations instead of excluding them. An exclusion names its rule with a one-line reason in `scripts/a11y.js`.
+- `aubr a11y` runs Playwright Test with axe-core on the public pages and `/design` in light and dark, and fails on any violation. Run it on demand after UI changes; it is not part of Validation.
+- It needs no dev server, secrets or database: `scripts/a11y-server.js` builds the Worker with `/design` added, serves it with `astro preview` on `http://localhost:4322`, and deletes that build output on exit. `A11Y_BASE_URL` scans a running site instead. The browser comes from `aubx playwright install chromium`, once.
+- Fix violations instead of excluding them. An exclusion names its rule with a one-line reason in `tests/a11y.spec.ts`.
 
 ## PlanetScale Database
 
