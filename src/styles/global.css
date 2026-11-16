@@ -5,6 +5,7 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/preflight.css" layer(reset);
 @import "./tokens.css";
+@import "./base.css";
 @import "tailwindcss/utilities.css" layer(utilities);
 
 /* Each role exists only on the utility it belongs to: `text-fg` works, `bg-fg` does not. */
@@ -90,27 +91,6 @@
 @media (prefers-reduced-motion: no-preference) {
 	@view-transition {
 		navigation: auto;
-	}
-}
-
-@layer base {
-	/* Every page sits on the canvas in primary text; layout stays per page. */
-	body {
-		background-color: var(--canvas);
-		color: var(--fg);
-		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
-	}
-
-	/* Like headings after preflight, table cells take their weight from a role,
-	   not from the browser's bold th. */
-	th {
-		font-weight: inherit;
-	}
-
-	:focus-visible {
-		outline: 2px solid var(--focus);
-		outline-offset: 2px;
 	}
 }
 
