@@ -412,31 +412,20 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 						lines whose meaning text already carries have no minimum, and the
 						surfaces are what the others are measured on.
 					</p>
-					<div
-						class="rows"
-						data-at="36"
-						style="--rows-columns: minmax(0, 1fr) auto auto auto auto"
-					>
-						<ul>
-							<li aria-hidden="true" class="label-caps" data-head>
-								<span>Token</span>
-								<span>Light</span>
-								<span>Dark</span>
-								<span>On canvas</span>
-								<span>Needs</span>
-							</li>
-							{light?.map(({ name, value, minimum, checks }, index) => {
-								const darkRow = dark?.[index];
-								const onCanvas = [checks, darkRow?.checks ?? []].map(
-									(schemeChecks) =>
-										schemeChecks.find(({ surface }) => surface === "canvas")
-											?.ratio,
-								);
-								const met = onCanvas.every(
-									(ratio) => !minimum || (ratio ?? 0) >= minimum,
-								);
-								return (
-									<li class="text-sm">
+					<ul class="lines" data-actions="none">
+						{light?.map(({ name, value, minimum, checks }, index) => {
+							const darkRow = dark?.[index];
+							const onCanvas = [checks, darkRow?.checks ?? []].map(
+								(schemeChecks) =>
+									schemeChecks.find(({ surface }) => surface === "canvas")
+										?.ratio,
+							);
+							const met = onCanvas.every(
+								(ratio) => !minimum || (ratio ?? 0) >= minimum,
+							);
+							return (
+								<li class="text-sm">
+									<div class="line-text">
 										<p class="cluster">
 											<span
 												aria-hidden="true"
@@ -445,43 +434,33 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 											/>
 											<code>--{name}</code>
 										</p>
-										<p class="tabular-nums">
-											<span class="text-fg-muted" data-label>
-												Light{" "}
+										<p class="cluster tabular-nums text-fg-muted">
+											<span>
+												Light <code>{value}</code>
 											</span>
-											<code>{value}</code>
+											<span>
+												Dark <code>{darkRow?.value}</code>
+											</span>
 										</p>
-										<p class="tabular-nums">
-											<span class="text-fg-muted" data-label>
-												Dark{" "}
-											</span>
-											<code>{darkRow?.value}</code>
-										</p>
-										<p class="tabular-nums">
-											<span class="text-fg-muted" data-label>
-												On canvas{" "}
-											</span>
+									</div>
+									<p class="line-figure">
+										<span>
 											{onCanvas.every((ratio) => ratio === undefined)
 												? "—"
-												: onCanvas
-														.map((ratio) => ratio?.toFixed(2))
-														.join(" · ")}
-										</p>
-										<p class:list={[!met && "text-fg-danger"]}>
-											<span class="text-fg-muted" data-label>
-												Needs{" "}
-											</span>
+												: `${onCanvas.map((ratio) => ratio?.toFixed(2)).join(" · ")} on canvas`}
+										</span>
+										<span class={met ? "text-fg-muted" : "text-fg-danger"}>
 											{minimum
-												? `${minimum}:1, ${met ? "met" : "missed"}`
+												? `needs ${minimum}:1, ${met ? "met" : "missed"}`
 												: requirements.get(name) === "surface"
-													? "Surface"
-													: "Decorative"}
-										</p>
-									</li>
-								);
-							})}
-						</ul>
-					</div>
+													? "surface"
+													: "decorative"}
+										</span>
+									</p>
+								</li>
+							);
+						})}
+					</ul>
 				</section>
 
 				<section
@@ -498,27 +477,21 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 						in two weights, 400 and 600. Headings grow with the window from
 						320px to 1280px; body text and everything smaller keep their size.
 					</p>
-					<div
-						class="rows"
-						data-at="36"
-						style="--rows-columns: minmax(0, 1fr) auto"
-					>
-						<ul>
-							{typeRoles.map(([role, label, step]) => {
-								const token = scale.find(({ name }) => name === step);
-								return (
-									token && (
-										<li>
-											<p class={role}>{label}</p>
-											<p class="text-xs tabular-nums text-fg-muted">
-												{range(token)}
-											</p>
-										</li>
-									)
-								);
-							})}
-						</ul>
-					</div>
+					<ul class="lines" data-actions="none">
+						{typeRoles.map(([role, label, step]) => {
+							const token = scale.find(({ name }) => name === step);
+							return (
+								token && (
+									<li>
+										<p class:list={["line-text", role]}>{label}</p>
+										<p class="line-figure text-xs text-fg-muted">
+											{range(token)}
+										</p>
+									</li>
+								)
+							);
+						})}
+					</ul>
 				</section>
 
 				<section
@@ -534,13 +507,9 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 						Every rule beside the real component it shapes, in its default
 						state.
 					</p>
-					<div
-						class="rows"
-						data-at="36"
-						style="--rows-columns: minmax(0, 1fr) minmax(0, 1fr)"
-					>
-						<ul>
-							<li>
+					<ul class="lines" data-actions="none">
+						<li>
+							<div class="switcher">
 								<p class="text-sm">
 									<span class="text-label">One dashed line.</span> Structure is
 									a 1px dashed neutral line. Corners are square, and nothing
@@ -550,8 +519,10 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 									<p class="box text-sm">Plane</p>
 									<p class="box bg-panel text-sm">Panel</p>
 								</div>
-							</li>
-							<li>
+							</div>
+						</li>
+						<li>
+							<div class="switcher">
 								<p class="text-sm">
 									<span class="text-label"
 										>Controls are drawn, not filled.</span
@@ -564,8 +535,10 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 									<Button variant="quiet">Quiet</Button>
 									<Button variant="danger">Danger</Button>
 								</div>
-							</li>
-							<li>
+							</div>
+						</li>
+						<li>
+							<div class="switcher">
 								<p class="text-sm">
 									<span class="text-label">Colour means state.</span> Blue for
 									what to act on, green for done, red for overdue or cancelled,
@@ -576,8 +549,10 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 										<Badge type={badge}>{label}</Badge>
 									))}
 								</div>
-							</li>
-							<li>
+							</div>
+						</li>
+						<li>
+							<div class="switcher">
 								<p class="text-sm">
 									<span class="text-label">Labels stay with their field.</span>
 									{" "}
@@ -592,8 +567,10 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 									/>
 									<Checkbox>Send a copy</Checkbox>
 								</div>
-							</li>
-							<li>
+							</div>
+						</li>
+						<li>
+							<div class="switcher">
 								<p class="text-sm">
 									<span class="text-label">Numbers stay literal.</span> Progress
 									is ink until it runs over the budget, then red.
@@ -602,9 +579,9 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 									<Progress percent={40} aria-label="Within budget" />
 									<Progress percent={120} aria-label="Over budget" />
 								</div>
-							</li>
-						</ul>
-					</div>
+							</div>
+						</li>
+					</ul>
 				</section>
 
 				<section
