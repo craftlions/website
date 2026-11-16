@@ -27,10 +27,11 @@ if (error?.code === "INTERNAL_SERVER_ERROR") {
 {isInputError(error) ? (
 	<div
 		role="alert"
-		class="grid gap-2 border border-dashed border-line-danger p-3 text-sm text-fg-danger"
+		class="box action-banner text-sm text-fg-danger"
+		data-space="xs"
 	>
 		<p>Check these fields and try again.</p>
-		<ul class="grid list-disc gap-1 pl-5">
+		<ul>
 			{error.issues.map((issue) => (
 				<li>
 					{[fieldLabels[String(issue.path[0] ?? "")], issue.message]
@@ -43,7 +44,8 @@ if (error?.code === "INTERNAL_SERVER_ERROR") {
 ) : error ? (
 	<p
 		role="alert"
-		class="border border-dashed border-line-danger p-3 text-sm text-fg-danger"
+		class="box action-banner text-sm text-fg-danger"
+		data-space="xs"
 	>
 		{error.code === "INTERNAL_SERVER_ERROR" || !error.message
 			? "The action failed because of a server error. Try again."
@@ -53,7 +55,8 @@ if (error?.code === "INTERNAL_SERVER_ERROR") {
 	message && (
 		<p
 			role="status"
-			class="border border-dashed border-line-success p-3 text-sm text-fg-success wrap-break-word"
+			class="box action-banner text-sm text-fg-success wrap-break-word"
+			data-space="xs"
 		>
 			{typeof message === "string" ? (
 				message
