@@ -1,3 +1,39 @@
 @layer components {
-	/* src/components/ConfirmAction.astro; filled by conversion package S5b. */
+	/* src/components/ConfirmAction.astro: the trigger, and the modal that
+	   confirms its action. */
+	confirm-action {
+		display: grid;
+		justify-items: start;
+
+		& dialog {
+			inline-size: 100%;
+			max-inline-size: min(var(--dialog), 100% - 2rem);
+			grid-template-columns: repeat(1, minmax(0, 1fr));
+			gap: var(--space-s);
+			margin: auto;
+			background-color: var(--canvas);
+			overscroll-behavior: contain;
+
+			&[open] {
+				display: grid;
+			}
+			&::backdrop {
+				overflow: hidden;
+				overscroll-behavior: contain;
+				background-color: color-mix(in oklab, var(--canvas) 80%, transparent);
+			}
+		}
+	}
+
+	/* Cancel and confirm at the end of the row, each shrinking to fit. */
+	.confirm-action-buttons {
+		display: grid;
+		grid-template-columns: minmax(0, auto) minmax(0, auto);
+		justify-content: end;
+		gap: var(--space-2xs);
+
+		& > * {
+			max-inline-size: 100%;
+		}
+	}
 }
