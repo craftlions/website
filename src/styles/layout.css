@@ -47,13 +47,15 @@
 		}
 	}
 
-	/* The dashed plane (DESIGN.md#4-elevation): padding inside a dashed line. */
+	/* The dashed plane (DESIGN.md#4-elevation): padding inside a dashed line.
+	   Its step is data-padding, so a box that is also a stack sets its gap
+	   with data-space independently. */
 	.box {
 		--box-space: var(--space-s);
 		padding: var(--box-space);
 		border: var(--rule) var(--line);
 
-		&[data-space="xs"] {
+		&[data-padding="xs"] {
 			--box-space: var(--space-xs);
 		}
 	}

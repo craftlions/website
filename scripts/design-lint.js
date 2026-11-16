@@ -677,6 +677,60 @@ for (const file of globSync("src/**/*.astro")) {
 	}
 }
 
+// Each primitive's data-* steps, read from the selectors that tune it
+// (`&[data-space="xs"]`, `.rows[data-at="36"]`): a step must name a value one
+// of the element's own primitives declares, so data-space on a box, whose step
+// is data-padding, cannot silently do nothing.
+const steps = new Map();
+for (const block of sheet(layoutDoc).blocks) {
+	const owner = [...block.parents, block]
+		.map(({ prelude }) => prelude.match(/^\.([\w-]+)/)?.[1])
+		.findLast((name) => primitives.has(name));
+	if (!owner) continue;
+	for (const part of block.prelude.split(/,(?![^(]*\))/)) {
+		const compound = part.trim().split(/\s*[>+~ ](?![^(]*\))\s*/)[0];
+		if (!/^(?:&|\.)/.test(compound)) continue;
+		for (const [, name, value] of compound.matchAll(
+			/\[data-([\w-]+)="([^"]*)"\]/g,
+		)) {
+			const own = steps.get(owner) ?? new Map();
+			own.set(name, (own.get(name) ?? new Set()).add(value));
+			steps.set(owner, own);
+		}
+	}
+}
+const stepNames = new Set(
+	[...steps.values()].flatMap((own) => [...own.keys()]),
+);
+for (const file of globSync("src/**/*.astro")) {
+	const source = readFileSync(file, "utf8");
+	for (const { 0: tag, index } of source.matchAll(/<[\w-]+\s[^<>]*>/g)) {
+		const own = (tag.match(/\sclass="([^"]*)"/)?.[1].split(/\s+/) ?? []).filter(
+			(name) => primitives.has(name),
+		);
+		if (own.length === 0) continue;
+		for (const [, name, value] of tag.matchAll(/\sdata-([\w-]+)="([^"]*)"/g)) {
+			if (!stepNames.has(name)) continue;
+			const where = `${file}:${source.slice(0, index).split("\n").length}  data-${name}="${value}"`;
+			const declared = own.flatMap((primitive) => [
+				...(steps.get(primitive)?.get(name) ?? []),
+			]);
+			if (declared.length === 0) {
+				const readers = [...steps]
+					.filter(([, names]) => names.has(name))
+					.map(([primitive]) => primitive);
+				violations.push(
+					`${where} → only ${readers.join(", ")} read data-${name}; ${own.join(", ")} take${own.length === 1 ? "s" : ""} ${own.flatMap((primitive) => [...(steps.get(primitive)?.keys() ?? [])].map((step) => `data-${step}`)).join(", ") || "no step"}  (${layoutDoc})`,
+				);
+			} else if (!declared.includes(value)) {
+				violations.push(
+					`${where} → one of ${declared.join(", ")}, or leave it out for the default  (${layoutDoc})`,
+				);
+			}
+		}
+	}
+}
+
 // Report-only until the markup is converted (`--report` lists them): a page's
 // scoped <style> holds one-off layout only; a rule that redoes a primitive
 // should use it; every class markup uses is defined, and every defined one used.

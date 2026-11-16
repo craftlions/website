@@ -28,7 +28,7 @@ if (error?.code === "INTERNAL_SERVER_ERROR") {
 	<div
 		role="alert"
 		class="box action-banner text-sm text-fg-danger"
-		data-space="xs"
+		data-padding="xs"
 	>
 		<p>Check these fields and try again.</p>
 		<ul>
@@ -45,7 +45,7 @@ if (error?.code === "INTERNAL_SERVER_ERROR") {
 	<p
 		role="alert"
 		class="box action-banner text-sm text-fg-danger"
-		data-space="xs"
+		data-padding="xs"
 	>
 		{error.code === "INTERNAL_SERVER_ERROR" || !error.message
 			? "The action failed because of a server error. Try again."
@@ -56,7 +56,7 @@ if (error?.code === "INTERNAL_SERVER_ERROR") {
 		<p
 			role="status"
 			class="box action-banner text-sm text-fg-success wrap-break-word"
-			data-space="xs"
+			data-padding="xs"
 		>
 			{typeof message === "string" ? (
 				message

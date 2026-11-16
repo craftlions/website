@@ -139,6 +139,24 @@ test("box: padding inside a dashed line", async ({ page }) => {
 	]);
 });
 
+// A box that is also a stack: data-padding sets the box's step and
+// data-space the stack's, each without the other.
+test("box and stack on one element take their own steps", async ({ page }) => {
+	const steps = await frame(page, "box", "wide").evaluate((element) => {
+		element.insertAdjacentHTML(
+			"beforeend",
+			'<div class="box stack" data-padding="xs" data-space="2xs"><p></p><p></p></div>',
+		);
+		const both = element.lastElementChild;
+		if (!both) throw new Error("no box stack");
+		const style = getComputedStyle(both);
+		return [style.paddingInlineStart, style.rowGap].map((value) =>
+			Number.parseFloat(value).toFixed(2),
+		);
+	});
+	expect(steps).toEqual([space("xs").toFixed(2), space("2xs").toFixed(2)]);
+});
+
 test("center: fills a narrow frame and caps at its column in a wide one", async ({
 	page,
 }) => {
