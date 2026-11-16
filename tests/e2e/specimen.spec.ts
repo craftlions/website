@@ -2,8 +2,12 @@
 // light and a dark section inside `method="dialog"` forms that never navigate.
 import { expect, type Page, test } from "@playwright/test";
 
+// The section is named by its heading, the scheme capitalized.
 const section = (page: Page, scheme: string) =>
-	page.getByRole("region", { name: scheme, exact: true });
+	page.getByRole("region", {
+		name: `${scheme[0]?.toUpperCase()}${scheme.slice(1)}`,
+		exact: true,
+	});
 
 test.beforeEach(async ({ page }) => {
 	await page.goto("/brand/specimen/");

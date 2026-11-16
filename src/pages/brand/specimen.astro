@@ -25,10 +25,16 @@ import tokensCss from "../../styles/tokens.css?raw";
 const tokens = parseTokens(tokensCss);
 const requirements = parseContrast(designMd);
 
-const schemes = (["light", "dark"] as const).map((scheme) => {
+const schemes = (
+	[
+		["light", "Light"],
+		["dark", "Dark"],
+	] as const
+).map(([scheme, label]) => {
 	const swatches = contrastChecks(tokens, requirements, scheme);
 	return {
 		scheme,
+		label,
 		style: `color-scheme: ${scheme}; ${swatches.map(({ name, value }) => `--${name}: ${value}`).join("; ")}`,
 		swatches,
 	};
@@ -152,15 +158,15 @@ const frames = [
 					</section>
 				</section>
 				<div class="switcher">
-					{schemes.map(({ scheme, style, swatches }) => (
+					{schemes.map(({ scheme, label, style, swatches }) => (
 						<section
 							aria-labelledby={`scheme-${scheme}`}
 							class="box stack panel bg-canvas text-fg"
 							data-space="l"
 							style={style}
 						>
-							<h2 id={`scheme-${scheme}`} class="scheme-name text-headline">
-								{scheme}
+							<h2 id={`scheme-${scheme}`} class="text-headline">
+								{label}
 							</h2>
 
 							<section class="stack" data-space="xs">
@@ -826,9 +832,6 @@ const frames = [
 		.panel {
 			grid-template-columns: minmax(0, 1fr);
 			min-inline-size: 0;
-		}
-		.scheme-name {
-			text-transform: capitalize;
 		}
 		.probe {
 			display: block;
