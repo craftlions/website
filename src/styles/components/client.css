@@ -91,9 +91,15 @@
 		grid-template-columns: minmax(0, 1fr) auto;
 		border: var(--rule) var(--line);
 
+		/* Its groups are rows of the plane, not the base stack of a group:
+		   their label and amount keep their content's minimum width. */
 		& > div {
 			grid-column: span 2 / span 2;
 			display: grid;
+
+			& > * {
+				min-inline-size: auto;
+			}
 		}
 		& > :first-child {
 			gap: var(--space-2xs);

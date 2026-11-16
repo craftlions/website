@@ -174,13 +174,13 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 	<section aria-labelledby="summary-heading">
 		<h2 id="summary-heading" class="label-caps"> Summary </h2>
 		<dl class="cluster" data-space="metrics" data-align="start">
-			<div class="stack" data-space="3xs">
+			<div>
 				<dt class="label-caps">Your move</dt>
 				<dd class="text-title tabular-nums">
 					{worklist.filter((item) => item.actor === "admin").length}
 				</dd>
 			</div>
-			<div class="stack" data-space="3xs">
+			<div>
 				<dt class="label-caps">Overdue</dt>
 				<dd
 					class:list={[
@@ -193,7 +193,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 					{sumByCurrency(openInvoices.filter((invoice) => invoice.overdue))}
 				</dd>
 			</div>
-			<div class="stack" data-space="3xs">
+			<div>
 				<dt class="label-caps">Outstanding</dt>
 				<dd class="text-title tabular-nums wrap-break-word">
 					{sumByCurrency(openInvoices)}

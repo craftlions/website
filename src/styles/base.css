@@ -24,6 +24,19 @@
 		}
 	}
 
+	/* A description list's group without a class stacks its term above its
+	   details at the 3xs step, free to shrink below their longest word; any
+	   class opts out. */
+	dl > div:not([class]) {
+		display: grid;
+		align-content: start;
+		gap: var(--space-3xs);
+
+		& > * {
+			min-inline-size: 0;
+		}
+	}
+
 	/* Like headings after the reset, table cells take their weight from a role,
 	   not from the browser's bold th. */
 	th {

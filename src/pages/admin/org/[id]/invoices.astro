@@ -222,7 +222,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 	<section aria-labelledby="summary-heading">
 		<h2 id="summary-heading" class="label-caps"> Summary </h2>
 		<dl class="cluster" data-space="metrics" data-align="start">
-			<div class="stack" data-space="3xs">
+			<div>
 				<dt class="label-caps">Outstanding</dt>
 				<dd class="text-title tabular-nums wrap-break-word">
 					{sumByCurrency(
@@ -236,7 +236,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 					)}
 				</dd>
 			</div>
-			<div class="stack" data-space="3xs">
+			<div>
 				<dt class="label-caps">Overdue</dt>
 				<dd
 					class:list={[
@@ -257,7 +257,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 					)}
 				</dd>
 			</div>
-			<div class="stack" data-space="3xs">
+			<div>
 				<dt class="label-caps">To invoice</dt>
 				<dd class="text-title tabular-nums wrap-break-word">
 					{sumByCurrency(
@@ -584,7 +584,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 									class="auto-grid text-sm"
 									style="--grid-min: 12rem; --grid-space: var(--space-xs) var(--space-m)"
 								>
-									<div class="stack" data-space="3xs">
+									<div>
 										<dt class="label-caps">Status</dt>
 										<dd class="stack invoice-status" data-space="3xs">
 											<Badge type={status.badge}>{status.label}</Badge>
@@ -597,7 +597,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 											</span>
 										</dd>
 									</div>
-									<div class="stack" data-space="3xs">
+									<div>
 										<dt class="label-caps">Phase</dt>
 										<dd class="wrap-break-word">
 											<a class="link" href={phaseHref(row.project, row.phase)}>
@@ -605,11 +605,11 @@ const attachBlocker = (invoice: { currency: string }) => {
 											</a>
 										</dd>
 									</div>
-									<div class="stack" data-space="3xs">
+									<div>
 										<dt class="label-caps">Cost part</dt>
 										<dd>{costPartLabel[row.component]}</dd>
 									</div>
-									<div class="stack" data-space="3xs">
+									<div>
 										<dt class="label-caps">Payment</dt>
 										<dd>
 											{row.invoice.paymentPage ? (

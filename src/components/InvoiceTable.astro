@@ -117,17 +117,17 @@ const partSummaryTotal = partSummaryItems.reduce(
 	{rows.length > 0 && (
 		<div class="stack" data-space="xs">
 			<dl class="cluster text-sm" data-space="metrics" data-align="baseline">
-				<div class="stack" data-space="3xs">
+				<div>
 					<dt class="label-caps">Outstanding</dt>
 					<dd class="tabular-nums">{totalWhere(["open", "overdue"])}</dd>
 				</div>
-				<div class="stack" data-space="3xs">
+				<div>
 					<dt class="label-caps">Overdue</dt>
 					<dd class:list={["tabular-nums", hasOverdue && "text-fg-danger"]}>
 						{totalWhere(["overdue"])}
 					</dd>
 				</div>
-				<div class="stack" data-space="3xs">
+				<div>
 					<dt class="label-caps">Paid</dt>
 					<dd class="tabular-nums">{totalWhere(["paid"])}</dd>
 				</div>
@@ -225,7 +225,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 								data-space="metrics"
 								data-align="baseline"
 							>
-								<div class="stack" data-space="3xs">
+								<div>
 									<dt class="label-caps leading-none">Due</dt>
 									<dd
 										class:list={[
@@ -235,7 +235,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 										{invoice.dueAt ? formatDate(invoice.dueAt) : "—"}
 									</dd>
 								</div>
-								<div class="stack" data-space="3xs">
+								<div>
 									<dt class="label-caps leading-none">Status</dt>
 									<dd>
 										<div class="cluster">
@@ -260,7 +260,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 										</div>
 									</dd>
 								</div>
-								<div class="stack" data-space="3xs">
+								<div>
 									<dt class="label-caps leading-none">Work</dt>
 									<dd>
 										{invoice.phase?.project ? (
@@ -275,7 +275,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 										)}
 									</dd>
 								</div>
-								<div class="stack" data-space="3xs">
+								<div>
 									<dt class="label-caps leading-none">Delivery</dt>
 									<dd>
 										{invoice.phase?.deliveryState === "url" &&

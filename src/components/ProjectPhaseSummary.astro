@@ -20,7 +20,7 @@ const waitingOnClient = phaseStateSummary(phases, "gray");
 	data-space="metrics"
 	data-align="baseline"
 >
-	<div class="stack" data-space="3xs">
+	<div>
 		<dt class="label-caps">Phases</dt>
 		<dd class="tabular-nums wrap-break-word">
 			{counted.length > 0
@@ -31,13 +31,13 @@ const waitingOnClient = phaseStateSummary(phases, "gray");
 		</dd>
 	</div>
 	{yourMove && (
-		<div class="stack" data-space="3xs">
+		<div>
 			<dt class="label-caps">Your move</dt>
 			<dd class="wrap-break-word text-fg-info">{yourMove}</dd>
 		</div>
 	)}
 	{waitingOnClient && (
-		<div class="stack" data-space="3xs">
+		<div>
 			<dt class="label-caps">Waiting on client</dt>
 			<dd class="wrap-break-word">{waitingOnClient}</dd>
 		</div>

@@ -117,7 +117,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 		<>
 			<div class="with-sidebar" data-side="end" data-align="center">
 				<dl class="cluster text-sm" data-space="metrics" data-align="baseline">
-					<div class="stack" data-space="3xs">
+					<div>
 						<dt class="label-caps">Est. Cost</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(
@@ -128,13 +128,13 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							)}
 						</dd>
 					</div>
-					<div class="stack" data-space="3xs">
+					<div>
 						<dt class="label-caps">Paid</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(invoicesWhere(["paid"]), phases[0]?.currency)}
 						</dd>
 					</div>
-					<div class="stack" data-space="3xs">
+					<div>
 						<dt class="label-caps">Outstanding</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(
@@ -143,7 +143,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							)}
 						</dd>
 					</div>
-					<div class="stack" data-space="3xs">
+					<div>
 						<dt class="label-caps">Overdue</dt>
 						<dd class:list={["tabular-nums", hasOverdue && "text-fg-danger"]}>
 							{sumByCurrency(invoicesWhere(["overdue"]), phases[0]?.currency)}
@@ -279,7 +279,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 									data-space="metrics"
 									data-align="baseline"
 								>
-									<div class="stack" data-space="3xs">
+									<div>
 										<dt class="label-caps">Epic</dt>
 										<dd>
 											{phase.externalUrl ? (
@@ -297,7 +297,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 											)}
 										</dd>
 									</div>
-									<div class="stack" data-space="3xs">
+									<div>
 										<dt class="label-caps">Delivery</dt>
 										<dd>
 											{phase.deliveryState === "url" && phase.deliveryUrl ? (

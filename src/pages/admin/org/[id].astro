@@ -203,7 +203,7 @@ const setupGaps = [
 					or to be sent.
 				</p>
 				<dl class="org-money">
-					<div class="stack" data-space="3xs">
+					<div>
 						<dt class="label-caps">Yearly budget</dt>
 						{yearlyBudget > 0 ? (
 							<dd class="text-title tabular-nums wrap-break-word">
@@ -221,7 +221,7 @@ const setupGaps = [
 							</dd>
 						)}
 					</div>
-					<div class="stack" data-space="3xs">
+					<div>
 						<dt class="label-caps">Invoiced this year</dt>
 						<dd class="text-title tabular-nums wrap-break-word">
 							{formatMoney(currentYearTotal, "EUR")}
@@ -243,7 +243,7 @@ const setupGaps = [
 							</dd>
 						</div>
 					)}
-					<div class="stack" data-space="3xs">
+					<div>
 						<dt class="label-caps">Outstanding</dt>
 						<dd class="text-title tabular-nums wrap-break-word">
 							<a href={`${invoicesHref}#invoices`} class="link">
@@ -257,7 +257,7 @@ const setupGaps = [
 							</a>
 						</dd>
 					</div>
-					<div class="stack" data-space="3xs">
+					<div>
 						<dt class="label-caps">Overdue</dt>
 						<dd
 							class:list={[
@@ -276,7 +276,7 @@ const setupGaps = [
 							</a>
 						</dd>
 					</div>
-					<div class="stack" data-space="3xs">
+					<div>
 						<dt class="label-caps">To invoice</dt>
 						<dd class="text-title tabular-nums wrap-break-word">
 							<a href={`${invoicesHref}#to-invoice`} class="link">
