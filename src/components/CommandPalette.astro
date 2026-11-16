@@ -30,7 +30,14 @@ const idleStatus =
 					: "Projects, phases, invoices…"}
 				autofocus
 			/>
-			<Button variant="quiet" data-command-palette-close>Close</Button>
+			<Button
+				variant="quiet"
+				command="close"
+				commandfor="command-palette"
+				data-command-palette-close
+			>
+				Close
+			</Button>
 		</search>
 		<p id="command-palette-status" role="status" class="text-sm text-fg-muted">
 			{idleStatus}
@@ -245,14 +252,18 @@ const idleStatus =
 				if (then && first) then(first);
 			};
 
-			const open = () => {
-				opener =
-					document.activeElement instanceof HTMLElement
-						? document.activeElement
-						: null;
-				dialog.showModal();
+			// Opening lists the first results and remembers where focus returns.
+			const open = (from: Element | null) => {
+				opener = from instanceof HTMLElement ? from : null;
 				search("");
 			};
+
+			// The trigger's invoker command opens the dialog and names the trigger.
+			dialog.addEventListener("command", (event) => {
+				if (event instanceof CommandEvent && event.command === "show-modal") {
+					open(event.source);
+				}
+			});
 
 			dialog.addEventListener("close", () => {
 				controller?.abort();
@@ -383,15 +394,21 @@ const idleStatus =
 				if (pressedOutside && outside(event)) dialog.close();
 			});
 
-			document.addEventListener("click", (event) => {
-				if (!(event.target instanceof Element)) return;
-				if (event.target.closest("[data-command-palette-open]")) {
-					open();
-				} else if (event.target.closest("[data-command-palette-close]")) {
-					dialog.close();
-				}
-			});
+			// fallback: browsers without invoker commands open and close it here.
+			if (!("commandForElement" in HTMLButtonElement.prototype)) {
+				document.addEventListener("click", (event) => {
+					if (!(event.target instanceof Element)) return;
+					const trigger = event.target.closest("[data-command-palette-open]");
+					if (trigger) {
+						open(trigger);
+						dialog.showModal();
+					} else if (event.target.closest("[data-command-palette-close]")) {
+						dialog.close();
+					}
+				});
+			}
 
+			// Invoker commands answer only a button, so the shortcut stays here.
 			document.addEventListener("keydown", (event) => {
 				if (
 					event.isComposing ||
@@ -408,7 +425,8 @@ const idleStatus =
 				if (dialog.open) {
 					dialog.close();
 				} else {
-					open();
+					open(document.activeElement);
+					dialog.showModal();
 				}
 			});
 		}

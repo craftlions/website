@@ -115,13 +115,14 @@ const {
 					}
 				}
 
-				// Browsers without invoker commands open the dialog here.
-				if (!("command" in HTMLButtonElement.prototype)) {
+				// fallback: browsers without invoker commands open the dialog here.
+				if (!("commandForElement" in HTMLButtonElement.prototype)) {
 					dialog.showModal();
 				}
 			});
 
-			if (!("command" in HTMLButtonElement.prototype)) {
+			// fallback: and close it here.
+			if (!("commandForElement" in HTMLButtonElement.prototype)) {
 				this.querySelector("[data-confirm-cancel]")?.addEventListener(
 					"click",
 					() => dialog.close(),

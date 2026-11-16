@@ -158,7 +158,8 @@ test("a text selection dragged onto the backdrop keeps the palette open", async 
 test.describe("without invoker commands", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.addInitScript(() => {
-			delete (HTMLButtonElement.prototype as { command?: string }).command;
+			delete (HTMLButtonElement.prototype as { commandForElement?: Element })
+				.commandForElement;
 			document.addEventListener("DOMContentLoaded", () => {
 				for (const button of document.querySelectorAll("button[command]")) {
 					button.removeAttribute("command");
@@ -173,7 +174,9 @@ test.describe("without invoker commands", () => {
 		page,
 	}) => {
 		expect(
-			await page.evaluate(() => "command" in HTMLButtonElement.prototype),
+			await page.evaluate(
+				() => "commandForElement" in HTMLButtonElement.prototype,
+			),
 		).toBe(false);
 		await expect(page.locator("button[command]")).toHaveCount(0);
 
