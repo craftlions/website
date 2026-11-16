@@ -41,10 +41,13 @@ const {
 	>
 		{trigger}
 	</Button>
+	{/* Esc closes it, but a stray click on the backdrop must not cancel a
+	   decision: the modal default, stated. */}
 	<dialog
 		{id}
 		aria-labelledby={`${id}-title`}
 		aria-describedby={`${id}-consequence`}
+		closedby="closerequest"
 		class="box text-fg wrap-anywhere"
 		data-confirm-dialog
 	>

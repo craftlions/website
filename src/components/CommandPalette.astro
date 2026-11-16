@@ -11,7 +11,14 @@ const idleStatus =
 ---
 
 <command-palette data-idle-status={idleStatus}>
-	<dialog id="command-palette" aria-label="Search" class="box text-fg">
+	{/* A click on the backdrop closes it, as Esc does; the script's fallback
+	   does it where closedby is missing. */}
+	<dialog
+		id="command-palette"
+		aria-label="Search"
+		closedby="any"
+		class="box text-fg"
+	>
 		<search>
 			<Input
 				type="text"
@@ -374,25 +381,28 @@ const idleStatus =
 				follow(link);
 			});
 
-			// The backdrop's events land on the dialog, outside its box. The press
-			// must be there too: a text selection dragged out of the field onto
-			// the backdrop also ends in a click on the dialog.
-			const outside = (event: PointerEvent) => {
-				const box = dialog.getBoundingClientRect();
-				return (
-					event.clientX < box.left ||
-					event.clientX > box.right ||
-					event.clientY < box.top ||
-					event.clientY > box.bottom
-				);
-			};
-			let pressedOutside = false;
-			dialog.addEventListener("pointerdown", (event) => {
-				pressedOutside = outside(event);
-			});
-			dialog.addEventListener("pointerup", (event) => {
-				if (pressedOutside && outside(event)) dialog.close();
-			});
+			// fallback: browsers without closedby close it on the backdrop here.
+			// Its events land on the dialog, outside its box. The press must be
+			// there too: a text selection dragged out of the field onto the
+			// backdrop also ends in a click on the dialog.
+			if (!("closedBy" in HTMLDialogElement.prototype)) {
+				const outside = (event: PointerEvent) => {
+					const box = dialog.getBoundingClientRect();
+					return (
+						event.clientX < box.left ||
+						event.clientX > box.right ||
+						event.clientY < box.top ||
+						event.clientY > box.bottom
+					);
+				};
+				let pressedOutside = false;
+				dialog.addEventListener("pointerdown", (event) => {
+					pressedOutside = outside(event);
+				});
+				dialog.addEventListener("pointerup", (event) => {
+					if (pressedOutside && outside(event)) dialog.close();
+				});
+			}
 
 			// fallback: browsers without invoker commands open and close it here.
 			if (!("commandForElement" in HTMLButtonElement.prototype)) {
