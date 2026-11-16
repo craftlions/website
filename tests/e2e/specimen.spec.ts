@@ -132,54 +132,150 @@ test("type-to-confirm accepts only the exact text", async ({ page }) => {
 	await expect(trigger).toBeFocused();
 });
 
-// Signed out, the palette's search answers 401, so it offers only Sign in.
-test("a text selection dragged onto the backdrop keeps the palette open", async ({
-	page,
-}) => {
-	await page.keyboard.press("ControlOrMeta+k");
-	const field = page.getByRole("combobox", { name: "Search" });
-	await expect(field).toBeFocused();
-	await field.fill("acme invoices");
+// The palette and the confirmations behave alike with the native features and
+// with the components' fallbacks, so both runs share these tests. Signed out,
+// the palette's search answers 401, so it offers only Sign in.
+const dialogTests = () => {
+	test("the palette opens from its trigger, closes and returns focus", async ({
+		page,
+	}) => {
+		const dialog = page.getByRole("dialog", { name: "Search" });
+		const field = dialog.getByRole("combobox", { name: "Search" });
+		for (const scheme of ["light", "dark"]) {
+			const trigger = section(page, scheme).getByRole("button", {
+				name: "Search",
+			});
+			await trigger.click();
+			await expect(page.locator("dialog:modal")).toHaveCount(1);
+			await expect(field).toBeFocused();
+			await page.keyboard.press("Escape");
+			await expect(dialog).toBeHidden();
+			await expect(trigger).toBeFocused();
 
-	const box = await field.boundingBox();
-	if (!box) throw new Error("The search field has no box");
-	await page.mouse.move(box.x + box.width - 4, box.y + box.height / 2);
-	await page.mouse.down();
-	await page.mouse.move(8, 8, { steps: 4 });
-	await page.mouse.up();
-	await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+			await trigger.click();
+			await expect(field).toBeFocused();
+			await page.mouse.click(8, 8);
+			await expect(dialog).toBeHidden();
+			await expect(trigger).toBeFocused();
 
-	await page.mouse.click(8, 8);
-	await expect(page.getByRole("dialog", { name: "Search" })).toBeHidden();
-});
+			await trigger.click();
+			await dialog.getByRole("button", { name: "Close" }).click();
+			await expect(dialog).toBeHidden();
+			await expect(trigger).toBeFocused();
+		}
+	});
 
-// Browsers without invoker commands ignore `command` and `commandfor`; the
-// component opens and closes the dialog itself there.
-test.describe("without invoker commands", () => {
+	test("a text selection dragged onto the backdrop keeps the palette open", async ({
+		page,
+	}) => {
+		const trigger = section(page, "light").getByRole("button", {
+			name: "Search",
+		});
+		const dialog = page.getByRole("dialog", { name: "Search" });
+		const field = dialog.getByRole("combobox", { name: "Search" });
+		await trigger.click();
+		await field.fill("acme invoices");
+
+		const box = await field.boundingBox();
+		if (!box) throw new Error("The search field has no box");
+		await page.mouse.move(box.x + box.width - 4, box.y + box.height / 2);
+		await page.mouse.down();
+		await page.mouse.move(8, 8, { steps: 4 });
+		await page.mouse.up();
+		await expect(dialog).toBeVisible();
+		await expect(field).toBeFocused();
+
+		await page.mouse.click(8, 8);
+		await expect(dialog).toBeHidden();
+		await expect(trigger).toBeFocused();
+	});
+
+	test("the shortcut toggles the palette and Enter follows the chosen option", async ({
+		page,
+	}) => {
+		const trigger = section(page, "dark").getByRole("button", {
+			name: "Search",
+		});
+		const dialog = page.getByRole("dialog", { name: "Search" });
+		const field = dialog.getByRole("combobox", { name: "Search" });
+		const option = dialog.getByRole("option", { name: "Sign in" });
+		await trigger.focus();
+		await page.keyboard.press("ControlOrMeta+k");
+		await expect(field).toBeFocused();
+		await page.keyboard.press("ControlOrMeta+k");
+		await expect(dialog).toBeHidden();
+		await expect(trigger).toBeFocused();
+
+		await page.keyboard.press("ControlOrMeta+k");
+		await expect(option).toHaveAttribute("aria-selected", "true");
+		await expect(field).toHaveAttribute("aria-expanded", "true");
+		await page.keyboard.press("ArrowDown");
+		await expect(field).toHaveAttribute(
+			"aria-activedescendant",
+			(await option.getAttribute("id")) ?? "",
+		);
+		await page.keyboard.press("Enter");
+		await expect(page).toHaveURL("/login?returnTo=%2Fbrand%2Fspecimen%2F");
+	});
+
+	test("a click on the backdrop keeps a confirmation open", async ({
+		page,
+	}) => {
+		const trigger = section(page, "light").getByRole("button", {
+			name: "Remove Jane Doe",
+		});
+		const dialog = page.getByRole("dialog", {
+			name: "Remove Jane Doe from Acme?",
+		});
+		await trigger.click();
+		await page.mouse.click(8, 8);
+		await expect(dialog).toBeVisible();
+		await page.keyboard.press("Escape");
+		await expect(dialog).toBeHidden();
+		await expect(trigger).toBeFocused();
+	});
+};
+
+dialogTests();
+
+// Browsers without invoker commands or closedby ignore `command`, `commandfor`
+// and `closedby`; the components open and close the dialogs themselves there.
+test.describe("without invoker commands or closedby", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.addInitScript(() => {
 			delete (HTMLButtonElement.prototype as { commandForElement?: Element })
 				.commandForElement;
+			delete (HTMLDialogElement.prototype as { closedBy?: string }).closedBy;
 			document.addEventListener("DOMContentLoaded", () => {
 				for (const button of document.querySelectorAll("button[command]")) {
 					button.removeAttribute("command");
 					button.removeAttribute("commandfor");
+				}
+				for (const dialog of document.querySelectorAll("dialog[closedby]")) {
+					dialog.removeAttribute("closedby");
 				}
 			});
 		});
 		await page.reload();
 	});
 
+	test("the page has neither feature", async ({ page }) => {
+		expect(
+			await page.evaluate(() => [
+				"commandForElement" in HTMLButtonElement.prototype,
+				"closedBy" in HTMLDialogElement.prototype,
+			]),
+		).toEqual([false, false]);
+		await expect(page.locator("button[command], dialog[closedby]")).toHaveCount(
+			0,
+		);
+	});
+
+	dialogTests();
+
 	test("the dialog still opens, cancels and returns focus", async ({
 		page,
 	}) => {
-		expect(
-			await page.evaluate(
-				() => "commandForElement" in HTMLButtonElement.prototype,
-			),
-		).toBe(false);
-		await expect(page.locator("button[command]")).toHaveCount(0);
-
 		const trigger = section(page, "light").getByRole("button", {
 			name: "Approve for client",
 		});
