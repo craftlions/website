@@ -197,7 +197,7 @@ const phases = project.phases
 	}}
 >
 	<header class="stack" data-space="xs">
-		<div class="project-title">
+		<div class="cluster" data-space="xs">
 			<h2 id="project-heading" class="text-headline wrap-break-word">
 				{project.name}
 			</h2>
@@ -212,13 +212,13 @@ const phases = project.phases
 			(openPhaseCount === 0 ? (
 				<ProjectTransitionForm {project} nextState="completed" />
 			) : (
-				<div class="project-complete">
+				<div class="with-sidebar" data-align="center">
 					<ProjectTransitionForm
 						{project}
 						nextState="completed"
 						button={{ disabled: true, "aria-describedby": "complete-blocked" }}
 					/>
-					<p id="complete-blocked" class="measure text-sm text-fg-muted">
+					<p id="complete-blocked" class="text-sm text-fg-muted">
 						{openPhaseCount === 1
 							? "1 phase is still open. Accept or cancel it to complete the project."
 							: `${openPhaseCount} phases are still open. Accept or cancel them to complete the project.`}
@@ -226,7 +226,7 @@ const phases = project.phases
 				</div>
 			))}
 		{project.state === "completed" && (
-			<div class="project-actions">
+			<div class="cluster" data-space="s">
 				<ProjectTransitionForm {project} nextState="active" />
 				<form method="POST" action={actions.transitionProject}>
 					<input type="hidden" name="projectId" value={project.id}>
@@ -250,7 +250,7 @@ const phases = project.phases
 	</header>
 
 	<section class="stack" data-space="xs" aria-labelledby="phases-heading">
-		<div class="section-head">
+		<div class="with-sidebar" data-side="end" data-align="center">
 			<h3 id="phases-heading" class="label-caps"> Phases </h3>
 			{canAddPhase && (
 				<DisclosureButton controls="add-phase" open={isAddPhaseOpen}>
@@ -268,7 +268,7 @@ const phases = project.phases
 				id="add-phase"
 				method="POST"
 				action={actions.createPhase}
-				class="box stack phase-form"
+				class="box stack"
 				aria-label="Add phase"
 				hidden={!isAddPhaseOpen}
 			>
@@ -280,59 +280,57 @@ const phases = project.phases
 					maxlength="180"
 					hint="Shown to the client in their project view."
 					result={createResult}
-					class="phase-field phase-form-row"
 				/>
-				<Field
-					as="select"
-					label="Currency"
-					name="currency"
-					required
-					hint="Every invoice of the phase bills in this currency."
-					result={createResult}
-					class="phase-field"
-				>
-					{[
-						...new Set([
-							...Intl.supportedValuesOf("currency"),
-							...project.phases.map((phase) => phase.currency),
-						]),
-					]
-						.toSorted()
-						.map((code) => (
-							<option value={code} selected={code === defaultCurrency}>
-								{formatCurrency(code)}
-							</option>
-						))}
-				</Field>
-				<Field
-					label="Cost"
-					name="cost"
-					type="number"
-					min="0"
-					step="0.0001"
-					inputmode="decimal"
-					required
-					hint="Total for the phase in the currency chosen, e.g. 4800.50."
-					result={createResult}
-					class="phase-field"
-				/>
-				<Field
-					label="Due date"
-					name="dueAt"
-					type="date"
-					hint="Optional target date shown to the client."
-					result={createResult}
-					class="phase-field"
-				/>
+				<div class="switcher" style="--switcher-threshold: 40rem">
+					<Field
+						as="select"
+						label="Currency"
+						name="currency"
+						required
+						hint="Every invoice of the phase bills in this currency."
+						result={createResult}
+					>
+						{[
+							...new Set([
+								...Intl.supportedValuesOf("currency"),
+								...project.phases.map((phase) => phase.currency),
+							]),
+						]
+							.toSorted()
+							.map((code) => (
+								<option value={code} selected={code === defaultCurrency}>
+									{formatCurrency(code)}
+								</option>
+							))}
+					</Field>
+					<Field
+						label="Cost"
+						name="cost"
+						type="number"
+						min="0"
+						step="0.0001"
+						inputmode="decimal"
+						required
+						hint="Total for the phase in the currency chosen, e.g. 4800.50."
+						result={createResult}
+					/>
+					<Field
+						label="Due date"
+						name="dueAt"
+						type="date"
+						hint="Optional target date shown to the client."
+						result={createResult}
+					/>
+				</div>
 				<PhaseAmountCalculator
 					cost={Number(createInput?.get("cost")) || 0}
 					currency={createInput?.get("currency") ?? defaultCurrency}
 					{...(createInput
 						? submittedSplit(createInput)
 						: { acceptanceAmount: 0 })}
-					class="phase-form-row phase-form-split"
+					class="phase-form-split"
 				/>
-				<div class="projects-actions phase-form-row">
+				<div class="cluster" data-space="xs">
 					<Button type="submit">Add phase</Button>
 					<Button variant="quiet" data-disclosure-cancel>
 						Cancel
@@ -342,16 +340,18 @@ const phases = project.phases
 		)}
 		{phases.length > 0 ? (
 			<admin-phase-list
-				class="phase-list"
+				class="rows admin-phases"
+				data-at="60"
+				style="--rows-columns: minmax(0, 1fr) auto auto auto auto"
 				data-acted={actedPhase && `phase-${actedPhase.publicId}`}
 			>
-				<div aria-hidden="true" class="phase-list-head label-caps">
-					<span>Phase</span>
-					<span>State</span>
-					<span>Amount</span>
-					<span>Next step</span>
-				</div>
 				<ul>
+					<li aria-hidden="true" class="admin-phases-head label-caps" data-head>
+						<span>Phase</span>
+						<span>State</span>
+						<span>Amount</span>
+						<span>Next step</span>
+					</li>
 					{phases.map((phase) => (
 						<li id={`phase-${phase.publicId}`} class="phase-row" data-phase>
 							<div class="stack phase-info" data-space="3xs">

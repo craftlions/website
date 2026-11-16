@@ -3,15 +3,6 @@
 	   the layout primitives; lists that become tables switch at the rows
 	   thresholds of their own width, not the window's. */
 
-	/* A form's submit and cancel buttons. */
-	.projects-actions {
-		display: grid;
-		grid-template-columns: auto auto;
-		align-items: center;
-		justify-content: start;
-		gap: var(--space-xs);
-	}
-
 	/* Project list, on a rows list: the name with its state above the phase
 	   summary and the totals, which sit side by side once the list is 36rem
 	   wide; a table from 60rem. */
@@ -66,117 +57,44 @@
 		}
 	}
 
-	/* Project page: the name with its state, and the project's next step. */
-	.project-title {
-		display: grid;
-		grid-template-columns: minmax(0, max-content) max-content;
-		align-items: center;
-		gap: var(--space-xs);
-	}
-
-	.project-complete {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
-		align-items: center;
-		gap: var(--space-xs);
-	}
-
-	.project-actions {
-		display: grid;
-		grid-auto-flow: column;
-		grid-auto-columns: max-content;
-		align-items: center;
-		justify-content: start;
-		gap: var(--space-s);
-	}
-
-	/* Add phase: the title, then currency, cost and due date in a row from
-	   md, then the cost split and the buttons across. */
-	.phase-form {
-		grid-template-columns: minmax(0, 1fr);
-
-		@media (width >= 48rem) {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-		}
-	}
-
-	.phase-field {
-		grid-template-columns: minmax(0, 1fr);
-	}
-
-	.phase-form-row {
-		@media (width >= 48rem) {
-			grid-column: 1 / -1;
-		}
-	}
-
+	/* Add phase: the cost split below the fields, under a rule. */
 	.phase-form-split {
 		padding-block-start: var(--space-s);
 		border-block-start: var(--rule) var(--line);
 	}
 
-	/* Phases: stacked rows, a table on five columns from lg. */
-	.phase-list {
-		display: grid;
-		border: var(--rule) var(--line);
-
-		@media (width >= 64rem) {
-			grid-template-columns: minmax(0, 1fr) auto auto auto auto;
-			column-gap: var(--space-m);
-		}
-
-		& > ul {
-			display: grid;
-
-			@media (width >= 64rem) {
-				grid-column: span 5 / span 5;
-				grid-template-columns: subgrid;
-			}
-		}
+	/* Phases, on a rows list: stacked rows, a table on five columns from 60rem
+	   with the next step in the fourth and More in the fifth. A custom element
+	   is inline until styled, and an inline box cannot be a container. */
+	.admin-phases {
+		display: block;
 	}
 
-	.phase-list-head {
-		display: none;
-		padding: var(--space-xs) var(--space-s);
-		border-block-end: var(--rule) var(--line);
-
-		/* Amount and Next step sit over their end-aligned cells. */
+	/* Amount and Next step sit over their end-aligned cells. */
+	.admin-phases-head {
 		& > :nth-child(n + 3) {
 			text-align: end;
 		}
 
 		& > :last-child {
-			grid-column: span 2 / span 2;
-		}
-
-		@media (width >= 64rem) {
-			display: grid;
-			grid-column: span 5 / span 5;
-			grid-template-columns: subgrid;
+			grid-column: span 2;
 		}
 	}
 
 	.phase-row {
-		display: grid;
 		row-gap: var(--space-xs);
-		padding: var(--space-s);
-		border-block-end: var(--rule) var(--line);
 		scroll-margin-block-start: var(--space-2xl);
+	}
 
-		&:last-child {
-			border-block-end: 0;
-		}
-
-		@media (width >= 64rem) {
-			grid-column: span 5 / span 5;
-			grid-template-columns: subgrid;
-			align-items: center;
-		}
+	/* A row is one implicit column until it is a table; its cells may shrink
+	   below their longest word. */
+	.phase-info,
+	.phase-amount,
+	.phase-panel {
+		min-inline-size: 0;
 	}
 
 	.phase-info {
-		min-inline-size: 0;
-
 		& > [data-cancelled] {
 			text-decoration-line: line-through;
 		}
@@ -186,43 +104,30 @@
 		}
 	}
 
-	.phase-amount {
-		min-inline-size: 0;
+	.phase-panel {
+		grid-column: 1 / -1;
+		padding-block-start: var(--space-s);
+		border-block-start: var(--rule) var(--line);
+	}
 
-		@media (width >= 64rem) {
+	@container (inline-size >= 60rem) {
+		.phase-amount {
 			inline-size: 12rem;
 			justify-items: end;
 			text-align: end;
 		}
-	}
 
-	/* A row's next step sits in the fourth column, More in the fifth. */
-	.phase-step,
-	.phase-more {
-		@media (width >= 64rem) {
+		.phase-step,
+		.phase-more {
 			justify-self: end;
 		}
-	}
 
-	.phase-step {
-		@media (width >= 64rem) {
+		.phase-step {
 			grid-column-start: 4;
 		}
-	}
 
-	.phase-more {
-		@media (width >= 64rem) {
+		.phase-more {
 			grid-column-start: 5;
-		}
-	}
-
-	.phase-panel {
-		min-inline-size: 0;
-		padding-block-start: var(--space-s);
-		border-block-start: var(--rule) var(--line);
-
-		@media (width >= 64rem) {
-			grid-column: span 5 / span 5;
 		}
 	}
 
