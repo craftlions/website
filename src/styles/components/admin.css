@@ -137,73 +137,11 @@
 		grid-column: span 2 / span 2;
 	}
 
-	/* /admin/org/[id]/members: stacked below 64rem and a four-column table from
-	   it (Member, Role, Last active, Actions) on one subgrid. */
-	.members {
-		display: grid;
-		grid-template-columns: repeat(1, minmax(0, 1fr));
-		border: var(--rule) var(--line);
-
-		& > ul {
-			display: grid;
-			grid-template-columns: repeat(1, minmax(0, 1fr));
-		}
-
-		& > ul > li {
-			display: grid;
-			grid-template-columns: repeat(1, minmax(0, 1fr));
-			row-gap: var(--space-xs);
-			border-block-end: var(--rule) var(--line);
-			padding: var(--space-s);
-
-			&:last-child {
-				border-block-end-width: 0;
-			}
-		}
-
-		@media (width >= 64rem) {
-			grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 14rem);
-			column-gap: var(--space-m);
-
-			& > ul {
-				grid-column: span 4 / span 4;
-				grid-template-columns: subgrid;
-			}
-
-			& > ul > li {
-				grid-column: span 4 / span 4;
-				grid-template-columns: subgrid;
-				align-items: start;
-			}
-		}
-	}
-
-	/* The column heads, shown only as a table. */
-	.members-head {
-		display: none;
-		border-block-end: var(--rule) var(--line);
-		padding: var(--space-xs) var(--space-s);
-
-		@media (width >= 64rem) {
-			grid-column: span 4 / span 4;
-			display: grid;
-			grid-template-columns: subgrid;
-		}
-	}
-
-	/* A cell's label, read out instead of shown once the table has heads. */
-	.members-label {
-		@media (width >= 64rem) {
-			position: absolute;
-			inline-size: 1px;
-			block-size: 1px;
-			padding: 0;
-			margin: calc(-1 * var(--hairline));
-			overflow: hidden;
-			clip-path: inset(50%);
-			white-space: nowrap;
-			border-width: 0;
-		}
+	/* /admin/org/[id]/members: a .rows list, a four-column table (Member,
+	   Role, Last active, Actions) from 44rem of its own width; each cell starts
+	   at the top of a row the actions make tall. */
+	.members > ul > li {
+		align-items: start;
 	}
 
 	.members-actions {

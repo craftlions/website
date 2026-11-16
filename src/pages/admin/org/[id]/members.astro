@@ -149,14 +149,17 @@ const otherClients = (count: number) =>
 			</div>
 		</form>
 		{members.length > 0 ? (
-			<div class="members">
-				<div aria-hidden="true" class="members-head label-caps">
-					<span>Member</span>
-					<span>Role</span>
-					<span>Last active</span>
-					<span>Actions</span>
-				</div>
+			<div
+				class="rows members"
+				style="--rows-columns: minmax(0, 1fr) auto auto minmax(0, 14rem)"
+			>
 				<ul>
+					<li aria-hidden="true" class="label-caps" data-head>
+						<span>Member</span>
+						<span>Role</span>
+						<span>Last active</span>
+						<span>Actions</span>
+					</li>
 					{members.map((member) => (
 						<li id={`member-${member.id}`} class="target">
 							<div class="stack" data-space="3xs">
@@ -170,7 +173,9 @@ const otherClients = (count: number) =>
 							</Badge>
 							{member.user.lastActiveAt ? (
 								<p class="text-sm">
-									<span class="members-label text-fg-muted">Last active </span>
+									<span class="text-fg-muted" data-label>
+										Last active{" "}
+									</span>
 									<time datetime={member.user.lastActiveAt.toISOString()}>
 										{formatDate(member.user.lastActiveAt)}
 									</time>
