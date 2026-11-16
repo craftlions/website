@@ -170,10 +170,10 @@ const frames = [
 							<h3 class="text-title">Tokens</h3>
 							<ul class="tokens stack text-sm" data-space="2xs">
 								{swatches.map(({ name, value, minimum, checks }) => (
-									<li class="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-2 @md:grid-cols-[1.5rem_minmax(0,1fr)_auto]">
+									<li class="token-row">
 										<span class="swatch" style={`background-color: ${value}`} />
 										<code class="truncate">--{name}</code>
-										<span class="col-start-2 grid grid-flow-col justify-start gap-3 text-xs tabular-nums @md:col-start-auto">
+										<span class="token-ratios text-xs tabular-nums">
 											{checks.map(({ surface, ratio }) => (
 												<span
 													class:list={[
@@ -844,6 +844,29 @@ const frames = [
 			inline-size: 1.5rem;
 			block-size: 1.5rem;
 			border: var(--rule) var(--line);
+		}
+		/* A token: its swatch (the auto column) and name, its contrast ratios
+		   below the name, or beside it once the list is 28rem wide. */
+		.token-row {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
+			align-items: center;
+			column-gap: var(--space-2xs);
+		}
+		.token-ratios {
+			grid-column-start: 2;
+			display: grid;
+			grid-auto-flow: column;
+			justify-content: start;
+			gap: var(--space-xs);
+		}
+		@container (inline-size >= 28rem) {
+			.token-row {
+				grid-template-columns: auto minmax(0, 1fr) auto;
+			}
+			.token-ratios {
+				grid-column-start: auto;
+			}
 		}
 		/* Not a stack: the row of six buttons is wider than a scheme column in a
 		   768px or 1024px window, and a stack's min-inline-size: 0 on its children

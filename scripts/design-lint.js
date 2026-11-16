@@ -391,12 +391,19 @@ for (const {
 				`${where} → a token with light-dark() in src/styles/tokens.css, which follows the scheme by itself  (DESIGN.md#role-tokens)`,
 			);
 		}
+		// A page's scoped style may switch its own one-off layout at any rem
+		// width of a container it declares; shared stylesheets keep the rows
+		// thresholds.
 		if (
 			text.startsWith("@container") &&
-			!/^@container \(inline-size >= (?:36|44|60)rem\)$/.test(text)
+			!/^@container \(inline-size >= (?:36|44|60)rem\)$/.test(text) &&
+			!(
+				file.startsWith("src/pages/") &&
+				/^@container \(inline-size >= \d+(?:\.\d+)?rem\)$/.test(text)
+			)
 		) {
 			violations.push(
-				`${where} → (inline-size >= 36rem), 44rem or 60rem, the only thresholds; or with-sidebar or switcher, which switch without one  (${layoutDoc})`,
+				`${where} → (inline-size >= 36rem), 44rem or 60rem, the only thresholds outside a page's own <style>; or with-sidebar or switcher, which switch without one  (${layoutDoc})`,
 			);
 		}
 		if (
