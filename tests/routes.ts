@@ -1,5 +1,5 @@
 // The pages every browser test visits: the public pages and the design
-// reference at /brand/system, which renders every primitive the pages behind
+// reference at /brand/specimen, which renders every primitive the pages behind
 // login use.
 export const routes = [
 	"/",
@@ -8,5 +8,5 @@ export const routes = [
 	"/reset-password",
 	"/imprint/",
 	"/changelog/",
-	"/brand/system/",
+	"/brand/specimen/",
 ];

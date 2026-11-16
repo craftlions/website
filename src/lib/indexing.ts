@@ -1,5 +1,5 @@
 // Sign-in, client, admin, and API routes are never useful search results, and
-// the design reference stays out of search until /brand exists: the middleware
+// the component specimen stays out of search as an unlisted page: the middleware
 // sends these with `X-Robots-Tag: noindex`, Shell adds the meta tag that
 // prerendered pages need, and the sitemap leaves them out.
 const privatePaths = [
@@ -10,7 +10,7 @@ const privatePaths = [
 	"/login",
 	"/forgot-password",
 	"/reset-password",
-	"/brand/system",
+	"/brand/specimen",
 ];
 
 export const isPrivatePath = (pathname: string) =>

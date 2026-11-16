@@ -229,7 +229,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 
 Classes say what something is, never how it looks. Values live in `src/styles/tokens.css` as plain custom properties with `light-dark()`, so one class covers both color schemes and `aubr design:lint` rejects `dark:` variants; `src/styles/global.css` maps them to Tailwind utilities. Each role exists only on its own utility, so `text-fg` works and `bg-fg` does not. The Tailwind color palette is removed: a class such as `text-neutral-500` renders nothing, and `aubr design:lint` rejects it. That command also fails unless this file's frontmatter names every `tokens.css` token with its light value and its `-dark` value, and names nothing else, so token changes land in both places.
 
-The frontmatter `contrast:` map states each token's WCAG 2.2 AA requirement by its use: `min: 4.5` for text, `min: 3` for a line, fill or mark that alone shows a control, a state or data (WCAG 1.4.11), `exempt` for a decorative line whose meaning text already carries, and `surface` for the tokens the others are measured on (a translucent surface over canvas). `aubr design:lint` fails when a token is missing from the map or falls below its minimum on any surface it names, in either scheme; `/brand/system` shows the same ratios from `src/lib/contrast.ts`, in red below the minimum.
+The frontmatter `contrast:` map states each token's WCAG 2.2 AA requirement by its use: `min: 4.5` for text, `min: 3` for a line, fill or mark that alone shows a control, a state or data (WCAG 1.4.11), `exempt` for a decorative line whose meaning text already carries, and `surface` for the tokens the others are measured on (a translucent surface over canvas). `aubr design:lint` fails when a token is missing from the map or falls below its minimum on any surface it names, in either scheme; `/brand/specimen` shows the same ratios from `src/lib/contrast.ts`, in red below the minimum.
 
 Biome is excluded from this file because it flattens the YAML frontmatter that `aubr design:lint` reads.
 
@@ -252,7 +252,7 @@ Biome is excluded from this file because it flattens the YAML frontmatter that `
 | `border-canvas`                                   | Pace marker edge                                                             |
 | `text-chart-1`…`6`, `text-chart-unassigned`       | Spend chart only                                                             |
 
-A new token is a design decision: add it to `tokens.css`, `global.css`, this table, and the `contrast:` map together. The public design reference at `/brand/system` (`src/pages/brand/system.astro`) reads `tokens.css`, so it shows the new token with its contrast ratios automatically; add new primitives to it by hand. It is public, so its demos stay presentational: no actions, data, sessions, or logged errors.
+A new token is a design decision: add it to `tokens.css`, `global.css`, this table, and the `contrast:` map together. The unlisted component specimen at `/brand/specimen` (`src/pages/brand/specimen.astro`) reads `tokens.css`, so it shows the new token with its contrast ratios automatically; add new primitives to it by hand. It is public, so its demos stay presentational: no actions, data, sessions, or logged errors.
 
 Give an element one role per property, and choose between roles with a ternary. Tailwind orders utilities itself, not by class order, so stacking `text-fg-muted` with a conditional `text-fg-danger` lets the wrong one win.
 

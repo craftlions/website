@@ -70,11 +70,11 @@ const typeRoles = [
 ---
 
 <Shell>
-	<Fragment slot="head"> <title>craftlions | Design system</title> </Fragment>
+	<Fragment slot="head"> <title>craftlions | Specimen</title> </Fragment>
 	<Fragment slot="body">
 		<body class="grid gap-6 p-4 text-pretty">
 			<header class="mx-auto grid w-full max-w-6xl gap-2">
-				<PageHeading> Design system </PageHeading>
+				<PageHeading> Specimen </PageHeading>
 				<p class="pl-3 text-sm text-fg-muted">
 					Every token and primitive in both color schemes; hover and tab through
 					the controls to see their states.
@@ -136,12 +136,12 @@ const typeRoles = [
 							<div class="grid grid-cols-[repeat(3,max-content)] justify-start gap-2 sm:grid-flow-col sm:grid-cols-none">
 								<Button>Default</Button>
 								<Button aria-pressed="true">Pressed</Button>
-								<Button href="/brand/system" aria-current="page">
+								<Button href="/brand/specimen" aria-current="page">
 									Current
 								</Button>
 								<Button variant="danger">Danger</Button>
 								<Button disabled>Disabled</Button>
-								<Button href="/brand/system">Link</Button>
+								<Button href="/brand/specimen">Link</Button>
 							</div>
 							<div class="grid grid-flow-col items-center justify-start gap-4">
 								<Button variant="quiet">Quiet</Button>
@@ -197,9 +197,9 @@ const typeRoles = [
 							<Breadcrumbs
 								label={`Breadcrumb, ${scheme}`}
 								items={[
-									{ label: "Admin", href: "/brand/system" },
-									{ label: "Acme", href: "/brand/system" },
-									{ label: "Projects", href: "/brand/system" },
+									{ label: "Admin", href: "/brand/specimen" },
+									{ label: "Acme", href: "/brand/specimen" },
+									{ label: "Projects", href: "/brand/specimen" },
 									{ label: "Website relaunch" },
 								]}
 							/>
@@ -322,7 +322,7 @@ const typeRoles = [
 							<p class="border border-dashed border-line-danger p-4 text-sm text-fg-danger">
 								Danger outline
 							</p>
-							<a href="/brand/system" class="w-max text-sm text-fg-info link">
+							<a href="/brand/specimen" class="w-max text-sm text-fg-info link">
 								Text link
 							</a>
 						</section>

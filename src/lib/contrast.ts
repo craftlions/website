@@ -1,6 +1,6 @@
 // WCAG 2.2 contrast of the role tokens against the requirements in the DESIGN.md
 // `contrast:` map, shared by `aubr design:lint`, which fails below a minimum,
-// and the design reference at /brand/system. Node runs this file directly, so
+// and the component specimen at /brand/specimen. Node runs this file directly, so
 // it uses only erasable TypeScript.
 
 export type Token = { name: string; light: string; dark: string };
