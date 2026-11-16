@@ -1,5 +1,5 @@
-// Fails on styling that bypasses the role tokens in DESIGN.md. Locking the palette
-// makes raw color classes render nothing, silently; this makes them fail loudly.
+// Fails on styling that bypasses the role tokens and the vocabulary in
+// DESIGN.md, and on markup that bypasses the shared components.
 import { globSync, readFileSync } from "node:fs";
 import {
 	contrastChecks,
@@ -8,69 +8,12 @@ import {
 } from "../src/lib/contrast.ts";
 import { tokens as fluidTokens } from "./fluid-scale.js";
 
-const hues =
-	"slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
-const colorUtilities =
-	"text|bg|border|divide|outline|ring|decoration|fill|stroke|accent|caret|from|via|to";
-const colorFunctions =
-	"rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|light-dark";
-
+// Markup that has a component. The Tailwind-syntax rules that stood here
+// (palette, arbitrary and interpolated colours, size, weight, leading, shadow,
+// radius, outline, underline and dark: classes) are covered by the vocabulary
+// rule below, which fails on any class no stylesheet defines, and by the
+// declaration rules on the stylesheets.
 const rules = [
-	{
-		id: "raw-palette",
-		pattern: new RegExp(
-			`(?<![\\w-])(?:${colorUtilities})(?:-[trblxyse])?-(?:(?:${hues})-\\d+|black|white)(?![\\w-])`,
-			"g",
-		),
-		use: "a role token such as text-fg, bg-panel or border-line",
-		doc: "DESIGN.md#role-tokens",
-	},
-	{
-		id: "arbitrary-color",
-		pattern: new RegExp(
-			`-\\[(?:#|color:|(?:${colorFunctions})\\()|(?<![\\w-])(?:${colorUtilities})(?:-[trblxyse])?-(?:\\[(?:var\\(|[a-z]+\\])|\\(--)`,
-			"g",
-		),
-		use: "a role token, or add one to src/styles/tokens.css",
-		doc: "DESIGN.md#role-tokens",
-	},
-	{
-		id: "interpolated-class",
-		pattern: new RegExp(`(?<![\\w-])(?:${colorUtilities})-\\$\\{`, "g"),
-		use: "complete class names, because Tailwind cannot see interpolated ones",
-		doc: "DESIGN.md#role-tokens",
-	},
-	{
-		id: "font-size",
-		pattern: new RegExp(
-			`(?<![\\w-])text-(?:(?:base|lg|[2-9]?xl)(?![\\w-])|\\(length:|\\[(?!#|color:|var\\(|[a-z]+\\]|(?:${colorFunctions})\\())`,
-			"g",
-		),
-		use: "text-display, text-headline, text-title, text-label, text-caption, label-caps, text-sm or text-xs",
-		doc: "DESIGN.md#3-typography",
-	},
-	{
-		id: "outline-removed",
-		pattern: /(?<![\w-])outline-(?:none|hidden|0)(?![\w-])/g,
-		use: "the global :focus-visible outline; adjust only outline-offset",
-		doc: "DESIGN.md#role-tokens",
-	},
-	{
-		id: "shadow",
-		pattern:
-			/(?<![\w-])(?:inset-|drop-)?shadow(?!-none(?![\w-]))(?:-[a-z0-9]+)*(?:-\[[^\]]*\]|-\([^)]*\))?(?![\w-])/g,
-		classOnly: true,
-		use: "a dashed border, because surfaces are flat",
-		doc: "DESIGN.md#4-elevation",
-	},
-	{
-		id: "radius",
-		pattern:
-			/(?<![\w-])rounded(?!-none(?![\w-]))(?:-[a-z0-9]+)*(?:-\[[^\]]*\]|-\([^)]*\))?(?![\w-])/g,
-		classOnly: true,
-		use: "square corners",
-		doc: "DESIGN.md#5-components",
-	},
 	{
 		id: "raw-button",
 		pattern: /<button\b/g,
@@ -81,33 +24,9 @@ const rules = [
 	{
 		id: "style-block",
 		pattern: /<style\b/g,
-		use: "inline Tailwind utilities, or a global rule in src/styles/",
-		doc: "CLAUDE.md",
+		use: "the component's stylesheet in src/styles/components/, built on the classes in DESIGN.md#vocabulary",
+		doc: "AGENTS.md#styling",
 		only: "src/components/",
-	},
-	{
-		id: "font-utility",
-		pattern: /(?<![\w-])font-(?:\[[^\]]*\]|\([^)]*\)|[\w-]+)/g,
-		classOnly: true,
-		use: "a type role such as text-label or text-caption for 600, or no class for 400",
-		doc: "DESIGN.md#3-typography",
-	},
-	{
-		id: "line-height",
-		pattern:
-			/(?<![\w-])(?:leading-(?!none(?![\w-]))|text-(?:xs|sm|display|headline|title|label|caption)\/)(?:\[[^\]]*\]|\([^)]*\)|[\w.-]+)/g,
-		classOnly: true,
-		use: "the role's own line height, or leading-none in a tight metric row",
-		doc: "DESIGN.md#3-typography",
-	},
-	{
-		id: "link-recipe",
-		pattern:
-			/(?<![\w-])(?:underline|decoration-(?:dashed|dotted|double|wavy))(?![\w-])/g,
-		classOnly: true,
-		use: "the link class, which draws the dashed underline and its hover",
-		doc: "DESIGN.md#links",
-		ignore: "src/styles/components/link.css",
 	},
 	// Checkbox wraps its control in its label; the cost split labels number
 	// inputs that sit in a % suffix box, which Input cannot draw yet.
@@ -128,18 +47,7 @@ const rules = [
 		use: "<DisclosureButton> with a hidden panel",
 		doc: "DESIGN.md#disclosure",
 	},
-	{
-		id: "dark-variant",
-		pattern: /(?<![\w-])dark:/g,
-		classOnly: true,
-		use: "a role token, which switches scheme through light-dark()",
-		doc: "DESIGN.md#role-tokens",
-	},
 ];
-
-// Shadow and rounded are also ordinary words, so those rules skip free text.
-const classText = (line) =>
-	(line.match(/"[^"]*"|'[^']*'|`[^`]*`|@apply .*/g) ?? []).join(" ");
 
 const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
 	readFileSync(file, "utf8")
@@ -153,8 +61,8 @@ const violations = globSync("src/**/*.{astro,ts,css}").flatMap((file) =>
 								![ignore].flat().includes(file) &&
 								(!only || file.startsWith(only)),
 						)
-						.flatMap(({ pattern, use, doc, classOnly }) =>
-							[...(classOnly ? classText(line) : line).matchAll(pattern)].map(
+						.flatMap(({ pattern, use, doc }) =>
+							[...line.matchAll(pattern)].map(
 								([match]) =>
 									`${file}:${index + 1}  ${match} → use ${use}  (${doc})`,
 							),
@@ -985,30 +893,7 @@ for (const {
 }
 
 // Classes in markup: class and *Class attributes, class:list, className and
-// classList calls. Tailwind defines the rest while both systems coexist.
-let tailwind = () => false;
-try {
-	const { __unstable__loadDesignSystem } = await import("tailwindcss");
-	const system = await __unstable__loadDesignSystem(
-		readFileSync("src/styles/global.css", "utf8"),
-		{
-			base: "src/styles",
-			loadStylesheet: async (id, base) => {
-				const path = id.startsWith("tailwindcss/")
-					? `node_modules/${id}`
-					: `${base}/${id}`;
-				return {
-					path,
-					base: path.slice(0, path.lastIndexOf("/")),
-					content: readFileSync(path, "utf8"),
-				};
-			},
-		},
-	);
-	tailwind = (name) =>
-		/^(?:group|peer)(?:\/[\w-]+)?$/.test(name) ||
-		system.candidatesToCss([name])[0] !== null;
-} catch {}
+// classList calls.
 for (const file of globSync("src/**/*.astro")) {
 	const source = readFileSync(file, "utf8");
 	const local = new Set(
@@ -1034,6 +919,15 @@ for (const file of globSync("src/**/*.astro")) {
 			end++;
 			if (match.endsWith("{") && depth === 0) break;
 		}
+		// A name assembled with ${} is invisible to this check and to a search
+		// for the class; spell out each whole name and choose between them.
+		for (const [literal] of source.slice(index, end).matchAll(/`[^`]*`/g)) {
+			if (/[\w-]\$\{|\}[\w-]/.test(literal)) {
+				violations.push(
+					`${file}:${source.slice(0, index).split("\n").length}  ${literal} → whole class names, chosen with a ternary or class:list, never assembled with \${}; a data-* attribute for a variant  (DESIGN.md#vocabulary)`,
+				);
+			}
+		}
 		for (const [, ...quoted] of source
 			.slice(index, end)
 			.matchAll(/"([^"]*)"|'([^']*)'|`([^`$]*)`/g)) {
@@ -1049,12 +943,7 @@ for (const file of globSync("src/**/*.astro")) {
 				(name) =>
 					/[a-z]/i.test(name) && /^[\w@:[\]().%/#,&=>*+!-]+$/.test(name),
 			)) {
-			if (
-				attribute &&
-				!native.has(name) &&
-				!local.has(name) &&
-				!tailwind(name)
-			) {
+			if (attribute && !native.has(name) && !local.has(name)) {
 				reports.push(
 					`${file}:${source.slice(0, index).split("\n").length}  ${name} → a class defined in src/styles/ or in this page's <style>; this one renders nothing  (AGENTS.md#hard-requirements)`,
 				);
@@ -1062,13 +951,13 @@ for (const file of globSync("src/**/*.astro")) {
 		}
 	}
 }
-// Like Tailwind, a class counts as used wherever its name stands as a word,
-// such as in a list of series classes.
+// A class counts as used wherever its name stands as a word, such as in a list
+// of series classes.
 const markup = globSync("src/**/*.{astro,ts}")
 	.map((file) => readFileSync(file, "utf8"))
 	.join("\n");
 for (const name of native) {
-	if (!new RegExp(`(?<![\\w-])${name}(?:/\\d+)?(?![\\w-])`).test(markup)) {
+	if (!new RegExp(`(?<![\\w-])${name}(?![\\w-])`).test(markup)) {
 		reports.push(
 			`src/styles  .${name} is used nowhere → use it or remove its rule  (AGENTS.md#hard-requirements)`,
 		);
