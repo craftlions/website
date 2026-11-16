@@ -1,0 +1,77 @@
+// PhaseOverview's closed details panels stay findable (hidden="until-found"):
+// a text fragment, the mechanism find in page shares, opens the panel and its
+// toggle; a browser without beforematch keeps it plainly hidden. The overview
+// renders only behind login, so the test serves its script, with the site's
+// stylesheets, on a fixture of one phase that it routes itself.
+import { readFileSync } from "node:fs";
+import { stripTypeScriptTypes } from "node:module";
+import { expect, type Page, test } from "@playwright/test";
+
+const script = stripTypeScriptTypes(
+	readFileSync("src/components/PhaseOverview.astro", "utf8").match(
+		/<script>([\s\S]*)<\/script>/,
+	)?.[1] ?? "",
+);
+
+const fixture = async (page: Page) => {
+	await page.goto("/brand/specimen/");
+	const styles = await page
+		.locator("head link[rel=stylesheet], head style")
+		.evaluateAll((elements) =>
+			elements.map((element) => element.outerHTML).join(""),
+		);
+	await page.route("**/phase-overview-fixture", (route) =>
+		route.fulfill({
+			contentType: "text/html",
+			body: `<!doctype html><html lang="en"><head><title>Fixture</title>${styles}</head><body>
+<phase-overview><div class="rows" data-at="60"><ul>
+<li id="phase-a" data-phase><h3>Discovery</h3>
+<button type="button" class="button" data-variant="default" aria-expanded="false" aria-controls="phase-a-details" data-phase-toggle>Details</button>
+<div id="phase-a-details" class="phase-details stack" hidden><p>Upfront billed on approval</p></div>
+</li></ul></div></phase-overview>
+<script type="module">${script}</script></body></html>`,
+		}),
+	);
+};
+
+test("a text fragment opens a closed payment schedule", async ({ page }) => {
+	await fixture(page);
+	const toggle = page.getByRole("button", { name: "Details" });
+	const panel = page.locator("#phase-a-details");
+
+	await page.goto("/phase-overview-fixture");
+	await expect(panel).toHaveAttribute("hidden", "until-found");
+	await expect(toggle).toHaveAttribute("aria-expanded", "false");
+	// The closed panel draws nothing and takes no room in its row.
+	expect(await panel.boundingBox()).toMatchObject({ width: 0, height: 0 });
+
+	await page.goto("/phase-overview-fixture#:~:text=billed%20on%20approval");
+	await expect(panel).toBeVisible();
+	await expect(panel).not.toHaveAttribute("hidden");
+	await expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+	await toggle.click();
+	await expect(panel).toHaveAttribute("hidden", "until-found");
+	await expect(toggle).toHaveAttribute("aria-expanded", "false");
+});
+
+test("without beforematch a closed schedule stays plainly hidden", async ({
+	page,
+}) => {
+	await page.addInitScript(() => {
+		delete (HTMLElement.prototype as { onbeforematch?: unknown }).onbeforematch;
+	});
+	await fixture(page);
+	const toggle = page.getByRole("button", { name: "Details" });
+	const panel = page.locator("#phase-a-details");
+
+	await page.goto("/phase-overview-fixture#:~:text=billed%20on%20approval");
+	await expect(panel).toHaveAttribute("hidden", "");
+	await expect(panel).toBeHidden();
+	await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+	await toggle.click();
+	await expect(panel).toBeVisible();
+	await toggle.click();
+	await expect(panel).toHaveAttribute("hidden", "");
+});

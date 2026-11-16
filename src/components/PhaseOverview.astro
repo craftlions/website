@@ -492,6 +492,16 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 
 			this.applyTarget();
 			window.addEventListener("hashchange", () => this.applyTarget());
+
+			// Find in page or a text fragment is about to reveal a closed panel,
+			// so its toggle opens with it.
+			this.addEventListener("beforematch", (event) => {
+				if (!(event.target instanceof HTMLElement)) return;
+				const toggle = this.querySelector<HTMLButtonElement>(
+					`[data-phase-toggle][aria-controls="${event.target.id}"]`,
+				);
+				if (toggle) this.setExpanded(toggle, true);
+			});
 		}
 
 		setExpanded(toggle: HTMLButtonElement, expanded: boolean) {
@@ -499,7 +509,15 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 			const panel = document.getElementById(
 				toggle.getAttribute("aria-controls") ?? "",
 			);
-			if (panel) panel.hidden = !expanded;
+			// enhancement: a closed panel stays findable, so find in page and text
+			// fragments open it; without beforematch (Safari) it is plainly hidden.
+			if (panel) {
+				panel.hidden = expanded
+					? false
+					: "onbeforematch" in HTMLElement.prototype
+						? "until-found"
+						: true;
+			}
 		}
 
 		setView(view: string) {

@@ -63,6 +63,15 @@
 		grid-column: 1 / -1;
 		padding-block-start: var(--space-s);
 		border-block-start: var(--rule) var(--line);
+
+		/* enhancement: hidden="until-found" (PhaseOverview's script) keeps the
+		   closed panel's box and only skips its content, so it leaves the row's
+		   grid and draws nothing until find in page opens it. */
+		&[hidden="until-found"] {
+			position: absolute;
+			padding: 0;
+			border: 0;
+		}
 	}
 
 	/* In the table the billing figures sit at the end of their column. */
