@@ -38,5 +38,6 @@ description = "Deploy the Worker with its runtime secrets from fnox (owner only)
 usage = 'flag "--dry-run" help="Build and check without uploading"'
 depends = ["build"]
 confirm = "Deploy the Worker with the secrets from fnox?"
+lock = true
 secrets = ["BETTER_AUTH_SECRETS", "BETTER_AUTH_API_KEY", "GITHUB_CLIENT_SECRET"]
 run = "aubr cf deploy --prebuilt --secrets-file cloudflare.secrets.env{% if usage.dry_run %} --dry-run{% endif %}"
