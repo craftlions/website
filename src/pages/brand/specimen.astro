@@ -100,20 +100,21 @@ const frames = [
 <Shell>
 	<Fragment slot="head"> <title>craftlions | Specimen</title> </Fragment>
 	<Fragment slot="body">
-		<body class="grid gap-region p-gutter text-pretty">
-			<header class="mx-auto grid w-full max-w-6xl gap-2">
+		<body class="specimen">
+			<header class="column stack" data-space="2xs">
 				<PageHeading> Specimen </PageHeading>
-				<p class="pl-3 text-sm text-fg-muted">
+				<p class="intro text-sm text-fg-muted">
 					Every token and primitive in both color schemes; hover and tab through
 					the controls to see their states.
 				</p>
 			</header>
-			<main class="mx-auto grid w-full max-w-6xl gap-4 md:grid-cols-2">
+			<main class="column stack sections">
 				<section
 					aria-labelledby="scale"
-					class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-8 border border-dashed border-line p-4 md:col-span-2"
+					class="box stack panel full-row"
+					data-space="l"
 				>
-					<header class="grid gap-2">
+					<header class="stack" data-space="2xs">
 						<h2 id="scale" class="text-headline">Scale</h2>
 						<p class="text-sm text-fg-muted">
 							Fluid steps grow with the window from 320px to 1280px and hold
@@ -121,14 +122,14 @@ const frames = [
 						</p>
 					</header>
 
-					<section class="grid gap-3">
+					<section class="stack" data-space="xs">
 						<h3 class="text-title">Type</h3>
-						<ul class="grid gap-3">
+						<ul class="stack" data-space="xs">
 							{typeSteps.map(([role, label, name]) => {
 								const token = scale.find((step) => step.name === name);
 								return (
 									token && (
-										<li class="grid gap-1">
+										<li class="stack" data-space="3xs">
 											<p class={role} data-probe={name}>
 												{label}
 											</p>
@@ -142,16 +143,16 @@ const frames = [
 						</ul>
 					</section>
 
-					<section class="grid gap-3">
+					<section class="stack" data-space="xs">
 						<h3 class="text-title">Space</h3>
-						<ul class="grid gap-3">
+						<ul class="stack" data-space="xs">
 							{scale
 								.filter(({ name }) => name.startsWith("space-"))
 								.map((token) => (
-									<li class="grid gap-1">
+									<li class="stack" data-space="3xs">
 										<span
 											aria-hidden="true"
-											class="block h-2 bg-ink forced-ink"
+											class="probe bg-ink forced-ink"
 											style={`width: var(--${token.name})`}
 											data-probe={token.name}
 										/>
@@ -166,22 +167,20 @@ const frames = [
 				{schemes.map(({ scheme, style, swatches }) => (
 					<section
 						aria-labelledby={`scheme-${scheme}`}
-						class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-8 border border-dashed border-line bg-canvas p-4 text-fg"
+						class="box stack panel bg-canvas text-fg"
+						data-space="l"
 						style={style}
 					>
-						<h2 id={`scheme-${scheme}`} class="text-headline capitalize">
+						<h2 id={`scheme-${scheme}`} class="scheme-name text-headline">
 							{scheme}
 						</h2>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Tokens</h3>
-							<ul class="@container grid gap-2 text-sm">
+							<ul class="tokens stack text-sm" data-space="2xs">
 								{swatches.map(({ name, value, minimum, checks }) => (
 									<li class="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-2 @md:grid-cols-[1.5rem_minmax(0,1fr)_auto]">
-										<span
-											class="size-6 border border-dashed border-line"
-											style={`background-color: ${value}`}
-										/>
+										<span class="swatch" style={`background-color: ${value}`} />
 										<code class="truncate">--{name}</code>
 										<span class="col-start-2 grid grid-flow-col justify-start gap-3 text-xs tabular-nums @md:col-start-auto">
 											{checks.map(({ surface, ratio }) => (
@@ -201,7 +200,7 @@ const frames = [
 							</ul>
 						</section>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Type</h3>
 							{typeRoles.map(([role, label]) => (
 								<p class={role}>{label}</p>
@@ -213,9 +212,9 @@ const frames = [
 							<p class="text-fg-warning">Warning</p>
 						</section>
 
-						<section class="grid gap-3">
+						<section class="button-demos">
 							<h3 class="text-title">Buttons</h3>
-							<div class="grid grid-cols-[repeat(3,max-content)] justify-start gap-2 sm:grid-flow-col sm:grid-cols-none">
+							<div class="buttons">
 								<Button>Default</Button>
 								<Button aria-pressed="true">Pressed</Button>
 								<Button href="/brand/specimen" aria-current="page">
@@ -225,7 +224,7 @@ const frames = [
 								<Button disabled>Disabled</Button>
 								<Button href="/brand/specimen">Link</Button>
 							</div>
-							<div class="grid grid-flow-col items-center justify-start gap-4">
+							<div class="button-row">
 								<Button variant="quiet">Quiet</Button>
 								<Button variant="quiet" disabled>
 									Quiet disabled
@@ -236,9 +235,9 @@ const frames = [
 							</div>
 						</section>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Disclosure</h3>
-							<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+							<div class="heading-row">
 								<p class="label-caps">Members</p>
 								<DisclosureButton controls={`disclosure-${scheme}`}>
 									Add member
@@ -249,10 +248,10 @@ const frames = [
 								method="dialog"
 								aria-label="Add member"
 								hidden
-								class="grid grid-cols-1 gap-4 border border-dashed border-line p-4"
+								class="box stack panel"
 							>
 								<Field label="Email" type="email" />
-								<div class="grid grid-cols-[auto_auto] items-center justify-start gap-3">
+								<div class="pair">
 									<Button type="submit">Add member</Button>
 									<Button variant="quiet" data-disclosure-cancel>
 										Cancel
@@ -268,13 +267,13 @@ const frames = [
 							<p
 								id={`disclosure-row-${scheme}`}
 								hidden
-								class="border-t border-dashed border-line pt-4 text-sm text-fg-muted"
+								class="divided border-line text-sm text-fg-muted"
 							>
 								A row's corrections and quiet destructive actions.
 							</p>
 						</section>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Breadcrumbs</h3>
 							<Breadcrumbs
 								label={`Breadcrumb, ${scheme}`}
@@ -287,7 +286,7 @@ const frames = [
 							/>
 						</section>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Inputs</h3>
 							<Field label="Text" placeholder="Placeholder" />
 							<Field
@@ -317,9 +316,9 @@ const frames = [
 							<Checkbox checked>Checked</Checkbox>
 						</section>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Badges</h3>
-							<div class="grid justify-items-start gap-2">
+							<div class="badges stack" data-space="2xs">
 								<Badge type="info">Ready to start</Badge>
 								<Badge type="success">Accepted</Badge>
 								<Badge type="error">Overdue</Badge>
@@ -327,7 +326,7 @@ const frames = [
 							</div>
 						</section>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Progress</h3>
 							<Progress percent={40} aria-label="Within budget" />
 							<Progress
@@ -338,7 +337,7 @@ const frames = [
 							<Progress percent={120} aria-label="Over budget" />
 						</section>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Confirmation</h3>
 							<form method="dialog">
 								<ConfirmAction
@@ -380,7 +379,7 @@ const frames = [
 							</form>
 						</section>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Action feedback</h3>
 							{feedback.map((result) => (
 								<ActionBanner
@@ -390,21 +389,15 @@ const frames = [
 							))}
 						</section>
 
-						<section class="grid gap-3">
+						<section class="stack" data-space="xs">
 							<h3 class="text-title">Surfaces</h3>
-							<p class="border border-dashed border-line p-4 text-sm">
-								Dashed plane
-							</p>
-							<p class="border border-dashed border-line bg-panel p-4 text-sm">
-								Panel fill
-							</p>
-							<p class="border border-dashed border-line bg-info-subtle p-4 text-sm">
-								Info highlight
-							</p>
-							<p class="border border-dashed border-line-danger p-4 text-sm text-fg-danger">
+							<p class="box text-sm">Dashed plane</p>
+							<p class="box bg-panel text-sm">Panel fill</p>
+							<p class="box bg-info-subtle text-sm">Info highlight</p>
+							<p class="box border-line-danger text-sm text-fg-danger">
 								Danger outline
 							</p>
-							<a href="/brand/specimen" class="w-max text-sm text-fg-info link">
+							<a href="/brand/specimen" class="fit text-sm text-fg-info link">
 								Text link
 							</a>
 						</section>
@@ -412,7 +405,7 @@ const frames = [
 				))}
 				<section
 					aria-labelledby="layout"
-					class="layout box stack"
+					class="box stack full-row"
 					data-space="l"
 				>
 					<header class="stack" data-space="2xs">
@@ -824,9 +817,96 @@ const frames = [
 
 <style>
 	@layer page {
-		.layout {
+		.specimen {
+			display: grid;
+			gap: var(--space-m-l);
+			padding: var(--space-s-m);
+			text-wrap: pretty;
+		}
+		.column {
+			inline-size: 100%;
+			max-inline-size: var(--column-wide);
+			margin-inline: auto;
+		}
+		.intro {
+			padding-inline-start: var(--space-xs);
+		}
+		.sections {
+			@media (width >= 48rem) {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+		}
+		.panel {
+			grid-template-columns: minmax(0, 1fr);
+			min-inline-size: 0;
+		}
+		.full-row {
 			grid-column: 1 / -1;
 			min-inline-size: 0;
+		}
+		.scheme-name {
+			text-transform: capitalize;
+		}
+		.probe {
+			display: block;
+			block-size: 0.5rem;
+		}
+		.tokens {
+			container-type: inline-size;
+		}
+		.swatch {
+			inline-size: 1.5rem;
+			block-size: 1.5rem;
+			border: var(--rule) var(--line);
+		}
+		/* Not a stack: the row of six buttons is wider than a scheme column in a
+		   768px or 1024px window, and a stack's min-inline-size: 0 on its children
+		   would narrow the track they overflow today. */
+		.button-demos {
+			display: grid;
+			gap: var(--space-xs);
+		}
+		.buttons {
+			display: grid;
+			grid-template-columns: repeat(3, max-content);
+			justify-content: start;
+			gap: var(--space-2xs);
+
+			@media (width >= 40rem) {
+				grid-auto-flow: column;
+				grid-template-columns: none;
+			}
+		}
+		.button-row {
+			display: grid;
+			grid-auto-flow: column;
+			align-items: center;
+			justify-content: start;
+			gap: var(--space-s);
+		}
+		.heading-row {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: center;
+			gap: var(--space-xs);
+		}
+		.pair {
+			display: grid;
+			grid-template-columns: auto auto;
+			align-items: center;
+			justify-content: start;
+			gap: var(--space-xs);
+		}
+		.divided {
+			border-block-start-width: var(--hairline);
+			border-style: dashed;
+			padding-block-start: var(--space-s);
+		}
+		.badges {
+			justify-items: start;
+		}
+		.fit {
+			inline-size: max-content;
 		}
 		.frame {
 			inline-size: min(100%, 20rem);
