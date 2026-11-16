@@ -19,14 +19,14 @@ The differentiator is the engineering and advisory work itself: careful, durable
 ## Operating Context
 
 - Alexander operates the admin side solo: creating organizations, projects, phases, and invoices, moving work through phase and project transitions, and using view-as impersonation to verify what a client sees; while viewing as a client user, the admin acts as that user, not read-only.
-- Clients are organization members. Today the portal is read-only for them apart from account settings (profile, API keys): they check project state, phases, budget use, and invoice history between meetings and validate cost details.
+- Clients are organization members. Today the portal is read-only for them apart from their profile: they check project state, phases, budget use, and invoice history between meetings and validate cost details.
 - Stripe is the source of truth for invoices; the Stripe Data Pipeline writes them to the `stripe` schema and the app reads them live.
 - Client self-service write access is planned: an API over projects, phases, and invoices, plus CSV export. Future work should not assume the client portal stays read-only forever.
 - Runs on Cloudflare Workers with a PlanetScale Postgres database (Drizzle ORM); auth is Better Auth with the organization plugin.
 
 ## Capabilities and Constraints
 
-- Confirmed functionality: email/password auth with password reset, organizations with members and invitations, projects with phases, milestones, invoices, budget tracking, an event history, a changelog page, an admin area (organization, user, project, phase, and invoice management plus welcome-mail onboarding), API keys, search across clients, projects, phases and invoices (Ctrl+K), and rate limiting.
+- Confirmed functionality: email/password auth with password reset, organizations with members and invitations, projects with phases, milestones, invoices, budget tracking, an event history, a changelog page, an admin area (organization, user, project, phase, and invoice management plus welcome-mail onboarding), search across clients, projects, phases and invoices (Ctrl+K), and rate limiting.
 - Terminology: organization, project, phase, milestone, invoice, budget, event, transition. Use these words; do not introduce parallel terms for the same concepts.
 - Explicitly undecided: notification channels (mail, Slack, webhook) and the exact shape of the self-service API are roadmap items, not commitments.
 
