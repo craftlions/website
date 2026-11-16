@@ -164,28 +164,23 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 		deliveryUrl: "Delivery URL",
 	}}
 >
-	<header
-		slot="header"
-		class="grid gap-4 border-b border-dashed border-line pb-6"
-	>
-		<div class="grid gap-1">
+	<header slot="header" class="stack admin-masthead">
+		<div class="stack" data-space="3xs">
 			<p class="label-caps">Admin</p>
 			<PageHeading> Client workbench </PageHeading>
 		</div>
 	</header>
 
-	<section class="grid gap-3" aria-labelledby="summary-heading">
+	<section class="stack" data-space="xs" aria-labelledby="summary-heading">
 		<h2 id="summary-heading" class="label-caps"> Summary </h2>
-		<dl
-			class="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-x-8 gap-y-3"
-		>
-			<div class="grid min-w-0 content-start gap-1">
+		<dl class="admin-summary">
+			<div class="stack" data-space="3xs">
 				<dt class="label-caps">Your move</dt>
 				<dd class="text-title tabular-nums">
 					{worklist.filter((item) => item.actor === "admin").length}
 				</dd>
 			</div>
-			<div class="grid min-w-0 content-start gap-1">
+			<div class="stack" data-space="3xs">
 				<dt class="label-caps">Overdue</dt>
 				<dd
 					class:list={[
@@ -198,7 +193,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 					{sumByCurrency(openInvoices.filter((invoice) => invoice.overdue))}
 				</dd>
 			</div>
-			<div class="grid min-w-0 content-start gap-1">
+			<div class="stack" data-space="3xs">
 				<dt class="label-caps">Outstanding</dt>
 				<dd class="text-title tabular-nums wrap-break-word">
 					{sumByCurrency(openInvoices)}
@@ -207,9 +202,9 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 		</dl>
 	</section>
 
-	<section class="grid gap-3" aria-labelledby="worklist-heading">
+	<section class="stack" data-space="xs" aria-labelledby="worklist-heading">
 		<h2 id="worklist-heading" class="label-caps"> Worklist </h2>
-		<p class="max-w-prose text-sm text-fg-muted">
+		<p class="admin-intro text-sm text-fg-muted">
 			Phases that need a step from you or a client, and unpaid invoices across
 			all clients: overdue ones always, open ones only when their phase is not
 			listed.
@@ -217,9 +212,9 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 		<AdminWorklist items={worklist} />
 	</section>
 
-	<client-ledger class="grid">
-		<section class="grid gap-3" aria-labelledby="ledger-heading">
-			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+	<client-ledger>
+		<section class="stack" data-space="xs" aria-labelledby="ledger-heading">
+			<div class="admin-section-head">
 				<h2 id="ledger-heading" class="label-caps"> Client ledger </h2>
 				<DisclosureButton controls="onboard-client" open={isOnboardOpen}>
 					Onboard client
@@ -231,7 +226,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 				action={actions.onboardOrganization}
 				aria-label="Onboard client"
 				hidden={!isOnboardOpen}
-				class="grid grid-cols-1 gap-4 border border-dashed border-line p-4 md:grid-cols-2"
+				class="box admin-form"
 			>
 				<Field
 					label="Client name"
@@ -278,19 +273,17 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 					hint="Whole euros per calendar year, January to December. Leave empty for no budget."
 					result={onboardResult}
 				/>
-				<div
-					class="grid grid-cols-[auto_auto] items-center justify-start gap-3 md:col-span-2"
-				>
+				<div class="admin-form-actions">
 					<Button type="submit">Onboard client</Button>
 					<Button variant="quiet" data-disclosure-cancel> Cancel </Button>
 				</div>
 			</form>
-			<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+			<div class="stack ledger-toolbar" data-space="xs">
 				<p role="status" class="text-sm text-fg-muted" data-client-count>
 					{ledger.length} {ledger.length === 1 ? "client" : "clients"}
 				</p>
 				{ledger.length > 0 && (
-					<search class="sm:w-64">
+					<search>
 						<Field
 							label="Filter by name"
 							type="search"
@@ -302,39 +295,33 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 				)}
 			</div>
 			<section
-				class="overflow-x-auto border border-dashed border-line"
+				class="ledger"
 				// biome-ignore lint/a11y/noNoninteractiveTabindex: Safari cannot scroll it by keyboard unless it takes focus
 				tabindex="0"
 				aria-labelledby="ledger-heading"
 			>
-				<table class="w-full min-w-3xl text-sm">
+				<table class="text-sm">
 					<thead>
-						<tr class="border-b border-dashed border-line text-fg-muted">
-							<th scope="col" class="px-4 py-3 text-left label-caps">
-								Client
-							</th>
-							<th scope="col" class="px-4 py-3 text-right label-caps">
-								Your move
-							</th>
-							<th scope="col" class="px-4 py-3 text-right label-caps">
+						<tr class="text-fg-muted">
+							<th scope="col" class="label-caps"> Client </th>
+							<th scope="col" class="ledger-number label-caps"> Your move </th>
+							<th scope="col" class="ledger-number label-caps">
 								Waiting on client
 							</th>
-							<th scope="col" class="px-4 py-3 text-right label-caps">
+							<th scope="col" class="ledger-number label-caps">
 								Active projects
 							</th>
-							<th scope="col" class="px-4 py-3 text-left label-caps">
-								Budget used
-							</th>
-							<th scope="col" class="px-4 py-3 text-right label-caps">
+							<th scope="col" class="label-caps"> Budget used </th>
+							<th scope="col" class="ledger-number label-caps">
 								Outstanding
 							</th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-dashed divide-line">
+					<tbody>
 						{ledger.length > 0 ? (
 							ledger.map((client) => (
 								<tr data-client-name={client.name.toLocaleLowerCase("en")}>
-									<th scope="row" class="px-4 py-3 text-left wrap-break-word">
+									<th scope="row" class="wrap-break-word">
 										<a
 											href={`/admin/org/${client.id}`}
 											class:list={[
@@ -342,7 +329,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 												client.yourMove === 0 &&
 												client.waiting === 0 &&
 												client.openInvoices.length === 0
-													? "text-fg-muted hover:text-fg"
+													? "ledger-idle"
 													: "text-fg",
 											]}
 										>
@@ -351,25 +338,25 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 									</th>
 									<td
 										class:list={[
-											"px-4 py-3 text-right tabular-nums",
+											"ledger-number tabular-nums",
 											client.yourMove > 0 ? "text-fg" : "text-fg-muted",
 										]}
 									>
 										{client.yourMove}
 									</td>
-									<td class="px-4 py-3 text-right tabular-nums text-fg-muted">
+									<td class="ledger-number tabular-nums text-fg-muted">
 										{client.waiting}
 									</td>
-									<td class="px-4 py-3 text-right tabular-nums text-fg-muted">
+									<td class="ledger-number tabular-nums text-fg-muted">
 										{client.activeProjects} of {client.totalProjects}
 									</td>
-									<td class="px-4 py-3">
+									<td>
 										{client.budgetUsage === null ? (
 											<span class="text-fg-muted">No budget</span>
 										) : (
-											<span class="grid gap-1">
+											<span class="stack" data-space="3xs">
 												<Progress
-													class="w-24"
+													class="ledger-progress"
 													percent={client.budgetUsage}
 													aria-label={`Budget used by ${client.name}`}
 												/>
@@ -387,10 +374,10 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 											</span>
 										)}
 									</td>
-									<td class="px-4 py-3 text-right">
+									<td class="ledger-number">
 										<span
 											class:list={[
-												"block tabular-nums",
+												"tabular-nums",
 												client.openInvoices.length > 0
 													? "text-fg"
 													: "text-fg-muted",
@@ -399,7 +386,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 											{sumByCurrency(client.openInvoices)}
 										</span>
 										{client.openInvoices.some((invoice) => invoice.overdue) && (
-											<span class="block text-xs tabular-nums text-fg-danger">
+											<span class="text-xs tabular-nums text-fg-danger">
 												{sumByCurrency(
 													client.openInvoices.filter(
 														(invoice) => invoice.overdue,
@@ -413,31 +400,31 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 							))
 						) : (
 							<tr>
-								<td colspan="6" class="px-4 py-6 text-center text-fg-muted">
+								<td colspan="6" class="ledger-note text-fg-muted">
 									No clients yet. Onboard the first one above.
 								</td>
 							</tr>
 						)}
 						<tr hidden data-client-empty>
-							<td colspan="6" class="px-4 py-6 text-center text-fg-muted">
+							<td colspan="6" class="ledger-note text-fg-muted">
 								No client name contains the filter text.
 							</td>
 						</tr>
 					</tbody>
 					{ledger.length > 0 && (
 						<tfoot>
-							<tr class="border-t border-dashed border-line">
-								<th scope="row" class="px-4 py-3 text-left label-caps">
+							<tr>
+								<th scope="row" class="label-caps">
 									All clients
 								</th>
-								<td class="px-4 py-3 text-right tabular-nums">
+								<td class="ledger-number tabular-nums">
 									{worklist.filter((item) => item.actor === "admin").length}
 								</td>
-								<td class="px-4 py-3 text-right tabular-nums">
+								<td class="ledger-number tabular-nums">
 									{worklist.filter((item) => item.actor === "client").length}
 								</td>
-								<td class="px-4 py-3" colspan="2"></td>
-								<td class="px-4 py-3 text-right tabular-nums">
+								<td colspan="2"></td>
+								<td class="ledger-number tabular-nums">
 									{sumByCurrency(openInvoices)}
 								</td>
 							</tr>

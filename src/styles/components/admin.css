@@ -1,3 +1,137 @@
 @layer components {
-	/* Classes shared by the admin overview pages under src/pages/admin/; filled by conversion package S5f. */
+	/* The admin overview pages: src/pages/admin/index.astro and the client's
+	   overview, members, settings and worklist tabs under
+	   src/pages/admin/org/[id]. */
+
+	/* Shared by these pages. */
+
+	/* The page header above a rule. */
+	.admin-masthead {
+		border-block-end: var(--rule) var(--line);
+		padding-block-end: var(--space-m);
+	}
+
+	/* A section's lead paragraph keeps to the measure. */
+	.admin-intro {
+		max-inline-size: var(--measure);
+	}
+
+	/* A section heading with its action at the end of the row. */
+	.admin-section-head {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	/* A form's fields in one column, in two from 48rem. */
+	.admin-form {
+		display: grid;
+		grid-template-columns: repeat(1, minmax(0, 1fr));
+		gap: var(--space-s);
+
+		@media (width >= 48rem) {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	/* Submit and cancel side by side, across both columns of an admin form. */
+	.admin-form-actions {
+		display: grid;
+		grid-template-columns: auto auto;
+		align-items: center;
+		justify-content: start;
+		gap: var(--space-xs);
+
+		@media (width >= 48rem) {
+			grid-column: span 2 / span 2;
+		}
+	}
+
+	/* /admin: the summary figures, as many per row as fit at 10rem. */
+	.admin-summary {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+		gap: var(--space-xs) var(--space-l);
+
+		& > * {
+			min-inline-size: 0;
+		}
+	}
+
+	/* /admin: the client ledger, with its name filter. */
+	client-ledger {
+		display: grid;
+	}
+
+	/* The client count, and the filter beside it from 40rem. */
+	.ledger-toolbar {
+		@media (width >= 40rem) {
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: end;
+
+			& > search {
+				inline-size: 16rem;
+			}
+		}
+	}
+
+	/* The ledger table scrolls sideways inside its dashed line below 48rem. */
+	.ledger {
+		overflow-x: auto;
+		border: var(--rule) var(--line);
+
+		& > table {
+			inline-size: 100%;
+			min-inline-size: 48rem;
+		}
+
+		& thead > tr {
+			border-block-end: var(--rule) var(--line);
+		}
+
+		& tbody > :not(:last-child) {
+			border-block-end: var(--rule) var(--line);
+		}
+
+		& tfoot > tr {
+			border-block-start: var(--rule) var(--line);
+		}
+
+		& :where(th, td) {
+			padding: var(--space-xs) var(--space-s);
+			text-align: start;
+		}
+	}
+
+	/* A figure column: right-aligned, and the outstanding total above its
+	   overdue part. */
+	.ledger-number {
+		text-align: end;
+
+		& > span {
+			display: block;
+		}
+	}
+
+	/* A row that holds only a note across the table. */
+	.ledger-note {
+		padding-block: var(--space-m);
+		text-align: center;
+	}
+
+	/* A client with nothing open: muted until hovered. */
+	.ledger-idle {
+		color: var(--fg-muted);
+
+		@media (hover: hover) {
+			&:hover {
+				color: var(--fg);
+			}
+		}
+	}
+
+	.ledger-progress {
+		inline-size: 6rem;
+	}
 }
