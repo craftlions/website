@@ -71,6 +71,36 @@
 	--text-caption: var(--step--2);
 	--text-caption--line-height: calc(1 / 0.75);
 	--text-caption--font-weight: 600;
+
+	/* Space on the step scale (DESIGN.md#1-overview). Padding, margin, gap and
+	   scroll margin read their own keys before --spacing, so these move every
+	   used step onto a token while sizes (size-*, w-*, h-*, inset) keep
+	   --spacing and controls keep their size. 2px and 6px snap to 4px and 8px,
+	   gap-5 to s; padding-5 (list indent) and padding-2.5 (badge) stay fixed. */
+	--padding-0\.5: var(--space-3xs);
+	--padding-1: var(--space-3xs);
+	--padding-2: var(--space-2xs);
+	--padding-3: var(--space-xs);
+	--padding-4: var(--space-s);
+	--padding-6: var(--space-m);
+	--padding-gutter: var(--space-s-m);
+	--margin-1: var(--space-3xs);
+	--margin-2: var(--space-2xs);
+	--margin-3: var(--space-xs);
+	--margin-6: var(--space-m);
+	--gap-0\.5: var(--space-3xs);
+	--gap-1: var(--space-3xs);
+	--gap-1\.5: var(--space-2xs);
+	--gap-2: var(--space-2xs);
+	--gap-3: var(--space-xs);
+	--gap-4: var(--space-s);
+	--gap-5: var(--space-s);
+	--gap-6: var(--space-m);
+	--gap-8: var(--space-l);
+	--gap-12: var(--space-xl);
+	--gap-region: var(--space-m-l);
+	--scroll-margin-6: var(--space-m);
+	--scroll-margin-20: var(--space-2xl);
 }
 
 /* Forced colors (Windows High Contrast) repaint every background as Canvas and

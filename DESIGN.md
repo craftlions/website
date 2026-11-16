@@ -192,7 +192,7 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 
 **Layout:** Public pages and the settings area stay compact and single-column at a `max-w-3xl` container with a `pl-3` left gutter. The authenticated dashboard widens to `max-w-6xl`. Client pages render through `ClientShell` (navigation, breadcrumbs, a `header` slot, footer), the way admin pages use `AdminShell`; an organization's pages render through `ClientOrgShell`, which adds the organization heading and its section tabs (Overview, Invoices, Spend by year). The overview puts the full-width Worklist first, then a two-column grid at `lg` and up: Projects in a wide leading column (`2fr`) and Budget in a narrow one (`1fr`). Below `lg` they stack in that order.
 
-**Spacing:** one scale: 4, 6, 8, 12, 16, 24 and 48px (`1`, `1.5`, `2`, `3`, `4`, `6` and `12` in Tailwind steps). 8px is the gap inside a control and between grouped controls (a Button's icon and label, a row of buttons, a checkbox and its label) and the vertical padding of an input.
+**Spacing:** one step scale, the `--space-*` tokens that `scripts/fluid-scale.js` generates. `3xs` 4px, `2xs` 8px and `xs` 12px are static and sit inside controls and between tight pairs; `s` (14→18px), `m` (21→27px), `l` (28→36px), `xl` (42→54px) and `2xl` (56→72px) grow with the viewport from 320px to 1280px, and the pairs `s-m` (the page gutter, `p-gutter`, 14→27px) and `m-l` (the gap between header, main and footer, `gap-region`, 21→36px) grow from one step to the next. The Tailwind steps map onto them in `src/styles/global.css`: `1` and `0.5` are `3xs`, `1.5` and `2` are `2xs`, `3` is `xs`, `4` and `gap-5` are `s`, `6` is `m`, `8` is `l`, `12` is `xl` and `scroll-mt-20` is `2xl`; widths, heights and sizes keep their fixed steps, so controls do not change, and so do the list indent `pl-5` and the badge's `px-2.5`. 8px is the gap inside a control and between grouped controls (a Button's icon and label, a row of buttons, a checkbox and its label) and the vertical padding of an input.
 
 ## 2. Colors
 
@@ -396,7 +396,7 @@ Containers are simple line planes.
 - **Background:** transparent on the page surface.
 - **Shadow Strategy:** no shadows; see Elevation.
 - **Border:** 1px dashed neutral border for panels, empty states, tables, and legal information blocks.
-- **Internal Padding:** 16px for panels and empty states; 12-16px table cells.
+- **Internal Padding:** `s` (14→18px) for panels and empty states; table cells `xs` (12px) by `s`.
 
 ### Inputs / Fields
 
@@ -445,7 +445,7 @@ Navigation is a responsive grid with the logo on the left and compact session li
 Tables are the main product surface for project, phase, invoice, and budget data.
 
 - **Structure:** full-width tables with dashed outer borders and dashed row dividers.
-- **Density:** compact but readable cells (12-16px vertical rhythm).
+- **Density:** compact but readable cells (12px vertical rhythm, `s` horizontal).
 - **Headers:** semibold uppercase labels using the `label-caps` class.
 - **Rows:** hover fills are neutral and subtle; status is shown through badges. Row headers and amounts are body text in `text-fg` (see The Two Weights Rule).
 - **Overflow:** horizontal overflow is acceptable for dense data; do not crush columns until labels become ambiguous. The scrolling wrapper is a `<section tabindex="0">` named by its section heading (`aria-labelledby`), so keyboard users can reach and scroll it in every browser.
