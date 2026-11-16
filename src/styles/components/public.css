@@ -72,5 +72,26 @@
 		& .timeline {
 			display: grid;
 		}
+
+		/* The sign-in forms. A fieldset groups fields without a frame. */
+		& fieldset {
+			border-style: none;
+		}
+		& .password-extras {
+			display: grid;
+			grid-template-columns: auto auto;
+			justify-content: space-between;
+			gap: var(--space-xs);
+		}
+		& .request {
+			display: grid;
+		}
+		/* The live region takes its space only once it has something to say. */
+		& .form-message:not(:empty) {
+			margin-block-start: var(--space-m);
+		}
+		& .auth-link {
+			justify-self: start;
+		}
 	}
 }

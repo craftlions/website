@@ -24,22 +24,21 @@ if (session) {
 <Shell>
 	<Fragment slot="head"> <title>craftlions | Login</title> </Fragment>
 	<Fragment slot="body">
-		<body
-			class="min-h-dvh grid grid-rows-[auto_1fr_auto] gap-12 p-gutter text-pretty"
-		>
-			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+		<body class="public" data-variant="auth">
+			<header class="stack center" data-space="m">
 				<Nav variant="marketing" />
 			</header>
 
-			<main class="w-full grid content-start min-h-0 max-w-lg mx-auto gap-6">
+			<main class="stack center" data-width="narrow" data-space="m">
 				<PageHeading> Sign in </PageHeading>
 				<form
 					id="login-form"
-					class="grid gap-6"
+					class="stack"
+					data-space="m"
 					data-return-to={returnTo}
 					aria-label="Sign in form"
 				>
-					<fieldset class="grid gap-4 border-none p-0 m-0">
+					<fieldset class="stack">
 						<Field
 							label="Email address"
 							type="email"
@@ -51,7 +50,7 @@ if (session) {
 							placeholder="you@example.com"
 						/>
 
-						<div class="grid gap-1.5">
+						<div class="stack" data-space="2xs">
 							<Field
 								label="Password"
 								type="password"
@@ -61,7 +60,7 @@ if (session) {
 								required
 								placeholder="••••••••"
 							/>
-							<div class="grid grid-cols-[auto_auto] justify-between gap-3">
+							<div class="password-extras">
 								<PasswordToggle controls="password" />
 								<a href="/forgot-password" class="text-sm text-fg-info link">
 									Forgot password?
