@@ -8,7 +8,7 @@
 		-moz-osx-font-smoothing: grayscale;
 	}
 
-	/* Like headings after preflight, table cells take their weight from a role,
+	/* Like headings after the reset, table cells take their weight from a role,
 	   not from the browser's bold th. */
 	th {
 		font-weight: inherit;
