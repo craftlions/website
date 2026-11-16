@@ -156,9 +156,9 @@ const setupGaps = [
 			<h2 id="setup-heading" class="label-caps">
 				Setup
 			</h2>
-			<ul class="admin-list org-setup">
+			<ul class="admin-list">
 				{setupGaps.map((gap) => (
-					<li class="stack" data-space="2xs">
+					<li class="with-sidebar" data-side="end" data-align="center">
 						<p class="text-sm wrap-break-word">{gap.text}</p>
 						<Button href={gap.href} variant="quiet">
 							{gap.action}
@@ -190,7 +190,11 @@ const setupGaps = [
 			id="overview-worklist"
 		/>
 	</section>
-	<div class="stack org-columns org-overview" data-space="m">
+	<div
+		class="with-sidebar org-overview"
+		data-align="start"
+		style="--sidebar-width: 20rem; --content-min: 60%; --sidebar-space: var(--space-m)"
+	>
 		<div class="stack" data-space="m">
 			<section class="stack" data-space="xs" aria-labelledby="money-heading">
 				<h2 id="money-heading" class="label-caps"> Money </h2>

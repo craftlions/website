@@ -105,24 +105,6 @@
 		min-inline-size: 0;
 	}
 
-	/* The setup steps still missing, each with its action beside it from
-	   40rem. */
-	.org-setup > li {
-		@media (width >= 40rem) {
-			grid-template-columns: minmax(0, 1fr) auto;
-			align-items: center;
-			gap: var(--space-m);
-		}
-	}
-
-	/* Money and spend beside the current projects from 64rem, one to two. */
-	.org-columns {
-		@media (width >= 64rem) {
-			grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-			align-items: start;
-		}
-	}
-
 	/* The money figures, each above a rule. */
 	.org-money {
 		display: grid;
