@@ -204,7 +204,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 
 	<section class="stack" data-space="xs" aria-labelledby="worklist-heading">
 		<h2 id="worklist-heading" class="label-caps"> Worklist </h2>
-		<p class="admin-intro text-sm text-fg-muted">
+		<p class="measure text-sm text-fg-muted">
 			Phases that need a step from you or a client, and unpaid invoices across
 			all clients: overdue ones always, open ones only when their phase is not
 			listed.
@@ -329,7 +329,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 												client.yourMove === 0 &&
 												client.waiting === 0 &&
 												client.openInvoices.length === 0
-													? "ledger-idle"
+													? "text-fg-muted hover-text-fg"
 													: "text-fg",
 											]}
 										>

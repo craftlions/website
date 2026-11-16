@@ -11,11 +11,6 @@
 		padding-block-end: var(--space-m);
 	}
 
-	/* A section's lead paragraph keeps to the measure. */
-	.admin-intro {
-		max-inline-size: var(--measure);
-	}
-
 	/* A form's fields in one column, in two from 48rem. */
 	.admin-form {
 		display: grid;
@@ -141,17 +136,6 @@
 	.ledger-note {
 		padding-block: var(--space-m);
 		text-align: center;
-	}
-
-	/* A client with nothing open: muted until hovered. */
-	.ledger-idle {
-		color: var(--fg-muted);
-
-		@media (hover: hover) {
-			&:hover {
-				color: var(--fg);
-			}
-		}
 	}
 
 	.ledger-progress {

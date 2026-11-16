@@ -47,16 +47,9 @@
 			align-items: center;
 			gap: var(--space-2xs);
 		}
-		/* The date links to its entry, muted until the pointer is on it. */
+		/* The date links to its entry. */
 		& .date {
 			inline-size: max-content;
-			color: var(--fg-muted);
-
-			@media (hover: hover) {
-				&:hover {
-					color: var(--fg);
-				}
-			}
 		}
 		& .point {
 			display: grid;

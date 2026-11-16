@@ -155,7 +155,21 @@
 		outline-color: var(--fill-info);
 	}
 
+	/* A link that can rest in muted text, its own or a muted row's, turns
+	   primary under the pointer (DESIGN.md#links). */
+	.hover-text-fg {
+		@media (hover: hover) {
+			&:hover {
+				color: var(--fg);
+			}
+		}
+	}
+
 	/* Helpers. */
+	/* Prose no wider than its longest comfortable line. */
+	.measure {
+		max-inline-size: var(--measure);
+	}
 	.tabular-nums {
 		font-variant-numeric: tabular-nums;
 	}

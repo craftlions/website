@@ -59,13 +59,6 @@
 		& :is(th, td):nth-child(3) {
 			text-align: end;
 		}
-		& tbody th a {
-			@media (hover: hover) {
-				&:hover {
-					color: var(--fg);
-				}
-			}
-		}
 	}
 
 	/* After the table's cells, which it overrides. */

@@ -13,13 +13,5 @@
 		& span[aria-current="page"] {
 			color: var(--fg);
 		}
-
-		& a {
-			@media (hover: hover) {
-				&:hover {
-					color: var(--fg);
-				}
-			}
-		}
 	}
 }

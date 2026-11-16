@@ -72,7 +72,10 @@ const submitLabel = mode === "record" ? recordDeliveryLabel : "Update delivery";
 			data-delivery-url
 		/>
 		{mode === "record" && (
-			<p id={`delivery-${phase.id}-consequence`} class="text-sm text-fg-muted">
+			<p
+				id={`delivery-${phase.id}-consequence`}
+				class="measure text-sm text-fg-muted"
+			>
 				The phase moves to Awaiting acceptance for good and any Delivery amount
 				becomes due for invoicing. The delivery details stay correctable.
 			</p>

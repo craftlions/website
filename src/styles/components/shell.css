@@ -7,7 +7,6 @@
 		grid-template-rows: auto 1fr auto;
 		gap: var(--space-m-l);
 		padding: var(--space-s-m);
-		text-wrap: pretty;
 
 		&:has(> .impersonation) {
 			grid-template-rows: auto auto 1fr auto;

@@ -15,19 +15,9 @@
 		& > a > svg {
 			inline-size: 4rem;
 		}
-		& > div {
-			max-inline-size: var(--measure);
-		}
 		& > nav {
 			display: grid;
 			justify-self: start;
-		}
-		& .link {
-			@media (hover: hover) {
-				&:hover {
-					color: var(--fg);
-				}
-			}
 		}
 		& > p {
 			padding-block-start: var(--space-s);

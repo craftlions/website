@@ -1,9 +1,12 @@
 /* Element defaults, after the reset and before any class. */
 @layer base {
-	/* Every page sits on the canvas in primary text; layout stays per page. */
+	/* Every page sits on the canvas in primary text, its prose wrapped to
+	   avoid short last lines where the browser supports it; layout stays per
+	   page. */
 	body {
 		background-color: var(--canvas);
 		color: var(--fg);
+		text-wrap: pretty;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
 	}
@@ -15,7 +18,7 @@
 	}
 
 	/* Headings break into lines of even length where the browser supports it;
-	   elsewhere they wrap as before. Prose is pretty from each body's class. */
+	   elsewhere they wrap as before. */
 	h1,
 	h2,
 	h3 {
