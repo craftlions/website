@@ -16,22 +16,22 @@
 	--line-strong: light-dark(#a3a3a3, #525252);
 	--line-control: light-dark(#737373, #737373);
 	--line-active: light-dark(#525252, #d4d4d4);
-	--line-danger: light-dark(#ef4444, #b91c1c);
+	--line-danger: light-dark(#ef4444, #dc2626);
 	--line-success: light-dark(#34d399, #047857);
 	--line-info: light-dark(#7dd3fc, #0369a1);
 
 	--fill-danger: light-dark(#b91c1c, #f87171);
-	--fill-success: light-dark(#10b981, #34d399);
-	--fill-info: light-dark(#0ea5e9, #38bdf8);
+	--fill-success: light-dark(#059669, #34d399);
+	--fill-info: light-dark(#0284c7, #38bdf8);
 	--info-subtle: light-dark(#e0f2fe99, #082f4980);
 
 	--focus: light-dark(#404040, #d4d4d4);
 
 	--chart-1: light-dark(#1d4ed8b3, #93c5fdcc);
-	--chart-2: light-dark(#0e7490b3, #67e8f9cc);
-	--chart-3: light-dark(#c2410cb3, #fdba74cc);
+	--chart-2: light-dark(#155e75b3, #67e8f9cc);
+	--chart-3: light-dark(#9a3412b3, #fdba74cc);
 	--chart-4: light-dark(#be185db3, #f9a8d4cc);
 	--chart-5: light-dark(#6d28d9b3, #c4b5fdcc);
-	--chart-6: light-dark(#047857b3, #6ee7b7cc);
-	--chart-unassigned: light-dark(#7373738c, #a3a3a38c);
+	--chart-6: light-dark(#065f46b3, #6ee7b7cc);
+	--chart-unassigned: light-dark(#525252b3, #a3a3a3cc);
 }
