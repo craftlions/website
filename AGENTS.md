@@ -16,7 +16,7 @@ aubx astro sync
 - Never start `astro dev` (`aubr dev`, `mise run dev`): the dev server is the owner's and runs against real data. Assume none is running; `aubr a11y` and `aubr design:test` build and serve their own preview on port 4322.
 - For analysis-only requests, do not modify files, branches, staging, or commits.
 - Style with inline Tailwind utility classes built on the role tokens in `DESIGN.md` while the site moves to native CSS. Standalone CSS lives in `src/styles/`: `global.css` declares the layer order (`theme, reset, tokens, base, layout, components, utilities`; Tailwind's theme and utilities fill `theme` and `utilities` until it is removed) and imports the other files, each inside one layer: `reset.css` replaces Tailwind's Preflight, `tokens.css` holds the tokens and `base.css` the element defaults. Avoid `<style>` blocks in components.
-- Use CSS grid, never flexbox.
+- Lay out with CSS grid where grid and flexbox behave the same, to match the existing layouts; use flexbox where it behaves better, such as a row whose items wrap at their own widths.
 - Keep markup minimal and semantic.
 - Prefer accessing values directly where they are used instead of creating one-off aliases or derived variables. Add variables only when reused, needed for type narrowing, or when they remove real complexity.
 - Use Drizzle Relational Query Builder v2 (`db.query.*`) for reads when relations or simple table lookups are involved.

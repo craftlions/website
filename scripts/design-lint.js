@@ -72,14 +72,6 @@ const rules = [
 		doc: "DESIGN.md#5-components",
 	},
 	{
-		id: "flexbox",
-		pattern:
-			/(?<![\w-])(?:inline-)?flex(?:-[a-z0-9/]+)*(?:-\[[^\]]*\])?(?![\w-])/g,
-		classOnly: true,
-		use: "grid or inline-grid",
-		doc: "AGENTS.md",
-	},
-	{
 		id: "raw-button",
 		pattern: /<button\b/g,
 		use: '<Button>, with variant="quiet" or variant="hint" for smaller actions',
@@ -145,7 +137,7 @@ const rules = [
 	},
 ];
 
-// Shadow, rounded and flex are also ordinary words, so those rules skip free text.
+// Shadow and rounded are also ordinary words, so those rules skip free text.
 const classText = (line) =>
 	(line.match(/"[^"]*"|'[^']*'|`[^`]*`|@apply .*/g) ?? []).join(" ");
 

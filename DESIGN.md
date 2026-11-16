@@ -186,7 +186,7 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 
 - Neutral light and dark surfaces with a small set of semantic state colors.
 - Dashed borders as the primary structural material.
-- Grid-based layouts with a wide two-column dashboard; public surfaces stay compact single-column.
+- Grid layouts, and flexbox where it behaves better, with a wide two-column dashboard; public surfaces stay compact single-column.
 - System sans typography with clear weights instead of display styling.
 - Flat components with visible focus, hover, disabled, and loading states.
 
@@ -466,7 +466,7 @@ Progress is used for budget state and remains literal.
 
 ### Do:
 
-- **Do** use inline Tailwind utilities built on role tokens, and grid layouts, to match the existing project conventions.
+- **Do** use inline Tailwind utilities built on role tokens to match the existing project conventions, and lay out with grid where grid and flexbox behave the same; flexbox is fine where it behaves better, such as items that wrap at their own widths.
 - **Do** use 1px dashed neutral borders for structure, panels, tables, inputs, empty states, and buttons.
 - **Do** keep product data exact, scannable, and close to its label.
 - **Do** use neutral hover fills and visible focus outlines on interactive controls.
