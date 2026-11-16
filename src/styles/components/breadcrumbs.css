@@ -1,3 +1,25 @@
 @layer components {
-	/* src/components/Breadcrumbs.astro; filled by conversion package S5a. */
+	/* src/components/Breadcrumbs.astro: one wrapping line of muted links,
+	   separated by slashes, ending on the current page in primary text. */
+	.crumbs {
+		& > li {
+			display: inline;
+		}
+
+		& [aria-hidden="true"] {
+			padding-inline: var(--space-2xs);
+		}
+
+		& span[aria-current="page"] {
+			color: var(--fg);
+		}
+
+		& a {
+			@media (hover: hover) {
+				&:hover {
+					color: var(--fg);
+				}
+			}
+		}
+	}
 }
