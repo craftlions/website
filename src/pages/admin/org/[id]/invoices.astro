@@ -219,12 +219,13 @@ const attachBlocker = (invoice: { currency: string }) => {
 	results={[[attachResult, "Invoice attached to its cost part."]]}
 	fieldLabels={{ stripeId: "Stripe invoice", target: "Attach to" }}
 >
-	<section aria-labelledby="summary-heading" class="grid gap-3">
+	<section aria-labelledby="summary-heading" class="stack" data-space="xs">
 		<h2 id="summary-heading" class="label-caps"> Summary </h2>
 		<dl
-			class="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-x-8 gap-y-3"
+			class="auto-grid"
+			style="--grid-min: 10rem; --grid-space: var(--space-xs) var(--space-l)"
 		>
-			<div class="grid min-w-0 gap-1">
+			<div class="invoice-metric">
 				<dt class="label-caps">Outstanding</dt>
 				<dd class="text-title tabular-nums wrap-break-word">
 					{sumByCurrency(
@@ -238,7 +239,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 					)}
 				</dd>
 			</div>
-			<div class="grid min-w-0 gap-1">
+			<div class="invoice-metric">
 				<dt class="label-caps">Overdue</dt>
 				<dd
 					class:list={[
@@ -259,7 +260,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 					)}
 				</dd>
 			</div>
-			<div class="grid min-w-0 gap-1">
+			<div class="invoice-metric">
 				<dt class="label-caps">To invoice</dt>
 				<dd class="text-title tabular-nums wrap-break-word">
 					{sumByCurrency(
@@ -273,9 +274,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 			</div>
 		</dl>
 		<nav aria-label="On this page">
-			<ul
-				class="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-6 gap-y-2"
-			>
+			<ul class="invoices-toc">
 				<li>
 					<Button href="#to-invoice" variant="quiet">
 						To invoice ({dueParts.length})
@@ -298,17 +297,18 @@ const attachBlocker = (invoice: { currency: string }) => {
 	<section
 		id="to-invoice"
 		aria-labelledby="to-invoice-heading"
-		class="grid scroll-mt-20 gap-3"
+		class="stack invoices-section"
+		data-space="xs"
 	>
 		<h2 id="to-invoice-heading" class="label-caps">
 			To invoice ({dueParts.length})
 		</h2>
-		<p class="max-w-prose text-sm text-fg-muted">
+		<p class="projects-note text-sm text-fg-muted">
 			Cost parts that are due and have no invoice yet. Create the invoice in
 			Stripe, then attach it under To attach.
 		</p>
 		{!organizationData?.stripeCustomerId && (
-			<div class="grid gap-3 border border-dashed border-line p-4 text-sm">
+			<div class="box stack text-sm" style="--stack-space: var(--space-xs)">
 				<p>
 					No Stripe customer linked.{" "}
 					<span class="text-fg-muted">
@@ -322,12 +322,12 @@ const attachBlocker = (invoice: { currency: string }) => {
 			</div>
 		)}
 		{dueParts.length > 0 ? (
-			<ul class="grid divide-y divide-dashed divide-line border border-dashed border-line">
+			<ul class="invoice-list">
 				{dueParts.map((part) => (
-					<li class="grid gap-x-6 gap-y-2 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
-						<div class="grid min-w-0 gap-1">
+					<li class="due-row">
+						<div class="stack" data-space="3xs">
 							<a
-								class="w-fit max-w-full link wrap-break-word"
+								class="link wrap-break-word"
 								href={phaseHref(part.project, part.phase)}
 							>
 								{part.project.name} · {part.phase.title}
@@ -337,7 +337,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 								{phaseStatus[part.phase.state].label}
 							</p>
 						</div>
-						<p class="tabular-nums sm:text-right">
+						<p class="tabular-nums">
 							{formatMoney(part.amount, part.phase.currency)}
 						</p>
 						{organizationData?.stripeCustomerId && (
@@ -354,7 +354,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 				))}
 			</ul>
 		) : (
-			<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+			<p class="box text-sm text-fg-muted">
 				Nothing to invoice. Cost parts appear here once their phase makes them
 				due.
 			</p>
@@ -364,16 +364,17 @@ const attachBlocker = (invoice: { currency: string }) => {
 	<section
 		id="to-attach"
 		aria-labelledby="to-attach-heading"
-		class="grid scroll-mt-20 gap-3"
+		class="stack invoices-section"
+		data-space="xs"
 	>
 		<h2 id="to-attach-heading" class="label-caps">
 			To attach ({unattachedInvoices.length})
 		</h2>
-		<p class="max-w-prose text-sm text-fg-muted">
+		<p class="projects-note text-sm text-fg-muted">
 			Stripe invoices for this client that are not linked to a cost part yet.
 		</p>
 		{unattachedInvoices.length > 0 ? (
-			<ul class="grid divide-y divide-dashed divide-line border border-dashed border-line">
+			<ul class="invoice-list">
 				{unattachedInvoices.map((invoice) => {
 					const status = invoiceStatus(invoice, now);
 					const options = dueParts.filter(
@@ -397,11 +398,8 @@ const attachBlocker = (invoice: { currency: string }) => {
 							part.component === pickedComponent,
 					);
 					return (
-						<li
-							id={`invoice-${invoice.id}`}
-							class="grid scroll-mt-20 gap-x-6 gap-y-3 p-4 target:bg-info-subtle target:outline-2 target:-outline-offset-2 target:outline-dashed target:outline-fill-info/70 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:items-start"
-						>
-							<div class="grid min-w-0 justify-items-start gap-1">
+						<li id={`invoice-${invoice.id}`} class="attach-row">
+							<div class="stack" data-space="3xs">
 								<p class="label-caps">
 									Invoice{" "}
 									<a
@@ -431,7 +429,8 @@ const attachBlocker = (invoice: { currency: string }) => {
 								<form
 									method="POST"
 									action={actions.attachInvoiceToPhase}
-									class="grid min-w-0 gap-2"
+									class="stack"
+									data-space="2xs"
 								>
 									<input type="hidden" name="stripeId" value={invoice.id} />
 									<Field
@@ -445,7 +444,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 												? attachResult
 												: undefined
 										}
-										class="min-w-0 [&_select]:w-full [&_select]:min-w-0"
+										class="attach-field"
 									>
 										{projects.map((project) => {
 											const group = options.filter(
@@ -485,7 +484,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 									</ConfirmAction>
 								</form>
 							) : (
-								<p class="min-w-0 text-sm text-fg-muted wrap-break-word">
+								<p class="text-sm text-fg-muted wrap-break-word">
 									<span class="text-fg">Cannot attach yet.</span>{" "}
 									{attachBlocker(invoice)}
 								</p>
@@ -495,7 +494,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 				})}
 			</ul>
 		) : (
-			<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+			<p class="box text-sm text-fg-muted">
 				Every Stripe invoice for this client is attached.
 			</p>
 		)}
@@ -504,12 +503,13 @@ const attachBlocker = (invoice: { currency: string }) => {
 	<section
 		id="invoices"
 		aria-labelledby="invoices-heading"
-		class="grid scroll-mt-20 gap-3"
+		class="stack invoices-section"
+		data-space="xs"
 	>
 		<h2 id="invoices-heading" class="label-caps">
 			Invoices ({recorded.length})
 		</h2>
-		<p class="max-w-prose text-sm text-fg-muted">
+		<p class="projects-note text-sm text-fg-muted">
 			Invoices attached to a cost part, overdue first.
 		</p>
 		{unavailableCount > 0 && (
@@ -520,11 +520,8 @@ const attachBlocker = (invoice: { currency: string }) => {
 			</p>
 		)}
 		{recorded.length > 0 ? (
-			<admin-invoice-list class="grid gap-3">
-				<nav
-					aria-label="Filter invoices"
-					class="grid grid-flow-col justify-start gap-2"
-				>
+			<admin-invoice-list class="stack" data-space="xs">
+				<nav aria-label="Filter invoices" class="invoice-filter">
 					<Button type="button" data-invoice-filter="all" aria-pressed="true">
 						All
 					</Button>
@@ -539,13 +536,14 @@ const attachBlocker = (invoice: { currency: string }) => {
 					{recorded.length} of {recorded.length}{" "}
 					{recorded.length === 1 ? "invoice" : "invoices"} shown
 				</p>
-				<ul class="grid gap-3">
+				<ul class="stack" data-space="xs">
 					{recorded.map((row) => {
 						const status = invoiceStatus(row.invoice, now);
 						return (
 							<li
 								id={`invoice-${row.invoice.id}`}
-								class="grid scroll-mt-20 gap-3 border border-dashed border-line p-4 target:bg-info-subtle target:outline-2 target:-outline-offset-2 target:outline-dashed target:outline-fill-info/70"
+								class="box stack invoice-card"
+								style="--stack-space: var(--space-xs)"
 								data-invoice-item
 								data-category={
 									row.invoice.status === "open" || row.invoice.status === "paid"
@@ -553,7 +551,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 										: "other"
 								}
 							>
-								<div class="grid min-w-0 gap-1">
+								<div class="stack" data-space="3xs">
 									<p class="label-caps">
 										Invoice{" "}
 										<a
@@ -575,10 +573,10 @@ const attachBlocker = (invoice: { currency: string }) => {
 										</p>
 									)}
 								</div>
-								<dl class="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-									<div class="grid min-w-0 content-start gap-1">
+								<dl class="invoice-facts text-sm">
+									<div class="stack" data-space="3xs">
 										<dt class="label-caps">Status</dt>
-										<dd class="grid justify-items-start gap-1">
+										<dd class="stack invoice-status" data-space="3xs">
 											<Badge type={status.badge}>{status.label}</Badge>
 											<span
 												class={
@@ -589,7 +587,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 											</span>
 										</dd>
 									</div>
-									<div class="grid min-w-0 content-start gap-1">
+									<div class="stack" data-space="3xs">
 										<dt class="label-caps">Phase</dt>
 										<dd class="wrap-break-word">
 											<a class="link" href={phaseHref(row.project, row.phase)}>
@@ -597,11 +595,11 @@ const attachBlocker = (invoice: { currency: string }) => {
 											</a>
 										</dd>
 									</div>
-									<div class="grid min-w-0 content-start gap-1">
+									<div class="stack" data-space="3xs">
 										<dt class="label-caps">Cost part</dt>
 										<dd>{costPartLabel[row.component]}</dd>
 									</div>
-									<div class="grid min-w-0 content-start gap-1">
+									<div class="stack" data-space="3xs">
 										<dt class="label-caps">Payment</dt>
 										<dd>
 											{row.invoice.paymentPage ? (
@@ -624,16 +622,12 @@ const attachBlocker = (invoice: { currency: string }) => {
 						);
 					})}
 				</ul>
-				<p
-					class="border border-dashed border-line p-4 text-sm text-fg-muted"
-					data-invoice-empty
-					hidden
-				>
+				<p class="box text-sm text-fg-muted" data-invoice-empty hidden>
 					No invoices match this filter.
 				</p>
 			</admin-invoice-list>
 		) : (
-			<div class="grid gap-3 border border-dashed border-line p-4 text-sm">
+			<div class="box stack text-sm" style="--stack-space: var(--space-xs)">
 				<p class="text-fg-muted">
 					{parts.length === 0
 						? "No priced phases yet. Add a priced phase to a project to start billing."

@@ -25,9 +25,11 @@
 		gap: var(--space-xs);
 	}
 
-	/* The row the last action came from or a deep-linked row (data-highlight,
-	   set by the project page's script): a tint plus a dashed outline, so the
-	   cue is not color alone. */
+	/* A deep-linked row (:target) or the row the last action came from
+	   (data-highlight, set by the project page's script): a tint plus a
+	   dashed outline, so the cue is not color alone. */
+	.attach-row:target,
+	.invoice-card:target,
 	.phase-row[data-highlight] {
 		outline: 2px dashed color-mix(in oklab, var(--fill-info) 70%, transparent);
 		outline-offset: -2px;
@@ -277,6 +279,126 @@
 	}
 
 	.phase-split-form {
+		justify-items: start;
+	}
+
+	/* Invoices: a summary figure. Its label and value share the height of the
+	   tallest figure in the row, as a stack's would not. */
+	.invoice-metric {
+		display: grid;
+		gap: var(--space-3xs);
+	}
+
+	/* The page index and the three sections. */
+	.invoices-toc {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+		gap: var(--space-2xs) var(--space-m);
+	}
+
+	.invoices-section {
+		scroll-margin-block-start: var(--space-2xl);
+	}
+
+	/* Rows inside one dashed plane, divided by dashed rules. */
+	.invoice-list {
+		display: grid;
+		border: var(--rule) var(--line);
+
+		& > :not(:last-child) {
+			border-block-end: var(--rule) var(--line);
+		}
+	}
+
+	/* To invoice: the cost part, its amount and the Stripe button in a row
+	   from sm. */
+	.due-row {
+		display: grid;
+		gap: var(--space-2xs) var(--space-m);
+		padding: var(--space-s);
+
+		& > :first-child {
+			min-inline-size: 0;
+
+			& > a {
+				inline-size: fit-content;
+				max-inline-size: 100%;
+			}
+		}
+
+		@media (width >= 40rem) {
+			grid-template-columns: minmax(0, 1fr) auto auto;
+			align-items: center;
+
+			& > p {
+				text-align: end;
+			}
+		}
+	}
+
+	/* To attach: the invoice beside the cost part to attach it to, from md. */
+	.attach-row {
+		display: grid;
+		gap: var(--space-xs) var(--space-m);
+		padding: var(--space-s);
+		scroll-margin-block-start: var(--space-2xl);
+
+		& > * {
+			min-inline-size: 0;
+		}
+
+		& > :first-child {
+			justify-items: start;
+		}
+
+		@media (width >= 48rem) {
+			grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+			align-items: start;
+		}
+	}
+
+	/* The select of due cost parts, grouped by project, fills its column and
+	   may shrink below its longest option. */
+	.attach-field {
+		min-inline-size: 0;
+
+		& select {
+			inline-size: 100%;
+			min-inline-size: 0;
+		}
+	}
+
+	.invoice-filter {
+		display: grid;
+		grid-auto-flow: column;
+		justify-content: start;
+		gap: var(--space-2xs);
+	}
+
+	.invoice-card {
+		scroll-margin-block-start: var(--space-2xl);
+	}
+
+	/* Status, phase, cost part and payment: two columns from sm, four from
+	   lg. */
+	.invoice-facts {
+		display: grid;
+		gap: var(--space-xs) var(--space-m);
+
+		& > * {
+			min-inline-size: 0;
+		}
+
+		@media (width >= 40rem) {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		@media (width >= 64rem) {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+	}
+
+	.invoice-status {
 		justify-items: start;
 	}
 }
