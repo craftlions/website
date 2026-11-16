@@ -1,45 +1,10 @@
 @layer components {
 	/* The admin project list, project page and invoices page, composed from
-	   the layout primitives; lists that become tables switch at the rows
-	   thresholds of their own width, not the window's. */
+	   the layout primitives; their lists are lines (lines.css). */
 
-	/* Project list, on a rows list: the name with its state above the phase
-	   summary and the totals, the totals beside the summary until the summary
-	   would get less than half the row (with-sidebar); a table from 60rem,
-	   where the pair's wrapper gives way so both are cells of the row. */
+	/* The create-project form's name field. */
 	.project-name-field {
 		max-inline-size: 28rem;
-	}
-
-	.project-row {
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: start;
-	}
-
-	.project-figures {
-		grid-column: 1 / -1;
-	}
-
-	@container (inline-size >= 60rem) {
-		.project-row {
-			grid-template-columns: subgrid;
-		}
-
-		.project-figures {
-			display: contents;
-		}
-	}
-
-	.project-totals {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
-		align-content: start;
-		gap: var(--space-3xs) var(--space-xs);
-		min-inline-size: 0;
-
-		& dd {
-			text-align: end;
-		}
 	}
 
 	/* Add phase: the cost split below the fields, under a rule. */

@@ -6,7 +6,6 @@ import Badge from "../../../../components/Badge.astro";
 import Button from "../../../../components/Button.astro";
 import DisclosureButton from "../../../../components/DisclosureButton.astro";
 import Field from "../../../../components/Field.astro";
-import ProjectPhaseSummary from "../../../../components/ProjectPhaseSummary.astro";
 import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
 import { getAdminOrganizationCore } from "../../../../lib/admin-org.ts";
 import { sumByCurrency } from "../../../../lib/format.ts";
@@ -89,9 +88,14 @@ const rows = projects
 		const overdueInvoices = openInvoices.filter((invoice) =>
 			isInvoiceOverdue(invoice),
 		);
+		const yourMove = phaseStateSummary(phases, "info");
 		return {
 			...project,
-			rank: phaseStateSummary(phases, "info") ? 0 : stateRank[project.state],
+			rank: yourMove ? 0 : stateRank[project.state],
+			yourMove,
+			waitingOnClient: phaseStateSummary(phases, "gray"),
+			counted: phases.length,
+			accepted: phases.filter((phase) => phase.state === "accepted").length,
 			total:
 				phases.length > 0
 					? sumByCurrency(
@@ -199,22 +203,17 @@ const isCreateOpen =
 					</>
 				)}
 				{groupRows.length > 0 ? (
-					<div
+					<ul
 						id={archived ? groupId : undefined}
 						hidden={archived}
-						class="rows"
-						data-at="60"
-						style="--rows-columns: minmax(10rem, 1fr) auto auto auto"
+						class="lines"
+						data-actions="below"
+						aria-labelledby={`${groupId}-heading`}
 					>
-						<ul>
-							{groupRows.map((project) => (
-								<li
-									class:list={[
-										"project-row",
-										archived ? "text-fg-muted" : "text-fg",
-									]}
-								>
-									<h3 class="wrap-break-word">
+						{groupRows.map((project) => (
+							<li class={archived ? "text-fg-muted" : undefined}>
+								<div class="line-text">
+									<h3>
 										<a
 											href={`/admin/org/${organization.id}/projects/${project.publicId}`}
 											class="link hover-text-fg"
@@ -222,42 +221,48 @@ const isCreateOpen =
 											{project.name}
 										</a>
 									</h3>
-									<Badge type={projectStatus[project.state].badge}>
-										{projectStatus[project.state].label}
-									</Badge>
-									<div class="project-figures with-sidebar" data-side="end">
-										<ProjectPhaseSummary phases={project.phases} />
-										<dl class="project-totals text-sm">
-											<dt class="label-caps">Total</dt>
-											<dd class="tabular-nums wrap-break-word">
-												{project.total ?? "—"}
-											</dd>
-											<dt class="label-caps">Invoiced</dt>
-											<dd class="tabular-nums wrap-break-word">
-												{project.invoiced ?? "—"}
-											</dd>
-											{project.open && (
-												<>
-													<dt class="label-caps">Open</dt>
-													<dd class="tabular-nums wrap-break-word">
-														{project.open}
-													</dd>
-												</>
-											)}
-											{project.overdue && (
-												<>
-													<dt class="label-caps">Overdue</dt>
-													<dd class="tabular-nums wrap-break-word text-fg-danger">
-														{project.overdue}
-													</dd>
-												</>
-											)}
-										</dl>
-									</div>
-								</li>
-							))}
-						</ul>
-					</div>
+									<p class="cluster text-sm text-fg-muted">
+										<Badge type={projectStatus[project.state].badge}>
+											{projectStatus[project.state].label}
+										</Badge>
+										<span>
+											{project.counted > 0
+												? `${project.accepted} of ${project.counted} ${project.counted === 1 ? "phase" : "phases"} accepted`
+												: project.phases.length > 0
+													? `${project.phases.length} ${project.phases.length === 1 ? "phase" : "phases"} cancelled`
+													: "no phases yet"}
+										</span>
+										{project.yourMove && (
+											<span class="text-fg-info">
+												Your move: {project.yourMove}
+											</span>
+										)}
+										{project.waitingOnClient && (
+											<span>Waiting on client: {project.waitingOnClient}</span>
+										)}
+									</p>
+								</div>
+								{project.total && (
+									<p class="line-figure">
+										<span>{project.total}</span>
+										{project.overdue ? (
+											<span class="text-sm text-fg-danger">
+												{project.overdue} overdue
+											</span>
+										) : (
+											<span class="text-sm text-fg-muted">
+												{project.open
+													? `${project.open} open`
+													: project.invoiced
+														? `${project.invoiced} invoiced`
+														: "not invoiced"}
+											</span>
+										)}
+									</p>
+								)}
+							</li>
+						))}
+					</ul>
 				) : (
 					<p class="box text-sm text-fg-muted">
 						{groups[1]?.rows.length
