@@ -331,7 +331,7 @@ Buttons are compact, transparent, and line-drawn.
 - **Component:** every action is `src/components/Button.astro`; `aubr design:lint` rejects a raw `<button>`. It renders `<a>` with `href`.
 - **Danger:** `variant="danger"` draws the border and text in status red. It is for the one button that starts a destructive action, such as Delete client; inside dense rows a destructive trigger stays `quiet` and the danger style moves to the confirmation.
 - **Quiet:** `variant="quiet"` is a muted text link (see Links) for secondary actions in dense admin rows.
-- **Hint:** `variant="hint"` is the 1rem square that opens a tooltip; its dashed `line-control` border is the only sign that it is a control.
+- **Hint:** `variant="hint"` is the 1.5rem square that opens a tooltip, the 24px minimum target size (WCAG 2.5.8); its dashed `line-control` border is the only sign that it is a control.
 
 ### Links
 
