@@ -1,5 +1,6 @@
 // Scans the routes in routes.ts with axe-core; the light and dark projects in
-// playwright.config.ts run each route in both schemes.
+// playwright.config.ts run each route in both schemes, and each scheme once
+// more with prefers-contrast: more.
 // Every violation fails, best-practice included, so fix it instead of excluding it.
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
@@ -17,14 +18,20 @@ const tags = [
 const excluded: { id: string; reason: string }[] = [];
 
 for (const route of routes) {
-	test(route, async ({ page }) => {
-		expect((await page.goto(route))?.status()).toBe(200);
-		// Waits for the deferred nav island so the scan sees the final page.
-		await expect(page.getByText("Loading…")).toHaveCount(0);
-		const { violations } = await new AxeBuilder({ page })
-			.withTags(tags)
-			.disableRules(excluded.map(({ id }) => id))
-			.analyze();
-		expect(violations).toEqual([]);
-	});
+	for (const contrast of ["no-preference", "more"] as const) {
+		test(
+			contrast === "more" ? `${route} more contrast` : route,
+			async ({ page }) => {
+				await page.emulateMedia({ contrast });
+				expect((await page.goto(route))?.status()).toBe(200);
+				// Waits for the deferred nav island so the scan sees the final page.
+				await expect(page.getByText("Loading…")).toHaveCount(0);
+				const { violations } = await new AxeBuilder({ page })
+					.withTags(tags)
+					.disableRules(excluded.map(({ id }) => id))
+					.analyze();
+				expect(violations).toEqual([]);
+			},
+		);
+	}
 }

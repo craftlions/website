@@ -93,7 +93,28 @@
 		--duration: 150ms;
 		--ease: cubic-bezier(0.4, 0, 0.2, 1);
 
+		/* The spend chart's other projects while one is pointed at. */
+		--dimmed: 0.3;
+
 		/* The reader's own UI font (DESIGN.md#3-typography). */
 		--font-sans: system-ui, sans-serif;
+	}
+
+	/* A reader who asks for more contrast gets the quiet roles stronger, as
+	   mixes of the ink into the canvas, so each follows the scheme and keeps
+	   its rank: muted text, the dashed lines, the control boundary and its
+	   active state, the status lines, and the chart's dimmed projects. The
+	   lines stay 1px and dashed. */
+	@media (prefers-contrast: more) {
+		:root {
+			--fg-muted: color-mix(in oklab, var(--fg) 80%, var(--canvas));
+			--line: color-mix(in oklab, var(--fg) 50%, var(--canvas));
+			--line-strong: color-mix(in oklab, var(--fg) 65%, var(--canvas));
+			--line-control: color-mix(in oklab, var(--fg) 65%, var(--canvas));
+			--line-active: var(--fg);
+			--line-success: var(--fill-success);
+			--line-info: var(--fill-info);
+			--dimmed: 0.6;
+		}
 	}
 }

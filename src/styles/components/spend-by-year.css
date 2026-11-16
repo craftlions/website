@@ -37,7 +37,7 @@
 			filter: brightness(125%);
 		}
 		&[data-state="dimmed"] {
-			opacity: 0.3;
+			opacity: var(--dimmed);
 		}
 	}
 
