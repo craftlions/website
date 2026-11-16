@@ -1,7 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// A11Y_BASE_URL scans an already running site instead of building one on :4322.
-const baseURL = process.env.A11Y_BASE_URL ?? "http://localhost:4322";
+// A11Y_BASE_URL tests an already running site instead of building one on
+// TEST_PORT (4322 by default), which scripts/a11y-server.js serves.
+const baseURL =
+	process.env.A11Y_BASE_URL ??
+	`http://localhost:${process.env.TEST_PORT ?? 4322}`;
 
 export default defineConfig({
 	testDir: "tests",

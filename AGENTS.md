@@ -13,7 +13,7 @@ aubx astro sync
 
 ## Hard Requirements
 
-- Never start `astro dev` (`aubr dev`, `mise run dev`): the dev server is the owner's and runs against real data. Assume none is running; `aubr a11y` and `aubr design:test` build and serve their own preview on port 4322.
+- Never start `astro dev` (`aubr dev`, `mise run dev`): the dev server is the owner's and runs against real data. Assume none is running; `aubr a11y` and `aubr design:test` build and serve their own preview on port 4322, or on `TEST_PORT`.
 - For analysis-only requests, do not modify files, branches, staging, or commits.
 - Style with inline Tailwind utility classes built on the role tokens in `DESIGN.md` while the site moves to native CSS. Standalone CSS lives in `src/styles/`: `global.css` declares the layer order (`theme, reset, tokens, base, layout, components, utilities`; Tailwind's theme and utilities fill `theme` and `utilities` until it is removed) and imports the other files, each inside one layer: `reset.css` replaces Tailwind's Preflight, `tokens.css` holds the tokens and `base.css` the element defaults. Avoid `<style>` blocks in components.
 - Lay out with CSS grid where grid and flexbox behave the same, to match the existing layouts; use flexbox where it behaves better, such as a row whose items wrap at their own widths.
@@ -69,13 +69,13 @@ aubx biome check --write
 ## Accessibility Scan
 
 - `aubr a11y` runs Playwright Test with axe-core on the public pages, the component specimen at `/brand/specimen` included, in light and dark, and fails on any violation. Run it on demand after UI changes; it is not part of Validation.
-- It needs no dev server, secrets or database: `scripts/a11y-server.js` builds the Worker and serves it with Astro's preview API on `http://localhost:4322`; the `astro preview` CLI would detach from Playwright. `A11Y_BASE_URL` scans a running site instead. The browser comes from `aubx playwright install chromium`, once.
+- It needs no dev server, secrets or database: `scripts/a11y-server.js` builds the Worker and serves it with Astro's preview API on `http://localhost:4322`, or on the port in `TEST_PORT` so several runs can share a machine; the `astro preview` CLI would detach from Playwright. `A11Y_BASE_URL` scans a running site instead. The browser comes from `aubx playwright install chromium`, once.
 - Fix violations instead of excluding them. An exclusion names its rule with a one-line reason in `tests/a11y.spec.ts`.
 
 ## Design Tests
 
 - `aubr design:test` runs Playwright Test on `tests/design/`, over the routes in `tests/routes.ts` in light and dark. `reflow.spec.ts` fails when a page scrolls sideways at 320px, at 640px with a device scale factor of 2 (200% zoom) or with a 32px default font size (200% text), when text sits in a zero-width box, or when a control clips its text outside `.truncate`. `targets.spec.ts` fails on a target below 24×24px that misses the spacing exception of WCAG 2.5.8; links inside a sentence are exempt. Run it on demand after UI changes; it is not part of Validation.
-- It shares `playwright.config.ts` with the accessibility scan, so it builds and serves the Worker on `http://localhost:4322` and needs no dev server, secrets or database; `aubr a11y` runs only `tests/a11y.spec.ts`. `A11Y_BASE_URL` points both at a running site.
+- It shares `playwright.config.ts` with the accessibility scan, so it builds and serves the Worker on `http://localhost:4322` (or `TEST_PORT`) and needs no dev server, secrets or database; `aubr a11y` runs only `tests/a11y.spec.ts`. `A11Y_BASE_URL` points both at a running site.
 - Pages behind login have no harness: `/brand/specimen` renders the primitives they use, and the owner reviews the pages themselves by eye.
 
 ## PlanetScale Database
