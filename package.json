@@ -12,7 +12,7 @@
     "preview": "astro build && astro preview",
     "types": "cf workers types --include-runtime",
     "design:lint": "node scripts/design-lint.js",
-    "a11y": "node scripts/a11y.js",
+    "a11y": "playwright test",
     "cf-check": "cf workers types --include-runtime && git diff --exit-code -- .cloudflare/types"
   },
   "devDependencies": {
