@@ -1,17 +1,15 @@
-/* Layout primitives: nine classes that compose every layout, after the Every
+/* Layout primitives: eight classes that compose every layout, after the Every
    Layout patterns. Grid where grid and flexbox behave the same (stack,
-   auto-grid, rows); flexbox where it behaves better (cluster, with-sidebar,
-   switcher, cover). Each primitive declares its own custom properties with
+   auto-grid); flexbox where it behaves better (cluster, with-sidebar,
+   switcher, cover); box and center are single blocks. Each primitive declares its own custom properties with
    their defaults on itself, so a nested primitive never inherits a parent's
    value; an instance overrides one with a data-* step or an inline style. */
 @layer layout {
 	/* A child sized by its primitive may shrink below its longest word, which
 	   then wraps instead of overflowing: a grid item or flex item otherwise
-	   keeps its content's minimum and widens its track or line. In rows the
-	   items are the rows of the list inside it; the list itself is a block,
-	   which has no such minimum. Each child's own children keep theirs. */
-	:where(.stack, .cluster, .with-sidebar, .switcher, .auto-grid) > *,
-	:where(.rows) > * > li {
+	   keeps its content's minimum and widens its track or line. Each child's
+	   own children keep theirs. */
+	:where(.stack, .cluster, .with-sidebar, .switcher, .auto-grid) > * {
 		min-inline-size: 0;
 	}
 
@@ -200,112 +198,6 @@
 
 		& > [data-span="full"] {
 			grid-column: 1 / -1;
-		}
-	}
-
-	/* A list (ol or ul) that is a table when its own box is wide enough and
-	   stacked rows below that. From the threshold, data-at="36", "44" (default)
-	   or "60" rem, the rows line up on the --rows-columns template and take its
-	   column gap (normal, on a subgrid), the [data-head] row appears, and each
-	   [data-label] is only read out. */
-	.rows {
-		--rows-columns: minmax(0, 1fr);
-		container-type: inline-size;
-
-		& > * {
-			display: grid;
-			border: var(--rule) var(--line);
-		}
-		& > * > li {
-			display: grid;
-			gap: var(--space-2xs);
-			padding: var(--space-s);
-			border-block-end: var(--rule) var(--line);
-
-			&:last-child {
-				border-block-end: 0;
-			}
-		}
-		& [data-head] {
-			display: none;
-		}
-	}
-
-	@container (inline-size >= 36rem) {
-		.rows[data-at="36"] {
-			& > * {
-				grid-template-columns: var(--rows-columns);
-				column-gap: var(--space-m);
-			}
-			& > * > li {
-				grid-column: 1 / -1;
-				grid-template-columns: subgrid;
-				column-gap: normal;
-				align-items: center;
-			}
-			& [data-head] {
-				display: grid;
-			}
-			& [data-label] {
-				position: absolute;
-				inline-size: 1px;
-				block-size: 1px;
-				overflow: hidden;
-				clip-path: inset(50%);
-				white-space: nowrap;
-			}
-		}
-	}
-
-	@container (inline-size >= 44rem) {
-		.rows:not([data-at="36"], [data-at="60"]) {
-			& > * {
-				grid-template-columns: var(--rows-columns);
-				column-gap: var(--space-m);
-			}
-			& > * > li {
-				grid-column: 1 / -1;
-				grid-template-columns: subgrid;
-				column-gap: normal;
-				align-items: center;
-			}
-			& [data-head] {
-				display: grid;
-			}
-			& [data-label] {
-				position: absolute;
-				inline-size: 1px;
-				block-size: 1px;
-				overflow: hidden;
-				clip-path: inset(50%);
-				white-space: nowrap;
-			}
-		}
-	}
-
-	@container (inline-size >= 60rem) {
-		.rows[data-at="60"] {
-			& > * {
-				grid-template-columns: var(--rows-columns);
-				column-gap: var(--space-m);
-			}
-			& > * > li {
-				grid-column: 1 / -1;
-				grid-template-columns: subgrid;
-				column-gap: normal;
-				align-items: center;
-			}
-			& [data-head] {
-				display: grid;
-			}
-			& [data-label] {
-				position: absolute;
-				inline-size: 1px;
-				block-size: 1px;
-				overflow: hidden;
-				clip-path: inset(50%);
-				white-space: nowrap;
-			}
 		}
 	}
 }
