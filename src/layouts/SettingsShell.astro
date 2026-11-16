@@ -1,41 +1,14 @@
 ---
-import Button from "../components/Button.astro";
 import PageHeading from "../components/PageHeading.astro";
 import ClientShell from "./ClientShell.astro";
-
-interface Props {
-	activePage: "profile";
-}
-
-const { activePage } = Astro.props;
-const pages = [
-	{ id: "profile", label: "Profile", href: "/settings/profile" },
-] as const;
-const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 ---
 
-<ClientShell title={`${activeTab.label} · Account`}>
+<ClientShell title="Profile · Account">
 	<header
 		slot="header"
 		class="grid gap-4 border-b border-dashed border-line pb-6"
 	>
 		<PageHeading> Account </PageHeading>
-		<nav aria-label="Account sections">
-			<ul
-				class="-m-1 grid grid-flow-col auto-cols-max gap-2 overflow-x-auto p-1"
-			>
-				{pages.map((page) => (
-					<li>
-						<Button
-							href={page.href}
-							aria-current={activePage === page.id ? "page" : undefined}
-						>
-							{page.label}
-						</Button>
-					</li>
-				))}
-			</ul>
-		</nav>
 	</header>
 	<slot />
 </ClientShell>
