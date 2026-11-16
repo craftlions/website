@@ -264,8 +264,8 @@ Roles that markup sets carry a utility in `src/styles/utilities.css`; the others
 | `bg-info-subtle`                                  | Tinted highlight of a linked target                                          |
 | `target`                                          | An element a link points at: scroll room, then tint and dashed `fill-info` outline while targeted or `data-highlight` (`base.css`) |
 | `border-line`                                     | Default structure                                                            |
-| `--line-strong`, `bg-line-strong`                 | Headline rules, gray badges, the current year in the spend chart, bullets    |
-| `--line-control`                                  | Control and state outlines: inputs, checkbox, hint, progress track (3:1)     |
+| `border-line-strong`, `bg-line-strong`            | Headline rules, gray badges, the current year in the spend chart, bullets    |
+| `border-line-control`                             | Control and state outlines: inputs, checkbox, hint, progress track (3:1)     |
 | `--line-active`                                   | Hover, focus, and pressed borders                                            |
 | `border-line-danger`, `--line-success`, `-info`   | Status outlines                                                              |
 | `--canvas` on a border                            | Pace marker edge                                                             |

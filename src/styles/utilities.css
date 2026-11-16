@@ -109,6 +109,12 @@
 	.border-line {
 		border-color: var(--line);
 	}
+	.border-line-strong {
+		border-color: var(--line-strong);
+	}
+	.border-line-control {
+		border-color: var(--line-control);
+	}
 	.border-line-danger {
 		border-color: var(--line-danger);
 	}
