@@ -631,6 +631,64 @@ for (const {
 	}
 }
 
+// Every stylesheet loads on every page, so a class two files define styles both
+// files' markup. A rule defines the first class (or custom element) of its
+// selector's first compound once nesting is resolved; everything after it only
+// configures elements in that scope, as `.footer .switcher` or
+// `.shell > .center` do. Each name is defined by one stylesheet in src/styles,
+// and a page's scoped <style> defines only names no stylesheet defines, because
+// the global rule reaches the page's elements as well.
+const splitList = (selector) =>
+	selector.split(/,(?![^(]*\))/).map((part) => part.trim());
+const definedName = (compound) =>
+	compound
+		.replace(/:(?:not|has)\((?:[^()]|\([^()]*\))*\)/g, "")
+		.match(/(\.-?[_a-zA-Z][\w-]*)|^([a-z][\w]*-[\w-]*)/)
+		?.slice(1)
+		.find(Boolean);
+const definedBy = ({ prelude, parents }) => {
+	let names = [];
+	for (const selectors of [...parents, { prelude }]
+		.map(({ prelude }) => prelude)
+		.filter((prelude) => !prelude.startsWith("@"))) {
+		names = splitList(selectors).flatMap((selector) =>
+			names.length > 0 && (selector.startsWith("&") || !selector.includes("&"))
+				? names
+				: [definedName(selector.split(/\s*[>+~ ](?![^(]*\))\s*/)[0])].filter(
+						Boolean,
+					),
+		);
+	}
+	return names;
+};
+const definitions = new Map();
+for (const { file, blocks } of stylesheets) {
+	for (const block of blocks) {
+		if (
+			block.prelude.startsWith("@") ||
+			block.parents.some(({ prelude }) => /^@(?:keyframes|theme)/.test(prelude))
+		) {
+			continue;
+		}
+		for (const name of new Set(definedBy(block))) {
+			const files = definitions.get(name) ?? new Map();
+			if (!files.has(file)) files.set(file, block.line);
+			definitions.set(name, files);
+		}
+	}
+}
+for (const [name, files] of definitions) {
+	const shared = [...files].filter(([file]) => file.startsWith("src/styles/"));
+	const pages = [...files].filter(([file]) => !file.startsWith("src/styles/"));
+	const clash =
+		shared.length > 1 ? shared.slice(1) : shared.length === 1 ? pages : [];
+	for (const [file, line] of clash) {
+		violations.push(
+			`${file}:${line}  ${name} is also defined in ${shared[0][0]}:${shared[0][1]} → rename this one after its own component, or style the element under your own class (\`.your-area ${name}\`); every stylesheet loads on every page, so both rules reach both pages  (AGENTS.md#hard-requirements)`,
+		);
+	}
+}
+
 // A primitive is tuned only through its own custom properties, on the element
 // that carries it, with a step, a width token, a percentage or a small length;
 // a switcher child may take a larger share with a numeric flex-grow.
