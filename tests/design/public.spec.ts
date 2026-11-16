@@ -103,3 +103,49 @@ test("the landing prose keeps to the measure", async ({ page }) => {
 		),
 	).toBeCloseTo(measure, 0);
 });
+
+// The password toggle and the reset link sit at the two ends of one line and
+// drop below each other whole when the line is too short; neither text wraps.
+for (const fontSize of [16, 32]) {
+	test(`the login's password extras wrap as whole items at a ${fontSize}px default font size`, async ({
+		page,
+	}) => {
+		await (await page.context().newCDPSession(page)).send("Page.setFontSizes", {
+			fontSizes: { standard: fontSize },
+		});
+		expect((await page.goto("/login"))?.status()).toBe(200);
+		const lines = new Set<number>();
+		for (const width of [320, 480, 768, 1280]) {
+			await page.setViewportSize({ width, height: 900 });
+			const [toggle, link] = await Promise.all(
+				[
+					page.getByRole("button", { name: "Show password" }),
+					page.getByRole("link", { name: "Forgot password?" }),
+				].map((locator) =>
+					locator.evaluate((element) => {
+						const { top, left, right, height } =
+							element.getBoundingClientRect();
+						const range = document.createRange();
+						range.selectNodeContents(element);
+						const rows = new Set(
+							[...range.getClientRects()].map(({ top }) => Math.round(top)),
+						).size;
+						return { top, left, right, height, rows };
+					}),
+				),
+			);
+			if (!toggle || !link) throw new Error("no password extras");
+			expect([toggle.rows, link.rows], `${width}px`).toEqual([1, 1]);
+			const field = await box(page, "#password");
+			expect(toggle.left).toBeCloseTo(field.left, 0);
+			if (Math.abs(toggle.top - link.top) < toggle.height) {
+				lines.add(1);
+				expect(link.right).toBeCloseTo(field.right, 0);
+			} else {
+				lines.add(2);
+				expect(link.left).toBeCloseTo(field.left, 0);
+			}
+		}
+		expect([...lines]).toContain(1);
+	});
+}
