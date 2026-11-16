@@ -82,10 +82,7 @@
 			display: grid;
 		}
 
-		/* The sign-in forms. A fieldset groups fields without a frame. */
-		& fieldset {
-			border-style: none;
-		}
+		/* The sign-in forms. */
 		& .request {
 			display: grid;
 		}
