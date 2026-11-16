@@ -1,7 +1,7 @@
 @layer components {
-	/* The admin project list, project page and invoices page. Rows take their
-	   columns at today's sm, md and lg widths until the primitives replace the
-	   media queries. */
+	/* The admin project list, project page and invoices page, composed from
+	   the layout primitives; lists that become tables switch at the rows
+	   thresholds of their own width, not the window's. */
 
 	/* A form's submit and cancel buttons. */
 	.projects-actions {
@@ -12,66 +12,45 @@
 		gap: var(--space-xs);
 	}
 
-	/* Project list. */
-	.project-form {
-		grid-template-columns: minmax(0, 1fr);
-	}
-
+	/* Project list, on a rows list: the name with its state above the phase
+	   summary and the totals, which sit side by side once the list is 36rem
+	   wide; a table from 60rem. */
 	.project-name-field {
 		max-inline-size: 28rem;
 	}
 
-	.project-list {
-		display: grid;
-		border: var(--rule) var(--line);
-
-		@media (width >= 64rem) {
-			grid-template-columns: minmax(10rem, 1fr) auto auto auto;
-			column-gap: var(--space-m);
-		}
-	}
-
 	.project-row {
-		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;
 		align-items: start;
-		gap: var(--space-xs);
-		padding: var(--space-s);
-		border-block-end: var(--rule) var(--line);
-
-		&:last-child {
-			border-block-end: 0;
-		}
-
-		@media (width >= 40rem) {
-			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-		}
-
-		@media (width >= 64rem) {
-			grid-column: span 4 / span 4;
-			grid-template-columns: subgrid;
-			column-gap: var(--space-m);
-		}
-	}
-
-	.project-name {
-		min-inline-size: 0;
-
-		@media (width >= 40rem) {
-			grid-column: span 2 / span 2;
-		}
-
-		@media (width >= 64rem) {
-			grid-column: span 1 / span 1;
-		}
 	}
 
 	.project-summary,
 	.project-totals {
-		grid-column: span 2 / span 2;
+		grid-column: 1 / -1;
+	}
 
-		@media (width >= 40rem) {
-			grid-column: span 1 / span 1;
+	@container (inline-size >= 36rem) {
+		.project-row {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+		}
+
+		.project-name {
+			grid-column: span 2;
+		}
+
+		.project-summary,
+		.project-totals {
+			grid-column: auto;
+		}
+	}
+
+	@container (inline-size >= 60rem) {
+		.project-row {
+			grid-template-columns: subgrid;
+		}
+
+		.project-name {
+			grid-column: auto;
 		}
 	}
 
