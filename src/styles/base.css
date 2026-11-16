@@ -1,12 +1,9 @@
 /* Element defaults, after the reset and before any class. */
 @layer base {
-	/* Every page sits on the canvas in primary text, its prose wrapped to
-	   avoid short last lines where the browser supports it; layout stays per
-	   page. */
+	/* Every page sits on the canvas in primary text; layout stays per page. */
 	body {
 		background-color: var(--canvas);
 		color: var(--fg);
-		text-wrap: pretty;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
 	}
@@ -44,6 +41,15 @@
 		font-weight: 600;
 		line-height: calc(1 / 0.75);
 		text-transform: uppercase;
+	}
+
+	/* enhancement: prose avoids a short last line (Chrome 117, Safari 26);
+	   Firefox wraps it as before. Set on the prose elements, not inherited
+	   from the body into every label, cell and control. */
+	p,
+	li,
+	dd {
+		text-wrap: pretty;
 	}
 
 	/* Like headings after the reset, table cells take their weight from a role,
