@@ -142,6 +142,13 @@
 		justify-content: flex-end;
 	}
 
+	/* Every control in the slot is a 24px target (WCAG 2.5.8), the quiet
+	   ones too, with its text in the middle. */
+	.line-actions :is(a, button) {
+		min-block-size: 1.5rem;
+		align-content: center;
+	}
+
 	/* Opened from a DisclosureButton among the actions, across the whole
 	   line below a rule. */
 	.line-details {
