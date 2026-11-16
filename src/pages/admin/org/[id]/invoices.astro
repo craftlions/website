@@ -162,6 +162,25 @@ const recorded = parts
 				: b.invoice.invoicedAt.getTime() - a.invoice.invoicedAt.getTime())
 		);
 	});
+// Open (overdue included) above paid; void and uncollectible ones, if any,
+// last and without a total, since they are not owed. Each group keeps the
+// order above.
+const invoiceGroups = [
+	{ id: "open", label: "Open", empty: "Nothing is open." },
+	{ id: "paid", label: "Paid", empty: "Nothing is paid yet." },
+	{ id: "other", label: "Void or uncollectible", empty: undefined },
+]
+	.map((group) => ({
+		...group,
+		rows: recorded.filter(
+			(row) =>
+				group.id ===
+				(["open", "paid"].includes(row.invoice.status)
+					? row.invoice.status
+					: "other"),
+		),
+	}))
+	.filter((group) => group.empty || group.rows.length > 0);
 const unavailableCount = parts.filter(
 	(part) => part.link && !part.link.stripe,
 ).length;
@@ -173,7 +192,7 @@ const defaultCurrency =
 	parts[0]?.phase.currency ?? unattachedInvoices[0]?.currency ?? "EUR";
 
 // Paid date, days overdue, due date or issue date: the one fact that matters
-// for the invoice's current status.
+// for the invoice's current status, worded to stand alone ("paid 10.01.2026").
 const statusDetail = (invoice: {
 	status: string;
 	dueAt: Date | null;
@@ -181,12 +200,12 @@ const statusDetail = (invoice: {
 	invoicedAt: Date;
 }) =>
 	invoice.status === "paid" && invoice.paidAt
-		? `Paid ${formatDate(invoice.paidAt)}`
+		? `paid ${formatDate(invoice.paidAt)}`
 		: isInvoiceOverdue(invoice, now)
 			? `${formatDays(daysOverdue(invoice, now))} overdue`
 			: invoice.dueAt
-				? `Due ${formatDate(invoice.dueAt)}`
-				: `Issued ${formatDate(invoice.invoicedAt)}`;
+				? `due ${formatDate(invoice.dueAt)}`
+				: `issued ${formatDate(invoice.invoicedAt)}`;
 
 // Why an unattached invoice has no due cost part in its currency.
 const attachBlocker = (invoice: { currency: string }) => {
@@ -319,26 +338,31 @@ const attachBlocker = (invoice: { currency: string }) => {
 			</div>
 		)}
 		{dueParts.length > 0 ? (
-			<ul class="invoice-list">
+			<ul
+				class="lines"
+				data-actions="narrow"
+				aria-labelledby="to-invoice-heading"
+			>
 				{dueParts.map((part) => (
-					<li class="with-sidebar due-row" data-side="end" data-align="center">
-						<div class="stack" data-space="3xs">
-							<a
-								class="link wrap-break-word"
-								href={phaseHref(part.project, part.phase)}
-							>
-								{part.project.name} · {part.phase.title}
-							</a>
-							<p class="text-sm text-fg-muted">
-								{costPartLabel[part.component]} ·{" "}
-								{phaseStatus[part.phase.state].label}
+					<li>
+						<div class="line-text">
+							<h3>
+								<a class="link" href={phaseHref(part.project, part.phase)}>
+									{part.project.name} · {part.phase.title}
+								</a>
+							</h3>
+							<p class="cluster text-sm text-fg-muted">
+								<Badge type={phaseStatus[part.phase.state].badge}>
+									{phaseStatus[part.phase.state].label}
+								</Badge>
+								<span>{costPartLabel[part.component]} part</span>
 							</p>
 						</div>
-						<div class="cluster" data-space="s">
-							<p class="tabular-nums">
-								{formatMoney(part.amount, part.phase.currency)}
-							</p>
-							{organizationData?.stripeCustomerId && (
+						<p class="line-figure">
+							<span>{formatMoney(part.amount, part.phase.currency)}</span>
+						</p>
+						{organizationData?.stripeCustomerId && (
+							<div class="line-actions cluster">
 								<Button
 									href={`${stripeDashboard}/customers/${organizationData.stripeCustomerId}`}
 									target="_blank"
@@ -347,8 +371,8 @@ const attachBlocker = (invoice: { currency: string }) => {
 								>
 									Create in Stripe
 								</Button>
-							)}
-						</div>
+							</div>
+						)}
 					</li>
 				))}
 			</ul>
@@ -517,7 +541,8 @@ const attachBlocker = (invoice: { currency: string }) => {
 			Invoices ({recorded.length})
 		</h2>
 		<p class="measure text-sm text-fg-muted">
-			Invoices attached to a cost part, overdue first.
+			Invoices attached to a cost part: open ones, overdue first, then paid
+			ones.
 		</p>
 		{unavailableCount > 0 && (
 			<p class="text-sm text-fg-warning">
@@ -527,115 +552,102 @@ const attachBlocker = (invoice: { currency: string }) => {
 			</p>
 		)}
 		{recorded.length > 0 ? (
-			<admin-invoice-list class="stack" data-space="xs">
-				<nav aria-label="Filter invoices" class="cluster">
-					<Button type="button" data-invoice-filter="all" aria-pressed="true">
-						All
-					</Button>
-					<Button type="button" data-invoice-filter="open" aria-pressed="false">
-						Open
-					</Button>
-					<Button type="button" data-invoice-filter="paid" aria-pressed="false">
-						Paid
-					</Button>
-				</nav>
-				<p role="status" class="text-sm text-fg-muted" data-invoice-count>
-					{recorded.length} of {recorded.length}{" "}
-					{recorded.length === 1 ? "invoice" : "invoices"} shown
-				</p>
-				<ul class="stack" data-space="xs">
-					{recorded.map((row) => {
-						const status = invoiceStatus(row.invoice, now);
-						return (
-							<li
-								id={`invoice-${row.invoice.id}`}
-								class="box stack target"
-								data-space="xs"
-								data-invoice-item
-								data-category={
-									row.invoice.status === "open" || row.invoice.status === "paid"
-										? row.invoice.status
-										: "other"
-								}
-							>
-								<div class="stack" data-space="3xs">
-									<p class="label-caps">
-										Invoice{" "}
-										<a
-											class="text-fg link"
-											href={`${stripeDashboard}/invoices/${row.invoice.id}`}
-											target="_blank"
-											rel="noopener noreferrer"
-											aria-label={`Open invoice ${row.invoice.number} in Stripe (opens in a new tab)`}
-										>
-											{row.invoice.number}
-										</a>
-									</p>
-									<p class="text-title tabular-nums">
-										{formatMoney(row.invoice.total, row.invoice.currency)}
-									</p>
-									{row.invoice.total !== row.amount && (
-										<p class="text-sm text-fg-warning">
-											{`Differs from the cost part (${formatMoney(row.amount, row.phase.currency)})`}
-										</p>
+			<div class="lines" data-actions="below">
+				{invoiceGroups.map((group) => (
+					<>
+						<h3>
+							<span id={`invoices-${group.id}`} class="text-label">
+								{group.label}{" "}
+								<span class="text-fg-muted">· {group.rows.length}</span>
+							</span>
+							{group.id !== "other" && group.rows.length > 0 && (
+								<span class="line-figure text-sm text-fg-muted">
+									<span class="sr-only">total </span>
+									{sumByCurrency(
+										group.rows.map((row) => ({
+											amount: row.invoice.total,
+											currency: row.invoice.currency,
+										})),
 									)}
-								</div>
-								<dl
-									class="auto-grid text-sm"
-									style="--grid-min: 12rem; --grid-space: var(--space-xs) var(--space-m)"
-								>
-									<div>
-										<dt class="label-caps">Status</dt>
-										<dd class="stack invoice-status" data-space="3xs">
-											<Badge type={status.badge}>{status.label}</Badge>
-											<span
-												class={
-													status.overdue ? "text-fg-danger" : "text-fg-muted"
-												}
-											>
-												{statusDetail(row.invoice)}
-											</span>
-										</dd>
-									</div>
-									<div>
-										<dt class="label-caps">Phase</dt>
-										<dd class="wrap-break-word">
-											<a class="link" href={phaseHref(row.project, row.phase)}>
-												{row.project.name} · {row.phase.title}
-											</a>
-										</dd>
-									</div>
-									<div>
-										<dt class="label-caps">Cost part</dt>
-										<dd>{costPartLabel[row.component]}</dd>
-									</div>
-									<div>
-										<dt class="label-caps">Payment</dt>
-										<dd>
-											{row.invoice.paymentPage ? (
-												<a
-													class="link"
-													href={row.invoice.paymentPage}
+								</span>
+							)}
+						</h3>
+						{group.rows.length > 0 ? (
+							<ul aria-labelledby={`invoices-${group.id}`}>
+								{group.rows.map((row) => {
+									const status = invoiceStatus(row.invoice, now);
+									return (
+										<li id={`invoice-${row.invoice.id}`} class="target">
+											<div class="line-text">
+												<h4>
+													<a
+														class="link"
+														href={phaseHref(row.project, row.phase)}
+													>
+														{row.project.name} · {row.phase.title}
+													</a>
+												</h4>
+												<p class="cluster text-sm text-fg-muted">
+													<Badge type={status.badge}>{status.label}</Badge>
+													<span>
+														Invoice {row.invoice.number} ·{" "}
+														{costPartLabel[row.component]}
+													</span>
+													{row.invoice.total !== row.amount && (
+														<span class="text-fg-warning">
+															{`differs from the cost part (${formatMoney(row.amount, row.phase.currency)})`}
+														</span>
+													)}
+													{!row.invoice.paymentPage && (
+														<span>no payment page</span>
+													)}
+												</p>
+											</div>
+											<p class="line-figure">
+												<span>
+													{formatMoney(row.invoice.total, row.invoice.currency)}
+												</span>
+												<span
+													class:list={[
+														"text-sm",
+														status.overdue ? "text-fg-danger" : "text-fg-muted",
+													]}
+												>
+													{statusDetail(row.invoice)}
+												</span>
+											</p>
+											<div class="line-actions cluster">
+												<Button
+													href={`${stripeDashboard}/invoices/${row.invoice.id}`}
+													variant="quiet"
 													target="_blank"
 													rel="noopener noreferrer"
-													aria-label={`Client's payment page for invoice ${row.invoice.number} (opens in a new tab)`}
+													aria-label={`Open in Stripe: invoice ${row.invoice.number} (opens in a new tab)`}
 												>
-													Client's payment page
-												</a>
-											) : (
-												<span class="text-fg-muted">No payment page</span>
-											)}
-										</dd>
-									</div>
-								</dl>
-							</li>
-						);
-					})}
-				</ul>
-				<p class="box text-sm text-fg-muted" data-invoice-empty hidden>
-					No invoices match this filter.
-				</p>
-			</admin-invoice-list>
+													Open in Stripe
+												</Button>
+												{row.invoice.paymentPage && (
+													<Button
+														href={row.invoice.paymentPage}
+														variant="quiet"
+														target="_blank"
+														rel="noopener noreferrer"
+														aria-label={`Payment page: invoice ${row.invoice.number} (opens in a new tab)`}
+													>
+														Payment page
+													</Button>
+												)}
+											</div>
+										</li>
+									);
+								})}
+							</ul>
+						) : (
+							<p class="text-sm text-fg-muted">{group.empty}</p>
+						)}
+					</>
+				))}
+			</div>
 		) : (
 			<div class="box stack text-sm" data-space="xs">
 				<p class="text-fg-muted">
@@ -652,59 +664,3 @@ const attachBlocker = (invoice: { currency: string }) => {
 		)}
 	</section>
 </AdminOrgShell>
-
-<script>
-	// "Open" shows open and overdue invoices (Stripe status "open"); void and
-	// uncollectible ones only show under "All".
-	class AdminInvoiceList extends HTMLElement {
-		filter = "all";
-
-		connectedCallback() {
-			if (this.dataset.initialized === "true") {
-				this.render();
-				return;
-			}
-
-			this.dataset.initialized = "true";
-			for (const button of this.querySelectorAll<HTMLButtonElement>(
-				"[data-invoice-filter]",
-			)) {
-				button.addEventListener("click", () => {
-					this.filter = button.dataset.invoiceFilter ?? "all";
-					this.render();
-				});
-			}
-		}
-
-		render() {
-			for (const button of this.querySelectorAll<HTMLButtonElement>(
-				"[data-invoice-filter]",
-			)) {
-				button.setAttribute(
-					"aria-pressed",
-					String(button.dataset.invoiceFilter === this.filter),
-				);
-			}
-
-			const rows = [
-				...this.querySelectorAll<HTMLElement>("[data-invoice-item]"),
-			];
-			for (const row of rows) {
-				row.hidden =
-					this.filter !== "all" && row.dataset.category !== this.filter;
-			}
-			const visible = rows.filter((row) => !row.hidden).length;
-
-			const count = this.querySelector("[data-invoice-count]");
-			if (count) {
-				count.textContent = `${visible} of ${rows.length} ${rows.length === 1 ? "invoice" : "invoices"} shown`;
-			}
-			const empty = this.querySelector<HTMLElement>("[data-invoice-empty]");
-			if (empty) {
-				empty.hidden = visible > 0;
-			}
-		}
-	}
-
-	customElements.define("admin-invoice-list", AdminInvoiceList);
-</script>

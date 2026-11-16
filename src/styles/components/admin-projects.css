@@ -32,7 +32,7 @@
 		scroll-margin-block-start: var(--space-2xl);
 	}
 
-	/* Rows inside one dashed plane, divided by dashed rules. */
+	/* To attach: one dashed plane, its items divided by dashed rules. */
 	.invoice-list {
 		display: grid;
 		border: var(--rule) var(--line);
@@ -42,19 +42,7 @@
 		}
 	}
 
-	/* To invoice: the cost part beside its amount and the Stripe button, which
-	   move below it together when the part would get less than half the row. */
-	.due-row {
-		padding: var(--space-s);
-
-		& > :first-child > a {
-			inline-size: fit-content;
-			max-inline-size: 100%;
-		}
-	}
-
-	/* To attach: the invoice beside the cost part to attach it to, or both
-	   stacked. */
+	/* The invoice beside the cost part to attach it to, or both stacked. */
 	.attach-row {
 		padding: var(--space-s);
 
@@ -72,9 +60,5 @@
 			inline-size: 100%;
 			min-inline-size: 0;
 		}
-	}
-
-	.invoice-status {
-		justify-items: start;
 	}
 }
