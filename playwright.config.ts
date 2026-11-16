@@ -10,10 +10,14 @@ export default defineConfig({
 	testDir: "tests",
 	forbidOnly: !!process.env.CI,
 	retries: 0,
-	reporter: process.env.CI ? [["github"], ["list"]] : "list",
+	// CI keeps an HTML report and the traces of failed tests for the artifact.
+	reporter: process.env.CI
+		? [["github"], ["list"], ["html", { open: "never" }]]
+		: "list",
 	use: {
 		...devices["Desktop Chrome"],
 		baseURL,
+		trace: process.env.CI ? "retain-on-failure" : "off",
 		viewport: { width: 1280, height: 800 },
 	},
 	projects: [
