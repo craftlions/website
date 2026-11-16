@@ -61,8 +61,8 @@
 	}
 
 	/* A line, and a group heading: its first part takes the room the figure
-	   and the slot leave, and the parts wrap only where the actions or the
-	   details start a row of their own. */
+	   and the slot leave, and the parts wrap only where the figure, the
+	   actions or the details start a row of their own. */
 	:is(
 		.lines > li,
 		.lines > :is(ul, ol) > li,
@@ -77,6 +77,11 @@
 		& > :first-child {
 			flex: 1 1 0;
 			min-inline-size: 0;
+		}
+		/* A line's text keeps 12rem, or the whole line where that is less;
+		   the figure drops below it rather than squeeze it further. */
+		& > .line-text {
+			min-inline-size: min(100%, 12rem);
 		}
 	}
 
@@ -100,11 +105,14 @@
 	}
 
 	/* The amount above its secondary figure, both on the end edge in
-	   tabular figures. The amount never breaks; in a line too narrow for both
-	   the secondary figure wraps before the figure leaves the text's row. */
+	   tabular figures; the amount never breaks. Beside the text or on a row
+	   of its own below it, the figure keeps to the end: the auto margin takes
+	   whatever the text leaves, so it ends where the slot, the reserve or the
+	   line's edge begins, as on every other line. */
 	.line-figure {
 		display: grid;
 		flex: 0 1 auto;
+		margin-inline-start: auto;
 		justify-items: end;
 		row-gap: var(--space-3xs);
 		text-align: end;
