@@ -1,3 +1,66 @@
 @layer components {
-	/* src/components/Progress.astro; filled by conversion package S5a. */
+	/* src/components/Progress.astro: a dashed track filled with ink, or with
+	   danger above 100%, and an optional pace marker over a 12-month grid. */
+	.progress {
+		position: relative;
+		display: grid;
+
+		& > progress {
+			--progress-fill: var(--fg);
+			inline-size: 100%;
+			block-size: 0.5rem;
+			appearance: none;
+			border: var(--rule) var(--line-control);
+			background-color: transparent;
+
+			&[data-variant="danger"] {
+				--progress-fill: var(--fill-danger);
+			}
+			&::-webkit-progress-bar {
+				background-color: transparent;
+			}
+			&::-webkit-progress-value {
+				background-color: var(--progress-fill);
+			}
+			&::-moz-progress-bar {
+				background-color: var(--progress-fill);
+			}
+
+			/* Forced colors repaint the fill as Canvas; ink keeps it visible. */
+			@media (forced-colors: active) {
+				&::-webkit-progress-value {
+					forced-color-adjust: none;
+					background-color: CanvasText;
+					border-color: CanvasText;
+				}
+				&::-moz-progress-bar {
+					forced-color-adjust: none;
+					background-color: CanvasText;
+					border-color: CanvasText;
+				}
+			}
+		}
+
+		/* The months, a little taller than the track. --pace is the column the
+		   marker starts in. */
+		& > span {
+			position: absolute;
+			inset-block: calc(-1 * var(--space-3xs));
+			inset-inline-start: 0;
+			display: grid;
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			inline-size: 100%;
+			pointer-events: none;
+		}
+
+		& > span > span {
+			grid-column-start: var(--pace);
+			justify-self: start;
+			inline-size: 0.1875rem;
+			block-size: 100%;
+			border: 0 solid var(--canvas);
+			border-inline-width: var(--hairline);
+			background-color: var(--fg);
+		}
+	}
 }
