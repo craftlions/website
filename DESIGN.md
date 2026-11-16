@@ -196,13 +196,49 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 - System sans typography with clear weights instead of display styling.
 - Flat components with visible focus, hover, disabled, and loading states.
 
-**Layout:** Public pages and the settings area stay compact and single-column at a `max-w-3xl` container with a `pl-3` left gutter. The authenticated dashboard widens to `max-w-6xl`. Client pages render through `ClientShell` (navigation, breadcrumbs, a `header` slot, footer), the way admin pages use `AdminShell`; an organization's pages render through `ClientOrgShell`, which adds the organization heading and its section tabs (Overview, Invoices, Spend by year). The overview puts the full-width Worklist first, then a two-column grid at `lg` and up: Projects in a wide leading column (`2fr`) and Budget in a narrow one (`1fr`). Below `lg` they stack in that order.
+**Layout:** Layouts are intrinsic: every switch follows from the room an element has, never from the window's width, so there are no breakpoints and no media or container queries for layout. The page is a `cover` with the `--space-s-m` gutter and the `--space-m-l` gap between header, main and footer. Public pages and the settings area stay compact and single-column in a `center` at `--column`; the authenticated dashboard widens to `--column-wide`. Client pages render through `ClientShell` (navigation, breadcrumbs, a `header` slot, footer), the way admin pages use `AdminShell`; an organization's pages render through `ClientOrgShell`, which adds the organization heading and its section tabs (Overview, Invoices, Spend by year). The overview puts the full-width Worklist first, then Projects and Budget in a `with-sidebar`: Budget is the 20rem sidebar at the end, and both stack, Projects first, once Projects would get less than 60% of the row.
 
-**Spacing:** one step scale, the `--space-*` tokens that `scripts/fluid-scale.js` generates. `3xs` 4px, `2xs` 8px and `xs` 12px are static and sit inside controls and between tight pairs; `s` (14→18px), `m` (21→27px), `l` (28→36px), `xl` (42→54px) and `2xl` (56→72px) grow with the viewport from 320px to 1280px, and the pairs `s-m` (the page gutter, `p-gutter`, 14→27px) and `m-l` (the gap between header, main and footer, `gap-region`, 21→36px) grow from one step to the next. The Tailwind steps map onto them in `src/styles/global.css`: `1` and `0.5` are `3xs`, `1.5` and `2` are `2xs`, `3` is `xs`, `4` and `gap-5` are `s`, `6` is `m`, `8` is `l`, `12` is `xl` and `scroll-mt-20` is `2xl`; widths, heights and sizes keep their fixed steps, so controls do not change, and so do the list indent `pl-5` and the badge's `px-2.5`. 8px is the gap inside a control and between grouped controls (a Button's icon and label, a row of buttons, a checkbox and its label) and the vertical padding of an input.
+**Spacing:** one step scale, the `--space-*` tokens that `scripts/fluid-scale.js` generates. `3xs` 4px, `2xs` 8px and `xs` 12px are static and sit inside controls and between tight pairs; `s` (14→18px), `m` (21→27px), `l` (28→36px), `xl` (42→54px) and `2xl` (56→72px) grow with the viewport from 320px to 1280px, and the pairs `s-m` (the page gutter, 14→27px) and `m-l` (the gap between header, main and footer, 21→36px) grow from one step to the next. Every padding, margin and gap takes a step, or a primitive's own space property; a control's fixed size, such as the badge's inline padding, is marked `/* constant: why */`, so controls keep their size. 8px is the gap inside a control and between grouped controls (a Button's icon and label, a row of buttons, a checkbox and its label) and the vertical padding of an input.
 
 **Widths:** static tokens in `src/styles/tokens.css`, beside the scales. `--measure` (65ch) is the longest line of prose; `--column` (48rem) is the public and settings column, `--column-wide` (72rem) the dashboard and admin column and `--column-narrow` (32rem) the auth forms; `--dialog` (28rem) is a confirmation and `--dialog-wide` (40rem) the command palette. The `center` primitive takes a column through `data-width` and the `measure` utility caps a paragraph at the measure; every `<dialog>` takes `--dialog` from `src/styles/base.css`, and the command palette widens its own to `--dialog-wide`.
 
 **Motion:** `--duration` (150ms) and `--ease` (`cubic-bezier(0.4, 0, 0.2, 1)`) in `src/styles/tokens.css` time every transition: colors on hover and focus, and the disclosure chevron's turn. Nothing moves layout, and a turn stops under `prefers-reduced-motion: reduce`; `aubr design:lint` rejects any other duration or curve.
+
+## Vocabulary
+
+Everything a page is styled with, in `src/styles/`. Use these before writing CSS; `aubr design:lint` fails on a class no stylesheet defines, on a defined class nothing uses, and on a rule that repeats a primitive.
+
+**Layers** (`global.css`, a later one wins whatever the specificity): `reset` (the browser defaults the markup relies on), `tokens` (`tokens.css`: colour roles with `light-dark()`, the fluid `--step-*` and `--space-*` scales from `scripts/fluid-scale.js`, widths, motion, logo stops, `--dimmed`), `base` (element defaults), `layout` (the primitives), `components` (one stylesheet per component, `components/<name>.css`), `page` (a page's scoped `<style>`), `utilities` (role utilities). Each stylesheet is one `@layer`, imported by `global.css`.
+
+**Element defaults** (`base.css`), so plain markup needs no class; any class opts out:
+
+- `section` without a class: a stack at `xs`.
+- `dl > div` without a class: its term above its details, a stack at `3xs`.
+- `th scope="col"`: the caps label (`label-caps`).
+- `p`, `li`, `dd` avoid a short last line; `h1`–`h3` balance their lines; every `dialog` takes `--dialog`; `:focus-visible` draws the focus outline.
+
+**Layout primitives** (`layout.css`, after Every Layout). Each declares its custom properties with their defaults on itself; tune an instance with a `data-*` step or the property in `style`, on the element that carries the class.
+
+- `stack`: children one under another. `--stack-space` (`s`); `data-space` `3xs` `2xs` `xs` `m` `l` `xl`.
+- `box`: the dashed plane. `--box-space` (`s`); `data-padding="xs"`.
+- `center`: a column capped and centred. `--center-max` (`--column`); `data-width` `wide` `narrow`.
+- `cluster`: peers that keep their width and wrap like words. `--cluster-space` (`2xs`); `data-space` `xs` `s` `metrics`, `data-justify` `between` `end`, `data-align` `baseline` `start`.
+- `with-sidebar`: a sidebar beside content that takes the rest, both stacked once the content would get less than its minimum. `--sidebar-width` (`auto`), `--content-min` (50%), `--sidebar-space` (`s`); `data-side="end"`, `data-align` `center` `start`.
+- `switcher`: peers all in one row or all stacked, never in between. `--switcher-threshold` (`--column`), `--switcher-space` (`s`); a child takes a larger share with an inline `flex-grow`.
+- `cover`: the page shell; its `main` (or `data-cover="grow"`) grows. `--cover-min` (`100dvh`), `--cover-space` (`m-l`), `--cover-pad` (`s-m`).
+- `auto-grid`: equal cells that wrap. `--grid-min` (16rem), `--grid-space` (`s`); a child with `data-span="full"` spans the row.
+
+Which one: vertical rhythm, a stack; peers at their own widths, a cluster; one fixed or intrinsic part beside a growing one, a with-sidebar; equal peers all or nothing, a switcher; equal cells, an auto-grid; a page column, a center; a plane, a box. Set a primitive's properties on the primitive itself, never on a parent.
+
+**Lines** (`components/lines.css`): the pattern for lists of things to find and act on; see Lines. `--lines-actions` (16rem); `data-actions` `narrow` `wide` `below`.
+
+**Role utilities** (`utilities.css`): the type roles (`text-display`, `text-headline`, `text-title`, `text-label`, `text-caption`, `label-caps`, `text-sm`, `text-xs`, `leading-none`), the colour roles in Role Tokens, `hover-text-fg`, `forced-ink` and `forced-line`, and the helpers `measure`, `tabular-nums`, `capitalize`, `wrap-break-word`, `wrap-anywhere`, `truncate`, `sr-only`.
+
+**Naming:** a class says what a thing is; a variant is a `data-*` attribute the owning component sets (`data-variant="danger"`); a state is ARIA (`aria-pressed`, `aria-current`, `aria-expanded`) or a native pseudo-class (`:checked`, `:user-invalid`). Each class is defined in exactly one stylesheet. Spell out whole class names and choose between them with a ternary or `class:list`, never assemble one with `${}`.
+
+### Page Styles
+
+A page may keep its one-off layout in one scoped `<style>` holding `@layer page { … }`: page classes only, layout properties only (display, grid, gap, alignment, sizes, margin and padding), with steps, width tokens, `%`, `fr` or a `min(100%, Nrem)` floor. Colour, type and lines come from the role utilities and components; a primitive is tuned through its properties in `style`. Components have no `<style>`.
 
 ## 2. Colors
 
@@ -235,6 +271,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 - **Focus Ring** (`focus`): the global `:focus-visible` outline.
 - **Muted Text** (`fg-muted`): secondary text of every kind: body copy, table values, labels, metadata, placeholders, and helper text. There is one muted tier; express further hierarchy with size or weight.
 - **Inverse**: every token has a dark value, used with the same hierarchy.
+- **More contrast**: under `prefers-contrast: more` the quiet roles strengthen, as mixes of the ink into the canvas, so each follows the scheme and keeps its rank: `fg-muted`, `line`, `line-strong`, `line-control`, `line-active`, the status lines, and `--dimmed`, the opacity of the spend chart's other projects while one is pointed at (0.3, then 0.6). Lines stay 1px and dashed.
 
 ### Named Rules
 
@@ -244,7 +281,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 
 ### Role Tokens
 
-Classes say what something is, never how it looks. Values live in `src/styles/tokens.css` as plain custom properties with `light-dark()`, so one class covers both color schemes and `aubr design:lint` rejects `dark:` variants; `src/styles/global.css` maps them to Tailwind utilities. Each role exists only on its own utility, so `text-fg` works and `bg-fg` does not. The Tailwind color palette is removed: a class such as `text-neutral-500` renders nothing, and `aubr design:lint` rejects it. That command also fails unless this file's frontmatter names every `tokens.css` token with its light value and its `-dark` value, and names nothing else, so token changes land in both places.
+Classes say what something is, never how it looks. Values live in `src/styles/tokens.css` as plain custom properties with `light-dark()`, so one class covers both color schemes and `aubr design:lint` rejects a `prefers-color-scheme` query and any color outside that file. Each role exists only on its own utility, so `text-fg` works and `bg-fg` does not; a class no stylesheet defines, such as `text-neutral-500`, renders nothing, and `aubr design:lint` rejects it. That command also fails unless this file's frontmatter names every `tokens.css` token with its light value and its `-dark` value, and names nothing else, so token changes land in both places.
 
 The frontmatter `contrast:` map states each token's WCAG 2.2 AA requirement by its use: `min: 4.5` for text, `min: 3` for a line, fill or mark that alone shows a control, a state or data (WCAG 1.4.11), `exempt` for a decorative line whose meaning text already carries, and `surface` for the tokens the others are measured on (a translucent surface over canvas). `aubr design:lint` fails when a token is missing from the map or falls below its minimum on any surface it names, in either scheme; `/brand/specimen` shows the same ratios from `src/lib/contrast.ts`, in red below the minimum.
 
@@ -271,9 +308,9 @@ Roles that markup sets carry a utility in `src/styles/utilities.css`; the others
 | `--canvas` on a border                            | Pace marker edge                                                             |
 | `text-chart-1`…`6`, `text-chart-unassigned`       | Spend chart only                                                             |
 
-A new token is a design decision: add it to `tokens.css`, `global.css`, this table and the `contrast:` map together, and to `utilities.css` once markup sets it. The unlisted component specimen at `/brand/specimen` (`src/pages/brand/specimen.astro`) reads `tokens.css`, so it shows the new token with its contrast ratios automatically, and its Scale section shows every type and space step with its range, where the design tests measure them; add new primitives to it by hand. It is public, so its demos stay presentational: no actions, data, sessions, or logged errors. The brand page at `/brand` (`src/pages/brand/index.astro`), unlisted until its owner content is in, builds its colour and type sections from the same sources and shows a few components in their default state.
+A new token is a design decision: add it to `tokens.css`, this table and the `contrast:` map together, and to `utilities.css` once markup sets it. The unlisted component specimen at `/brand/specimen` (`src/pages/brand/specimen.astro`) reads `tokens.css`, so it shows the new token with its contrast ratios automatically, and its Scale section shows every type and space step with its range, where the design tests measure them; add new primitives to it by hand. It is public, so its demos stay presentational: no actions, data, sessions, or logged errors. The brand page at `/brand` (`src/pages/brand/index.astro`), unlisted until its owner content is in, builds its colour and type sections from the same sources and shows a few components in their default state.
 
-Give an element one role per property, and choose between roles with a ternary. Tailwind orders utilities itself, not by class order, so stacking `text-fg-muted` with a conditional `text-fg-danger` lets the wrong one win.
+Give an element one role per property, and choose between roles with a ternary. Two utilities for the same property on one element resolve by their order in `utilities.css`, not by their order in the class attribute, so stacking `text-fg-muted` with a conditional `text-fg-danger` lets the wrong one win.
 
 Focus is global. Every focusable element gets the `:focus-visible` outline in `--focus` from the base layer; do not remove it or restyle it per component.
 
@@ -317,16 +354,16 @@ The heading roles are fluid: they grow with the viewport from 320px to 1280px an
 - **Body** (400, `--step-0` 1rem, 1.5): prose and explanatory text, with public prose kept to the measure, `--measure` (65ch).
 - **Small body** (`text-sm`; 400, `--step--1` 0.875rem): table cells, inputs, metadata, and helper text.
 - **Label** (`text-label` at `--step--1` 0.875rem; 600): form labels, buttons, and inline labels.
-- **Label caps** (`label-caps`; 600, `--step--2` 0.75rem, uppercase, muted): page section headings (h2 and the h3 that heads a section's list), table headers, and metric labels. It already sets the muted color, so do not rebuild it from `text-label uppercase text-fg-muted`.
+- **Label caps** (`label-caps`; 600, `--step--2` 0.75rem, uppercase, muted): page section headings (h2 and the h3 that heads a section's list), metric labels, and every column header (`th scope="col"`), which takes it from the base layer without a class. It already sets the muted color, so add no color class to it.
 - **Caption** (`text-caption`; 600, `--step--2` 0.75rem, 1.333): badges and other single-word state marks.
 
-Each role carries its size, weight, and line height together, so do not add `font-*` to it; `aubr design:lint` rejects every `font-*` utility, weights and families alike. The one `leading-*` exception is `leading-none`, in tight metric rows and in boxes sized around a single line: the badge (`text-caption leading-none`) and the hint button. Add it as `leading-none`, never as a `/none` size modifier, which drops the role's weight; `aubr design:lint` rejects every other `leading-*` and size modifier. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
+Each role carries its size, weight, and line height together, and no other class sets them: `aubr design:lint` rejects a `font-size` that is not a `--step-*` token and a weight other than 400 or 600 in any stylesheet. The one line-height override is `leading-none`, in tight metric rows and in boxes sized around a single line: the badge (`text-caption leading-none`) and the hint button. Other text uses `text-sm` or `text-xs`.
 
 ### Named Rules
 
 **The One-Family Rule.** Product UI stays in one system sans family. Do not introduce display fonts for labels, buttons, tables, or data.
 
-**The Two Weights Rule.** Text is 400 or 600; there is no 500. 600 comes only from a role class (`text-display`, `text-headline`, `text-title`, `text-label`, `text-caption`, `label-caps`). Row names, item headings in dense lists, amounts, and totals are body text at 400; they stand out by `text-fg` against muted text and by size, not by weight. Table header cells take their weight from `label-caps`; row header cells are body text, because the base layer resets the browser's bold `th`. A muted note next to a label sits outside the role: wrap the label text in `text-label` instead of overriding the weight of a child.
+**The Two Weights Rule.** Text is 400 or 600; there is no 500. 600 comes only from a role class (`text-display`, `text-headline`, `text-title`, `text-label`, `text-caption`, `label-caps`). Row names, item headings in dense lists, amounts, and totals are body text at 400; they stand out by `text-fg` against muted text and by size, not by weight. Column header cells take their weight from the caps label of the base layer; row header cells are body text, because the base layer resets the browser's bold `th`. A muted note next to a label sits outside the role: wrap the label text in `text-label` instead of overriding the weight of a child.
 
 **The Exact Numbers Rule.** Amounts, percentages, and invoice data use tabular numerals when they need comparison.
 
@@ -360,7 +397,7 @@ Buttons are compact, transparent, and line-drawn.
 
 A text link is its text with a dashed underline, never a box.
 
-- **Recipe:** the `link` class in `src/styles/components/link.css` draws the dashed underline (4px offset); do not spell it out with `underline decoration-dashed`; `aubr design:lint` rejects `underline` and decoration styles outside that file, so an underline always means a link. The quiet Button and the breadcrumbs use it too.
+- **Recipe:** the `link` class in `src/styles/components/link.css` draws the dashed underline (4px offset); `aubr design:lint` rejects an underline in any other stylesheet, so an underline always means a link. The quiet Button and the breadcrumbs use it too.
 - **Hover:** the underline turns solid and the text keeps its color, so primary, status and `text-fg-info` links keep their meaning. A link that can rest in muted text, including one that inherits it from a muted row, adds `hover-text-fg` from `src/styles/utilities.css` as its only hover color. Only decoration and color change, so hovering never moves layout.
 - **Color:** a link inherits its text color or takes one role by ternary; `text-fg-info` marks links in public and account prose.
 
@@ -422,9 +459,9 @@ Inputs follow the same line vocabulary as buttons.
 - **Focus:** border shifts to stronger neutral, in addition to the global focus outline.
 - **Placeholder / Disabled:** placeholder text is muted but must remain readable against the active surface.
 - **Read-only:** `Input` draws a `readonly` input's value in `text-fg-muted` inside the same dashed box, like a calculated output, so it reads as shown rather than editable; it stays focusable and its value selectable. Its hint says why it is locked.
-- **Error:** error text uses status red and should be placed near the field it explains.
+- **Error:** error text uses status red, below the field it explains. A field shows its error once the user has interacted with it (`:user-invalid`, with `aria-invalid` kept in sync), not while it is still untouched; the server's error for the field stays the authority and shows after a failed submit.
 - **Show password:** `src/components/PasswordToggle.astro` is a quiet Button below a password field that switches the inputs named in `controls` between hidden and plain text, on sign-in and on both reset fields together ("Show passwords"). Its label stays the same and `aria-pressed` carries the state, so it reads "Show password, pressed" rather than a label and a state that contradict each other; pressed, the quiet text turns primary with a solid underline. Submitting hides the text again.
-- **Checkbox:** `src/components/Checkbox.astro` wraps a 1rem square with a dashed `line-control` outline and its `text-label` text in one label. Checked, the square fills with ink and shows a tick cut from `bg-canvas` with a mask, so the tick follows the scheme without a `dark:` variant or a fixed white or black.
+- **Checkbox:** `src/components/Checkbox.astro` wraps a 1rem square with a dashed `line-control` outline and its `text-label` text in one label. Checked, the square fills with ink and shows a tick cut from `bg-canvas` with a mask, so the tick follows the scheme without a fixed white or black.
 
 ### Action Feedback
 
@@ -433,20 +470,20 @@ A form action's outcome shows once, at the top of the page, below the page headi
 - **Component:** `src/components/ActionBanner.astro`, rendered by the admin shells from their `results` and `fieldLabels`. Pages never render their own result paragraph.
 - **Success:** a `role="status"` line in status green that says what happened, as a sentence ending in a period ("Phase sent to client."). An action reports the same text on every page; never a generic "Saved.".
 - **Error:** a `role="alert"` plane in status red. Input errors list each field by its label; server errors get a generic retry sentence instead of the raw message.
-- **Live regions:** a message set by a script lives in a `role="alert"` or `role="status"` element that is rendered from the start, empty; only its text changes, because a region revealed at the moment its text is set is not announced reliably. Space it with `not-empty:` utilities instead of hiding it; `aubr design:lint` rejects a live region that starts `hidden`.
+- **Live regions:** a message set by a script lives in a `role="alert"` or `role="status"` element that is rendered from the start, empty; only its text changes, because a region revealed at the moment its text is set is not announced reliably. Space it with `:not(:empty)` in its stylesheet instead of hiding it; `aubr design:lint` rejects a live region that starts `hidden`.
 
 ### One-time Secrets
 
 A secret the server returns once shows once, in the page, and nowhere else. No page shows one today; the first, such as API keys once the API is built, follows this pattern.
 
-- **Display:** a heading, a muted sentence that it will not be shown again, then the full value as small body text in a dashed `line-control` box with `wrap-anywhere` and `select-all`, so one click selects all of it. No monospace and no truncation.
+- **Display:** a heading, a muted sentence that it will not be shown again, then the full value as small body text in a dashed `line-control` box with `wrap-anywhere` and `user-select: all` in its stylesheet, so one click selects all of it. No monospace and no truncation.
 - **Copy:** a default Button "Copy" writes it with `navigator.clipboard`; where that fails it selects the value and says which shortcut copies it. The outcome goes to a `role="status"` line beside the button.
 - **Focus:** creating moves focus to the result section (`tabindex="-1"`, named by its heading and described by the not-shown-again sentence); a failure goes to the always-rendered `role="alert"` line and focus returns to the trigger.
 - **Lifetime:** the value is set as text only, never in an attribute, the console, storage or the URL, and is cleared on `pagehide` so the back-forward cache cannot restore it. Reloading shows nothing.
 
 ### Navigation
 
-Navigation is a responsive grid with the logo on the left and compact session links on the right at larger widths. On small screens it stacks into a centered single-column grid. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like. It sits in the shared `max-w-6xl` (dashboard) or `max-w-3xl` (public/settings) header, matching the page column it leads.
+Navigation is a `cluster`: the logo at the start and the compact session links at the end of one row, and the links below the logo, at the start, once both do not fit; the links wrap among themselves and never scroll. The logo scales from a compact app height to a larger marketing height, but the navigation controls stay compact and button-like. It sits in the page's `center`, at `--column-wide` (dashboard) or `--column` (public and settings), matching the page column it leads. A skip link to the main landmark leads every page; it waits above the top edge and appears in the corner while it has focus.
 
 - **Groups:** signed-in links form two groups. Work destinations (Dashboard, and Admin for admins) are default Buttons; the account group (Account, Logout) is quiet Buttons, set apart by a wider gap. The Search button sits between the two groups and opens the command palette (Ctrl+K or Cmd+K). Logout is hidden while viewing as a client.
 - **Dashboard:** on a client page it leads to that organization's dashboard, otherwise to `/dash`, which lists the member's organizations.
@@ -457,13 +494,13 @@ Navigation is a responsive grid with the logo on the left and compact session li
 
 ### Tables
 
-Tables are the main product surface for project, phase, invoice, and budget data.
+Lists of things to find and act on are lines (see Lines), not tables. A `<table>` is only for data compared across rows, column by column: today the client ledger.
 
 - **Structure:** full-width tables with dashed outer borders and dashed row dividers.
 - **Density:** compact but readable cells (12px vertical rhythm, `s` horizontal).
-- **Headers:** semibold uppercase labels using the `label-caps` class.
+- **Headers:** `th scope="col"`, which the base layer sets as the caps label.
 - **Rows:** hover fills are neutral and subtle; status is shown through badges. Row headers and amounts are body text in `text-fg` (see The Two Weights Rule).
-- **Overflow:** horizontal overflow is acceptable for dense data; do not crush columns until labels become ambiguous. The scrolling wrapper is a `<section tabindex="0">` named by its section heading (`aria-labelledby`), so keyboard users can reach and scroll it in every browser.
+- **Overflow:** horizontal overflow is acceptable; do not crush columns until labels become ambiguous. The scrolling wrapper is a `<section tabindex="0">` named by its section heading (`aria-labelledby`), so keyboard users can reach and scroll it in every browser.
 
 ### Lines
 
@@ -482,13 +519,13 @@ Progress is used for budget state and remains literal.
 - **Track:** transparent track with a dashed `line-control` border.
 - **Fill:** ink neutral by default, status red only when budget use exceeds the budget.
 - **Pace Marker:** a thin neutral marker may show calendar pace, but it must not compete with the actual value.
-- **Payment progress:** a phase's cost parts render as a row of small segments, one per part. Shape carries the state and color repeats it: paid is a solid green block, overdue a solid red outline, invoiced a dashed blue outline, and not yet invoiced a dotted neutral outline. Each segment names its part and state for screen readers and in its `title`, and the line below sums it up in words. The status fills that draw the segments (`fill-success`, `fill-danger`, `fill-info`) and the dotted `line-control` outline hold 3:1 on canvas and panel, so the state reads at a glance.
+- **Payment progress:** a phase's cost parts render as a row of small segments, one per part. Shape carries the state and color repeats it: paid is a solid green block, overdue a solid red outline, invoiced a dashed blue outline, and not yet invoiced a dotted neutral outline. Each segment names its part and state in text for screen readers, never in a `title` tooltip, and the line below sums it up in words. The status fills that draw the segments (`fill-success`, `fill-danger`, `fill-info`) and the dotted `line-control` outline hold 3:1 on canvas and panel, so the state reads at a glance.
 
 ## 6. Do's and Don'ts
 
 ### Do:
 
-- **Do** use inline Tailwind utilities built on role tokens to match the existing project conventions, and lay out with grid where grid and flexbox behave the same; flexbox is fine where it behaves better, such as items that wrap at their own widths.
+- **Do** compose from the element defaults, primitives, lines pattern and role utilities in Vocabulary, with role tokens for every color and steps for every size and space; lay out with grid where grid and flexbox behave the same, and flexbox where it behaves better, such as items that wrap at their own widths.
 - **Do** use 1px dashed neutral borders for structure, panels, tables, inputs, empty states, and buttons.
 - **Do** keep product data exact, scannable, and close to its label.
 - **Do** use neutral hover fills and visible focus outlines on interactive controls.
