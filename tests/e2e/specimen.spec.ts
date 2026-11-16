@@ -132,6 +132,27 @@ test("type-to-confirm accepts only the exact text", async ({ page }) => {
 	await expect(trigger).toBeFocused();
 });
 
+// Signed out, the palette's search answers 401, so it offers only Sign in.
+test("a text selection dragged onto the backdrop keeps the palette open", async ({
+	page,
+}) => {
+	await page.keyboard.press("ControlOrMeta+k");
+	const field = page.getByRole("combobox", { name: "Search" });
+	await expect(field).toBeFocused();
+	await field.fill("acme invoices");
+
+	const box = await field.boundingBox();
+	if (!box) throw new Error("The search field has no box");
+	await page.mouse.move(box.x + box.width - 4, box.y + box.height / 2);
+	await page.mouse.down();
+	await page.mouse.move(8, 8, { steps: 4 });
+	await page.mouse.up();
+	await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+
+	await page.mouse.click(8, 8);
+	await expect(page.getByRole("dialog", { name: "Search" })).toBeHidden();
+});
+
 // Browsers without invoker commands ignore `command` and `commandfor`; the
 // component opens and closes the dialog itself there.
 test.describe("without invoker commands", () => {
