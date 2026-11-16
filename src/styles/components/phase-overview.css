@@ -1,31 +1,20 @@
 @layer components {
 	/* src/components/PhaseOverview.astro: totals and the view switch, then one
-	   row per phase on a rows list (a table from 60rem of its own width), each
-	   with a hidden payment schedule on a rows list of its own (from 44rem). */
-
-	/* The header's Billing column lines up with its figures, and Actions
-	   covers the actions and the Details toggle. */
-	phase-overview [data-head] {
-		& > :nth-child(3) {
-			text-align: end;
-		}
-		& > :last-child {
-			grid-column: span 2;
-		}
-	}
+	   inbox line per phase (DESIGN.md#lines), each with a hidden payment
+	   schedule of ledger lines. */
 
 	phase-overview h3[data-state="cancelled"] {
 		color: var(--fg-muted);
 		text-decoration-line: line-through;
 	}
 
-	/* One mark per cost part. Shape carries the state without colour: paid is
-	   a solid block, overdue a solid outline, invoiced a dashed one and not yet
-	   invoiced a dotted one. */
+	/* One mark per cost part, under the phase's amount. Shape carries the
+	   state without colour: paid is a solid block, overdue a solid outline,
+	   invoiced a dashed one and not yet invoiced a dotted one. A fixed width,
+	   since a percentage has nothing to resolve against inside the figure. */
 	.phase-payments {
 		display: grid;
-		inline-size: 100%;
-		max-inline-size: 11rem;
+		inline-size: 6rem;
 		grid-auto-columns: minmax(0, 1fr);
 		grid-auto-flow: column;
 		gap: var(--space-3xs);
@@ -53,45 +42,12 @@
 		}
 	}
 
-	/* A phase without actions leaves no empty cell; in the table the Details
-	   toggle keeps the last column by itself. */
-	.phase-actions:empty {
-		display: none;
-	}
-
-	.phase-details {
-		grid-column: 1 / -1;
-		padding-block-start: var(--space-s);
-		border-block-start: var(--rule) var(--line);
-
-		/* enhancement: hidden="until-found" (PhaseOverview's script) keeps the
-		   closed panel's box and only skips its content, so it leaves the row's
-		   grid and draws nothing until find in page opens it. */
-		&[hidden="until-found"] {
-			position: absolute;
-			padding: 0;
-			border: 0;
-		}
-	}
-
-	/* In the table the billing figures sit at the end of their column. */
-	@container (inline-size >= 60rem) {
-		.phase-billing {
-			inline-size: 11rem;
-			justify-items: end;
-			text-align: end;
-		}
-		.phase-toggle {
-			grid-column: -2;
-		}
-	}
-
-	@container (inline-size >= 44rem) {
-		.phase-part-invoice {
-			justify-content: flex-end;
-		}
-		.phase-part-note {
-			text-align: end;
-		}
+	/* enhancement: hidden="until-found" (PhaseOverview's script) keeps the
+	   closed details' box and only skips its content, so it leaves the line's
+	   flex row and draws nothing until find in page opens it. */
+	phase-overview [data-phase] > [hidden="until-found"] {
+		position: absolute;
+		padding: 0;
+		border: 0;
 	}
 }

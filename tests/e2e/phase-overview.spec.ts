@@ -24,11 +24,12 @@ const fixture = async (page: Page) => {
 		route.fulfill({
 			contentType: "text/html",
 			body: `<!doctype html><html lang="en"><head><title>Fixture</title>${styles}</head><body>
-<phase-overview><div class="rows" data-at="60"><ul>
-<li id="phase-a" data-phase><h3>Discovery</h3>
-<button type="button" class="button" data-variant="default" aria-expanded="false" aria-controls="phase-a-details" data-phase-toggle>Details</button>
-<div id="phase-a-details" class="phase-details stack" hidden><p>Upfront billed on approval</p></div>
-</li></ul></div></phase-overview>
+<phase-overview><ol class="lines" aria-label="Phases">
+<li id="phase-a" class="target" data-phase><div class="line-text"><h3>Discovery</h3></div>
+<p class="line-figure"><span>30.000,00 €</span></p>
+<div class="line-actions cluster"><button type="button" class="button disclosure" data-variant="quiet" aria-label="Details: Discovery" aria-expanded="false" aria-controls="phase-a-details" data-phase-toggle>Details</button></div>
+<div id="phase-a-details" class="line-details stack" hidden><p>upfront billed on approval</p></div>
+</li></ol></phase-overview>
 <script type="module">${script}</script></body></html>`,
 		}),
 	);
@@ -36,13 +37,13 @@ const fixture = async (page: Page) => {
 
 test("a text fragment opens a closed payment schedule", async ({ page }) => {
 	await fixture(page);
-	const toggle = page.getByRole("button", { name: "Details" });
+	const toggle = page.getByRole("button", { name: "Details: Discovery" });
 	const panel = page.locator("#phase-a-details");
 
 	await page.goto("/phase-overview-fixture");
 	await expect(panel).toHaveAttribute("hidden", "until-found");
 	await expect(toggle).toHaveAttribute("aria-expanded", "false");
-	// The closed panel draws nothing and takes no room in its row.
+	// The closed panel draws nothing and takes no room in its line.
 	expect(await panel.boundingBox()).toMatchObject({ width: 0, height: 0 });
 
 	await page.goto("/phase-overview-fixture#:~:text=billed%20on%20approval");
@@ -62,7 +63,7 @@ test("without beforematch a closed schedule stays plainly hidden", async ({
 		delete (HTMLElement.prototype as { onbeforematch?: unknown }).onbeforematch;
 	});
 	await fixture(page);
-	const toggle = page.getByRole("button", { name: "Details" });
+	const toggle = page.getByRole("button", { name: "Details: Discovery" });
 	const panel = page.locator("#phase-a-details");
 
 	await page.goto("/phase-overview-fixture#:~:text=billed%20on%20approval");
