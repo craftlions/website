@@ -67,10 +67,16 @@
         "noAsyncPromiseFinally": "error",
         "noConstantComparisons": "error",
         "noDisabledAttribute": "error",
+        "noDrizzleDbObjectInsideTransaction": {
+          "level": "error",
+          "options": { "drizzleObjectName": ["db"] }
+        },
         "noDuplicateTypeConstituents": "error",
         "noErasingOperation": "error",
         "noExcessiveSelectorComplexity": "error",
         "noInvalidFetchOptions": "error",
+        "noLateCurrentTargetAccess": "error",
+        "noMisusedSpread": "error",
         "noNegatedArrayPredicate": "error",
         "noNewArray": "error",
         "noNumberArgumentOutOfRange": "error",
@@ -93,7 +99,8 @@
         "useGlobalRegexInMatchAll": "error",
         "useGlobalRegexInReplaceAll": "error",
         "useNextScriptForGoogleAnalytics": "error",
-        "useValidCharacterComparison": "error"
+        "useValidCharacterComparison": "error",
+        "useValidNamespaceImports": "error"
       }
     },
     "domains": {
