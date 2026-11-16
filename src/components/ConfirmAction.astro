@@ -66,21 +66,10 @@ const {
 		)}
 		<div class="confirm-action-buttons">
 			{/* The dialog opens on the safe action, so Enter cannot confirm by accident. */}
-			<Button
-				command="close"
-				commandfor={id}
-				class="max-w-full"
-				autofocus
-				data-confirm-cancel
-			>
+			<Button command="close" commandfor={id} autofocus data-confirm-cancel>
 				{cancel}
 			</Button>
-			<Button
-				type="submit"
-				variant={confirmVariant}
-				class="max-w-full"
-				data-confirm-submit
-			>
+			<Button type="submit" variant={confirmVariant} data-confirm-submit>
 				{confirm}
 			</Button>
 		</div>
