@@ -13,71 +13,13 @@
 		border-block-start: var(--rule) var(--line);
 	}
 
-	/* Phases, on a rows list: stacked rows, a table on five columns from 60rem
-	   with the next step in the fourth and More in the fifth. A custom element
-	   is inline until styled, and an inline box cannot be a container. */
+	/* Phases, on lines. A custom element is inline until styled. A
+	   cancelled phase's title is struck through. */
 	.admin-phases {
 		display: block;
-	}
 
-	/* Amount and Next step sit over their end-aligned cells. */
-	.admin-phases-head {
-		& > :nth-child(n + 3) {
-			text-align: end;
-		}
-
-		& > :last-child {
-			grid-column: span 2;
-		}
-	}
-
-	.phase-row {
-		row-gap: var(--space-xs);
-		scroll-margin-block-start: var(--space-2xl);
-	}
-
-	/* A row is one implicit column until it is a table; its cells may shrink
-	   below their longest word. */
-	.phase-info,
-	.phase-amount,
-	.phase-panel {
-		min-inline-size: 0;
-	}
-
-	.phase-info {
-		& > [data-cancelled] {
+		& [data-cancelled] {
 			text-decoration-line: line-through;
-		}
-
-		& > a {
-			inline-size: max-content;
-		}
-	}
-
-	.phase-panel {
-		grid-column: 1 / -1;
-		padding-block-start: var(--space-s);
-		border-block-start: var(--rule) var(--line);
-	}
-
-	@container (inline-size >= 60rem) {
-		.phase-amount {
-			inline-size: 12rem;
-			justify-items: end;
-			text-align: end;
-		}
-
-		.phase-step,
-		.phase-more {
-			justify-self: end;
-		}
-
-		.phase-step {
-			grid-column-start: 4;
-		}
-
-		.phase-more {
-			grid-column-start: 5;
 		}
 	}
 

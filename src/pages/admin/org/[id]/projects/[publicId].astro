@@ -155,6 +155,13 @@ const reopenedPhase =
 		? actedPhase
 		: undefined;
 
+// When a phase billed in one part bills it, for the line's secondary figure.
+const billedOn = {
+	upfront: "approval",
+	delivery: "delivery",
+	acceptance: "acceptance",
+} as const;
+
 // Open phases first, settled ones after; each group keeps creation order.
 const phases = project.phases
 	.map((phase) => ({
@@ -259,7 +266,7 @@ const phases = project.phases
 			)}
 		</div>
 		<p class="measure text-sm text-fg-muted">
-			Open phases come first. Each row offers its next step; corrections and
+			Open phases come first. Each phase offers its next step; corrections and
 			cancelling sit under More.
 			{!canAddPhase && " Phases can only be added to draft or active projects."}
 		</p>
@@ -340,128 +347,112 @@ const phases = project.phases
 		)}
 		{phases.length > 0 ? (
 			<admin-phase-list
-				class="rows admin-phases"
-				data-at="60"
-				style="--rows-columns: minmax(0, 1fr) auto auto auto auto"
+				class="admin-phases"
 				data-acted={actedPhase && `phase-${actedPhase.publicId}`}
 			>
-				<ul>
-					<li aria-hidden="true" class="admin-phases-head label-caps" data-head>
-						<span>Phase</span>
-						<span>State</span>
-						<span>Amount</span>
-						<span>Next step</span>
-					</li>
+				<ol class="lines" aria-labelledby="phases-heading">
 					{phases.map((phase) => (
-						<li id={`phase-${phase.publicId}`} class="phase-row" data-phase>
-							<div class="stack phase-info" data-space="3xs">
+						<li id={`phase-${phase.publicId}`} class="target" data-phase>
+							<div class="line-text">
 								<h4
-									class:list={[
-										"wrap-break-word",
-										phase.settled ? "text-fg-muted" : undefined,
-									]}
+									class={phase.settled ? "text-fg-muted" : undefined}
 									data-cancelled={phase.state === "cancelled" || undefined}
 								>
 									{phase.title}
 								</h4>
-								<p class="text-sm text-fg-muted">
-									{phase.dueAt
-										? `Due ${formatDate(phase.dueAt)}`
-										: "No due date"}
+								<p class="cluster text-sm text-fg-muted">
+									<Badge type={phaseStatus[phase.state].badge}>
+										{phaseStatus[phase.state].label}
+									</Badge>
+									<span>
+										{phase.dueAt
+											? `due ${formatDate(phase.dueAt)}`
+											: "no due date"}
+									</span>
+									{phase.components.length > 1 && phase.cost > 0 && (
+										<span>
+											{phase.components
+												.map(
+													(part) =>
+														`${costPartLabel[part.component]} ${formatPercent((part.amount / phase.cost) * 100)}`,
+												)
+												.join(" · ")}
+										</span>
+									)}
+									{phase.externalUrl && (
+										<a
+											class="link"
+											href={phase.externalUrl}
+											rel="noopener noreferrer"
+											target="_blank"
+											aria-label={`Epic: ${phase.title} (opens in a new tab)`}
+										>
+											Epic
+										</a>
+									)}
+									{phase.deliveryState === "url" && phase.deliveryUrl ? (
+										<a
+											class="link"
+											href={phase.deliveryUrl}
+											rel="noopener noreferrer"
+											target="_blank"
+											aria-label={`Delivery: ${phase.title} (opens in a new tab)`}
+										>
+											Delivery
+										</a>
+									) : (
+										phase.deliveryState === "none" && (
+											<span>delivered without a PR/MR</span>
+										)
+									)}
 								</p>
-								{phase.externalUrl && (
-									<a
-										class="text-sm link"
-										href={phase.externalUrl}
-										rel="noopener noreferrer"
-										target="_blank"
-										aria-label={`Epic: ${phase.title} (opens in a new tab)`}
-									>
-										Epic
-									</a>
-								)}
-								{phase.deliveryState === "url" && phase.deliveryUrl ? (
-									<a
-										class="text-sm link"
-										href={phase.deliveryUrl}
-										rel="noopener noreferrer"
-										target="_blank"
-										aria-label={`Delivery: ${phase.title} (opens in a new tab)`}
-									>
-										Delivery
-									</a>
-								) : (
-									phase.deliveryState === "none" && (
-										<p class="text-sm text-fg-muted">
-											Delivered without a PR/MR
-										</p>
-									)
-								)}
 							</div>
-							<Badge type={phaseStatus[phase.state].badge}>
-								{phaseStatus[phase.state].label}
-							</Badge>
-							<div class="stack phase-amount" data-space="3xs">
-								<p
-									class:list={[
-										"tabular-nums wrap-break-word",
-										phase.settled ? "text-fg-muted" : undefined,
-									]}
-								>
+							<p class="line-figure">
+								<span class={phase.settled ? "text-fg-muted" : undefined}>
 									{formatMoney(phase.cost, phase.currency)}
-								</p>
-								{phase.components.length > 0 ? (
-									<ul
-										class="stack text-xs tabular-nums text-fg-muted wrap-break-word"
-										data-space="3xs"
-										aria-label={`Cost split of ${phase.title}`}
-									>
-										{phase.components.map((part) => (
-											<li>
-												{costPartLabel[part.component]}
-												{phase.cost > 0 &&
-													` ${formatPercent((part.amount / phase.cost) * 100)}`}
-												{" · "}
-												{formatMoney(part.amount, phase.currency)}
-											</li>
+								</span>
+								<span class="text-sm text-fg-muted">
+									{phase.components.length > 1
+										? `in ${phase.components.length} parts`
+										: phase.components[0]
+											? `billed on ${billedOn[phase.components[0].component]}`
+											: "nothing to bill"}
+								</span>
+							</p>
+							{phase.state !== "cancelled" && (
+								<div class="line-actions cluster">
+									{phaseTransitionsFrom(phase.state)
+										.filter((nextState) => nextState !== "cancelled")
+										.map((nextState) => (
+											<PhaseTransitionForm {phase} {nextState} />
 										))}
-									</ul>
-								) : (
-									<p class="text-xs text-fg-muted">Nothing to bill</p>
-								)}
-							</div>
-							{phaseTransitionsFrom(phase.state)
-								.filter((nextState) => nextState !== "cancelled")
-								.map((nextState) => (
-									<PhaseTransitionForm {phase} {nextState} class="phase-step" />
-								))}
-							{phase.state === "in_progress" && (
-								<DisclosureButton
-									controls={`phase-${phase.publicId}-more`}
-									open={phase.id === reopenedPhase?.id}
-									class="phase-step"
-									aria-label={`${recordDeliveryLabel}: ${phase.title}`}
-								>
-									{recordDeliveryLabel}
-								</DisclosureButton>
-							)}
-							{["submitted", "planned", "delivered", "accepted"].includes(
-								phase.state,
-							) && (
-								<DisclosureButton
-									controls={`phase-${phase.publicId}-more`}
-									open={phase.id === reopenedPhase?.id}
-									variant="quiet"
-									class="phase-more"
-									aria-label={`More: ${phase.title}`}
-								>
-									More
-								</DisclosureButton>
+									{phase.state === "in_progress" && (
+										<DisclosureButton
+											controls={`phase-${phase.publicId}-more`}
+											open={phase.id === reopenedPhase?.id}
+											aria-label={`${recordDeliveryLabel}: ${phase.title}`}
+										>
+											{recordDeliveryLabel}
+										</DisclosureButton>
+									)}
+									{["submitted", "planned", "delivered", "accepted"].includes(
+										phase.state,
+									) && (
+										<DisclosureButton
+											controls={`phase-${phase.publicId}-more`}
+											open={phase.id === reopenedPhase?.id}
+											variant="quiet"
+											aria-label={`More: ${phase.title}`}
+										>
+											More
+										</DisclosureButton>
+									)}
+								</div>
 							)}
 							{!["approved", "cancelled"].includes(phase.state) && (
 								<div
 									id={`phase-${phase.publicId}-more`}
-									class="stack phase-panel"
+									class="line-details stack"
 									hidden={phase.id !== reopenedPhase?.id}
 								>
 									{phase.state === "in_progress" && (
@@ -520,7 +511,7 @@ const phases = project.phases
 							)}
 						</li>
 					))}
-				</ul>
+				</ol>
 			</admin-phase-list>
 		) : (
 			<p class="box text-sm text-fg-muted">
