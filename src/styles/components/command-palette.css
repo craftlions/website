@@ -1,3 +1,62 @@
 @layer components {
-	/* src/components/CommandPalette.astro; filled by conversion package S5b. */
+	/* src/components/CommandPalette.astro: the search field, its status line
+	   and the results, which scroll inside the modal. */
+	command-palette {
+		& dialog {
+			inline-size: 100%;
+			max-inline-size: min(var(--dialog-wide), 100% - 2rem);
+			max-block-size: min(36rem, 100dvh - 4rem);
+			grid-template-rows: auto auto minmax(0, 1fr);
+			gap: var(--space-xs);
+			margin: auto;
+			background-color: var(--canvas);
+			overscroll-behavior: contain;
+
+			&[open] {
+				display: grid;
+			}
+			&::backdrop {
+				overflow: hidden;
+				overscroll-behavior: contain;
+				background-color: color-mix(in oklab, var(--canvas) 80%, transparent);
+			}
+		}
+
+		& search {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: center;
+			gap: var(--space-2xs);
+		}
+		& [role="combobox"] {
+			inline-size: 100%;
+		}
+
+		& [role="listbox"] {
+			min-block-size: 0;
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+		/* Groups and options are built by the script, so these rules select
+		   them by role. */
+		& [role="group"] {
+			display: grid;
+
+			& > [role="presentation"] {
+				padding: var(--space-3xs) var(--space-xs);
+			}
+		}
+		& [role="option"] {
+			display: grid;
+			gap: var(--space-3xs);
+			padding: var(--space-2xs) var(--space-xs);
+
+			&[aria-selected="true"] {
+				outline-width: 1px;
+				outline-style: dashed;
+				outline-offset: -1px;
+				background-color: var(--panel);
+			}
+		}
+	}
 }

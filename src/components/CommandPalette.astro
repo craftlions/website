@@ -10,12 +10,8 @@ const idleStatus =
 ---
 
 <command-palette data-idle-status={idleStatus}>
-	<dialog
-		id="command-palette"
-		aria-label="Search"
-		class="m-auto max-h-[min(36rem,calc(100dvh-4rem))] w-full max-w-[min(40rem,calc(100%-2rem))] grid-rows-[auto_auto_minmax(0,1fr)] gap-3 border border-dashed border-line bg-canvas p-4 text-fg overscroll-contain open:grid backdrop:overflow-hidden backdrop:overscroll-contain backdrop:bg-canvas/80"
-	>
-		<search class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+	<dialog id="command-palette" aria-label="Search" class="box text-fg">
+		<search>
 			<Input
 				type="text"
 				role="combobox"
@@ -32,7 +28,6 @@ const idleStatus =
 					? "Clients, projects, phases, invoices…"
 					: "Projects, phases, invoices…"}
 				autofocus
-				class="w-full"
 			/>
 			<Button variant="quiet" data-command-palette-close>Close</Button>
 		</search>
@@ -43,7 +38,8 @@ const idleStatus =
 			id="command-palette-results"
 			role="listbox"
 			aria-label="Results"
-			class="grid min-h-0 content-start gap-3 overflow-y-auto overscroll-contain"
+			class="stack"
+			data-space="xs"
 		></div>
 	</dialog>
 </command-palette>
@@ -51,8 +47,6 @@ const idleStatus =
 <script>
 	import type { SearchResponse } from "../lib/search-query.ts";
 
-	const optionClass =
-		"grid gap-0.5 px-3 py-2 text-sm aria-selected:bg-panel aria-selected:outline-1 aria-selected:outline-dashed aria-selected:-outline-offset-1";
 	// Ctrl+K stays the line-kill key in macOS text fields.
 	const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 
@@ -116,7 +110,7 @@ const idleStatus =
 				// Hovering a result must not load its page: some page loads change
 				// state, such as the active organization.
 				link.setAttribute("data-astro-prefetch", "false");
-				link.className = optionClass;
+				link.className = "text-sm";
 				const primary = document.createElement("span");
 				primary.className = "text-fg wrap-break-word";
 				primary.textContent = label;
@@ -139,11 +133,10 @@ const idleStatus =
 							"aria-labelledby",
 							`command-palette-group-${group.id}`,
 						);
-						element.className = "grid";
 						const heading = document.createElement("p");
 						heading.id = `command-palette-group-${group.id}`;
 						heading.setAttribute("role", "presentation");
-						heading.className = "label-caps px-3 py-1";
+						heading.className = "label-caps";
 						heading.textContent = group.label;
 						element.replaceChildren(
 							heading,
