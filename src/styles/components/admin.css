@@ -77,6 +77,25 @@
 			padding: var(--space-xs) var(--space-s);
 			text-align: start;
 		}
+
+		/* The client column stays while the figures scroll under it, on the
+		   canvas and with a dashed rule at its end. A fifth of the table, so a
+		   long name wraps rather than cover the figures in a narrow region. */
+		& tr > :first-child {
+			inline-size: 20%;
+			position: sticky;
+			inset-inline-start: 0;
+			z-index: 1;
+			background-color: var(--canvas);
+
+			&::after {
+				content: "";
+				position: absolute;
+				inset-block: 0;
+				inset-inline-end: 0;
+				border-inline-end: var(--rule) var(--line);
+			}
+		}
 	}
 
 	/* A figure column: right-aligned, and the outstanding total above its
