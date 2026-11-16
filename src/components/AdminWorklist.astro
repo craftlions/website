@@ -1,7 +1,7 @@
 ---
 import type { WorklistItem } from "../lib/admin-worklist.ts";
 import { actions } from "astro:actions";
-import { formatMoney } from "../lib/format.ts";
+import { formatMoney, sumByCurrency } from "../lib/format.ts";
 import {
 	componentBillingStatus,
 	type InvoiceComponent,
@@ -77,18 +77,28 @@ const ordered = [
 	...items.filter((item) => item.actor === "client"),
 ];
 const visible = ordered.slice(0, limit ?? ordered.length);
+// An invoice item's amount is its invoice's total, a phase item's the cost.
+const amount = (item: (typeof items)[number]) =>
+	item.invoice
+		? {
+				amount: item.invoice.stripe.total,
+				currency: item.invoice.stripe.currency,
+			}
+		: { amount: item.phase.cost, currency: item.phase.currency };
 const groups = [
 	{
 		id: `${id}-your-move`,
 		label: "Your move",
-		total: items.filter((item) => item.actor === "admin").length,
+		// Every item of the group, also those a limited list leaves out, for
+		// its count and total.
+		total: items.filter((item) => item.actor === "admin"),
 		items: visible.filter((item) => item.actor === "admin"),
 		empty: "Nothing for you to do: every open item waits on the client.",
 	},
 	{
 		id: `${id}-waiting`,
 		label: "Waiting on client",
-		total: items.filter((item) => item.actor === "client").length,
+		total: items.filter((item) => item.actor === "client"),
 		items: visible.filter((item) => item.actor === "client"),
 		empty: "Nothing waits on the client.",
 	},
@@ -96,140 +106,116 @@ const groups = [
 ---
 
 {items.length > 0 ? (
-	<div
-		class="rows"
-		data-at="60"
-		style="--rows-columns: auto minmax(0, 1fr) auto auto auto"
-	>
-		<div>
-			<div aria-hidden="true" class="worklist-head label-caps" data-head>
-				<span>Status</span>
-				<span>Item</span>
-				<span>Amount</span>
-				<span>Waiting</span>
-				<span>Action</span>
-			</div>
-			{groups
-				.filter((group) => group.total === 0 || group.items.length > 0)
-				.map((group) => (
-					<section aria-labelledby={group.id} class="worklist-group">
-						<h3 id={group.id} class="text-label">
-							{group.label}{" "}
-							<span class="tabular-nums text-fg-muted">· {group.total}</span>
-						</h3>
-						{group.items.length > 0 ? (
-							<ul>
-								{group.items.map((item) => (
-									<li>
+	<div class="lines">
+		{groups
+			.filter((group) => group.items.length > 0 || group.total.length === 0)
+			.map((group) => [
+				<h3>
+					<span id={group.id} class="text-label">
+						{group.label}{" "}
+						<span class="tabular-nums text-fg-muted">
+							· {group.total.length}
+						</span>
+					</span>
+					{group.total.length > 0 && (
+						<span class="line-figure text-sm text-fg-muted">
+							<span class="sr-only">total </span>
+							{sumByCurrency(group.total.map(amount))}
+						</span>
+					)}
+				</h3>,
+				group.items.length > 0 ? (
+					<ul aria-labelledby={group.id}>
+						{group.items.map((item) => (
+							<li>
+								<div class="line-text">
+									<h4>
+										<a href={item.href} class="link">
+											{item.project.name} · {item.phase.title}
+										</a>
+									</h4>
+									<p class="cluster text-sm text-fg-muted">
 										<Badge type={item.badge}>{item.label}</Badge>
-										<div class="worklist-item">
-											<h4 class="stack wrap-break-word" data-space="3xs">
-												{item.organization && (
-													<span class="text-sm text-fg-muted">
-														{item.organization.name}
-													</span>
-												)}
-												<a href={item.href} class="link">
-													{item.project.name} · {item.phase.title}
-												</a>
-											</h4>
-											{item.invoice ? (
-												<p class="text-sm text-fg-muted wrap-break-word">
-													{costPartLabel[item.invoice.component]} invoice{" "}
-													{item.invoice.stripe.number}
-												</p>
-											) : (
-												(item.phase.state === "approved" ||
-													item.phase.state === "in_progress" ||
-													item.phase.state === "delivered") &&
-												Boolean(item.phase.upfrontAmount) &&
-												componentBillingStatus({
-													component: "upfront",
-													state: item.phase.state,
-													invoice:
-														item.phase.invoices.find(
-															(invoice) => invoice.component === "upfront",
-														) ?? null,
-												}) !== "paid" && (
-													<p class="text-sm text-fg-danger">Upfront unpaid</p>
-												)
-											)}
-										</div>
-										<p class="worklist-amount tabular-nums">
-											<span class="text-sm text-fg-muted" data-label>
-												Amount{" "}
+										{item.organization && <span>{item.organization.name}</span>}
+										{item.invoice ? (
+											<span>
+												{costPartLabel[item.invoice.component]} invoice{" "}
+												{item.invoice.stripe.number}
 											</span>
-											{item.invoice
-												? formatMoney(
-														item.invoice.stripe.total,
-														item.invoice.stripe.currency,
-													)
-												: formatMoney(item.phase.cost, item.phase.currency)}
-										</p>
-										<p
-											class:list={[
-												"text-sm tabular-nums",
-												item.status === "overdue"
-													? "text-fg-danger"
-													: "text-fg-muted",
-											]}
-										>
-											{item.status !== "overdue" && (
-												<span data-label>Waiting </span>
-											)}
-											{item.age}
-										</p>
-										<div class="worklist-actions">
-											{item.invoice ? (
-												<Button
-													href={`https://dashboard.stripe.com/invoices/${item.invoice.stripe.id}`}
-													target="_blank"
-													rel="noreferrer"
-													aria-label={`Open in Stripe: invoice ${item.invoice.stripe.number} (opens in a new tab)`}
-												>
-													Open in Stripe
-												</Button>
-											) : item.phase.state === "in_progress" ? (
-												<DisclosureButton
-													controls={`${id}-${item.key}-delivery`}
-													open={item.phase.id === failedDeliveryPhaseId}
-													aria-label={`${recordDeliveryLabel}: ${item.phase.title}`}
-												>
-													{recordDeliveryLabel}
-												</DisclosureButton>
-											) : (
-												phaseTransitionsFrom(item.phase.state).map(
-													(nextState) => (
-														<PhaseTransitionForm
-															phase={item.phase}
-															{nextState}
-														/>
-													),
-												)
-											)}
-										</div>
-										{item.phase.state === "in_progress" && !item.invoice && (
-											<div
-												id={`${id}-${item.key}-delivery`}
-												class="worklist-delivery"
-												hidden={item.phase.id !== failedDeliveryPhaseId}
-											>
-												<DeliveryForm
-													mode="record"
-													phase={item.phase}
-													result={deliveryResult}
-												/>
-											</div>
+										) : (
+											(item.phase.state === "approved" ||
+												item.phase.state === "in_progress" ||
+												item.phase.state === "delivered") &&
+											Boolean(item.phase.upfrontAmount) &&
+											componentBillingStatus({
+												component: "upfront",
+												state: item.phase.state,
+												invoice:
+													item.phase.invoices.find(
+														(invoice) => invoice.component === "upfront",
+													) ?? null,
+											}) !== "paid" && (
+												<span class="text-fg-danger">Upfront unpaid</span>
+											)
 										)}
-									</li>
-								))}
-							</ul>
-						) : (
-							<p class="text-sm text-fg-muted">{group.empty}</p>
-						)}
-					</section>
-				))}
-		</div>
+									</p>
+								</div>
+								<p class="line-figure">
+									<span>
+										{formatMoney(amount(item).amount, amount(item).currency)}
+									</span>
+									{item.status === "overdue" ? (
+										<span class="text-sm text-fg-danger">{item.age}</span>
+									) : (
+										<span class="text-sm text-fg-muted">
+											waiting {item.age}
+										</span>
+									)}
+								</p>
+								<div class="line-actions cluster">
+									{item.invoice ? (
+										<Button
+											href={`https://dashboard.stripe.com/invoices/${item.invoice.stripe.id}`}
+											target="_blank"
+											rel="noreferrer"
+											aria-label={`Open in Stripe: invoice ${item.invoice.stripe.number} (opens in a new tab)`}
+										>
+											Open in Stripe
+										</Button>
+									) : item.phase.state === "in_progress" ? (
+										<DisclosureButton
+											controls={`${id}-${item.key}-delivery`}
+											open={item.phase.id === failedDeliveryPhaseId}
+											aria-label={`${recordDeliveryLabel}: ${item.phase.title}`}
+										>
+											{recordDeliveryLabel}
+										</DisclosureButton>
+									) : (
+										phaseTransitionsFrom(item.phase.state).map((nextState) => (
+											<PhaseTransitionForm phase={item.phase} {nextState} />
+										))
+									)}
+								</div>
+								{item.phase.state === "in_progress" && !item.invoice && (
+									<div
+										id={`${id}-${item.key}-delivery`}
+										class="line-details"
+										hidden={item.phase.id !== failedDeliveryPhaseId}
+									>
+										<DeliveryForm
+											mode="record"
+											phase={item.phase}
+											result={deliveryResult}
+										/>
+									</div>
+								)}
+							</li>
+						))}
+					</ul>
+				) : (
+					<p class="text-sm text-fg-muted">{group.empty}</p>
+				),
+			])}
 	</div>
 ) : (
 	<p class="box text-sm text-fg-muted">
