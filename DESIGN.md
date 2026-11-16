@@ -194,6 +194,8 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 
 **Spacing:** one step scale, the `--space-*` tokens that `scripts/fluid-scale.js` generates. `3xs` 4px, `2xs` 8px and `xs` 12px are static and sit inside controls and between tight pairs; `s` (14→18px), `m` (21→27px), `l` (28→36px), `xl` (42→54px) and `2xl` (56→72px) grow with the viewport from 320px to 1280px, and the pairs `s-m` (the page gutter, `p-gutter`, 14→27px) and `m-l` (the gap between header, main and footer, `gap-region`, 21→36px) grow from one step to the next. The Tailwind steps map onto them in `src/styles/global.css`: `1` and `0.5` are `3xs`, `1.5` and `2` are `2xs`, `3` is `xs`, `4` and `gap-5` are `s`, `6` is `m`, `8` is `l`, `12` is `xl` and `scroll-mt-20` is `2xl`; widths, heights and sizes keep their fixed steps, so controls do not change, and so do the list indent `pl-5` and the badge's `px-2.5`. 8px is the gap inside a control and between grouped controls (a Button's icon and label, a row of buttons, a checkbox and its label) and the vertical padding of an input.
 
+**Widths:** static tokens in `src/styles/tokens.css`, beside the scales. `--measure` (65ch) is the longest line of prose; `--column` (48rem) is the public and settings column, `--column-wide` (72rem) the dashboard and admin column and `--column-narrow` (32rem) the auth forms; `--dialog` (28rem) is a confirmation and `--dialog-wide` (40rem) the command palette. Markup still sets them through `max-w-prose`, `max-w-3xl`, `max-w-6xl`, `max-w-lg` and the dialogs' `max-w-[min(…)]` until it moves to native CSS.
+
 ## 2. Colors
 
 The palette is a restrained paper-and-ink system: neutral structure first, link and status colors only where the user needs action or state. The frontmatter keys every color by its token name in `src/styles/tokens.css`, with the light value under the name and the dark value under `-dark`; the names below are what the colors are called in prose, with their tokens.
@@ -299,7 +301,7 @@ The heading roles are fluid: they grow with the viewport from 320px to 1280px an
 - **Display** (`text-display`; 600, `--step-3` 22.8→31.25px, 1.25): page h1 headings with a dashed left rule, always through `src/components/PageHeading.astro`.
 - **Headline** (`text-headline`; 600, `--step-2` 20.25→25px, 1.333): major public-page section headings.
 - **Title** (`text-title`; 600, `--step-1` 18→20px, 1.4): article titles, card headings, and compact section titles.
-- **Body** (400, `--step-0` 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.
+- **Body** (400, `--step-0` 1rem, 1.5): prose and explanatory text, with public prose kept to the measure, `--measure` (65ch).
 - **Small body** (`text-sm`; 400, `--step--1` 0.875rem): table cells, inputs, metadata, and helper text.
 - **Label** (`text-label` at `--step--1` 0.875rem; 600): form labels, buttons, and inline labels.
 - **Label caps** (`label-caps`; 600, `--step--2` 0.75rem, uppercase, muted): page section headings (h2 and the h3 that heads a section's list), table headers, and metric labels. It already sets the muted color, so do not rebuild it from `text-label uppercase text-fg-muted`.
@@ -323,7 +325,7 @@ This system is flat by default. It does not use shadows to create hierarchy; dep
 
 **The No Shadow Rule.** Shadows are forbidden for normal cards, tables, buttons, and inputs. If a future overlay truly needs elevation, keep it structural and minimal, never glossy.
 
-**The Dashed Plane Rule.** A container is a plane drawn with a 1px dashed neutral border and transparent background. Do not pair this with soft drop shadows.
+**The Dashed Plane Rule.** A container is a plane drawn with a 1px dashed neutral border (`border: var(--rule) var(--line)`, where `--rule` is the `--hairline` width, dashed) and transparent background. Do not pair this with soft drop shadows.
 
 ## 5. Components
 
