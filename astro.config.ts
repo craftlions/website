@@ -21,10 +21,6 @@ export default defineConfig({
 	experimental: {
 		contentIntellisense: true,
 	},
-	// The design reference lived at /design while it was dev only.
-	redirects: {
-		"/design": "/brand/system/",
-	},
 	prefetch: {
 		prefetchAll: true,
 		defaultStrategy: "hover",
