@@ -369,6 +369,45 @@ test("rows: a table from 44rem, stacked rows with labels below", async ({
 	for (const row of columns) expect(row).toEqual(item(columns, 0));
 });
 
+// A child a primitive sizes may shrink below its longest word: an unbreakable
+// word added to it overflows the child's text, never the primitive, and the
+// child's minimum is 0 rather than its content. The with-sidebar content side
+// keeps its own minimum share, which the shared rule must not override.
+test("primitive children shrink below their longest word", async ({ page }) => {
+	for (const [fixture, name, outer, child] of [
+		["stack", "narrow", ".stack", ":scope > :first-child"],
+		["cluster", "narrow", ".cluster", ":scope > :first-child"],
+		["sidebar", "narrow", ".with-sidebar", ":scope > :last-child"],
+		["switcher", "narrow", ".switcher", ":scope > :first-child"],
+		["auto-grid", "narrow", ".auto-grid", ":scope > :first-child"],
+		["rows", "rows-narrow", ".rows", ":scope > * > li:not([data-head])"],
+	] as const) {
+		const result = await frame(page, fixture, name)
+			.locator(outer)
+			.first()
+			.evaluate((element, selector) => {
+				const target = element.querySelector(selector);
+				if (!target) throw new Error(`no ${selector}`);
+				target.insertAdjacentHTML(
+					"beforeend",
+					`<span>${"W".repeat(60)}</span>`,
+				);
+				return {
+					overflow:
+						target.getBoundingClientRect().right -
+						element.getBoundingClientRect().right,
+					minimum: getComputedStyle(target).minInlineSize,
+				};
+			}, child);
+		expect(result.overflow, fixture).toBeLessThanOrEqual(0.5);
+		expect(result.minimum, fixture).toBe("0px");
+	}
+	const content = await frame(page, "sidebar", "wide")
+		.locator(".with-sidebar > :first-child")
+		.evaluate((element) => getComputedStyle(element).minInlineSize);
+	expect(content).toBe("60%");
+});
+
 // Report-only until the markup uses the primitives: no Button on a page is
 // wider than its text, the sign of a capped sibling handing over its share.
 for (const route of routes) {

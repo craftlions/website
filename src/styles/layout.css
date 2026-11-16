@@ -6,8 +6,12 @@
    value; an instance overrides one with a data-* step or an inline style. */
 @layer layout {
 	/* A child sized by its primitive may shrink below its longest word, which
-	   then wraps instead of overflowing. */
-	:where(.stack, .cluster, .with-sidebar, .switcher, .auto-grid, .rows) > * {
+	   then wraps instead of overflowing: a grid item or flex item otherwise
+	   keeps its content's minimum and widens its track or line. In rows the
+	   items are the rows of the list inside it; the list itself is a block,
+	   which has no such minimum. Each child's own children keep theirs. */
+	:where(.stack, .cluster, .with-sidebar, .switcher, .auto-grid) > *,
+	:where(.rows) > * > li {
 		min-inline-size: 0;
 	}
 
