@@ -1044,8 +1044,6 @@ for (const name of native) {
 // use carries /* enhancement: … */ or /* fallback: … */ (as {/* … */},
 // <!-- … --> or // …) on its line or just above its tag, or the file holds a
 // marked comment that names the feature, as a script's fallback does.
-// Report-only (`--report` lists them) until every existing use is marked.
-const reports = [];
 const markupGate = [
 	{
 		feature: "invoker commands",
@@ -1083,7 +1081,7 @@ for (const file of globSync("src/**/*.astro")) {
 			const start = tag ? lineAt(tag.index) : line;
 			const marked = marks.some(({ end }) => end >= start - 1 && end <= line);
 			if (!marked) {
-				reports.push(
+				violations.push(
 					`${file}:${line}  ${feature} → mark it on its line or above its tag: {/* enhancement: what is lost without it */}, or {/* fallback: … */} naming where the Widely available way runs  (AGENTS.md#browser-support)`,
 				);
 			}
@@ -1310,13 +1308,6 @@ for (const { name, fontSize, fontWeight, lineHeight } of roles) {
 	}
 }
 
-if (process.argv.includes("--report")) {
-	console.log(reports.join("\n"));
-} else if (reports.length > 0) {
-	console.log(
-		`design:lint  ${reports.length} report-only findings (newer features in markup) → node scripts/design-lint.js --report`,
-	);
-}
 if (violations.length > 0) {
 	console.error(violations.join("\n"));
 	process.exit(1);
