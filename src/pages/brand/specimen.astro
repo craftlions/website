@@ -721,76 +721,6 @@ const frames = [
 							</figure>
 						))}
 					</section>
-
-					<section aria-labelledby="layout-rows" data-fixture="rows">
-						<h3 id="layout-rows" class="text-title">Rows</h3>
-						<p class="text-sm text-fg-muted">
-							A list that becomes a table from 44rem of its own width, in a
-							30rem and a 64rem frame: the header row appears and the cell
-							labels are only read out.
-						</p>
-						{[
-							["rows-narrow", "30rem"],
-							["rows-wide", "64rem"],
-						].map(([frame, width]) => (
-							<figure class="stack" data-space="3xs">
-								<figcaption class="label-caps">{width}</figcaption>
-								<div class="frame box" data-frame={frame}>
-									<div
-										class="rows"
-										style="--rows-columns: minmax(0, 1fr) auto auto auto"
-									>
-										<ul>
-											<li aria-hidden="true" class="label-caps" data-head>
-												<span>Phase</span>
-												<span>Status</span>
-												<span>Amount</span>
-												<span>Action</span>
-											</li>
-											{(
-												[
-													["May release", "info", "Sent", "4,000 €", "Accept"],
-													[
-														"Discovery",
-														"success",
-														"Paid",
-														"2,400 €",
-														"Details",
-													],
-												] as const
-											).map(([phase, type, status, amount, action]) => (
-												<li>
-													<p class="text-sm">
-														<span class="text-fg-muted" data-label>
-															Phase{" "}
-														</span>
-														{phase}
-													</p>
-													<p class="text-sm">
-														<span class="text-fg-muted" data-label>
-															Status{" "}
-														</span>
-														<Badge type={type}>{status}</Badge>
-													</p>
-													<p class="text-sm tabular-nums">
-														<span class="text-fg-muted" data-label>
-															Amount{" "}
-														</span>
-														{amount}
-													</p>
-													<Button
-														variant={type === "info" ? "default" : "quiet"}
-													>
-														{action}
-													</Button>
-												</li>
-											))}
-										</ul>
-									</div>
-								</div>
-							</figure>
-						))}
-					</section>
 				</section>
 				<section aria-labelledby="lines" class="box stack" data-space="l">
 					<header class="stack" data-space="2xs">
@@ -1408,12 +1338,6 @@ const frames = [
 		}
 		.frame[data-frame="wide"] {
 			inline-size: min(100%, 60rem);
-		}
-		.frame[data-frame="rows-narrow"] {
-			inline-size: min(100%, 30rem);
-		}
-		.frame[data-frame="rows-wide"] {
-			inline-size: min(100%, 64rem);
 		}
 	}
 </style>

@@ -84,8 +84,6 @@ test("frames take their width from the page layer", async ({ page }) => {
 	for (const [name, rem] of [
 		["narrow", 20],
 		["wide", 60],
-		["rows-narrow", 30],
-		["rows-wide", 64],
 	] as const) {
 		for (const size of await page
 			.locator(`[data-frame="${name}"]`)
@@ -342,33 +340,6 @@ test("auto-grid: equal cells, as many columns as fit at 16rem", async ({
 	}
 });
 
-test("rows: a table from 44rem, stacked rows with labels below", async ({
-	page,
-}) => {
-	const narrow = frame(page, "rows", "rows-narrow");
-	await expect(narrow.locator("[data-head]")).toBeHidden();
-	for (const label of await narrow.locator("[data-label]").all()) {
-		expect((await label.boundingBox())?.width).toBeGreaterThan(1);
-	}
-
-	const wide = frame(page, "rows", "rows-wide");
-	await expect(wide.locator("[data-head]")).toBeVisible();
-	for (const label of await wide.locator("[data-label]").all()) {
-		expect((await label.boundingBox())?.width).toBe(1);
-	}
-	// Every row's cells start where the header's columns start.
-	const columns = await wide
-		.locator("li")
-		.evaluateAll((rows) =>
-			rows.map((row) =>
-				[...row.children].map((cell) =>
-					Math.round(cell.getBoundingClientRect().left),
-				),
-			),
-		);
-	for (const row of columns) expect(row).toEqual(item(columns, 0));
-});
-
 // A child a primitive sizes may shrink below its longest word: an unbreakable
 // word added to it overflows the child's text, never the primitive, and the
 // child's minimum is 0 rather than its content. The with-sidebar content side
@@ -380,7 +351,6 @@ test("primitive children shrink below their longest word", async ({ page }) => {
 		["sidebar", "narrow", ".with-sidebar", ":scope > :last-child"],
 		["switcher", "narrow", ".switcher", ":scope > :first-child"],
 		["auto-grid", "narrow", ".auto-grid", ":scope > :first-child"],
-		["rows", "rows-narrow", ".rows", ":scope > * > li:not([data-head])"],
 	] as const) {
 		const result = await frame(page, fixture, name)
 			.locator(outer)
