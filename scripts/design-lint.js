@@ -664,7 +664,7 @@ for (const { file, blocks } of stylesheets) {
 	for (const block of blocks) {
 		if (
 			block.prelude.startsWith("@") ||
-			block.parents.some(({ prelude }) => /^@(?:keyframes|theme)/.test(prelude))
+			block.parents.some(({ prelude }) => prelude.startsWith("@keyframes"))
 		) {
 			continue;
 		}
@@ -839,11 +839,7 @@ const native = new Set(
 		.filter(({ file }) => file.startsWith("src/styles/"))
 		.flatMap(({ blocks }) =>
 			blocks
-				.filter(
-					({ prelude, parents }) =>
-						!prelude.startsWith("@") &&
-						parents.every((parent) => !parent.prelude.startsWith("@theme")),
-				)
+				.filter(({ prelude }) => !prelude.startsWith("@"))
 				.flatMap(({ prelude }) => classesIn(prelude)),
 		),
 );
@@ -1207,12 +1203,29 @@ for (const name of spacing.keys()) {
 	}
 }
 
-// Each frontmatter type role states what its utility renders: the value of the
-// role's --step-* token, and the line height and weight in global.css. Body has
-// no utility; it is --step-0 at the reset's line height.
-const theme = readFileSync("src/styles/global.css", "utf8");
-const themeValue = (key) =>
-	theme.match(new RegExp(`--text-${key}: ([^;]+);`))?.[1];
+// Each frontmatter type role states what its utility renders: the size, line
+// height and weight of its rule in utilities.css, with a --step-* size and a
+// --leading-* line height read from tokens.css. Body has no utility; it is
+// --step-0 at the reset's line height.
+const leading = new Map(
+	[
+		...readFileSync("src/styles/tokens.css", "utf8").matchAll(
+			/--(leading-[\w-]+): ([^;]+);/g,
+		),
+	].map(([, name, value]) => [name, value]),
+);
+const roleRule = (key) =>
+	new Map(
+		sheet("src/styles/utilities.css")
+			.blocks.find(({ prelude }) => prelude === `.text-${key}`)
+			?.declarations.map(({ property, value }) => [
+				property,
+				value.replace(
+					/^var\(--(leading-[\w-]+)\)$/,
+					(match, name) => leading.get(name) ?? match,
+				),
+			]) ?? [],
+	);
 // A unitless line height, written as a number or calc(a / b).
 const ratio = (value) => {
 	const [, a, b = "1"] =
@@ -1255,13 +1268,14 @@ for (const { name, fontSize, fontWeight, lineHeight } of roles) {
 		);
 		continue;
 	}
-	const size = key ? themeValue(key) : "var(--step-0)";
+	const rule = key ? roleRule(key) : new Map();
+	const size = key ? rule.get("font-size") : "var(--step-0)";
 	const expected = {
 		fontSize: scale.get(size?.match(/^var\(--(step-[\w-]+)\)$/)?.[1]) ?? size,
-		fontWeight: key ? (themeValue(`${key}--font-weight`) ?? "400") : "400",
+		fontWeight: rule.get("font-weight") ?? "400",
 		lineHeight: ratio(
 			(key
-				? themeValue(`${key}--line-height`)
+				? rule.get("line-height")
 				: readFileSync("src/styles/reset.css", "utf8").match(
 						/html \{[^}]*line-height: ([\d.]+)/,
 					)?.[1]) ?? "",
