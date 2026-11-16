@@ -232,13 +232,23 @@ const worklist = deriveClientWorklist({
 		/>
 	</section>
 
-	<div class="client-overview">
+	<div
+		class="with-sidebar"
+		data-side="end"
+		data-align="start"
+		style="--sidebar-width: 20rem; --content-min: 60%; --sidebar-space: var(--space-m)"
+	>
 		<section
 			aria-labelledby="projects-heading"
 			class="stack client-projects"
 			data-space="xs"
 		>
-			<div class="section-head">
+			<div
+				class="with-sidebar"
+				data-side="end"
+				data-align="center"
+				style="--content-min: 25%"
+			>
 				<h2 id="projects-heading" class="label-caps"> Projects </h2>
 				{completedProjectCount > 0 && <Checkbox>Hide completed</Checkbox>}
 			</div>

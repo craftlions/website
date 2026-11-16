@@ -14,26 +14,16 @@
 		}
 	}
 
-	/* /dash/org/[slug]: projects beside the budget from lg. */
-	.client-overview {
-		display: grid;
-		align-content: start;
-		gap: var(--space-m);
-
-		& > * {
-			min-inline-size: 0;
-		}
-
-		@media (width >= 64rem) {
-			grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-			align-items: start;
-		}
-	}
-
 	/* "Hide completed" hides the completed projects; when that hides all of
-	   them, a note says so. */
-	.client-projects:has(:checked) [data-state="completed"] {
-		display: none;
+	   them, a note says so. Below the heading it keeps its own width, so the
+	   label's columns do not spread. */
+	.client-projects {
+		&:has(:checked) [data-state="completed"] {
+			display: none;
+		}
+		& .checkbox {
+			flex-grow: 0;
+		}
 	}
 
 	/* The projects table scrolls sideways inside its plane. */
