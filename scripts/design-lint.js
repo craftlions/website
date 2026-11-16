@@ -315,6 +315,79 @@ for (const name of spacing.keys()) {
 	}
 }
 
+// Each frontmatter type role states what its utility renders: the value of the
+// role's --step-* token, and the line height and weight in global.css. Body has
+// no utility; it is --step-0 at the reset's line height.
+const theme = readFileSync("src/styles/global.css", "utf8");
+const themeValue = (key) =>
+	theme.match(new RegExp(`--text-${key}: ([^;]+);`))?.[1];
+// A unitless line height, written as a number or calc(a / b).
+const ratio = (value) => {
+	const [, a, b = "1"] =
+		value.match(/^(?:calc\()?([\d.]+)(?: \/ ([\d.]+)\))?$/) ?? [];
+	return Math.round((Number(a) / Number(b)) * 1000) / 1000;
+};
+const roles = [
+	...(frontmatter.split(/^typography:\n/m)[1]?.split(/^\S/m)[0] ?? "").matchAll(
+		/^ {2}([\w-]+):\n((?: {4}.+\n)+)/gm,
+	),
+].map(([, name, body]) => ({
+	name,
+	...Object.fromEntries(
+		[...body.matchAll(/^ {4}(\w+): "?([^"\n]*)"?$/gm)].map(([, key, value]) => [
+			key,
+			value,
+		]),
+	),
+}));
+const utilities = {
+	display: "display",
+	headline: "headline",
+	title: "title",
+	"body-small": "sm",
+	label: "label",
+	caption: "caption",
+};
+for (const name of ["body", ...Object.keys(utilities)]) {
+	if (roles.every((role) => role.name !== name)) {
+		violations.push(
+			`DESIGN.md  typography.${name} → add the role with its fontSize, fontWeight and lineHeight  (DESIGN.md#3-typography)`,
+		);
+	}
+}
+for (const { name, fontSize, fontWeight, lineHeight } of roles) {
+	const key = utilities[name];
+	if (!key && name !== "body") {
+		violations.push(
+			`DESIGN.md  typography.${name} → name a role with a text-* utility in src/styles/global.css`,
+		);
+		continue;
+	}
+	const size = key ? themeValue(key) : "var(--step-0)";
+	const expected = {
+		fontSize: scale.get(size?.match(/^var\(--(step-[\w-]+)\)$/)?.[1]) ?? size,
+		fontWeight: key ? (themeValue(`${key}--font-weight`) ?? "400") : "400",
+		lineHeight: ratio(
+			(key
+				? themeValue(`${key}--line-height`)
+				: readFileSync("src/styles/reset.css", "utf8").match(
+						/html \{[^}]*line-height: ([\d.]+)/,
+					)?.[1]) ?? "",
+		),
+	};
+	for (const [property, value] of Object.entries({
+		fontSize,
+		fontWeight,
+		lineHeight: ratio(lineHeight ?? ""),
+	})) {
+		if (String(value) !== String(expected[property])) {
+			violations.push(
+				`DESIGN.md  typography.${name}.${property} → set it to ${expected[property]}, what ${key ? `text-${key}` : "body text"} renders  (DESIGN.md#3-typography)`,
+			);
+		}
+	}
+}
+
 if (violations.length > 0) {
 	console.error(violations.join("\n"));
 	process.exit(1);

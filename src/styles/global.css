@@ -50,19 +50,25 @@
 	--divide-color-line: var(--line);
 	--outline-color-fill-info: var(--fill-info);
 
-	--text-display: 1.875rem;
+	/* Type roles on the fluid scale; line heights are unitless, so they follow
+	   the size. */
+	--text-display: var(--step-3);
 	--text-display--line-height: 1.25;
 	--text-display--font-weight: 600;
-	--text-headline: 1.5rem;
+	--text-headline: var(--step-2);
 	--text-headline--line-height: calc(2 / 1.5);
 	--text-headline--font-weight: 600;
-	--text-title: 1.25rem;
+	--text-title: var(--step-1);
 	--text-title--line-height: 1.4;
 	--text-title--font-weight: 600;
-	--text-label: 0.875rem;
+	--text-sm: var(--step--1);
+	--text-sm--line-height: calc(1.25 / 0.875);
+	--text-xs: var(--step--2);
+	--text-xs--line-height: calc(1 / 0.75);
+	--text-label: var(--step--1);
 	--text-label--line-height: calc(1.25 / 0.875);
 	--text-label--font-weight: 600;
-	--text-caption: 0.75rem;
+	--text-caption: var(--step--2);
 	--text-caption--line-height: calc(1 / 0.75);
 	--text-caption--font-weight: 600;
 }
@@ -97,7 +103,7 @@
 @layer components {
 	.label-caps {
 		color: var(--fg-muted);
-		font-size: 0.75rem;
+		font-size: var(--step--2);
 		font-weight: 600;
 		line-height: calc(1 / 0.75);
 		text-transform: uppercase;

@@ -87,19 +87,19 @@ contrast:
 typography:
   display:
     fontFamily: "system-ui, sans-serif"
-    fontSize: "1.875rem"
+    fontSize: "clamp(1.4238rem, 1.2474rem + 0.8822vw, 1.9531rem)"
     fontWeight: 600
     lineHeight: 1.25
     letterSpacing: "0"
   headline:
     fontFamily: "system-ui, sans-serif"
-    fontSize: "1.5rem"
+    fontSize: "clamp(1.2656rem, 1.1667rem + 0.4948vw, 1.5625rem)"
     fontWeight: 600
     lineHeight: 1.333
     letterSpacing: "0"
   title:
     fontFamily: "system-ui, sans-serif"
-    fontSize: "1.25rem"
+    fontSize: "clamp(1.125rem, 1.0833rem + 0.2083vw, 1.25rem)"
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: "0"
@@ -294,14 +294,16 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 
 ### Hierarchy
 
-- **Display** (`text-display`; 600, 1.875rem, 1.25): page h1 headings with a dashed left rule, always through `src/components/PageHeading.astro`.
-- **Headline** (`text-headline`; 600, 1.5rem, 1.333): major public-page section headings.
-- **Title** (`text-title`; 600, 1.25rem, 1.4): article titles, card headings, and compact section titles.
-- **Body** (400, 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.
-- **Small body** (`text-sm`; 400, 0.875rem): table cells, inputs, metadata, and helper text.
-- **Label** (`text-label` at 0.875rem; 600): form labels, buttons, and inline labels.
-- **Label caps** (`label-caps`; 600, 0.75rem, uppercase, muted): page section headings (h2 and the h3 that heads a section's list), table headers, and metric labels. It already sets the muted color, so do not rebuild it from `text-label uppercase text-fg-muted`.
-- **Caption** (`text-caption`; 600, 0.75rem, 1.333): badges and other single-word state marks.
+The heading roles are fluid: they grow with the viewport from 320px to 1280px and hold their size outside that range, in rem, so zoom and the reader's font size still scale them. Body text and everything smaller stay static, so tables, labels and controls keep their size. `scripts/fluid-scale.js` generates the `--step-*` tokens in `src/styles/tokens.css`; `aubr design:lint` fails when they, or the frontmatter `typography`, differ from what it and the role utilities produce.
+
+- **Display** (`text-display`; 600, `--step-3` 22.8→31.25px, 1.25): page h1 headings with a dashed left rule, always through `src/components/PageHeading.astro`.
+- **Headline** (`text-headline`; 600, `--step-2` 20.25→25px, 1.333): major public-page section headings.
+- **Title** (`text-title`; 600, `--step-1` 18→20px, 1.4): article titles, card headings, and compact section titles.
+- **Body** (400, `--step-0` 1rem, 1.5): prose and explanatory text, with public prose kept around 65-75ch.
+- **Small body** (`text-sm`; 400, `--step--1` 0.875rem): table cells, inputs, metadata, and helper text.
+- **Label** (`text-label` at `--step--1` 0.875rem; 600): form labels, buttons, and inline labels.
+- **Label caps** (`label-caps`; 600, `--step--2` 0.75rem, uppercase, muted): page section headings (h2 and the h3 that heads a section's list), table headers, and metric labels. It already sets the muted color, so do not rebuild it from `text-label uppercase text-fg-muted`.
+- **Caption** (`text-caption`; 600, `--step--2` 0.75rem, 1.333): badges and other single-word state marks.
 
 Each role carries its size, weight, and line height together, so do not add `font-*` to it; `aubr design:lint` rejects every `font-*` utility, weights and families alike. The one `leading-*` exception is `leading-none`, in tight metric rows and in boxes sized around a single line: the badge (`text-caption leading-none`) and the hint button. Add it as `leading-none`, never as a `/none` size modifier, which drops the role's weight; `aubr design:lint` rejects every other `leading-*` and size modifier. Other text uses `text-sm` or `text-xs`; `aubr design:lint` rejects larger steps and arbitrary sizes.
 
