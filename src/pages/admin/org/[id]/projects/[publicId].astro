@@ -196,10 +196,8 @@ const phases = project.phases
 		deliveryUrl: "Delivery URL",
 	}}
 >
-	<header class="grid gap-3">
-		<div
-			class="grid grid-cols-[minmax(0,max-content)_max-content] items-center gap-3"
-		>
+	<header class="stack" data-space="xs">
+		<div class="project-title">
 			<h2 id="project-heading" class="text-headline wrap-break-word">
 				{project.name}
 			</h2>
@@ -214,13 +212,13 @@ const phases = project.phases
 			(openPhaseCount === 0 ? (
 				<ProjectTransitionForm {project} nextState="completed" />
 			) : (
-				<div class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+				<div class="project-complete">
 					<ProjectTransitionForm
 						{project}
 						nextState="completed"
 						button={{ disabled: true, "aria-describedby": "complete-blocked" }}
 					/>
-					<p id="complete-blocked" class="max-w-prose text-sm text-fg-muted">
+					<p id="complete-blocked" class="projects-note text-sm text-fg-muted">
 						{openPhaseCount === 1
 							? "1 phase is still open. Accept or cancel it to complete the project."
 							: `${openPhaseCount} phases are still open. Accept or cancel them to complete the project.`}
@@ -228,7 +226,7 @@ const phases = project.phases
 				</div>
 			))}
 		{project.state === "completed" && (
-			<div class="grid grid-flow-col auto-cols-max items-center justify-start gap-4">
+			<div class="project-actions">
 				<ProjectTransitionForm {project} nextState="active" />
 				<form method="POST" action={actions.transitionProject}>
 					<input type="hidden" name="projectId" value={project.id}>
@@ -251,8 +249,8 @@ const phases = project.phases
 		)}
 	</header>
 
-	<section class="grid gap-3" aria-labelledby="phases-heading">
-		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+	<section class="stack" data-space="xs" aria-labelledby="phases-heading">
+		<div class="projects-head">
 			<h3 id="phases-heading" class="label-caps"> Phases </h3>
 			{canAddPhase && (
 				<DisclosureButton controls="add-phase" open={isAddPhaseOpen}>
@@ -260,7 +258,7 @@ const phases = project.phases
 				</DisclosureButton>
 			)}
 		</div>
-		<p class="max-w-prose text-sm text-fg-muted">
+		<p class="projects-note text-sm text-fg-muted">
 			Open phases come first. Each row offers its next step; corrections and
 			cancelling sit under More.
 			{!canAddPhase && " Phases can only be added to draft or active projects."}
@@ -270,7 +268,7 @@ const phases = project.phases
 				id="add-phase"
 				method="POST"
 				action={actions.createPhase}
-				class="grid grid-cols-1 gap-4 border border-dashed border-line p-4 md:grid-cols-3"
+				class="box stack phase-form"
 				aria-label="Add phase"
 				hidden={!isAddPhaseOpen}
 			>
@@ -282,7 +280,7 @@ const phases = project.phases
 					maxlength="180"
 					hint="Shown to the client in their project view."
 					result={createResult}
-					class="grid-cols-1 md:col-span-full"
+					class="phase-field phase-form-row"
 				/>
 				<Field
 					as="select"
@@ -291,7 +289,7 @@ const phases = project.phases
 					required
 					hint="Every invoice of the phase bills in this currency."
 					result={createResult}
-					class="grid-cols-1"
+					class="phase-field"
 				>
 					{[
 						...new Set([
@@ -316,7 +314,7 @@ const phases = project.phases
 					required
 					hint="Total for the phase in the currency chosen, e.g. 4800.50."
 					result={createResult}
-					class="grid-cols-1"
+					class="phase-field"
 				/>
 				<Field
 					label="Due date"
@@ -324,7 +322,7 @@ const phases = project.phases
 					type="date"
 					hint="Optional target date shown to the client."
 					result={createResult}
-					class="grid-cols-1"
+					class="phase-field"
 				/>
 				<PhaseAmountCalculator
 					cost={Number(createInput?.get("cost")) || 0}
@@ -332,9 +330,9 @@ const phases = project.phases
 					{...(createInput
 						? submittedSplit(createInput)
 						: { acceptanceAmount: 0 })}
-					class="border-t border-dashed border-line pt-4 md:col-span-full"
+					class="phase-form-row phase-form-split"
 				/>
-				<div class="grid grid-cols-[auto_auto] items-center justify-start gap-3 md:col-span-full">
+				<div class="projects-actions phase-form-row">
 					<Button type="submit">Add phase</Button>
 					<Button variant="quiet" data-disclosure-cancel>
 						Cancel
@@ -344,32 +342,25 @@ const phases = project.phases
 		)}
 		{phases.length > 0 ? (
 			<admin-phase-list
-				class="grid border border-dashed border-line lg:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] lg:gap-x-6"
+				class="phase-list"
 				data-acted={actedPhase && `phase-${actedPhase.publicId}`}
 			>
-				<div
-					aria-hidden="true"
-					class="hidden border-b border-dashed border-line px-4 py-3 label-caps lg:col-span-5 lg:grid lg:grid-cols-subgrid"
-				>
+				<div aria-hidden="true" class="phase-list-head label-caps">
 					<span>Phase</span>
 					<span>State</span>
-					<span class="text-right">Amount</span>
-					<span class="col-span-2 text-right">Next step</span>
+					<span>Amount</span>
+					<span>Next step</span>
 				</div>
-				<ul class="grid lg:col-span-5 lg:grid-cols-subgrid">
+				<ul>
 					{phases.map((phase) => (
-						<li
-							id={`phase-${phase.publicId}`}
-							class="grid scroll-mt-20 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid lg:items-center"
-							data-phase
-						>
-							<div class="grid min-w-0 gap-1">
+						<li id={`phase-${phase.publicId}`} class="phase-row" data-phase>
+							<div class="stack phase-info" data-space="3xs">
 								<h4
 									class:list={[
 										"wrap-break-word",
 										phase.settled ? "text-fg-muted" : undefined,
-										phase.state === "cancelled" && "line-through",
 									]}
+									data-cancelled={phase.state === "cancelled" || undefined}
 								>
 									{phase.title}
 								</h4>
@@ -380,7 +371,7 @@ const phases = project.phases
 								</p>
 								{phase.externalUrl && (
 									<a
-										class="w-max text-sm link"
+										class="text-sm link"
 										href={phase.externalUrl}
 										rel="noopener noreferrer"
 										target="_blank"
@@ -391,7 +382,7 @@ const phases = project.phases
 								)}
 								{phase.deliveryState === "url" && phase.deliveryUrl ? (
 									<a
-										class="w-max text-sm link"
+										class="text-sm link"
 										href={phase.deliveryUrl}
 										rel="noopener noreferrer"
 										target="_blank"
@@ -410,7 +401,7 @@ const phases = project.phases
 							<Badge type={phaseStatus[phase.state].badge}>
 								{phaseStatus[phase.state].label}
 							</Badge>
-							<div class="grid min-w-0 gap-1 lg:w-48 lg:justify-items-end lg:text-right">
+							<div class="stack phase-amount" data-space="3xs">
 								<p
 									class:list={[
 										"tabular-nums wrap-break-word",
@@ -421,7 +412,8 @@ const phases = project.phases
 								</p>
 								{phase.components.length > 0 ? (
 									<ul
-										class="grid gap-0.5 text-xs tabular-nums text-fg-muted wrap-break-word"
+										class="stack text-xs tabular-nums text-fg-muted wrap-break-word"
+										data-space="3xs"
 										aria-label={`Cost split of ${phase.title}`}
 									>
 										{phase.components.map((part) => (
@@ -441,17 +433,13 @@ const phases = project.phases
 							{phaseTransitionsFrom(phase.state)
 								.filter((nextState) => nextState !== "cancelled")
 								.map((nextState) => (
-									<PhaseTransitionForm
-										{phase}
-										{nextState}
-										class="lg:col-start-4 lg:justify-self-end"
-									/>
+									<PhaseTransitionForm {phase} {nextState} class="phase-step" />
 								))}
 							{phase.state === "in_progress" && (
 								<DisclosureButton
 									controls={`phase-${phase.publicId}-more`}
 									open={phase.id === reopenedPhase?.id}
-									class="lg:col-start-4 lg:justify-self-end"
+									class="phase-step"
 									aria-label={`${recordDeliveryLabel}: ${phase.title}`}
 								>
 									{recordDeliveryLabel}
@@ -464,7 +452,7 @@ const phases = project.phases
 									controls={`phase-${phase.publicId}-more`}
 									open={phase.id === reopenedPhase?.id}
 									variant="quiet"
-									class="lg:col-start-5 lg:justify-self-end"
+									class="phase-more"
 									aria-label={`More: ${phase.title}`}
 								>
 									More
@@ -473,7 +461,7 @@ const phases = project.phases
 							{!["approved", "cancelled"].includes(phase.state) && (
 								<div
 									id={`phase-${phase.publicId}-more`}
-									class="grid min-w-0 gap-4 border-t border-dashed border-line pt-4 lg:col-span-5"
+									class="stack phase-panel"
 									hidden={phase.id !== reopenedPhase?.id}
 								>
 									{phase.state === "in_progress" && (
@@ -499,7 +487,8 @@ const phases = project.phases
 											<form
 												method="POST"
 												action={actions.updatePhaseAmounts}
-												class="grid justify-items-start gap-3 border border-dashed border-line p-4"
+												class="box stack phase-split-form"
+												style="--stack-space: var(--space-xs)"
 											>
 												<input type="hidden" name="phaseId" value={phase.id}>
 												<input
@@ -534,7 +523,7 @@ const phases = project.phases
 				</ul>
 			</admin-phase-list>
 		) : (
-			<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+			<p class="box text-sm text-fg-muted">
 				No phases yet. Add the first phase, then send it to the client.
 			</p>
 		)}
@@ -544,17 +533,11 @@ const phases = project.phases
 <script>
 	// Deep links (`#phase-<publicId>`, from the worklist and invoices) and the
 	// row the last action came from (`data-acted`, set by the server) are
-	// marked with a background tint plus a non-color outline cue, without
-	// motion. A deep-linked row also opens its More panel, the way its
-	// DisclosureButton does; the server already rendered the acted row's panel
-	// open when its failed form lives there.
-	const highlightClasses = [
-		"outline-2",
-		"-outline-offset-2",
-		"outline-dashed",
-		"outline-fill-info/70",
-		"bg-info-subtle",
-	];
+	// marked with `data-highlight`, which admin-projects.css draws as a
+	// background tint plus a non-color outline cue, without motion. A
+	// deep-linked row also opens its More panel, the way its DisclosureButton
+	// does; the server already rendered the acted row's panel open when its
+	// failed form lives there.
 
 	class AdminPhaseList extends HTMLElement {
 		currentTarget: HTMLElement | null = null;
@@ -573,8 +556,8 @@ const phases = project.phases
 		}
 
 		mark(row: HTMLElement) {
-			this.currentTarget?.classList.remove(...highlightClasses);
-			row.classList.add(...highlightClasses);
+			this.currentTarget?.removeAttribute("data-highlight");
+			row.setAttribute("data-highlight", "");
 			this.currentTarget = row;
 		}
 
@@ -595,7 +578,7 @@ const phases = project.phases
 				}
 				panel.hidden = false;
 			} else {
-				this.currentTarget?.classList.remove(...highlightClasses);
+				this.currentTarget?.removeAttribute("data-highlight");
 				this.currentTarget = null;
 			}
 		}
