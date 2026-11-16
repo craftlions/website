@@ -30,6 +30,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 			@layer reset, tokens, base, layout, components, page, utilities;
 		</style>
 
+		{/* enhancement: the cross-fade between pages waits for the new page's
+		   main landmark to be parsed (Chrome 124, Safari 18.2); Firefox ignores
+		   it and fades as before. */}
+		<link rel="expect" href="#main" blocking="render">
+
 		<slot name="head" />
 		{/* Prerendered pages skip the middleware's X-Robots-Tag, so this carries it. */}
 		{isPrivatePath(Astro.url.pathname) && (

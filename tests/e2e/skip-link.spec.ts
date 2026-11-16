@@ -27,3 +27,15 @@ for (const route of routes) {
 		).toBe(true);
 	});
 }
+
+// The cross-document view transition waits for the main landmark, which the
+// skip link targets too, so the link's target exists on every page.
+for (const route of routes) {
+	test(`${route} renders once main is parsed`, async ({ page }) => {
+		expect((await page.goto(route))?.status()).toBe(200);
+		const link = page.locator('head link[rel="expect"]');
+		await expect(link).toHaveAttribute("href", "#main");
+		await expect(link).toHaveAttribute("blocking", "render");
+		await expect(page.locator("main#main")).toHaveCount(1);
+	});
+}
