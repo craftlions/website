@@ -1,7 +1,5 @@
 /* Role utilities (DESIGN.md#role-tokens): what a piece of text or a line is,
-   with the names markup already uses. While Tailwind generates the same
-   classes, its copies follow these in the layer with the same declarations,
-   so nothing changes; these remain when it goes. */
+   with the names markup already uses. */
 @layer utilities {
 	/* Type roles carry size, line height and weight together
 	   (DESIGN.md#3-typography). */

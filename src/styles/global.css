@@ -1,9 +1,8 @@
 /* Layer order, first in the bundle: a later layer wins over an earlier one
-   whatever the specificity. Tailwind's theme and utilities join it while both
-   systems coexist; page holds the scoped <style> of a page. Shell.astro repeats
-   the statement, so a page's own stylesheet can never come first. */
-@layer theme, reset, tokens, base, layout, components, page, utilities;
-@import "tailwindcss/theme.css" layer(theme);
+   whatever the specificity; page holds the scoped <style> of a page.
+   Shell.astro repeats the statement, so a page's own stylesheet can never come
+   first. */
+@layer reset, tokens, base, layout, components, page, utilities;
 @import "./reset.css";
 @import "./tokens.css";
 @import "./base.css";
@@ -38,50 +37,10 @@
 @import "./components/shell.css";
 @import "./components/spend-by-year.css";
 @import "./utilities.css";
-@import "tailwindcss/utilities.css" layer(utilities);
 
-/* Each role exists only on the utility it belongs to: `text-fg` works, `bg-fg` does not. */
+/* Not read by the build: scripts/design-lint.js checks the type roles in the
+   DESIGN.md frontmatter against these values until it reads utilities.css. */
 @theme inline {
-	--color-*: initial;
-
-	--text-color-fg: var(--fg);
-	--text-color-fg-muted: var(--fg-muted);
-	--text-color-fg-danger: var(--fg-danger);
-	--text-color-fg-success: var(--fg-success);
-	--text-color-fg-info: var(--fg-info);
-	--text-color-fg-warning: var(--fg-warning);
-	--text-color-chart-1: var(--chart-1);
-	--text-color-chart-2: var(--chart-2);
-	--text-color-chart-3: var(--chart-3);
-	--text-color-chart-4: var(--chart-4);
-	--text-color-chart-5: var(--chart-5);
-	--text-color-chart-6: var(--chart-6);
-	--text-color-chart-unassigned: var(--chart-unassigned);
-
-	--background-color-canvas: var(--canvas);
-	--background-color-panel: var(--panel);
-	--background-color-ink: var(--fg);
-	--background-color-line-strong: var(--line-strong);
-	--background-color-fill-danger: var(--fill-danger);
-	--background-color-fill-success: var(--fill-success);
-	--background-color-fill-info: var(--fill-info);
-	--background-color-info-subtle: var(--info-subtle);
-
-	--border-color-line: var(--line);
-	--border-color-line-strong: var(--line-strong);
-	--border-color-line-control: var(--line-control);
-	--border-color-line-active: var(--line-active);
-	--border-color-line-danger: var(--line-danger);
-	--border-color-line-success: var(--line-success);
-	--border-color-line-info: var(--line-info);
-	--border-color-fill-danger: var(--fill-danger);
-	--border-color-fill-success: var(--fill-success);
-	--border-color-fill-info: var(--fill-info);
-	--border-color-canvas: var(--canvas);
-
-	--divide-color-line: var(--line);
-	--outline-color-fill-info: var(--fill-info);
-
 	/* Type roles on the fluid scale; line heights are unitless, so they follow
 	   the size. */
 	--text-display: var(--step-3);
@@ -103,36 +62,6 @@
 	--text-caption: var(--step--2);
 	--text-caption--line-height: calc(1 / 0.75);
 	--text-caption--font-weight: 600;
-
-	/* Space on the step scale (DESIGN.md#1-overview). Padding, margin, gap and
-	   scroll margin read their own keys before --spacing, so these move every
-	   used step onto a token while sizes (size-*, w-*, h-*, inset) keep
-	   --spacing and controls keep their size. 2px and 6px snap to 4px and 8px,
-	   gap-5 to s; padding-5 (list indent) and padding-2.5 (badge) stay fixed. */
-	--padding-0\.5: var(--space-3xs);
-	--padding-1: var(--space-3xs);
-	--padding-2: var(--space-2xs);
-	--padding-3: var(--space-xs);
-	--padding-4: var(--space-s);
-	--padding-6: var(--space-m);
-	--padding-gutter: var(--space-s-m);
-	--margin-1: var(--space-3xs);
-	--margin-2: var(--space-2xs);
-	--margin-3: var(--space-xs);
-	--margin-6: var(--space-m);
-	--gap-0\.5: var(--space-3xs);
-	--gap-1: var(--space-3xs);
-	--gap-1\.5: var(--space-2xs);
-	--gap-2: var(--space-2xs);
-	--gap-3: var(--space-xs);
-	--gap-4: var(--space-s);
-	--gap-5: var(--space-s);
-	--gap-6: var(--space-m);
-	--gap-8: var(--space-l);
-	--gap-12: var(--space-xl);
-	--gap-region: var(--space-m-l);
-	--scroll-margin-6: var(--space-m);
-	--scroll-margin-20: var(--space-2xl);
 }
 
 /* Same-origin page loads cross-fade, unless the reader asks for less motion. */

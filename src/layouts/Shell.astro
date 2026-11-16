@@ -26,7 +26,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		{/* The layer order of src/styles/global.css, ahead of every stylesheet,
 		   so a page's own one cannot come first and reorder the layers. */}
 		<style is:inline>
-			@layer theme, reset, tokens, base, layout, components, page, utilities;
+			@layer reset, tokens, base, layout, components, page, utilities;
 		</style>
 
 		<slot name="head" />
