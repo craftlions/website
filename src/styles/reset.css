@@ -1,4 +1,4 @@
-/* Replaces Tailwind's Preflight: what the markup relies on, plus the fixes for
+/* The browser defaults reset to what the markup relies on, plus the fixes for
    the controls the site has (number, date, search). Rules for elements it never
    renders are left out. */
 @layer reset {
