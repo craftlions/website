@@ -1,9 +1,9 @@
-// Scans the public pages, the design reference at /brand/system included, with
-// axe-core; the light and dark projects in playwright.config.ts run each route
-// in both schemes.
+// Scans the routes in routes.ts with axe-core; the light and dark projects in
+// playwright.config.ts run each route in both schemes.
 // Every violation fails, best-practice included, so fix it instead of excluding it.
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { routes } from "./routes.ts";
 
 const tags = [
 	"wcag2a",
@@ -16,15 +16,7 @@ const tags = [
 // Each exclusion names its rule and says why: { id: "rule-id", reason: "…" }.
 const excluded: { id: string; reason: string }[] = [];
 
-for (const route of [
-	"/",
-	"/login",
-	"/forgot-password",
-	"/reset-password",
-	"/imprint/",
-	"/changelog/",
-	"/brand/system/",
-]) {
+for (const route of routes) {
 	test(route, async ({ page }) => {
 		expect((await page.goto(route))?.status()).toBe(200);
 		// Waits for the deferred nav island so the scan sees the final page.
