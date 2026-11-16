@@ -218,7 +218,7 @@ const isCreateOpen =
 										archived ? "text-fg-muted" : "text-fg",
 									]}
 								>
-									<h3 class="project-name wrap-break-word">
+									<h3 class="wrap-break-word">
 										<a
 											href={`/admin/org/${organization.id}/projects/${project.publicId}`}
 											class="link hover-text-fg"
@@ -229,36 +229,35 @@ const isCreateOpen =
 									<Badge type={projectStatus[project.state].badge}>
 										{projectStatus[project.state].label}
 									</Badge>
-									<ProjectPhaseSummary
-										phases={project.phases}
-										class="project-summary"
-									/>
-									<dl class="project-totals text-sm">
-										<dt class="label-caps">Total</dt>
-										<dd class="tabular-nums wrap-break-word">
-											{project.total ?? "—"}
-										</dd>
-										<dt class="label-caps">Invoiced</dt>
-										<dd class="tabular-nums wrap-break-word">
-											{project.invoiced ?? "—"}
-										</dd>
-										{project.open && (
-											<>
-												<dt class="label-caps">Open</dt>
-												<dd class="tabular-nums wrap-break-word">
-													{project.open}
-												</dd>
-											</>
-										)}
-										{project.overdue && (
-											<>
-												<dt class="label-caps">Overdue</dt>
-												<dd class="tabular-nums wrap-break-word text-fg-danger">
-													{project.overdue}
-												</dd>
-											</>
-										)}
-									</dl>
+									<div class="project-figures with-sidebar" data-side="end">
+										<ProjectPhaseSummary phases={project.phases} />
+										<dl class="project-totals text-sm">
+											<dt class="label-caps">Total</dt>
+											<dd class="tabular-nums wrap-break-word">
+												{project.total ?? "—"}
+											</dd>
+											<dt class="label-caps">Invoiced</dt>
+											<dd class="tabular-nums wrap-break-word">
+												{project.invoiced ?? "—"}
+											</dd>
+											{project.open && (
+												<>
+													<dt class="label-caps">Open</dt>
+													<dd class="tabular-nums wrap-break-word">
+														{project.open}
+													</dd>
+												</>
+											)}
+											{project.overdue && (
+												<>
+													<dt class="label-caps">Overdue</dt>
+													<dd class="tabular-nums wrap-break-word text-fg-danger">
+														{project.overdue}
+													</dd>
+												</>
+											)}
+										</dl>
+									</div>
 								</li>
 							))}
 						</ul>

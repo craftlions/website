@@ -4,8 +4,9 @@
 	   thresholds of their own width, not the window's. */
 
 	/* Project list, on a rows list: the name with its state above the phase
-	   summary and the totals, which sit side by side once the list is 36rem
-	   wide; a table from 60rem. */
+	   summary and the totals, the totals beside the summary until the summary
+	   would get less than half the row (with-sidebar); a table from 60rem,
+	   where the pair's wrapper gives way so both are cells of the row. */
 	.project-name-field {
 		max-inline-size: 28rem;
 	}
@@ -15,24 +16,8 @@
 		align-items: start;
 	}
 
-	.project-summary,
-	.project-totals {
+	.project-figures {
 		grid-column: 1 / -1;
-	}
-
-	@container (inline-size >= 36rem) {
-		.project-row {
-			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-		}
-
-		.project-name {
-			grid-column: span 2;
-		}
-
-		.project-summary,
-		.project-totals {
-			grid-column: auto;
-		}
 	}
 
 	@container (inline-size >= 60rem) {
@@ -40,8 +25,8 @@
 			grid-template-columns: subgrid;
 		}
 
-		.project-name {
-			grid-column: auto;
+		.project-figures {
+			display: contents;
 		}
 	}
 
