@@ -785,6 +785,469 @@ const frames = [
 						))}
 					</section>
 				</section>
+				<section
+					aria-labelledby="lines"
+					class="box stack full-row"
+					data-space="l"
+				>
+					<header class="stack" data-space="2xs">
+						<h2 id="lines" class="text-headline">Lines</h2>
+						<p class="text-sm text-fg-muted">
+							The lines in src/styles/components/lines.css, each in a 20rem and
+							a 60rem frame: no column heads, every figure on the end edge, the
+							actions beside it or, whole, below it.
+						</p>
+					</header>
+
+					<section
+						aria-labelledby="lines-worklist"
+						class="stack"
+						data-space="xs"
+						data-fixture="lines-worklist"
+					>
+						<h3 id="lines-worklist" class="text-title">
+							Inbox line: a worklist
+						</h3>
+						<p class="text-sm text-fg-muted">
+							Groups with a count and a total, two actions, a six-digit amount,
+							an overdue item, an expanded line and an empty group.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="lines">
+										<h4>
+											<span id={`lines-${frame}-move`} class="text-label">
+												Your move <span class="text-fg-muted">· 3</span>
+											</span>
+											<span class="line-figure text-sm text-fg-muted">
+												<span class="sr-only">total </span>162.430,00 €
+											</span>
+										</h4>
+										<ul aria-labelledby={`lines-${frame}-move`}>
+											<li>
+												<div class="line-text">
+													<h5>
+														<a href="#lines" class="link">
+															Fleet Telemetry Platform Rebuild · Ingestion
+															pipeline, backfill and replay tooling
+														</a>
+													</h5>
+													<p class="cluster text-sm text-fg-muted">
+														<Badge type="info">To send</Badge>
+														<span>Northwind Logistics GmbH</span>
+													</p>
+												</div>
+												<p class="line-figure">
+													<span>148.750,00 €</span>
+													<span class="text-sm text-fg-muted">
+														waiting 9 days
+													</span>
+												</p>
+												<div class="line-actions cluster">
+													<Button aria-label="Send to client: Ingestion pipeline">
+														Send to client
+													</Button>
+													<Button
+														variant="quiet"
+														aria-label="Cancel phase: Ingestion pipeline"
+													>
+														Cancel phase
+													</Button>
+												</div>
+											</li>
+											<li>
+												<div class="line-text">
+													<h5>
+														<a href="#lines" class="link">
+															Hafenwerk Kiel Website · Relaunch
+														</a>
+													</h5>
+													<p class="cluster text-sm text-fg-muted">
+														<Badge type="error">Overdue</Badge>
+														<span>
+															Hafenwerk Kiel · Delivery invoice A-0042
+														</span>
+													</p>
+												</div>
+												<p class="line-figure">
+													<span>1.280,00 €</span>
+													<span class="text-sm text-fg-danger">
+														14 days overdue
+													</span>
+												</p>
+												<div class="line-actions cluster">
+													<Button aria-label="Open in Stripe: invoice A-0042">
+														Open in Stripe
+													</Button>
+												</div>
+											</li>
+											<li>
+												<div class="line-text">
+													<h5>
+														<a href="#lines" class="link">
+															Datenmigrationsinfrastrukturmodernisierungsprogramm
+															· Phase 2
+														</a>
+													</h5>
+													<p class="cluster text-sm text-fg-muted">
+														<Badge type="info">To deliver</Badge>
+														<span>Stadtwerke Nord</span>
+														<span class="text-fg-danger">Upfront unpaid</span>
+													</p>
+												</div>
+												<p class="line-figure">
+													<span>12.400,00 €</span>
+													<span class="text-sm text-fg-muted">
+														waiting 21 days
+													</span>
+												</p>
+												<div class="line-actions cluster">
+													<DisclosureButton
+														controls={`lines-${frame}-delivery`}
+														open
+														aria-label="Record delivery: Phase 2"
+													>
+														Record delivery
+													</DisclosureButton>
+												</div>
+												<form
+													id={`lines-${frame}-delivery`}
+													method="dialog"
+													aria-label={`Record delivery: Phase 2, ${width} frame`}
+													class="line-details stack"
+												>
+													<Field
+														label="Delivery URL"
+														type="url"
+														name="url"
+														hint="HTTPS link to the pull or merge request that delivers the phase."
+													/>
+													<div class="cluster" data-space="xs">
+														<Button type="submit">Record delivery</Button>
+														<Button variant="quiet" data-disclosure-cancel>
+															Cancel
+														</Button>
+													</div>
+												</form>
+											</li>
+										</ul>
+										<h4>
+											<span class="text-label">
+												Waiting on client <span class="text-fg-muted">· 0</span>
+											</span>
+										</h4>
+										<p class="text-sm text-fg-muted">
+											Nothing waits on the client.
+										</p>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="lines-phases"
+						class="stack"
+						data-space="xs"
+						data-fixture="lines-phases"
+					>
+						<h3 id="lines-phases" class="text-title">
+							Inbox line: phases with a schedule
+						</h3>
+						<p class="text-sm text-fg-muted">
+							Three actions that wrap inside the slot, a line without actions,
+							and an expanded line whose payment schedule is a ledger.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<ol class="lines" aria-label="Phases">
+										<li>
+											<div class="line-text">
+												<h4>Ingestion pipeline, backfill and replay tooling</h4>
+												<p class="cluster text-sm text-fg-muted">
+													<Badge type="info">Awaiting acceptance</Badge>
+													<span>delivered 31.10.2026</span>
+												</p>
+											</div>
+											<p class="line-figure">
+												<span>24.000,00 €</span>
+												<span class="text-sm text-fg-danger">
+													1 of 3 parts overdue
+												</span>
+											</p>
+											<div class="line-actions cluster">
+												<Button aria-label="Accept Ingestion pipeline">
+													Accept
+												</Button>
+												<DisclosureButton
+													controls={`lines-${frame}-schedule`}
+													open
+													variant="quiet"
+													aria-label="Details: Ingestion pipeline"
+												>
+													Details
+												</DisclosureButton>
+											</div>
+											<div
+												id={`lines-${frame}-schedule`}
+												class="line-details stack"
+												data-space="2xs"
+											>
+												<h5 class="label-caps">Payment schedule</h5>
+												<ol
+													class="lines"
+													data-actions="below"
+													aria-label="Payment schedule"
+												>
+													<li>
+														<div class="line-text text-sm">
+															<p>Upfront · 30%</p>
+															<p class="cluster text-fg-muted">
+																<Badge type="success">Paid</Badge>
+																<span>Invoice A-0040</span>
+															</p>
+														</div>
+														<p class="line-figure text-sm">
+															<span>7.200,00 €</span>
+															<span class="text-fg-muted">paid 01.10.2026</span>
+														</p>
+														<div class="line-actions cluster">
+															<Button aria-label="View invoice A-0040">
+																View
+															</Button>
+														</div>
+													</li>
+													<li>
+														<div class="line-text text-sm">
+															<p>Delivery · 50%</p>
+															<p class="cluster text-fg-muted">
+																<Badge type="error">Overdue</Badge>
+																<span>Invoice A-0042</span>
+															</p>
+														</div>
+														<p class="line-figure text-sm">
+															<span>12.000,00 €</span>
+															<span class="text-fg-danger">
+																14 days overdue
+															</span>
+														</p>
+														<div class="line-actions cluster">
+															<Button aria-label="Pay invoice A-0042">
+																Pay
+															</Button>
+														</div>
+													</li>
+													<li>
+														<div class="line-text text-sm">
+															<p>Acceptance · 20%</p>
+															<p class="cluster text-fg-muted">
+																<Badge type="gray">Not due</Badge>
+																<span>billed on acceptance</span>
+															</p>
+														</div>
+														<p class="line-figure text-sm">
+															<span>4.800,00 €</span>
+														</p>
+													</li>
+												</ol>
+											</div>
+										</li>
+										<li>
+											<div class="line-text">
+												<h4>Mobile app · Offline sync</h4>
+												<p class="cluster text-sm text-fg-muted">
+													<Badge type="info">To approve</Badge>
+													<span>due 15.03.2027</span>
+												</p>
+											</div>
+											<p class="line-figure">
+												<span>31.250,00 €</span>
+												<span class="text-sm text-fg-muted">
+													3 parts not due
+												</span>
+											</p>
+											<div class="line-actions cluster">
+												<Button aria-label="Approve Mobile app · Offline sync">
+													Approve
+												</Button>
+												<Button
+													variant="quiet"
+													aria-label="Decline Mobile app · Offline sync"
+												>
+													Decline
+												</Button>
+												<DisclosureButton
+													controls={`lines-${frame}-mobile`}
+													variant="quiet"
+													aria-label="Details: Mobile app · Offline sync"
+												>
+													Details
+												</DisclosureButton>
+											</div>
+											<div
+												id={`lines-${frame}-mobile`}
+												hidden
+												class="line-details text-sm text-fg-muted"
+											>
+												Upfront 30%, delivery 50% and acceptance 20%, none
+												invoiced yet.
+											</div>
+										</li>
+										<li>
+											<div class="line-text">
+												<h4 class="text-fg-muted">Legacy export</h4>
+												<p class="cluster text-sm text-fg-muted">
+													<Badge type="error">Cancelled</Badge>
+													<span>cancelled 03.08.2026</span>
+												</p>
+											</div>
+											<p class="line-figure text-fg-muted">
+												<span>2.400,00 €</span>
+												<span class="text-sm">not charged</span>
+											</p>
+										</li>
+									</ol>
+								</div>
+							</figure>
+						))}
+					</section>
+
+					<section
+						aria-labelledby="lines-invoices"
+						class="stack"
+						data-space="xs"
+						data-fixture="lines-invoices"
+					>
+						<h3 id="lines-invoices" class="text-title">
+							Ledger line: invoices
+						</h3>
+						<p class="text-sm text-fg-muted">
+							Open, then paid, each with its total on the amounts' edge; the
+							actions always on their own row; the highlighted line is the one a
+							link points at.
+						</p>
+						{frames.map(([frame, width]) => (
+							<figure class="stack" data-space="3xs">
+								<figcaption class="label-caps">{width}</figcaption>
+								<div class="frame box" data-frame={frame}>
+									<div class="lines" data-actions="below">
+										<h4>
+											<span id={`lines-${frame}-open`} class="text-label">
+												Open <span class="text-fg-muted">· 1</span>
+											</span>
+											<span class="line-figure text-sm text-fg-muted">
+												<span class="sr-only">total </span>12.000,00 €
+											</span>
+										</h4>
+										<ul aria-labelledby={`lines-${frame}-open`}>
+											<li data-highlight>
+												<div class="line-text">
+													<h5>
+														<a href="#lines" class="link">
+															Fleet Telemetry Platform Rebuild · Ingestion
+															pipeline
+														</a>
+													</h5>
+													<p class="cluster text-sm text-fg-muted">
+														<Badge type="error">Overdue</Badge>
+														<span>Invoice A-0042 · Delivery</span>
+													</p>
+												</div>
+												<p class="line-figure">
+													<span>12.000,00 €</span>
+													<span class="text-sm text-fg-danger">
+														14 days overdue
+													</span>
+												</p>
+												<div class="line-actions cluster">
+													<DisclosureButton
+														controls={`lines-${frame}-invoice`}
+														variant="quiet"
+														aria-label="Details: invoice A-0042"
+													>
+														Details
+													</DisclosureButton>
+													<Button aria-label="Pay invoice A-0042">Pay</Button>
+												</div>
+												<p
+													id={`lines-${frame}-invoice`}
+													hidden
+													class="line-details text-sm text-fg-muted"
+												>
+													Due 02.11.2026 · Delivery 50% of 24.000,00 €
+												</p>
+											</li>
+										</ul>
+										<h4>
+											<span id={`lines-${frame}-paid`} class="text-label">
+												Paid <span class="text-fg-muted">· 2</span>
+											</span>
+											<span class="line-figure text-sm text-fg-muted">
+												<span class="sr-only">total </span>155.950,00 €
+											</span>
+										</h4>
+										<ul aria-labelledby={`lines-${frame}-paid`}>
+											<li>
+												<div class="line-text">
+													<h5>
+														<a href="#lines" class="link">
+															Hafenwerk Kiel Website · Relaunch
+														</a>
+													</h5>
+													<p class="cluster text-sm text-fg-muted">
+														<Badge type="success">Paid</Badge>
+														<span>Invoice A-0031 · Upfront</span>
+													</p>
+												</div>
+												<p class="line-figure">
+													<span>148.750,00 €</span>
+													<span class="text-sm text-fg-muted">
+														paid 10.01.2026
+													</span>
+												</p>
+												<div class="line-actions cluster">
+													<Button
+														variant="quiet"
+														aria-label="Receipt for invoice A-0031"
+													>
+														Receipt
+													</Button>
+												</div>
+											</li>
+											<li>
+												<div class="line-text">
+													<h5 class="text-fg-muted">Unassigned invoice</h5>
+													<p class="cluster text-sm text-fg-muted">
+														<Badge type="success">Paid</Badge>
+														<span>Invoice A-0029</span>
+													</p>
+												</div>
+												<p class="line-figure">
+													<span>7.200,00 €</span>
+													<span class="text-sm text-fg-muted">
+														paid 12.12.2025
+													</span>
+												</p>
+												<div class="line-actions cluster">
+													<Button
+														variant="quiet"
+														aria-label="Receipt for invoice A-0029"
+													>
+														Receipt
+													</Button>
+												</div>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</figure>
+						))}
+					</section>
+				</section>
 			</main>
 			{/* One palette for both sections: signed out, it offers only Sign in. */}
 			<CommandPalette />
