@@ -273,6 +273,8 @@ const idleStatus =
 			});
 
 			dialog.addEventListener("close", () => {
+				// The event is queued: a quick reopen may already have searched.
+				if (dialog.open) return;
 				controller?.abort();
 				clearTimeout(debounce);
 				clearTimeout(retry);
