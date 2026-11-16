@@ -541,3 +541,4 @@ Progress is used for budget state and remains literal.
 - **Don't** add visual noise that makes routine client review feel more complex than it is.
 - **Don't** make the product feel like a generic startup template or a showpiece at the expense of clarity.
 - **Don't** pair dashed borders with soft shadows, glassmorphism, gradient text, rounded card stacks, or decorative illustrations.
+- **Don't** put information in a `title` tooltip: it reaches only a mouse that hovers and waits. State it in visible text, or name the thing with `aria-label` or `sr-only` text. `title` stays only on an `<iframe>`, as an `<svg>`'s `<title>` child, and beside a `pattern`, where the browser quotes it in the constraint message.

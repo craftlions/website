@@ -87,6 +87,31 @@ for (const file of globSync("src/**/*.astro")) {
 	}
 }
 
+// A title tooltip reaches only a mouse user who hovers and waits: not touch,
+// not the keyboard, and screen readers read it inconsistently. The state goes
+// in visible text, a name in aria-label or sr-only text. An <iframe> needs its
+// title as its name, an <svg> names itself with a <title> child (no attribute),
+// and a control with a pattern states the format in its title, which the
+// browser puts in the constraint message Field shows. Component props named
+// title are not attributes, except where Field or Input forward them.
+for (const file of globSync("src/**/*.astro")) {
+	const source = readFileSync(file, "utf8");
+	for (const { 0: tag, 1: name, index } of source.matchAll(
+		/<([\w-]+)\s(?:[^<>{}]|\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})*>/g,
+	)) {
+		if (
+			/\stitle=/.test(tag) &&
+			(/^[a-z]/.test(name) || /^(?:Field|Input)$/.test(name)) &&
+			name !== "iframe" &&
+			!/\spattern=/.test(tag)
+		) {
+			violations.push(
+				`${file}:${source.slice(0, index).split("\n").length}  title on <${name}> → no tooltips: state it in visible text, name it with aria-label or sr-only text; title stays only on an <iframe>, as an <svg>'s <title> child, or beside a pattern  (DESIGN.md#dont)`,
+			);
+		}
+	}
+}
+
 // Native CSS: the stylesheets in src/styles and every <style> block, split into
 // blocks and declarations that know their line, the selectors and at-rules
 // around them, and the comments that start or end on each line, which can
