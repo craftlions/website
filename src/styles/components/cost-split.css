@@ -1,3 +1,53 @@
 @layer components {
-	/* src/components/CostSplit.astro; filled by conversion package S5d. */
+	/* src/components/CostSplit.astro: a phase's cost parts, one row each with
+	   the amount at the end; data-variant="compact" keeps a row on one line. */
+	.cost-split {
+		display: grid;
+		min-inline-size: 0;
+		gap: var(--space-3xs);
+
+		&[data-variant="full"] {
+			gap: var(--space-2xs);
+		}
+
+		& li {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: center;
+			column-gap: var(--space-2xs);
+
+			& > :first-child {
+				min-inline-size: 0;
+			}
+		}
+		&[data-variant="compact"] li {
+			align-items: baseline;
+		}
+
+		/* The other parts, beside the one an invoice bills. */
+		& [data-dimmed] {
+			opacity: 0.6;
+		}
+	}
+
+	/* The part's name is capitalized, its due hint is not. */
+	.cost-split-part {
+		text-transform: capitalize;
+
+		& > span {
+			text-transform: none;
+		}
+	}
+
+	.cost-split-name {
+		display: grid;
+		grid-auto-flow: column;
+		align-items: baseline;
+		justify-content: start;
+		column-gap: var(--space-2xs);
+	}
+
+	.cost-split-amount {
+		white-space: nowrap;
+	}
 }

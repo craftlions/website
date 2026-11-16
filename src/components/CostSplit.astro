@@ -76,22 +76,20 @@ const accessibleSummary =
 		No chargeable parts · {formatter.format(total)}
 	</p>
 ) : variant === "compact" ? (
-	<figure class="grid min-w-0 gap-1">
+	<figure class="cost-split" data-variant="compact">
 		<figcaption class="sr-only">{accessibleSummary}</figcaption>
-		<ul class="grid gap-0.5" aria-label="Cost split">
+		<ul class="stack" data-space="3xs" aria-label="Cost split">
 			{items.map((item) => (
 				<li
-					class:list={[
-						"grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-1.5 text-xs",
-						highlight && item.component !== highlight && "opacity-60",
-					]}
+					class="text-xs"
+					data-dimmed={(highlight && item.component !== highlight) || undefined}
 					title={`${dueHint[item.component]}${showStatus ? ` · ${item.status.replaceAll("_", " ")}` : ""}`}
 				>
-					<span class="min-w-0 truncate capitalize text-fg-muted">
+					<span class="cost-split-part truncate text-fg-muted">
 						{item.component}
-						<span class="normal-case"> · {dueHint[item.component]}</span>
+						<span> · {dueHint[item.component]}</span>
 					</span>
-					<span class="whitespace-nowrap tabular-nums text-fg">
+					<span class="cost-split-amount tabular-nums text-fg">
 						{formatter.format(item.amount)}
 						<span class="text-fg-muted"> · {share(item.amount)}</span>
 					</span>
@@ -106,19 +104,16 @@ const accessibleSummary =
 		)}
 	</figure>
 ) : (
-	<figure class="grid min-w-0 gap-1.5">
+	<figure class="cost-split" data-variant="full">
 		<figcaption class="sr-only">{accessibleSummary}</figcaption>
-		<ul class="grid gap-1" aria-label="Cost split">
+		<ul class="stack" data-space="3xs" aria-label="Cost split">
 			{items.map((item) => (
 				<li
-					class:list={[
-						"grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2",
-						highlight && item.component !== highlight && "opacity-60",
-					]}
+					data-dimmed={(highlight && item.component !== highlight) || undefined}
 				>
-					<span class="grid min-w-0 gap-0.5">
-						<span class="grid grid-flow-col items-baseline justify-start gap-x-1.5 text-xs">
-							<span class="capitalize">{item.component}</span>
+					<span class="stack" data-space="3xs">
+						<span class="cost-split-name text-xs">
+							<span class="cost-split-part">{item.component}</span>
 							<span class="truncate text-fg-muted">
 								{dueHint[item.component]}
 							</span>
