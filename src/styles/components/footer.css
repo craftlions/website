@@ -1,48 +1,26 @@
 @layer components {
-	/* src/components/Footer.astro, a .center: logo, about and links in two
-	   columns from sm and three from lg, the copyright across all of them. Its
-	   inset sits inside the column width. */
+	/* src/components/Footer.astro, a .center and a .stack: logo, about and
+	   links in a .switcher, all in one row or all stacked, the copyright below
+	   them. Its inset sits inside the column width. */
 	.footer {
-		display: grid;
-		gap: var(--space-s);
 		padding: var(--space-m) var(--space-xs);
 		border-block-start: var(--rule) var(--line);
 
-		& > a {
-			display: grid;
-			justify-self: start;
+		/* The logo and the links keep their own width, so the about text
+		   takes the rest of the row and the links end it; the logo's focus
+		   ring fits the logo. */
+		& > .switcher > :is(a, nav) {
+			max-inline-size: max-content;
 		}
-		& > a > svg {
+		& > .switcher > a {
+			display: grid;
+		}
+		& > .switcher > a > svg {
 			inline-size: 4rem;
-		}
-		& > nav {
-			display: grid;
-			justify-self: start;
 		}
 		& > p {
 			padding-block-start: var(--space-s);
 			border-block-start: var(--rule) var(--line);
-		}
-
-		@media (width >= 40rem) {
-			grid-template-columns: auto minmax(0, 1fr);
-			align-items: start;
-
-			& > p {
-				grid-column: span 2 / span 2;
-			}
-		}
-
-		@media (width >= 64rem) {
-			grid-template-columns: auto minmax(0, 1fr) auto;
-
-			& > nav {
-				justify-self: end;
-				align-self: start;
-			}
-			& > p {
-				grid-column: span 3 / span 3;
-			}
 		}
 	}
 }

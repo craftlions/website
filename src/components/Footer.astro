@@ -10,37 +10,41 @@ const { wide = false } = Astro.props;
 ---
 
 <footer
-	class="center footer text-sm text-fg-muted"
+	class="center stack footer text-sm text-fg-muted"
 	data-width={wide ? "wide" : undefined}
 >
-	<a href="/" aria-label="craftlions home">
-		<LogoWithTextVertical class="text-fg" />
-	</a>
-	<div class="stack measure" data-space="2xs">
-		<p>{tagline}</p>
-		<p class="text-xs text-fg-muted">{summary}</p>
+	<div class="switcher" style="--switcher-threshold: 36rem">
+		<a href="/" aria-label="craftlions home">
+			<LogoWithTextVertical class="text-fg" />
+		</a>
+		<div class="stack" data-space="2xs">
+			<p class="measure">{tagline}</p>
+			<p class="measure text-xs text-fg-muted">{summary}</p>
+		</div>
+		<nav aria-label="Footer">
+			<ul class="stack" data-space="3xs">
+				<li
+					><a href={`mailto:${email}`} class="link hover-text-fg"
+						>Contact</a
+					></li
+				>
+				<li>
+					<a href="https://github.com/craftlions" class="link hover-text-fg"
+						>GitHub</a
+					>
+				</li>
+				<li>
+					<a
+						href="https://www.linkedin.com/company/craftlions"
+						class="link hover-text-fg"
+						>LinkedIn</a
+					>
+				</li>
+				<li><a href="/changelog/" class="link hover-text-fg">Changelog</a></li>
+				<li><a href="/imprint/" class="link hover-text-fg">Imprint</a></li>
+			</ul>
+		</nav>
 	</div>
-	<nav aria-label="Footer">
-		<ul class="stack" data-space="3xs">
-			<li
-				><a href={`mailto:${email}`} class="link hover-text-fg">Contact</a></li
-			>
-			<li>
-				<a href="https://github.com/craftlions" class="link hover-text-fg"
-					>GitHub</a
-				>
-			</li>
-			<li>
-				<a
-					href="https://www.linkedin.com/company/craftlions"
-					class="link hover-text-fg"
-					>LinkedIn</a
-				>
-			</li>
-			<li><a href="/changelog/" class="link hover-text-fg">Changelog</a></li>
-			<li><a href="/imprint/" class="link hover-text-fg">Imprint</a></li>
-		</ul>
-	</nav>
 	<p class="text-xs text-fg-muted">
 		&copy; 2026 craftlions. All rights reserved.
 	</p>

@@ -15,7 +15,7 @@ const stop = (name: string) => tokens.find((token) => token.name === name);
 // Each logo's color and the computed colors of its two gradient stops.
 const logos = (page: Page) =>
 	page
-		.locator("nav.nav > a > svg, footer.footer > a > svg")
+		.locator("nav.nav > a > svg, footer.footer > .switcher > a > svg")
 		.evaluateAll((svgs) =>
 			svgs.map((svg) => ({
 				color: getComputedStyle(svg).color,
