@@ -14,6 +14,14 @@
 		font-weight: inherit;
 	}
 
+	/* Headings break into lines of even length where the browser supports it;
+	   elsewhere they wrap as before. Prose is pretty from each body's class. */
+	h1,
+	h2,
+	h3 {
+		text-wrap: balance;
+	}
+
 	:focus-visible {
 		outline: 2px solid var(--focus);
 		outline-offset: 2px;
