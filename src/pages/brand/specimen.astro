@@ -9,6 +9,7 @@ import Badge from "../../components/Badge.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import Button from "../../components/Button.astro";
 import Checkbox from "../../components/Checkbox.astro";
+import CommandPalette from "../../components/CommandPalette.astro";
 import ConfirmAction from "../../components/ConfirmAction.astro";
 import DisclosureButton from "../../components/DisclosureButton.astro";
 import Field from "../../components/Field.astro";
@@ -384,6 +385,19 @@ const frames = [
 										The client and its settings are deleted for good.
 									</ConfirmAction>
 								</form>
+							</section>
+
+							<section>
+								<h3 class="text-title">Command palette</h3>
+								<Button
+									aria-haspopup="dialog"
+									aria-controls="command-palette"
+									aria-keyshortcuts="Control+K Meta+K"
+									class="fit"
+									data-command-palette-open
+								>
+									Search
+								</Button>
 							</section>
 
 							<section>
@@ -768,6 +782,8 @@ const frames = [
 					</section>
 				</section>
 			</main>
+			{/* One palette for both sections: signed out, it offers only Sign in. */}
+			<CommandPalette />
 		</body>
 	</Fragment>
 </Shell>

@@ -105,13 +105,7 @@ test("the auth API reports no session to a signed-out caller", async ({
 	expect((await request.get("/api/auth/does-not-exist")).status()).toBe(404);
 });
 
-for (const path of [
-	"/",
-	"/changelog/",
-	"/login",
-	"/brand/",
-	"/brand/specimen/",
-]) {
+for (const path of ["/", "/changelog/", "/login", "/brand/"]) {
 	test(`${path} ships no command palette`, async ({ page }) => {
 		await page.goto(path);
 		await expect(page.getByText("Loading…")).toHaveCount(0);
