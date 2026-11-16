@@ -13,7 +13,7 @@ aubx astro sync
 
 ## Hard Requirements
 
-- Never run a dev server; assume one is already running.
+- Never start `astro dev` (`aubr dev`, `mise run dev`): the dev server is the owner's and runs against real data. Assume none is running; `aubr a11y` and `aubr design:test` build and serve their own preview on port 4322.
 - For analysis-only requests, do not modify files, branches, staging, or commits.
 - Style with inline Tailwind utility classes built on the role tokens in `DESIGN.md` while the site moves to native CSS. Standalone CSS lives in `src/styles/`: `global.css` declares the layer order (`theme, reset, tokens, base, layout, components, utilities`; Tailwind's theme and utilities fill `theme` and `utilities` until it is removed) and imports the other files, each inside one layer: `reset.css` replaces Tailwind's Preflight, `tokens.css` holds the tokens and `base.css` the element defaults. Avoid `<style>` blocks in components.
 - Use CSS grid, never flexbox.
