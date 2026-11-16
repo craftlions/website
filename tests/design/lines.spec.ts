@@ -120,6 +120,9 @@ for (const fixture of fixtures) {
 		page,
 	}) => {
 		const seen = new Set<string>();
+		// Where lines of one list differ, some figures beside their text and
+		// some below it, while the edge check above still held.
+		const mixed: string[] = [];
 		for (const width of widths) {
 			await resize(frame(page, fixture), width);
 			expect(
@@ -139,17 +142,31 @@ for (const fixture of fixtures) {
 				for (const edge of edges) {
 					expect(Math.abs(edge - (edges[0] ?? edge)), where).toBeLessThan(0.5);
 				}
+				const figures = new Set<string>();
 				for (const line of list.lines) {
 					if (line.figure && line.amount) {
 						expect(
 							Math.abs(line.amount.right - line.figure.right),
 						).toBeLessThan(0.5);
 					}
-					// The figure stays on the text's row, at its end.
+					// The figure sits beside the text, after it, or on a row of
+					// its own below it; either way on the shared edge above.
 					if (line.figure && line.text) {
-						expect(line.figure.top, where).toBeLessThan(line.text.bottom);
-						expect(line.figure.left, where).toBeGreaterThanOrEqual(
-							line.text.right - 0.5,
+						const beside =
+							line.figure.top < line.text.bottom &&
+							line.figure.left >= line.text.right - 0.5;
+						const below = line.figure.top >= line.text.bottom - 0.5;
+						expect(beside || below, where).toBe(true);
+						if (!line.heading) figures.add(beside ? "beside" : "below");
+					}
+					// A line's text keeps 12rem, or the whole line where that is
+					// less.
+					if (line.text && !line.heading) {
+						expect(
+							line.text.right - line.text.left,
+							where,
+						).toBeGreaterThanOrEqual(
+							Math.min(12 * 16, line.content.right - line.content.left) - 0.5,
 						);
 					}
 					expect(line.scrolls, where).toBe(false);
@@ -169,8 +186,13 @@ for (const fixture of fixtures) {
 				expect(states.size, where).toBeLessThanOrEqual(1);
 				if (list.ledger) expect([...states], where).not.toContain("beside");
 				for (const state of states) seen.add(`${list.ledger}-${state}`);
+				if (figures.size > 1) mixed.push(where);
 			}
 		}
+		test.info().annotations.push({
+			type: "figures beside and below in one list",
+			description: mixed.join("; ") || "none",
+		});
 		// The sweep crosses the threshold of every inbox list.
 		if (fixture !== "lines-invoices") {
 			expect([...seen]).toEqual(
@@ -210,8 +232,9 @@ for (const fixture of fixtures) {
 	});
 
 	// WCAG 2.5.8: at least 24×24px, or a 24px circle on a smaller target
-	// touches no other target and no other such circle.
-	test(`${fixture}: targets are at least 24px or spaced`, async ({ page }) => {
+	// touches no other target and no other such circle; in the actions slot,
+	// at least 24×24px without exception.
+	test(`${fixture}: targets are at least 24px`, async ({ page }) => {
 		for (const width of [320, 480, 960]) {
 			await resize(frame(page, fixture), width);
 			const failures = await frame(page, fixture).evaluate((root) => {
@@ -249,6 +272,17 @@ for (const fixture of fixtures) {
 					.map(({ html, box }) => `${box.width}×${box.height} ${html}`);
 			});
 			expect(failures, `${width}px`).toEqual([]);
+			// In the actions slot every control is 24px, quiet ones too.
+			const small = await frame(page, fixture)
+				.locator(".line-actions :is(a, button)")
+				.evaluateAll((nodes) =>
+					nodes
+						.filter((node) => node.checkVisibility())
+						.map((node) => node.getBoundingClientRect())
+						.filter(({ width, height }) => width < 24 || height < 24)
+						.map(({ width, height }) => `${width}×${height}`),
+				);
+			expect(small, `${width}px`).toEqual([]);
 		}
 	});
 }
