@@ -92,6 +92,20 @@ export const px = ({ min, intercept, slope, max }, width, root = 16) =>
 		Math.max(min * root, intercept * root + (slope * width) / 100),
 	);
 
+// A token's size at 320px and from 1280px, between which a fluid step grows,
+// as "22.78px → 31.25px", or one size for a static step. The specimen and
+// /brand print it beside each step.
+export const range = (token) =>
+	[
+		...new Set(
+			[viewport.min, viewport.max].map(
+				(width) => Math.round(px(token, width) * 100) / 100,
+			),
+		),
+	]
+		.map((size) => `${size}px`)
+		.join(" → ");
+
 if (import.meta.main) {
 	console.log(
 		tokens.map(({ name, value }) => `--${name}: ${value};`).join("\n"),

@@ -3,7 +3,7 @@ export const prerender = true;
 
 import { ActionError } from "astro:actions";
 import designMd from "../../../DESIGN.md?raw";
-import { px, tokens as scale } from "../../../scripts/fluid-scale.js";
+import { range, tokens as scale } from "../../../scripts/fluid-scale.js";
 import ActionBanner from "../../components/ActionBanner.astro";
 import Badge from "../../components/Badge.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
@@ -69,17 +69,8 @@ const typeRoles = [
 	["label-caps", "Label caps"],
 ];
 
-// A step's size at 320px and from 1280px, between which a fluid step grows.
-// The design tests measure each probe against scripts/fluid-scale.js.
-const range = (token: (typeof scale)[number]) =>
-	[
-		...new Set(
-			[320, 1280].map((width) => Math.round(px(token, width) * 100) / 100),
-		),
-	]
-		.map((size) => `${size}px`)
-		.join(" → ");
-
+// Each step shows its range from scripts/fluid-scale.js, which the design tests
+// measure each probe against.
 const typeSteps = [
 	["text-display", "Display", "step-3"],
 	["text-headline", "Headline", "step-2"],
