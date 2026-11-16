@@ -66,17 +66,6 @@
 		max-inline-size: 100%;
 	}
 
-	/* /admin: the summary figures, as many per row as fit at 10rem. */
-	.admin-summary {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-		gap: var(--space-xs) var(--space-l);
-
-		& > * {
-			min-inline-size: 0;
-		}
-	}
-
 	/* /admin: the client ledger, with its name filter. */
 	client-ledger {
 		display: grid;
