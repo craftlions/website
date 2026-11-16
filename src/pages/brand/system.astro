@@ -2,6 +2,7 @@
 export const prerender = true;
 
 import { ActionError } from "astro:actions";
+import designMd from "../../../DESIGN.md?raw";
 import ActionBanner from "../../components/ActionBanner.astro";
 import Badge from "../../components/Badge.astro";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
@@ -13,42 +14,22 @@ import Field from "../../components/Field.astro";
 import PageHeading from "../../components/PageHeading.astro";
 import Progress from "../../components/Progress.astro";
 import Shell from "../../layouts/Shell.astro";
-import { contrast, parseTokens } from "../../lib/contrast.ts";
+import {
+	contrastChecks,
+	parseContrast,
+	parseTokens,
+} from "../../lib/contrast.ts";
 import tokensCss from "../../styles/tokens.css?raw";
 
 const tokens = parseTokens(tokensCss);
-
-// Text needs 4.5:1; focus rings, lines, fills and chart marks are non-text
-// contrast (WCAG 1.4.11) and need 3:1.
-const minimumContrast = (name: string) =>
-	name.startsWith("fg")
-		? 4.5
-		: ["focus", "line", "fill", "chart"].some((prefix) =>
-					name.startsWith(prefix),
-				)
-			? 3
-			: undefined;
+const requirements = parseContrast(designMd);
 
 const schemes = (["light", "dark"] as const).map((scheme) => {
-	const values = tokens.map((token) => ({
-		name: token.name,
-		value: token[scheme],
-		minimum: minimumContrast(token.name),
-	}));
-	const background = (name: string) =>
-		values.find((token) => token.name === name)?.value ?? "#000000";
+	const swatches = contrastChecks(tokens, requirements, scheme);
 	return {
 		scheme,
-		style: `color-scheme: ${scheme}; ${values.map(({ name, value }) => `--${name}: ${value}`).join("; ")}`,
-		swatches: values.map((token) => ({
-			...token,
-			checks: token.minimum
-				? ["canvas", "panel"].map((surface) => ({
-						surface,
-						ratio: contrast(token.value, background(surface)),
-					}))
-				: [],
-		})),
+		style: `color-scheme: ${scheme}; ${swatches.map(({ name, value }) => `--${name}: ${value}`).join("; ")}`,
+		swatches,
 	};
 });
 
