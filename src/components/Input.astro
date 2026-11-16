@@ -9,14 +9,7 @@ interface Props extends HTMLAttributes<"input"> {
 
 const { as = "input", class: className, danger, value, ...attrs } = Astro.props;
 
-const inputClass = [
-	"border border-dashed bg-transparent px-3 py-2 text-sm transition-colors placeholder:text-fg-muted focus:border-line-active disabled:cursor-not-allowed disabled:opacity-50",
-	danger ? "border-line-danger" : "border-line-control",
-	// A read-only value is shown, not edited: muted like a calculated output,
-	// and still focusable and selectable.
-	as === "input" && attrs.readonly && "text-fg-muted",
-	className,
-];
+const inputClass = ["input text-sm", className];
 
 // A select has no value attribute: a given `value` (one or, for `multiple`,
 // several) selects the slot's options whose `value` attribute matches instead.
@@ -33,9 +26,18 @@ const options =
 ---
 
 {as === "select" ? (
-	<select class:list={inputClass} {...attrs}>
+	<select
+		class:list={inputClass}
+		data-variant={danger ? "danger" : undefined}
+		{...attrs}
+	>
 		{options === undefined ? <slot /> : <Fragment set:html={options} />}
 	</select>
 ) : (
-	<input class:list={inputClass} {value} {...attrs} />
+	<input
+		class:list={inputClass}
+		data-variant={danger ? "danger" : undefined}
+		{value}
+		{...attrs}
+	/>
 )}
