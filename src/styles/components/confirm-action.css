@@ -5,23 +5,10 @@
 		display: grid;
 		justify-items: start;
 
+		/* The base dialog, its parts one column apart. */
 		& dialog {
-			inline-size: 100%;
-			max-inline-size: min(var(--dialog), 100% - 2rem);
 			grid-template-columns: repeat(1, minmax(0, 1fr));
 			gap: var(--space-s);
-			margin: auto;
-			background-color: var(--canvas);
-			overscroll-behavior: contain;
-
-			&[open] {
-				display: grid;
-			}
-			&::backdrop {
-				overflow: hidden;
-				overscroll-behavior: contain;
-				background-color: color-mix(in oklab, var(--canvas) 80%, transparent);
-			}
 		}
 	}
 

@@ -36,6 +36,26 @@
 		outline-offset: 2px;
 	}
 
+	/* A modal on the canvas, as wide as a confirmation (--dialog) and never
+	   wider than the window less a margin, over a backdrop that dims the page.
+	   Scrolling inside it or on the backdrop never scrolls the page behind. */
+	dialog {
+		inline-size: 100%;
+		max-inline-size: min(var(--dialog), 100% - 2rem);
+		margin: auto;
+		background-color: var(--canvas);
+		overscroll-behavior: contain;
+
+		&[open] {
+			display: grid;
+		}
+		&::backdrop {
+			overflow: hidden;
+			overscroll-behavior: contain;
+			background-color: color-mix(in oklab, var(--canvas) 80%, transparent);
+		}
+	}
+
 	/* An element a link points at (#id) scrolls into view with room above it
 	   and is marked while it is the target; [data-highlight] marks the one a
 	   script points at instead. A tint and a dashed outline, so the mark does

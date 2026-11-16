@@ -2,24 +2,12 @@
 	/* src/components/CommandPalette.astro: the search field, its status line
 	   and the results, which scroll inside the modal. */
 	command-palette {
+		/* The base dialog, at the wide dialog width. */
 		& dialog {
-			inline-size: 100%;
 			max-inline-size: min(var(--dialog-wide), 100% - 2rem);
 			max-block-size: min(36rem, 100dvh - 4rem);
 			grid-template-rows: auto auto minmax(0, 1fr);
 			gap: var(--space-xs);
-			margin: auto;
-			background-color: var(--canvas);
-			overscroll-behavior: contain;
-
-			&[open] {
-				display: grid;
-			}
-			&::backdrop {
-				overflow: hidden;
-				overscroll-behavior: contain;
-				background-color: color-mix(in oklab, var(--canvas) 80%, transparent);
-			}
 		}
 
 		& search {
