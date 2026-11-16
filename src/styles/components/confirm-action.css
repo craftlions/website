@@ -1,6 +1,6 @@
 @layer components {
 	/* src/components/ConfirmAction.astro: the trigger, and the modal that
-	   confirms its action. */
+	   confirms its action, cancel and confirm in a .cluster at its end. */
 	confirm-action {
 		display: grid;
 		justify-items: start;
@@ -9,18 +9,6 @@
 		& dialog {
 			grid-template-columns: repeat(1, minmax(0, 1fr));
 			gap: var(--space-s);
-		}
-	}
-
-	/* Cancel and confirm at the end of the row, each shrinking to fit. */
-	.confirm-action-buttons {
-		display: grid;
-		grid-template-columns: minmax(0, auto) minmax(0, auto);
-		justify-content: end;
-		gap: var(--space-2xs);
-
-		& > * {
-			max-inline-size: 100%;
 		}
 	}
 }
