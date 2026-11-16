@@ -15,7 +15,7 @@ aubx astro sync
 
 - Never run a dev server; assume one is already running.
 - For analysis-only requests, do not modify files, branches, staging, or commits.
-- Style with inline Tailwind utility classes built on the role tokens in `DESIGN.md`. Standalone CSS is allowed in `src/styles/` for tokens and global rules; avoid `<style>` blocks in components.
+- Style with inline Tailwind utility classes built on the role tokens in `DESIGN.md` while the site moves to native CSS. Standalone CSS lives in `src/styles/`: `global.css` declares the layer order (`theme, reset, tokens, base, layout, components, utilities`; Tailwind's theme and utilities fill `theme` and `utilities` until it is removed) and imports the other files, each inside one layer: `reset.css` replaces Tailwind's Preflight, `tokens.css` holds the tokens and `base.css` the element defaults. Avoid `<style>` blocks in components.
 - Use CSS grid, never flexbox.
 - Keep markup minimal and semantic.
 - Prefer accessing values directly where they are used instead of creating one-off aliases or derived variables. Add variables only when reused, needed for type narrowing, or when they remove real complexity.
