@@ -808,16 +808,20 @@ const frames = [
 
 <style>
 	@layer page {
+		/* The page is the container its sections and button rows switch on:
+		   its content box, the window less the fluid gutter on both sides. */
 		.specimen {
 			display: grid;
 			gap: var(--space-m-l);
 			padding: var(--space-s-m);
+			container-type: inline-size;
 		}
 		.intro {
 			padding-inline-start: var(--space-xs);
 		}
-		.sections {
-			@media (width >= 48rem) {
+		/* Two columns from a 768px window, whose content box is 45.49rem. */
+		@container (inline-size >= 45.49rem) {
+			.sections {
 				grid-template-columns: repeat(2, minmax(0, 1fr));
 			}
 		}
@@ -879,8 +883,10 @@ const frames = [
 			grid-template-columns: repeat(3, max-content);
 			justify-content: start;
 			gap: var(--space-2xs);
-
-			@media (width >= 40rem) {
+		}
+		/* One row from a 640px window, whose content box is 37.7rem. */
+		@container (inline-size >= 37.7rem) {
+			.buttons {
 				grid-auto-flow: column;
 				grid-template-columns: none;
 			}
