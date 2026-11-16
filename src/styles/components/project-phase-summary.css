@@ -1,4 +1,0 @@
-@layer components {
-	/* src/components/ProjectPhaseSummary.astro is a metrics cluster and needs
-	   no rules of its own; this file goes once global.css drops its import. */
-}
