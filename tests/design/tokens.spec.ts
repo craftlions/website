@@ -1,7 +1,7 @@
 // T5, token audit, report-only until the conversion to native CSS: lists every
 // computed font size that is no --step-*, every padding, block margin, gap and
-// scroll margin that is no --space-* at the current width, and flexbox, other
-// weights, radius and shadow. The list is attached to each test's result.
+// scroll margin that is no --space-* at the current width, and other weights,
+// radius and shadow. The list is attached to each test's result.
 import { expect, test } from "@playwright/test";
 import { px, tokens } from "../../scripts/fluid-scale.js";
 import { routes } from "../routes.ts";
@@ -73,8 +73,6 @@ for (const route of routes) {
 								note(`${property} ${value}`, element);
 							}
 						}
-						if (/flex/.test(style.display))
-							note(`display ${style.display}`, element);
 						if (!["400", "600"].includes(style.fontWeight)) {
 							note(`font-weight ${style.fontWeight}`, element);
 						}
