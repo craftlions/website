@@ -81,9 +81,6 @@
 		&[data-width="narrow"] {
 			--center-max: var(--column-narrow);
 		}
-		&[data-width="measure"] {
-			--center-max: var(--measure);
-		}
 	}
 
 	/* Peers that keep their own width and wrap like words, with the same gap
