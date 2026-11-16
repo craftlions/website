@@ -122,17 +122,16 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 	<form
 		method="POST"
 		action={actions.updateOrganizationSettings}
-		class="grid gap-6"
+		class="stack"
+		data-space="m"
 	>
 		<input type="hidden" name="organizationId" value={organization.id}>
-		<section aria-labelledby="identity-heading" class="grid gap-3">
+		<section aria-labelledby="identity-heading" class="stack" data-space="xs">
 			<h2 id="identity-heading" class="label-caps"> Identity </h2>
-			<p class="max-w-prose text-sm text-fg-muted">
+			<p class="admin-intro text-sm text-fg-muted">
 				How this client is named in the admin area and on their dashboard.
 			</p>
-			<div
-				class="grid grid-cols-1 gap-4 border border-dashed border-line p-4 md:grid-cols-2"
-			>
+			<div class="box admin-form">
 				<Field
 					label="Name"
 					name="name"
@@ -154,15 +153,13 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 				/>
 			</div>
 		</section>
-		<section aria-labelledby="billing-heading" class="grid gap-3">
+		<section aria-labelledby="billing-heading" class="stack" data-space="xs">
 			<h2 id="billing-heading" class="label-caps"> Billing </h2>
-			<p class="max-w-prose text-sm text-fg-muted">
+			<p class="admin-intro text-sm text-fg-muted">
 				The budget the client dashboard compares invoices against, and the
 				Stripe customer whose invoices belong to this client.
 			</p>
-			<div
-				class="grid grid-cols-1 gap-4 border border-dashed border-line p-4 md:grid-cols-2"
-			>
+			<div class="box admin-form">
 				<Field
 					label="Yearly budget (EUR)"
 					name="yearlyBudget"
@@ -176,7 +173,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 					hint="Whole euros per calendar year, January to December. Compared with this year's invoices. Leave empty for no budget."
 					result={settingsResult}
 				/>
-				<div class="grid grid-cols-1 content-start gap-1.5">
+				<div class="stack" data-space="2xs">
 					<Field
 						label="Stripe customer ID"
 						name="stripeCustomerId"
@@ -203,7 +200,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 							target="_blank"
 							rel="noreferrer"
 							aria-label={`Open in Stripe: customer ${organization.data.stripeCustomerId} (opens in a new tab)`}
-							class="max-w-full wrap-break-word"
+							class="admin-long-label wrap-break-word"
 						>
 							Open in Stripe
 						</Button>
@@ -213,9 +210,9 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		</section>
 		<Button type="submit">Save settings</Button>
 	</form>
-	<section aria-labelledby="client-url-heading" class="grid gap-3">
+	<section aria-labelledby="client-url-heading" class="stack" data-space="xs">
 		<h2 id="client-url-heading" class="label-caps"> Client URL </h2>
-		<p class="max-w-prose text-sm text-fg-muted">
+		<p class="admin-intro text-sm text-fg-muted">
 			The address members of this client use to open their dashboard. It is
 			changed on its own, with a confirmation, because existing links and
 			bookmarks stop working.
@@ -223,7 +220,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		<form
 			method="POST"
 			action={actions.updateOrganizationSlug}
-			class="grid grid-cols-1 gap-4 border border-dashed border-line p-4 md:grid-cols-2"
+			class="box admin-form"
 			data-client-url-form
 		>
 			<input type="hidden" name="organizationId" value={organization.id}>
@@ -243,7 +240,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 				hint={`Currently ${Astro.url.origin}/dash/org/${organization.slug}. Lowercase letters, digits and single hyphens. Changing it breaks existing links and bookmarks to the dashboard.`}
 				result={slugResult}
 			/>
-			<div class="grid md:col-span-2">
+			<div class="admin-form-full">
 				<ConfirmAction
 					id="confirm-client-url"
 					trigger="Change client URL"
@@ -266,22 +263,23 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 	</section>
 	<section
 		aria-labelledby="delete-heading"
-		class="grid gap-3 border-t border-dashed border-line pt-6"
+		class="stack settings-delete"
+		data-space="xs"
 	>
 		<h2 id="delete-heading" class="label-caps"> Delete client </h2>
-		<p class="max-w-prose text-sm text-fg-muted">
+		<p class="admin-intro text-sm text-fg-muted">
 			Deleting a client is permanent and cannot be undone.
 		</p>
 		{organization.projectCount === 0 ? (
 			<form
 				method="POST"
 				action={actions.hardDeleteOrganization}
-				class="grid grid-cols-1 gap-4 border border-dashed border-line-danger p-4 wrap-anywhere"
+				class="box stack border-line-danger wrap-anywhere"
 			>
 				<input type="hidden" name="organizationId" value={organization.id}>
-				<div class="grid gap-2 text-sm">
+				<div class="stack text-sm" data-space="2xs">
 					<p>Deleting {organization.name} removes:</p>
-					<ul class="grid list-disc gap-1 pl-5">
+					<ul class="stack settings-delete-list" data-space="3xs">
 						<li>the client with its name, client URL and logo</li>
 						<li>
 							its yearly budget and its link to the Stripe customer; the
@@ -310,18 +308,18 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 				</ConfirmAction>
 			</form>
 		) : (
-			<div class="grid grid-cols-1 gap-4 border border-dashed border-line-danger p-4 wrap-anywhere">
-				<p class="max-w-prose text-sm">
+			<div class="box stack border-line-danger wrap-anywhere">
+				<p class="admin-intro text-sm">
 					Only a client without projects can be deleted. Projects cannot be
 					deleted, archived ones included, so {organization.name} stays. To
 					offboard the client, archive its projects and remove its members.
 				</p>
-				<ul class="grid gap-2">
+				<ul class="stack" data-space="2xs">
 					<li>
 						<Button
 							variant="quiet"
 							href={`/admin/org/${organization.id}/projects`}
-							class="max-w-full"
+							class="admin-long-label"
 						>
 							{`${organization.projectCount} ${organization.projectCount === 1 ? "project" : "projects"}, ${organization.unarchivedProjectCount} not archived`}
 						</Button>
@@ -330,7 +328,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 						<Button
 							variant="quiet"
 							href={`/admin/org/${organization.id}/members`}
-							class="max-w-full"
+							class="admin-long-label"
 						>
 							{`${organization.memberCount} ${organization.memberCount === 1 ? "member" : "members"}`}
 						</Button>

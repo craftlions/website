@@ -314,4 +314,15 @@
 			margin-block-start: var(--space-3xs);
 		}
 	}
+
+	/* /admin/org/[id]/settings: deleting the client, below a rule. */
+	.settings-delete {
+		border-block-start: var(--rule) var(--line);
+		padding-block-start: var(--space-m);
+	}
+
+	.settings-delete-list {
+		list-style-type: disc;
+		padding-inline-start: 1.25rem; /* constant: the list marker's indent */
+	}
 }
