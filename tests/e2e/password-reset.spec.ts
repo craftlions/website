@@ -1,0 +1,151 @@
+// P-4: the reset request and the new-password form up to the auth API.
+// Sending the mail and spending a token need the database and stay out.
+import { expect, test } from "@playwright/test";
+
+test("the request form validates the address before sending", async ({
+	page,
+}) => {
+	const requests: string[] = [];
+	page.on("request", (request) => {
+		if (new URL(request.url()).pathname.startsWith("/api/auth/")) {
+			requests.push(request.url());
+		}
+	});
+	await page.goto("/forgot-password");
+	const form = page.getByRole("form", { name: "Forgot password form" });
+	const email = form.getByLabel("Email address");
+	const submit = form.getByRole("button", { name: "Send reset link" });
+	await expect(email).toHaveAttribute("type", "email");
+	await expect(email).toHaveAttribute("required");
+
+	await submit.click();
+	await expect(email).toBeFocused();
+	expect(
+		await email.evaluate(
+			(input: HTMLInputElement) => input.validity.valueMissing,
+		),
+	).toBe(true);
+
+	await email.fill("not-an-email");
+	await submit.click();
+	expect(
+		await email.evaluate(
+			(input: HTMLInputElement) => input.validity.typeMismatch,
+		),
+	).toBe(true);
+
+	await expect(submit).toHaveText("Send reset link");
+	await expect(page.getByRole("status")).toBeEmpty();
+	expect(requests).toEqual([]);
+});
+
+test("Back to sign in returns to the login", async ({ page }) => {
+	await page.goto("/forgot-password");
+	await page.getByRole("link", { name: "Back to sign in" }).click();
+	await expect(page).toHaveURL("/login");
+});
+
+test("a reset link without a token offers a new one", async ({ page }) => {
+	await page.goto("/reset-password");
+	await expect(page.getByText("Invalid or missing reset token.")).toBeVisible();
+	await expect(
+		page.getByRole("form", { name: "Reset password form" }),
+	).toBeHidden();
+	await expect(page.getByLabel("New password")).toBeHidden();
+
+	await page.getByRole("link", { name: "Request a new reset link" }).click();
+	await expect(page).toHaveURL("/forgot-password");
+});
+
+test.describe("with a token", () => {
+	const requests: string[] = [];
+
+	test.beforeEach(async ({ page }) => {
+		requests.length = 0;
+		page.on("request", (request) => {
+			if (new URL(request.url()).pathname.startsWith("/api/auth/")) {
+				requests.push(request.url());
+			}
+		});
+		await page.goto("/reset-password?token=dummy");
+	});
+
+	test.afterEach(() => {
+		expect(requests).toEqual([]);
+	});
+
+	test("the form shows two labelled password fields", async ({ page }) => {
+		await expect(page.getByText("Enter a new password below.")).toBeVisible();
+		await expect(page.getByText("Invalid or missing reset token.")).toHaveCount(
+			0,
+		);
+		for (const label of ["New password", "Confirm password"]) {
+			const field = page.getByLabel(label);
+			await expect(field).toHaveAttribute("type", "password");
+			await expect(field).toHaveAttribute("autocomplete", "new-password");
+			await expect(field).toHaveAttribute("minlength", "8");
+			await expect(field).toHaveAttribute("required");
+		}
+	});
+
+	test("a short password is blocked by the browser", async ({ page }) => {
+		const password = page.getByLabel("New password");
+		await password.pressSequentially("abc");
+		await page.getByLabel("Confirm password").pressSequentially("abc");
+		await page.getByRole("button", { name: "Reset password" }).click();
+		await expect(password).toBeFocused();
+		expect(
+			await password.evaluate(
+				(input: HTMLInputElement) => input.validity.tooShort,
+			),
+		).toBe(true);
+		await expect(page.getByRole("status")).toBeEmpty();
+	});
+
+	test("different passwords are reported", async ({ page }) => {
+		await page.getByLabel("New password").fill("longpassword1");
+		await page.getByLabel("Confirm password").fill("longpassword2");
+		await page.getByRole("button", { name: "Reset password" }).click();
+		await expect(page.getByRole("status")).toHaveText(
+			"Passwords do not match.",
+		);
+		await expect(
+			page.getByRole("button", { name: "Reset password" }),
+		).toBeEnabled();
+	});
+
+	test("Show passwords reveals both fields and submitting hides them", async ({
+		page,
+	}) => {
+		const toggle = page.getByRole("button", { name: "Show passwords" });
+		await expect(toggle).toHaveAttribute(
+			"aria-controls",
+			"password confirm-password",
+		);
+		await page.getByLabel("New password").fill("longpassword1");
+		await page.getByLabel("Confirm password").fill("longpassword2");
+
+		await toggle.click();
+		await expect(toggle).toHaveAttribute("aria-pressed", "true");
+		await expect(page.getByLabel("New password")).toHaveAttribute(
+			"type",
+			"text",
+		);
+		await expect(page.getByLabel("Confirm password")).toHaveAttribute(
+			"type",
+			"text",
+		);
+
+		// Submitted as text, a password could land in the form history.
+		await page.getByRole("button", { name: "Reset password" }).click();
+		await expect(toggle).toHaveAttribute("aria-pressed", "false");
+		await expect(page.getByLabel("New password")).toHaveAttribute(
+			"type",
+			"password",
+		);
+		await expect(page.getByLabel("Confirm password")).toHaveAttribute(
+			"type",
+			"password",
+		);
+	});
+});
