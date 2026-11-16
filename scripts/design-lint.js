@@ -8,11 +8,10 @@ import {
 } from "../src/lib/contrast.ts";
 import { tokens as fluidTokens } from "./fluid-scale.js";
 
-// Markup that has a component. The Tailwind-syntax rules that stood here
-// (palette, arbitrary and interpolated colours, size, weight, leading, shadow,
-// radius, outline, underline and dark: classes) are covered by the vocabulary
-// rule below, which fails on any class no stylesheet defines, and by the
-// declaration rules on the stylesheets.
+// Markup that has a component. Colours, sizes, weights and the other looks a
+// class could carry are covered by the vocabulary rule below, which fails on
+// any class no stylesheet defines, and by the declaration rules on the
+// stylesheets.
 const rules = [
 	{
 		id: "raw-button",
