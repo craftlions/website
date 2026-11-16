@@ -137,17 +137,8 @@
 		grid-column: span 2 / span 2;
 	}
 
-	/* /admin/org/[id]/members: a .rows list, a four-column table (Member,
-	   Role, Last active, Actions) from 44rem of its own width; each cell starts
-	   at the top of a row the actions make tall. */
-	.members > ul > li {
-		align-items: start;
-	}
-
-	.members-actions {
-		justify-items: start;
-	}
-
+	/* /admin/org/[id]/members: a member's "View as" button, and its error
+	   below it, in a line's actions. */
 	impersonate-user {
 		display: grid;
 		max-inline-size: 100%;

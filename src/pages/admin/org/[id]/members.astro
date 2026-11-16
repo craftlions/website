@@ -149,112 +149,99 @@ const otherClients = (count: number) =>
 			</div>
 		</form>
 		{members.length > 0 ? (
-			<div
-				class="rows members"
-				style="--rows-columns: minmax(0, 1fr) auto auto minmax(0, 14rem)"
-			>
-				<ul>
-					<li aria-hidden="true" class="label-caps" data-head>
-						<span>Member</span>
-						<span>Role</span>
-						<span>Last active</span>
-						<span>Actions</span>
-					</li>
-					{members.map((member) => (
-						<li id={`member-${member.id}`} class="target">
-							<div class="stack" data-space="3xs">
-								<h3 class="wrap-break-word">{member.user.name}</h3>
-								<p class="text-sm text-fg-muted wrap-break-word">
-									{member.user.email}
-								</p>
-							</div>
-							<Badge type={memberRole(member.role).badge}>
-								{memberRole(member.role).label}
-							</Badge>
-							{member.user.lastActiveAt ? (
-								<p class="text-sm">
-									<span class="text-fg-muted" data-label>
-										Last active{" "}
+			<ul class="lines" data-actions="wide" aria-labelledby="members-heading">
+				{members.map((member) => (
+					<li id={`member-${member.id}`} class="target">
+						<div class="line-text">
+							<h3>{member.user.name}</h3>
+							<p class="cluster text-sm text-fg-muted">
+								<Badge type={memberRole(member.role).badge}>
+									{memberRole(member.role).label}
+								</Badge>
+								<span>{member.user.email}</span>
+								{member.user.lastActiveAt ? (
+									<span>
+										last active{" "}
+										<time datetime={member.user.lastActiveAt.toISOString()}>
+											{formatDate(member.user.lastActiveAt)}
+										</time>
 									</span>
-									<time datetime={member.user.lastActiveAt.toISOString()}>
-										{formatDate(member.user.lastActiveAt)}
-									</time>
-								</p>
-							) : (
-								<p class="text-sm text-fg-muted">Never logged in</p>
-							)}
-							<div class="stack members-actions" data-space="2xs">
-								{member.user.lastActiveAt && (
-									<impersonate-user
-										data-user-id={member.userId}
-										data-organization-slug={organization.slug}
-									>
-										<Button
-											class="admin-long-label wrap-break-word"
-											aria-label={`View as ${member.user.name}`}
-											aria-describedby={`impersonate-error-${member.id}`}
-										>
-											View as {member.user.name.split(" ")[0]}
-										</Button>
-										<p
-											id={`impersonate-error-${member.id}`}
-											role="alert"
-											class="text-sm text-fg-danger"
-										/>
-									</impersonate-user>
+								) : (
+									<span>never logged in</span>
 								)}
-								<form method="POST" action={actions.resendWelcomeMail}>
-									<input type="hidden" name="email" value={member.user.email} />
+							</p>
+						</div>
+						<div class="line-actions cluster">
+							{member.user.lastActiveAt && (
+								<impersonate-user
+									data-user-id={member.userId}
+									data-organization-slug={organization.slug}
+								>
 									<Button
-										type="submit"
-										aria-label={`${member.user.lastActiveAt ? "Send password reset" : "Resend invite"}: ${member.user.name}`}
+										class="admin-long-label wrap-break-word"
+										aria-label={`View as ${member.user.name}`}
+										aria-describedby={`impersonate-error-${member.id}`}
 									>
-										{member.user.lastActiveAt
-											? "Send password reset"
-											: "Resend invite"}
+										View as {member.user.name.split(" ")[0]}
 									</Button>
-								</form>
-								<form method="POST" action={actions.removeOrganizationMember}>
-									<input
-										type="hidden"
-										name="organizationId"
-										value={organization.id}
+									<p
+										id={`impersonate-error-${member.id}`}
+										role="alert"
+										class="text-sm text-fg-danger"
 									/>
-									<input type="hidden" name="memberId" value={member.id} />
+								</impersonate-user>
+							)}
+							<form method="POST" action={actions.resendWelcomeMail}>
+								<input type="hidden" name="email" value={member.user.email} />
+								<Button
+									type="submit"
+									aria-label={`${member.user.lastActiveAt ? "Send password reset" : "Resend invite"}: ${member.user.name}`}
+								>
+									{member.user.lastActiveAt
+										? "Send password reset"
+										: "Resend invite"}
+								</Button>
+							</form>
+							<form method="POST" action={actions.removeOrganizationMember}>
+								<input
+									type="hidden"
+									name="organizationId"
+									value={organization.id}
+								/>
+								<input type="hidden" name="memberId" value={member.id} />
+								<ConfirmAction
+									id={`remove-member-${member.id}`}
+									trigger="Remove from client"
+									triggerLabel={`Remove from client: ${member.user.name}`}
+									triggerVariant="quiet"
+									title={`Remove ${member.user.name} from ${organization.name}?`}
+									confirm="Remove from client"
+									cancel="Keep member"
+								>
+									{`${member.user.name} can no longer see the ${organization.name} dashboard. The account stays${member.user.memberships.length > 1 ? ` and keeps access to ${otherClients(member.user.memberships.length - 1)}` : ""}, and you can add it again with the same email.${members.length === 1 ? " Nobody else is a member, so nobody at the client will see the dashboard." : ""}`}
+								</ConfirmAction>
+							</form>
+							{!member.user.lastActiveAt && (
+								<form method="POST" action={actions.removeNeverLoggedInUser}>
+									<input type="hidden" name="userId" value={member.userId} />
 									<ConfirmAction
-										id={`remove-member-${member.id}`}
-										trigger="Remove from client"
-										triggerLabel={`Remove from client: ${member.user.name}`}
+										id={`delete-user-${member.userId}`}
+										trigger="Delete account"
+										triggerLabel={`Delete account: ${member.user.name}`}
 										triggerVariant="quiet"
-										title={`Remove ${member.user.name} from ${organization.name}?`}
-										confirm="Remove from client"
-										cancel="Keep member"
+										title={`Delete the account of ${member.user.name}?`}
+										confirm="Delete account"
+										cancel="Keep account"
+										typeToConfirm={member.user.email}
 									>
-										{`${member.user.name} can no longer see the ${organization.name} dashboard. The account stays${member.user.memberships.length > 1 ? ` and keeps access to ${otherClients(member.user.memberships.length - 1)}` : ""}, and you can add it again with the same email.${members.length === 1 ? " Nobody else is a member, so nobody at the client will see the dashboard." : ""}`}
+										{`This deletes the account for ${member.user.email} everywhere: it is removed from ${organization.name}${member.user.memberships.length > 1 ? ` and from ${otherClients(member.user.memberships.length - 1)}` : ""} and can no longer sign in. This cannot be undone; adding the same email later creates a new account.`}
 									</ConfirmAction>
 								</form>
-								{!member.user.lastActiveAt && (
-									<form method="POST" action={actions.removeNeverLoggedInUser}>
-										<input type="hidden" name="userId" value={member.userId} />
-										<ConfirmAction
-											id={`delete-user-${member.userId}`}
-											trigger="Delete account"
-											triggerLabel={`Delete account: ${member.user.name}`}
-											triggerVariant="quiet"
-											title={`Delete the account of ${member.user.name}?`}
-											confirm="Delete account"
-											cancel="Keep account"
-											typeToConfirm={member.user.email}
-										>
-											{`This deletes the account for ${member.user.email} everywhere: it is removed from ${organization.name}${member.user.memberships.length > 1 ? ` and from ${otherClients(member.user.memberships.length - 1)}` : ""} and can no longer sign in. This cannot be undone; adding the same email later creates a new account.`}
-										</ConfirmAction>
-									</form>
-								)}
-							</div>
-						</li>
-					))}
-				</ul>
-			</div>
+							)}
+						</div>
+					</li>
+				))}
+			</ul>
 		) : (
 			<p class="box text-sm text-fg-muted">
 				No members yet. Nobody at {organization.name} can see its dashboard
