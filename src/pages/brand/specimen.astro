@@ -15,6 +15,7 @@ import DisclosureButton from "../../components/DisclosureButton.astro";
 import Field from "../../components/Field.astro";
 import PageHeading from "../../components/PageHeading.astro";
 import Progress from "../../components/Progress.astro";
+import SkipLink from "../../components/SkipLink.astro";
 import Shell from "../../layouts/Shell.astro";
 import {
 	contrastChecks,
@@ -99,6 +100,7 @@ const frames = [
 	<Fragment slot="head"> <title>craftlions | Specimen</title> </Fragment>
 	<Fragment slot="body">
 		<body class="specimen">
+			<SkipLink />
 			<header class="center stack" data-width="wide" data-space="2xs">
 				<PageHeading> Specimen </PageHeading>
 				<p class="intro text-sm text-fg-muted">
@@ -106,7 +108,7 @@ const frames = [
 					the controls to see their states.
 				</p>
 			</header>
-			<main class="center stack" data-width="wide">
+			<main id="main" tabindex="-1" class="center stack" data-width="wide">
 				<section aria-labelledby="scale" class="box stack panel" data-space="l">
 					<header class="stack" data-space="2xs">
 						<h2 id="scale" class="text-headline">Scale</h2>

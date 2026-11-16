@@ -4,6 +4,7 @@ export const prerender = true;
 import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
 import PageHeading from "../components/PageHeading.astro";
+import SkipLink from "../components/SkipLink.astro";
 import Shell from "../layouts/Shell.astro";
 import { email, legalName } from "../lib/company.ts";
 ---
@@ -12,11 +13,12 @@ import { email, legalName } from "../lib/company.ts";
 	<Fragment slot="head"> <title>craftlions | Impressum</title> </Fragment>
 	<Fragment slot="body">
 		<body class="cover public">
+			<SkipLink />
 			<header class="stack center" data-space="m">
 				<Nav deferSessionLinks />
 			</header>
 
-			<main class="stack center imprint" data-space="m">
+			<main id="main" tabindex="-1" class="stack center imprint" data-space="m">
 				<div class="stack">
 					<PageHeading> Impressum </PageHeading>
 					<p class="measure text-sm text-fg-muted">

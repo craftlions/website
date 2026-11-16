@@ -20,7 +20,13 @@ const { title, breadcrumbs = [], results, fieldLabels } = Astro.props;
 		<header class="center stack" data-width="wide" data-space="m">
 			<Nav />
 		</header>
-		<main class="center stack" data-width="wide" data-space="m">
+		<main
+			id="main"
+			tabindex="-1"
+			class="center stack"
+			data-width="wide"
+			data-space="m"
+		>
 			{breadcrumbs.length > 1 && <Breadcrumbs items={breadcrumbs} />}
 			<slot name="header" />
 			<ActionBanner {results} {fieldLabels} />
