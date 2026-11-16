@@ -71,23 +71,21 @@ const entries: {
 		<meta property="og:type" content="website">
 	</Fragment>
 	<Fragment slot="body">
-		<body
-			class="min-h-dvh grid grid-rows-[auto_1fr_auto] gap-region p-gutter text-pretty"
-		>
-			<header class="grid gap-6 max-w-3xl mx-auto w-full">
+		<body class="public">
+			<header class="stack center" data-space="m">
 				<Nav deferSessionLinks />
 			</header>
 
-			<main class="w-full grid content-start min-h-0 max-w-3xl mx-auto gap-8">
-				<section class="grid gap-4">
+			<main class="stack center" data-space="l">
+				<section class="stack">
 					<PageHeading> Changelog </PageHeading>
-					<p class="max-w-2xl text-fg-muted">
+					<p class="timeline-intro text-fg-muted">
 						A timeline of improvements, fixes, and visible updates to the
 						craftlions website.
 					</p>
 				</section>
 
-				<ol class="grid" aria-label="Website update timeline">
+				<ol class="timeline" aria-label="Website update timeline">
 					{entries.map((entry, index) => (
 						<ChangelogEntry
 							date={entry.date}

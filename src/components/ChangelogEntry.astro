@@ -35,30 +35,15 @@ const slug = `${datetime}-${title
 	.replace(/^-|-$/g, "")}`;
 ---
 
-<li class="grid grid-cols-[1rem_minmax(0,1fr)] gap-x-4">
-	<div class="relative grid justify-items-center" aria-hidden="true">
-		{!last && (
-			<span
-				class:list={[
-					"absolute bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-line",
-					first ? "top-7" : "top-0",
-				]}
-			></span>
-		)}
-		<span
-			class="relative z-10 mt-6 h-2 w-2 border border-line-active bg-canvas"
-		></span>
+<li class="changelog-entry">
+	<div class="rail" aria-hidden="true">
+		{!last && <span class="rail-line" data-first={first || undefined}></span>}
+		<span class="rail-dot"></span>
 	</div>
-	<article
-		id={slug}
-		class:list={[
-			"grid gap-4 border border-dashed border-line bg-transparent p-4 scroll-mt-6",
-			!last && "mb-6",
-		]}
-	>
-		<header class="grid gap-2">
-			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-				<a href={`#${slug}`} class="w-max link text-fg-muted hover:text-fg">
+	<article id={slug} class="stack box" data-last={last || undefined}>
+		<header class="stack" data-space="2xs">
+			<div class="meta">
+				<a href={`#${slug}`} class="date link">
 					<time datetime={datetime} class="text-label">
 						{date}
 					</time>
@@ -69,10 +54,10 @@ const slug = `${datetime}-${title
 		</header>
 		<p class="text-fg-muted">{summary}</p>
 		{points.length > 0 && (
-			<ul class="grid gap-2 text-sm text-fg-muted">
+			<ul class="stack text-sm text-fg-muted" data-space="2xs">
 				{points.map((point) => (
-					<li class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-2">
-						<span class="mt-2 h-1 w-1 bg-line-strong" aria-hidden="true"></span>
+					<li class="point">
+						<span class="bullet bg-line-strong" aria-hidden="true"></span>
 						<span>{point}</span>
 					</li>
 				))}

@@ -1,3 +1,73 @@
 @layer components {
-	/* src/components/ChangelogEntry.astro; filled by conversion package S5c. */
+	/* One entry of the changelog timeline: a rail with a dot beside a dashed
+	   plane. The rail's line runs down to the next entry, from the first dot
+	   on, and the last entry has none. */
+	.changelog-entry {
+		display: grid;
+		grid-template-columns: 1rem minmax(0, 1fr);
+		column-gap: var(--space-s);
+
+		& .rail {
+			position: relative;
+			display: grid;
+			justify-items: center;
+		}
+		& .rail-line {
+			position: absolute;
+			inset-block: 0;
+			inset-inline-start: 50%; /* constant: centred on the rail */
+			translate: -50%;
+			border: 0 dashed var(--line);
+			border-inline-start-width: var(--hairline);
+
+			&[data-first] {
+				inset-block-start: 1.75rem; /* constant: from the first dot down */
+			}
+		}
+		& .rail-dot {
+			position: relative;
+			z-index: 10;
+			inline-size: 0.5rem;
+			block-size: 0.5rem;
+			margin-block-start: var(--space-m);
+			border: var(--hairline) solid var(--line-active);
+			background-color: var(--canvas);
+		}
+
+		& > article {
+			scroll-margin-block-start: var(--space-m);
+
+			&:not([data-last]) {
+				margin-block-end: var(--space-m);
+			}
+		}
+		& .meta {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: center;
+			gap: var(--space-2xs);
+		}
+		/* The date links to its entry, muted until the pointer is on it. */
+		& .date {
+			inline-size: max-content;
+			color: var(--fg-muted);
+
+			@media (hover: hover) {
+				&:hover {
+					color: var(--fg);
+				}
+			}
+		}
+		& .point {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
+			align-items: start;
+			gap: var(--space-2xs);
+		}
+		& .bullet {
+			inline-size: 0.25rem;
+			block-size: 0.25rem;
+			margin-block-start: var(--space-2xs);
+		}
+	}
 }

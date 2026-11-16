@@ -63,5 +63,14 @@
 		& address {
 			font-style: normal;
 		}
+
+		/* The changelog: an intro a little narrower than the column, then the
+		   entries, whose rail runs from one into the next. */
+		& .timeline-intro {
+			max-inline-size: 42rem;
+		}
+		& .timeline {
+			display: grid;
+		}
 	}
 }
