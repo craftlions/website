@@ -187,26 +187,29 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 								</p>
 								{phase.parts.length > 0 && (
 									<ol aria-label="Payment progress" class="phase-payments">
-										{phase.parts.map((part) => (
-											<li
-												title={`${part.component}: ${part.invoice?.status ?? part.status.replaceAll("_", " ")}`}
-												data-state={
-													part.invoice?.status === "overdue"
-														? "overdue"
-														: part.status === "paid"
-															? "paid"
-															: part.invoice
-																? "invoiced"
-																: "uninvoiced"
-												}
-											>
-												<span class="sr-only">
-													{part.component}{" "}
-													{part.invoice?.status ??
-														part.status.replaceAll("_", " ")}
-												</span>
-											</li>
-										))}
+										{phase.parts.map((part) => {
+											const state =
+												part.invoice?.status === "overdue"
+													? "overdue"
+													: part.status === "paid"
+														? "paid"
+														: part.invoice
+															? "invoiced"
+															: "uninvoiced";
+											return (
+												<li
+													title={`${part.component}: ${part.invoice?.status ?? part.status.replaceAll("_", " ")}`}
+													data-state={state}
+													class:list={[state === "paid" && "forced-ink"]}
+												>
+													<span class="sr-only">
+														{part.component}{" "}
+														{part.invoice?.status ??
+															part.status.replaceAll("_", " ")}
+													</span>
+												</li>
+											);
+										})}
 									</ol>
 								)}
 								<p

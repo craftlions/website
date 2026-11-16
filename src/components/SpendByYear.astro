@@ -161,7 +161,10 @@ const hasNegativeSpend = bars.some((bar) =>
 											>
 												{reversed.map((segment) => (
 													<div
-														class:list={["spend-segment", segment.mark]}
+														class:list={[
+															"spend-segment forced-line",
+															segment.mark,
+														]}
 														data-project={segment.id}
 														data-name={segment.name}
 														data-amount={currencyFormatter.format(
@@ -212,7 +215,7 @@ const hasNegativeSpend = bars.some((bar) =>
 							>
 								<span
 									aria-hidden="true"
-									class:list={["spend-swatch", project.mark]}
+									class:list={["spend-swatch forced-line", project.mark]}
 								/>
 								<span class="spend-name wrap-break-word" dir="auto">
 									{project.name}

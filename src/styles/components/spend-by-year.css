@@ -40,7 +40,8 @@
 		gap: var(--hairline);
 	}
 
-	/* Hatching in the project's chart colour, which a text-chart-* role sets. */
+	/* Hatching in the project's chart colour, which a text-chart-* role sets;
+	   forced-line keeps it drawn in CanvasText under forced colors. */
 	.spend-segment,
 	.spend-swatch {
 		background-image: repeating-linear-gradient(
@@ -48,13 +49,6 @@
 			transparent 0 3px,
 			currentColor 3px 4px
 		);
-
-		/* Forced colors drop the hatching; the mark keeps it in CanvasText. */
-		@media (forced-colors: active) {
-			forced-color-adjust: none;
-			color: CanvasText !important;
-			border-color: CanvasText !important;
-		}
 	}
 
 	.spend-segment {

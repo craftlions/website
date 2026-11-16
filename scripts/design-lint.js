@@ -450,7 +450,7 @@ for (const {
 				.match(/(?<![\w-])[a-z][\w-]*(?![\w(-])/gi) ?? []) {
 				if (systemColor.test(word) && !forced(declaration)) {
 					fail(
-						"system colors only inside @media (forced-colors: active), as forced-ink and forced-line in src/styles/global.css",
+						"system colors only inside @media (forced-colors: active), as forced-ink and forced-line in src/styles/utilities.css",
 						"DESIGN.md#forced-colors",
 					);
 				} else if (

@@ -152,16 +152,10 @@
 			&[data-state="overdue"] {
 				border-color: var(--fill-danger);
 			}
+			/* forced-ink keeps it solid under forced colors. */
 			&[data-state="paid"] {
 				border-color: var(--fill-success);
 				background-color: var(--fill-success);
-
-				/* Forced colors repaint the fill as Canvas; keep it solid. */
-				@media (forced-colors: active) {
-					forced-color-adjust: none;
-					background-color: CanvasText;
-					border-color: CanvasText;
-				}
 			}
 			&[data-state="invoiced"] {
 				border-style: dashed;

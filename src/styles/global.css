@@ -138,26 +138,6 @@
 	--scroll-margin-20: var(--space-2xl);
 }
 
-/* Forced colors (Windows High Contrast) repaint every background as Canvas and
-   drop gradients, so a mark drawn as a fill disappears. These opt one element
-   out and paint it in system colors; outside forced colors they do nothing.
-   They are important so they win over the role utilities on the same element. */
-@utility forced-ink {
-	@media (forced-colors: active) {
-		forced-color-adjust: none;
-		background-color: CanvasText !important;
-		border-color: CanvasText !important;
-	}
-}
-
-@utility forced-line {
-	@media (forced-colors: active) {
-		forced-color-adjust: none;
-		border-color: CanvasText !important;
-		color: CanvasText !important;
-	}
-}
-
 /* Same-origin page loads cross-fade, unless the reader asks for less motion. */
 @media (prefers-reduced-motion: no-preference) {
 	@view-transition {

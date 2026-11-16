@@ -170,6 +170,26 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
+	/* Forced colors (Windows High Contrast, DESIGN.md#forced-colors) repaint
+	   every background as Canvas and drop gradients, so a mark drawn as a fill
+	   disappears. These opt one element out and paint it in system colors;
+	   outside forced colors they do nothing. They are important so they win
+	   over the role utilities on the same element. */
+	@media (forced-colors: active) {
+		/* A solid mark. */
+		.forced-ink {
+			forced-color-adjust: none;
+			background-color: CanvasText !important;
+			border-color: CanvasText !important;
+		}
+		/* An element that keeps drawing itself in its text color. */
+		.forced-line {
+			forced-color-adjust: none;
+			border-color: CanvasText !important;
+			color: CanvasText !important;
+		}
+	}
+
 	/* Read out, not shown. */
 	.sr-only {
 		position: absolute;
