@@ -47,6 +47,7 @@ const session =
 		{/* Only where Shell mounts the palette: a deferred island's request is not gated, so it has no session local. */}
 		{Astro.locals.session && (
 			<li>
+				{/* fallback: CommandPalette's script opens the palette where invoker commands are missing. */}
 				<Button
 					command="show-modal"
 					commandfor="command-palette"
