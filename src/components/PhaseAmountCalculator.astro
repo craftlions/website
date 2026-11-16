@@ -67,11 +67,23 @@ const percentages = [
 			remainder, so the default of 0% and 0% bills the whole cost on acceptance.
 		</p>
 		{parts.map((part, index) => (
-			<div class="split-part">
-				<label for={`${id}-${part.key}`} class="text-sm wrap-break-word">
-					<span class="text-label">{part.label}</span>{" "}
-					<span class="text-fg-muted">{part.when}</span>
-				</label>
+			<div
+				class="with-sidebar"
+				data-side="end"
+				data-align="center"
+				style="--sidebar-width: 7rem; --content-min: 40%"
+			>
+				<div class="stack" data-space="3xs">
+					<label for={`${id}-${part.key}`} class="text-sm wrap-break-word">
+						<span class="text-label">{part.label}</span>{" "}
+						<span class="text-fg-muted">{part.when}</span>
+					</label>
+					<output
+						for={`${id}-${part.key}`}
+						class="text-xs tabular-nums text-fg-muted wrap-break-word"
+						data-split-amount-output
+					></output>
+				</div>
 				<span class="split-share text-sm">
 					<input
 						id={`${id}-${part.key}`}
@@ -86,26 +98,28 @@ const percentages = [
 					/>
 					<span class="text-fg-muted">%</span>
 				</span>
+			</div>
+		))}
+		<div
+			class="with-sidebar"
+			data-side="end"
+			data-align="center"
+			style="--sidebar-width: 7rem; --content-min: 40%"
+		>
+			<div class="stack" data-space="3xs">
+				<p class="text-sm wrap-break-word">
+					<span class="text-label">Acceptance</span>{" "}
+					<span class="text-fg-muted">billed on acceptance · remainder</span>
+				</p>
 				<output
-					for={`${id}-${part.key}`}
 					class="text-xs tabular-nums text-fg-muted wrap-break-word"
 					data-split-amount-output
 				></output>
 			</div>
-		))}
-		<div class="split-part">
-			<p class="text-sm wrap-break-word">
-				<span class="text-label">Acceptance</span>{" "}
-				<span class="text-fg-muted">billed on acceptance · remainder</span>
-			</p>
 			<output
 				class="split-remainder text-sm tabular-nums text-fg-muted"
 				aria-label="Acceptance share, calculated"
 				data-split-remainder
-			></output>
-			<output
-				class="text-xs tabular-nums text-fg-muted wrap-break-word"
-				data-split-amount-output
 			></output>
 		</div>
 		<div class="split-result">

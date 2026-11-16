@@ -1,18 +1,11 @@
 @layer components {
 	/* The cost split of a phase form: Upfront and Delivery shares typed in a %
-	   box, Acceptance the calculated remainder, each with its amount below the
-	   label and the total under them. */
-	.split-part {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) 7rem;
-		align-items: center;
-		gap: var(--space-3xs) var(--space-xs);
-	}
-
-	/* The share box spans the label and amount rows, drawn like an Input. */
+	   box, Acceptance the calculated remainder. Each box sits at the end of its
+	   row beside the label and amount, below them once the label would get
+	   less than 40% of the row (not at 320px, but with large text), and the
+	   total is under them. The box is drawn like an Input. */
 	.split-share,
 	.split-remainder {
-		grid-row: span 2 / span 2;
 		padding: var(--space-2xs) var(--space-xs);
 		border: var(--rule) var(--line-control);
 	}
