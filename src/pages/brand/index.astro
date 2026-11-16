@@ -1,0 +1,679 @@
+---
+export const prerender = true;
+
+import designMd from "../../../DESIGN.md?raw";
+import { range, tokens as scale } from "../../../scripts/fluid-scale.js";
+import Logo from "../../assets/logoWithTextVertical.svg";
+import logoSvg from "../../assets/logoWithTextVertical.svg?raw";
+import Badge from "../../components/Badge.astro";
+import Button from "../../components/Button.astro";
+import Checkbox from "../../components/Checkbox.astro";
+import Field from "../../components/Field.astro";
+import Footer from "../../components/Footer.astro";
+import Nav from "../../components/Nav.astro";
+import PageHeading from "../../components/PageHeading.astro";
+import Progress from "../../components/Progress.astro";
+import Shell from "../../layouts/Shell.astro";
+import {
+	description,
+	email,
+	legalName,
+	summary,
+	tagline,
+} from "../../lib/company.ts";
+import {
+	contrast,
+	contrastChecks,
+	parseContrast,
+	parseTokens,
+} from "../../lib/contrast.ts";
+import { phaseStatus } from "../../lib/status.ts";
+import tokensCss from "../../styles/tokens.css?raw";
+
+// The page lists its sections in this order; the contents are built from it.
+const sections = [
+	["logo", "Logo"],
+	["clear-space", "Clear space and minimum size"],
+	["dont", "Don'ts"],
+	["name", "Name"],
+	["about", "About craftlions"],
+	["colour", "Colour"],
+	["type", "Type"],
+	["linework", "Linework"],
+	["system", "The full system"],
+	["use", "Use and licence"],
+] as const;
+
+// Colour comes from the same sources as the specimen and design:lint: the
+// tokens, the DESIGN.md contrast map, and the gradient stops of the logo file.
+const tokens = parseTokens(tokensCss);
+const requirements = parseContrast(designMd);
+const [light, dark] = (["light", "dark"] as const).map((scheme) =>
+	contrastChecks(tokens, requirements, scheme),
+);
+const canvas = tokens.find(({ name }) => name === "canvas");
+const ink = tokens.find(({ name }) => name === "fg");
+const [start, end] = [...logoSvg.matchAll(/stop-color:(#[\da-f]{6})/g)].map(
+	([, hex = ""]) => ({
+		hex,
+		light: contrast(hex, canvas?.light ?? ""),
+		dark: contrast(hex, canvas?.dark ?? ""),
+	}),
+);
+const ratio = (value = 0) => `${value.toFixed(2)}:1`;
+
+// Each type role in its own class, with the step it is set in.
+const typeRoles = [
+	["text-display", "Display", "step-3"],
+	["text-headline", "Headline", "step-2"],
+	["text-title", "Title", "step-1"],
+	[undefined, "Body", "step-0"],
+	["text-sm", "Small body", "step--1"],
+	["text-label", "Label", "step--1"],
+	["text-caption", "Caption", "step--2"],
+	["label-caps", "Label caps", "step--2"],
+] as const;
+
+const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
+	(state) => phaseStatus[state],
+);
+---
+
+<Shell>
+	<Fragment slot="head">
+		<title>craftlions | Brand</title>
+		<meta
+			name="description"
+			content="The craftlions logo, name and colours, the rules for using them, and the design system behind the site."
+		>
+		<meta property="og:title" content="craftlions | Brand">
+		<meta
+			property="og:description"
+			content="The craftlions logo, name and colours, the rules for using them, and the design system behind the site."
+		>
+		<meta property="og:type" content="website">
+	</Fragment>
+	<Fragment slot="body">
+		<body class="public">
+			<header class="stack center" data-space="m">
+				<Nav deferSessionLinks />
+			</header>
+
+			<main class="stack center" data-space="xl">
+				<div class="stack">
+					<PageHeading>Brand</PageHeading>
+					<p class="lede text-fg-muted">
+						The logo, the name and the colours of craftlions, how to use them,
+						and the design system behind this site.
+					</p>
+				</div>
+
+				<nav aria-labelledby="contents" class="stack" data-space="2xs">
+					<h2 id="contents" class="label-caps">On this page</h2>
+					<ol
+						class="auto-grid text-sm"
+						style="--grid-min: 10rem; --grid-space: var(--space-2xs) var(--space-s)"
+					>
+						{sections.map(([id, title], index) => (
+							<li>
+								<a href={`#${id}`} class="link">
+									<span class="text-fg-muted tabular-nums">{index + 1}</span>{" "}
+									{title}
+								</a>
+							</li>
+						))}
+					</ol>
+				</nav>
+
+				<section
+					id="logo"
+					aria-labelledby="logo-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="logo-heading" class="text-headline">
+						<span class="text-fg-muted">1</span> Logo
+					</h2>
+					<p>
+						The official mark is the gradient from purple to cyan, above the
+						name. Pick the file by the background it sits on, not by the theme
+						of your page.
+					</p>
+					<div class="auto-grid" style="--grid-min: 14rem">
+						<figure class="stack" data-space="2xs">
+							<div class="box brand-tile" data-scheme="dark">
+								<Logo
+									role="img"
+									aria-label="craftlions logo, vertical lockup with the gradient mark, on a dark background"
+								/>
+							</div>
+							<figcaption class="text-sm">
+								<span class="text-label">Colour, on dark backgrounds.</span>
+								{" "}
+								The official mark, as this site draws it.
+							</figcaption>
+						</figure>
+						<figure class="stack" data-space="2xs">
+							<div class="box brand-tile" data-scheme="light">
+								<p class="text-sm">
+									<strong class="text-label text-fg-warning"
+										>Placeholder:</strong
+									>{" "}
+									one-colour lockup in ink, SVG
+								</p>
+							</div>
+							<figcaption class="text-sm">
+								<span class="text-label"
+									>One colour, on light backgrounds.</span
+								>{" "}
+								For light backgrounds, where the gradient's cyan end fades.
+							</figcaption>
+						</figure>
+						<figure class="stack" data-space="2xs">
+							<div class="box brand-tile" data-scheme="dark">
+								<p class="text-sm">
+									<strong class="text-label text-fg-warning"
+										>Placeholder:</strong
+									>{" "}
+									one-colour lockup in paper, SVG
+								</p>
+							</div>
+							<figcaption class="text-sm">
+								<span class="text-label">One colour, on dark backgrounds.</span>
+								{" "}
+								For print and single-colour use.
+							</figcaption>
+						</figure>
+						<figure class="stack" data-space="2xs">
+							<div class="box brand-tile" data-scheme="light">
+								<p class="text-sm">
+									<strong class="text-label text-fg-warning"
+										>Placeholder:</strong
+									>{" "}
+									standalone mark, SVG
+								</p>
+							</div>
+							<figcaption class="text-sm">
+								<span class="text-label">Mark alone.</span>{" "}
+								For avatars and tight spots, if the mark may stand alone.
+							</figcaption>
+						</figure>
+						<figure class="stack" data-space="2xs">
+							<div class="box brand-tile" data-scheme="light">
+								<p class="text-sm">
+									<strong class="text-label text-fg-warning"
+										>Placeholder:</strong
+									>{" "}
+									horizontal lockup, SVG
+								</p>
+							</div>
+							<figcaption class="text-sm">
+								<span class="text-label">Horizontal.</span>{" "}
+								Mark beside the name, for slide footers and logo rows.
+							</figcaption>
+						</figure>
+					</div>
+					<p class="box border-line-strong text-sm">
+						<strong class="text-label text-fg-warning">Placeholder:</strong>
+						{" "}
+						downloads. Each variant as SVG with its colours written out and as
+						PNG at 512, 1024 and 2048px wide, and all of them in one ZIP.
+					</p>
+				</section>
+
+				<section
+					id="clear-space"
+					aria-labelledby="clear-space-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="clear-space-heading" class="text-headline">
+						<span class="text-fg-muted">2</span> Clear space and minimum size
+					</h2>
+					<p>
+						Keep the space around the logo free of text and other marks, and do
+						not set it smaller than its minimum.
+					</p>
+					<dl class="stack text-sm" data-space="xs">
+						<div class="stack" data-space="3xs">
+							<dt class="text-label">Clear space</dt>
+							<dd>
+								<strong class="text-label text-fg-warning">Proposed:</strong>
+								{" "}
+								half the height of the mark, on every side.
+							</dd>
+						</div>
+						<div class="stack" data-space="3xs">
+							<dt class="text-label">Minimum size, screen</dt>
+							<dd>
+								<strong class="text-label text-fg-warning">Proposed:</strong>
+								64px wide for the vertical lockup, the size this site's footer
+								uses.
+							</dd>
+						</div>
+						<div class="stack" data-space="3xs">
+							<dt class="text-label">Minimum size, print</dt>
+							<dd>
+								<strong class="text-label text-fg-warning">Proposed:</strong>
+								20mm wide for the vertical lockup.
+							</dd>
+						</div>
+					</dl>
+				</section>
+
+				<section
+					id="dont"
+					aria-labelledby="dont-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="dont-heading" class="text-headline">
+						<span class="text-fg-muted">3</span> Don'ts
+					</h2>
+					<p class="text-sm">
+						<strong class="text-label text-fg-warning">Draft:</strong>{" "}
+						these rules wait for the owner's confirmation.
+					</p>
+					<ul class="stack reasons" data-space="2xs">
+						<li>Do not recolour the logo beyond the variants given here.</li>
+						<li>
+							Do not stretch, rotate or outline it, or add shadows or other
+							effects.
+						</li>
+						<li>Do not place it on busy or low-contrast backgrounds.</li>
+						<li>Do not rearrange or separate the mark and the name.</li>
+						<li>
+							Do not use it in your own logo, product name or domain, or in a
+							way that suggests craftlions endorses you.
+						</li>
+					</ul>
+				</section>
+
+				<section
+					id="name"
+					aria-labelledby="name-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="name-heading" class="text-headline">
+						<span class="text-fg-muted">4</span> Name
+					</h2>
+					<p class="text-display">craftlions</p>
+					<p>
+						Always lowercase and one word, also at the start of a sentence. The
+						company is {legalName}.
+					</p>
+					<ul
+						class="cluster text-fg-muted"
+						data-space="s"
+						aria-label="Wrong spellings"
+					>
+						<li><del>Craftlions</del></li>
+						<li><del>CraftLions</del></li>
+						<li><del>Craft Lions</del></li>
+						<li><del>craft lions</del></li>
+						<li><del>CRAFTLIONS</del></li>
+					</ul>
+				</section>
+
+				<section
+					id="about"
+					aria-labelledby="about-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="about-heading" class="text-headline">
+						<span class="text-fg-muted">5</span> About craftlions
+					</h2>
+					<p>
+						Text to quote, as this site's footer and landing page say it. One
+						click selects a whole text.
+					</p>
+					<dl class="stack">
+						<div class="stack" data-space="2xs">
+							<dt class="label-caps">One sentence</dt>
+							<dd class="box border-line-control brand-copy text-sm">
+								{summary}
+							</dd>
+						</div>
+						<div class="stack" data-space="2xs">
+							<dt class="label-caps">What craftlions does</dt>
+							<dd class="box border-line-control brand-copy text-sm">
+								{description}
+							</dd>
+						</div>
+						<div class="stack" data-space="2xs">
+							<dt class="label-caps">How it works</dt>
+							<dd class="box border-line-control brand-copy text-sm">
+								{tagline}
+							</dd>
+						</div>
+					</dl>
+				</section>
+
+				<section
+					id="colour"
+					aria-labelledby="colour-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="colour-heading" class="text-headline">
+						<span class="text-fg-muted">6</span> Colour
+					</h2>
+					<p>
+						Paper and ink, with colour only for links and state, and the
+						gradient of the mark.
+					</p>
+					<dl class="auto-grid text-sm" style="--grid-min: 12rem">
+						{[
+							["Ink", ink?.light],
+							["Paper", canvas?.light],
+							["Gradient start", start?.hex],
+							["Gradient end", end?.hex],
+						].map(([name, hex]) => (
+							<div class="cluster">
+								<dt class="cluster">
+									<span
+										aria-hidden="true"
+										class="brand-swatch"
+										style={`background-color: ${hex}`}
+									/>
+									<span class="text-label">{name}</span>
+								</dt>
+								<dd>
+									<code>{hex}</code>
+								</dd>
+							</div>
+						))}
+					</dl>
+					<p>
+						On the light paper, the purple start of the gradient reaches{" "}
+						{ratio(start?.light)} and the cyan end {ratio(end?.light)}; on the
+						dark ink, they reach {ratio(start?.dark)} and {ratio(end?.dark)}. A
+						mark below 3:1 is hard to make out, so the gradient goes on dark
+						backgrounds, and light backgrounds take the one-colour variant. This
+						site's own header and footer still show the gradient on the light
+						paper.
+					</p>
+
+					<h3 id="tokens" class="text-title">Role tokens</h3>
+					<p class="text-sm text-fg-muted">
+						Every colour of the interface, from{" "}
+						<code>src/styles/tokens.css</code>, with its contrast on the canvas
+						in the light and the dark scheme. Text needs 4.5:1; a line, fill or
+						mark that alone shows a control or a state needs 3:1. Decorative
+						lines whose meaning text already carries have no minimum, and the
+						surfaces are what the others are measured on.
+					</p>
+					<div
+						class="rows"
+						data-at="36"
+						style="--rows-columns: minmax(0, 1fr) auto auto auto auto"
+					>
+						<ul>
+							<li aria-hidden="true" class="label-caps" data-head>
+								<span>Token</span>
+								<span>Light</span>
+								<span>Dark</span>
+								<span>On canvas</span>
+								<span>Needs</span>
+							</li>
+							{light?.map(({ name, value, minimum, checks }, index) => {
+								const darkRow = dark?.[index];
+								const onCanvas = [checks, darkRow?.checks ?? []].map(
+									(schemeChecks) =>
+										schemeChecks.find(({ surface }) => surface === "canvas")
+											?.ratio,
+								);
+								const met = onCanvas.every(
+									(ratio) => !minimum || (ratio ?? 0) >= minimum,
+								);
+								return (
+									<li class="text-sm">
+										<p class="cluster">
+											<span
+												aria-hidden="true"
+												class="brand-swatch"
+												style={`background-color: var(--${name})`}
+											/>
+											<code>--{name}</code>
+										</p>
+										<p class="tabular-nums">
+											<span class="text-fg-muted" data-label>
+												Light{" "}
+											</span>
+											<code>{value}</code>
+										</p>
+										<p class="tabular-nums">
+											<span class="text-fg-muted" data-label>
+												Dark{" "}
+											</span>
+											<code>{darkRow?.value}</code>
+										</p>
+										<p class="tabular-nums">
+											<span class="text-fg-muted" data-label>
+												On canvas{" "}
+											</span>
+											{onCanvas.every((ratio) => ratio === undefined)
+												? "—"
+												: onCanvas
+														.map((ratio) => ratio?.toFixed(2))
+														.join(" · ")}
+										</p>
+										<p class:list={[!met && "text-fg-danger"]}>
+											<span class="text-fg-muted" data-label>
+												Needs{" "}
+											</span>
+											{minimum
+												? `${minimum}:1, ${met ? "met" : "missed"}`
+												: requirements.get(name) === "surface"
+													? "Surface"
+													: "Decorative"}
+										</p>
+									</li>
+								);
+							})}
+						</ul>
+					</div>
+				</section>
+
+				<section
+					id="type"
+					aria-labelledby="type-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="type-heading" class="text-headline">
+						<span class="text-fg-muted">7</span> Type
+					</h2>
+					<p>
+						One family, the reader's own system sans (<code>system-ui</code>),
+						in two weights, 400 and 600. Headings grow with the window from
+						320px to 1280px; body text and everything smaller keep their size.
+					</p>
+					<div
+						class="rows"
+						data-at="36"
+						style="--rows-columns: minmax(0, 1fr) auto"
+					>
+						<ul>
+							{typeRoles.map(([role, label, step]) => {
+								const token = scale.find(({ name }) => name === step);
+								return (
+									token && (
+										<li>
+											<p class={role}>{label}</p>
+											<p class="text-xs tabular-nums text-fg-muted">
+												{range(token)}
+											</p>
+										</li>
+									)
+								);
+							})}
+						</ul>
+					</div>
+				</section>
+
+				<section
+					id="linework"
+					aria-labelledby="linework-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="linework-heading" class="text-headline">
+						<span class="text-fg-muted">8</span> Linework
+					</h2>
+					<p>
+						Every rule beside the real component it shapes, in its default
+						state.
+					</p>
+					<div
+						class="rows"
+						data-at="36"
+						style="--rows-columns: minmax(0, 1fr) minmax(0, 1fr)"
+					>
+						<ul>
+							<li>
+								<p class="text-sm">
+									<span class="text-label">One dashed line.</span> Structure is
+									a 1px dashed neutral line. Corners are square, and nothing
+									casts a shadow.
+								</p>
+								<div class="cluster">
+									<p class="box text-sm">Plane</p>
+									<p class="box bg-panel text-sm">Panel</p>
+								</div>
+							</li>
+							<li>
+								<p class="text-sm">
+									<span class="text-label"
+										>Controls are drawn, not filled.</span
+									>{" "}
+									Danger is kept for the one button that starts a destructive
+									action.
+								</p>
+								<div class="cluster">
+									<Button>Default</Button>
+									<Button variant="quiet">Quiet</Button>
+									<Button variant="danger">Danger</Button>
+								</div>
+							</li>
+							<li>
+								<p class="text-sm">
+									<span class="text-label">Colour means state.</span> Blue for
+									what to act on, green for done, red for overdue or cancelled,
+									gray for waiting.
+								</p>
+								<div class="cluster">
+									{badges.map(({ label, badge }) => (
+										<Badge type={badge}>{label}</Badge>
+									))}
+								</div>
+							</li>
+							<li>
+								<p class="text-sm">
+									<span class="text-label">Labels stay with their field.</span>
+									{" "}
+									The line that alone shows a control holds 3:1.
+								</p>
+								<div class="stack" data-space="xs">
+									<Field
+										label="Email"
+										type="email"
+										placeholder="name@example.com"
+										hint="Shown to the client on every invoice."
+									/>
+									<Checkbox>Send a copy</Checkbox>
+								</div>
+							</li>
+							<li>
+								<p class="text-sm">
+									<span class="text-label">Numbers stay literal.</span> Progress
+									is ink until it runs over the budget, then red.
+								</p>
+								<div class="stack" data-space="xs">
+									<Progress percent={40} aria-label="Within budget" />
+									<Progress percent={120} aria-label="Over budget" />
+								</div>
+							</li>
+						</ul>
+					</div>
+				</section>
+
+				<section
+					id="system"
+					aria-labelledby="system-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="system-heading" class="text-headline">
+						<span class="text-fg-muted">9</span> The full system
+					</h2>
+					<ul class="stack reasons" data-space="2xs">
+						<li>
+							The{" "}
+							<a href="/brand/specimen/" class="text-fg-info link">specimen</a>
+							{" "}
+							shows every token, component and layout primitive in every state,
+							in light and dark.
+						</li>
+						<li>
+							<a
+								href="https://github.com/craftlions/website/blob/main/DESIGN.md"
+								class="text-fg-info link"
+								>DESIGN.md</a
+							>{" "}
+							holds the written rules.
+						</li>
+					</ul>
+				</section>
+
+				<section
+					id="use"
+					aria-labelledby="use-heading"
+					class="stack section-rule"
+					data-space="m"
+				>
+					<h2 id="use-heading" class="text-headline">
+						<span class="text-fg-muted">10</span> Use and licence
+					</h2>
+					<div class="stack box border-line-strong" data-space="xs">
+						<p class="text-sm">
+							<strong class="text-label text-fg-warning">Draft:</strong>{" "}
+							this wording awaits legal review and is not yet craftlions' terms.
+						</p>
+						<p>
+							The name craftlions and the craftlions logo are identifiers
+							(Kennzeichen) of {legalName}. You may use the files on this page,
+							unchanged, to refer to craftlions, for example in articles, event
+							listings or a list of service providers. Do not use them in a way
+							that suggests craftlions endorses or is affiliated with your
+							product, do not use them in your own names, logos or domains, and
+							do not put them on merchandise. For anything else, ask first. We
+							may change these terms at any time.
+						</p>
+						<p lang="de" class="text-sm text-fg-muted">
+							Name und Logo von craftlions sind Kennzeichen der {legalName}. Die
+							Dateien auf dieser Seite dürfen unverändert genutzt werden, um auf
+							craftlions zu verweisen; jede weitere Nutzung bitte vorher per
+							E-Mail anfragen.
+						</p>
+					</div>
+					<p class="box border-line-strong text-sm">
+						<strong class="text-label text-fg-warning">Placeholder:</strong>
+						{" "}
+						trademark status. This page claims no registration of the name or
+						the logo until the owner confirms one.
+					</p>
+					<p>
+						Questions about the brand go to{" "}
+						<a href={`mailto:${email}`} class="text-fg-info link">{email}</a>;
+						the postal address is on the{" "}
+						<a href="/imprint/" class="text-fg-info link">imprint</a>.
+					</p>
+				</section>
+			</main>
+			<Footer />
+		</body>
+	</Fragment>
+</Shell>

@@ -64,6 +64,35 @@
 			font-style: normal;
 		}
 
+		/* /brand: a logo in a .box on the canvas of the scheme data-scheme
+		   names, a token's swatch, and a text to quote that one click selects. */
+		& .brand-tile {
+			display: grid;
+			place-items: center;
+			aspect-ratio: 1000 / 847;
+			background-color: var(--canvas);
+			color: var(--fg);
+			text-align: center;
+
+			&[data-scheme="light"] {
+				color-scheme: light;
+			}
+			&[data-scheme="dark"] {
+				color-scheme: dark;
+			}
+			& > svg {
+				inline-size: min(100%, 10rem);
+			}
+		}
+		& .brand-swatch {
+			inline-size: 1.5rem;
+			block-size: 1.5rem;
+			border: var(--rule) var(--line);
+		}
+		& .brand-copy {
+			user-select: all;
+		}
+
 		/* The changelog: an intro a little narrower than the column, then the
 		   entries, whose rail runs from one into the next. */
 		& .timeline-intro {

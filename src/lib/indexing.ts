@@ -10,7 +10,9 @@ const privatePaths = [
 	"/login",
 	"/forgot-password",
 	"/reset-password",
-	"/brand/specimen",
+	// /brand and the specimen below it, until /brand holds the owner's content;
+	// "/brand/specimen" then publishes /brand alone.
+	"/brand",
 ];
 
 export const isPrivatePath = (pathname: string) =>
