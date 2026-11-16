@@ -2,7 +2,7 @@
 // dark, against the dev server that is already running; it never starts one.
 // Every violation fails, best-practice included, so fix it instead of excluding it.
 import { AxeBuilder } from "@axe-core/playwright";
-import { chromium } from "playwright";
+import { chromium } from "@playwright/test";
 
 const base = process.env.A11Y_BASE_URL ?? "http://localhost:4321";
 const routes = [

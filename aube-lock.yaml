@@ -44,6 +44,9 @@ importers:
       "@drizzle-team/minipg":
         specifier: 0.4.4
         version: 0.4.4
+      "@playwright/test":
+        specifier: 1.65.1
+        version: 1.65.1
       "@tailwindcss/vite":
         specifier: 4.3.5
         version: 4.3.5(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0)(yaml@2.9.1))
@@ -74,9 +77,6 @@ importers:
       lightningcss:
         specifier: 1.33.0
         version: 1.33.0
-      playwright:
-        specifier: 1.65.1
-        version: 1.65.1
       tailwindcss:
         specifier: 4.3.5
         version: 4.3.5
@@ -1446,6 +1446,14 @@ packages:
       {
         integrity: sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw==,
       }
+
+  "@playwright/test@1.65.1":
+    resolution:
+      {
+        integrity: sha512-y+NCIRm2LvY4slUVWvGh1nujJ8RF/hEisIsq2mtUPgdQC4L701bq5hZGMhrpeXjACvwvO9tj5dJqhvM6TP9lbw==,
+      }
+    engines: { node: ">=20" }
+    hasBin: true
 
   "@poppinss/colors@4.1.6":
     resolution:
@@ -4912,6 +4920,10 @@ snapshots:
   "@oslojs/encoding@1.1.0": {}
 
   "@oxc-project/types@0.156.0": {}
+
+  "@playwright/test@1.65.1":
+    dependencies:
+      playwright: 1.65.1
 
   "@poppinss/colors@4.1.6":
     dependencies:
