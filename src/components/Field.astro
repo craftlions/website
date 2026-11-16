@@ -84,7 +84,7 @@ const errors = [
 	{/* Rendered empty as well, for the script to show a constraint error in. */}
 	<p
 		id={`${id}-error`}
-		class="text-sm text-fg-danger empty:hidden"
+		class="field-error text-sm text-fg-danger"
 		set:text={errors.join(" ")}
 	/>
 </div>
