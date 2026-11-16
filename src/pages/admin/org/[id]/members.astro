@@ -94,14 +94,14 @@ const otherClients = (count: number) =>
 		confirmation: "Confirmation",
 	}}
 >
-	<section class="grid gap-3" aria-labelledby="members-heading">
-		<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+	<section class="stack" data-space="xs" aria-labelledby="members-heading">
+		<div class="admin-section-head">
 			<h2 id="members-heading" class="label-caps"> Members </h2>
 			<DisclosureButton controls="add-member" open={isAddOpen}>
 				Add member
 			</DisclosureButton>
 		</div>
-		<p class="max-w-prose text-sm text-fg-muted">
+		<p class="admin-intro text-sm text-fg-muted">
 			People who can sign in and see the {organization.name} dashboard.
 		</p>
 		<form
@@ -109,7 +109,7 @@ const otherClients = (count: number) =>
 			method="POST"
 			action={actions.addOrganizationMember}
 			aria-label="Add member"
-			class="grid grid-cols-1 gap-4 border border-dashed border-line p-4 md:grid-cols-2"
+			class="box admin-form"
 			hidden={!isAddOpen}
 		>
 			<input type="hidden" name="organizationId" value={organization.id}>
@@ -137,36 +137,28 @@ const otherClients = (count: number) =>
 				name="role"
 				result={addResult}
 				hint="Members see projects, phases and invoices and can pay invoices. Owners can also approve, decline and accept phases."
-				class="md:col-span-2"
+				class="admin-form-full"
 			>
 				<option value="member" selected>Member</option>
 				<option value="owner">Owner</option>
 			</Field>
-			<div
-				class="grid grid-cols-[auto_auto] items-center justify-start gap-3 md:col-span-2"
-			>
+			<div class="admin-form-actions">
 				<Button type="submit">Add member</Button>
 				<Button variant="quiet" data-disclosure-cancel>Cancel</Button>
 			</div>
 		</form>
 		{members.length > 0 ? (
-			<div class="grid grid-cols-1 border border-dashed border-line lg:grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,14rem)] lg:gap-x-6">
-				<div
-					aria-hidden="true"
-					class="hidden border-b border-dashed border-line px-4 py-3 label-caps lg:col-span-4 lg:grid lg:grid-cols-subgrid"
-				>
+			<div class="members">
+				<div aria-hidden="true" class="members-head label-caps">
 					<span>Member</span>
 					<span>Role</span>
 					<span>Last active</span>
 					<span>Actions</span>
 				</div>
-				<ul class="grid grid-cols-1 lg:col-span-4 lg:grid-cols-subgrid">
+				<ul>
 					{members.map((member) => (
-						<li
-							id={`member-${member.id}`}
-							class="grid scroll-mt-20 grid-cols-1 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 target:bg-info-subtle target:outline-2 target:-outline-offset-2 target:outline-dashed target:outline-fill-info/70 lg:col-span-4 lg:grid-cols-subgrid lg:items-start"
-						>
-							<div class="grid gap-1">
+						<li id={`member-${member.id}`}>
+							<div class="stack" data-space="3xs">
 								<h3 class="wrap-break-word">{member.user.name}</h3>
 								<p class="text-sm text-fg-muted wrap-break-word">
 									{member.user.email}
@@ -177,7 +169,7 @@ const otherClients = (count: number) =>
 							</Badge>
 							{member.user.lastActiveAt ? (
 								<p class="text-sm">
-									<span class="text-fg-muted lg:sr-only">Last active </span>
+									<span class="members-label text-fg-muted">Last active </span>
 									<time datetime={member.user.lastActiveAt.toISOString()}>
 										{formatDate(member.user.lastActiveAt)}
 									</time>
@@ -185,15 +177,14 @@ const otherClients = (count: number) =>
 							) : (
 								<p class="text-sm text-fg-muted">Never logged in</p>
 							)}
-							<div class="grid content-start justify-items-start gap-2">
+							<div class="stack members-actions" data-space="2xs">
 								{member.user.lastActiveAt && (
 									<impersonate-user
-										class="grid max-w-full justify-items-start"
 										data-user-id={member.userId}
 										data-organization-slug={organization.slug}
 									>
 										<Button
-											class="max-w-full wrap-break-word"
+											class="admin-long-label wrap-break-word"
 											aria-label={`View as ${member.user.name}`}
 											aria-describedby={`impersonate-error-${member.id}`}
 										>
@@ -202,7 +193,7 @@ const otherClients = (count: number) =>
 										<p
 											id={`impersonate-error-${member.id}`}
 											role="alert"
-											class="text-sm text-fg-danger not-empty:mt-1"
+											class="text-sm text-fg-danger"
 										/>
 									</impersonate-user>
 								)}
@@ -259,7 +250,7 @@ const otherClients = (count: number) =>
 				</ul>
 			</div>
 		) : (
-			<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+			<p class="box text-sm text-fg-muted">
 				No members yet. Nobody at {organization.name} can see its dashboard
 				until you add one.
 			</p>
