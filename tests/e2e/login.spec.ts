@@ -105,3 +105,25 @@ test("Forgot password? opens the reset request", async ({ page }) => {
 		"Reset password",
 	);
 });
+
+test.describe("without scripts", () => {
+	test.use({ javaScriptEnabled: false });
+
+	test("a submit posts and says that signing in needs JavaScript", async ({
+		page,
+	}) => {
+		const form = page.getByRole("form", { name: "Sign in form" });
+		await expect(form).toHaveAttribute("method", "post");
+		await page.getByLabel("Email address").fill("owner@example.com");
+		await page.getByLabel("Password", { exact: true }).fill("secret123");
+		const request = page.waitForRequest((request) =>
+			request.url().includes("/login"),
+		);
+		await form.getByRole("button", { name: "Sign in" }).click();
+		expect((await request).method()).toBe("POST");
+		await expect(page.getByRole("alert")).toHaveText(
+			"Signing in needs JavaScript. Turn it on and try again.",
+		);
+		expect(new URL(page.url()).search).toBe("");
+	});
+});

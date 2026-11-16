@@ -149,3 +149,48 @@ test.describe("with a token", () => {
 		);
 	});
 });
+
+test.describe("without scripts", () => {
+	test.use({ javaScriptEnabled: false });
+
+	for (const { path, form, fill, submit, message } of [
+		{
+			path: "/forgot-password",
+			form: "Forgot password form",
+			fill: { "Email address": "owner@example.com" },
+			submit: "Send reset link",
+			message:
+				"Sending a reset link needs JavaScript. Turn it on and try again.",
+		},
+		{
+			path: "/reset-password?token=dummy",
+			form: "Reset password form",
+			fill: {
+				"New password": "longpassword1",
+				"Confirm password": "longpassword1",
+			},
+			submit: "Reset password",
+			message:
+				"Resetting the password needs JavaScript. Turn it on and try again.",
+		},
+	]) {
+		test(`${path} posts and says that it needs JavaScript`, async ({
+			page,
+		}) => {
+			await page.goto(path);
+			const element = page.getByRole("form", { name: form });
+			await expect(element).toHaveAttribute("method", "post");
+			for (const [label, value] of Object.entries(fill)) {
+				await page.getByLabel(label).fill(value);
+			}
+			const request = page.waitForRequest(
+				(request) => request.url() === new URL(path, page.url()).href,
+			);
+			await element.getByRole("button", { name: submit }).click();
+			expect((await request).method()).toBe("POST");
+			await expect(page.getByRole("status")).toHaveText(message);
+			// Nothing typed lands in the address.
+			expect(page.url()).toBe(new URL(path, page.url()).href);
+		});
+	}
+});

@@ -43,6 +43,7 @@ if (session) {
 					id="login-form"
 					class="stack"
 					data-space="m"
+					method="post"
 					data-return-to={returnTo}
 					aria-label="Sign in form"
 				>
@@ -80,7 +81,11 @@ if (session) {
 					<Button type="submit" id="login-submit"> Sign in </Button>
 				</form>
 
-				<p id="login-message" class="text-sm text-fg-danger" role="alert"></p>
+				{/* The script signs in; a submit without it lands here as a POST. */}
+				<p id="login-message" class="text-sm text-fg-danger" role="alert">
+					{Astro.request.method === "POST" &&
+						"Signing in needs JavaScript. Turn it on and try again."}
+				</p>
 			</main>
 
 			<Footer />
