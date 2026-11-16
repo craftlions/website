@@ -13,7 +13,8 @@
 	   every line of a list and every group heading turn at the same width,
 	   whatever their content, so the figures and the totals end on one edge.
 	   data-actions="below" makes the ledger line, whose actions are always
-	   below. No container or media query: the switcher's trick, a size that is
+	   below; data-actions="none" a list whose lines have no actions, which
+	   reserves no slot. No container or media query: the switcher's trick, a size that is
 	   hugely positive or negative around the threshold, does the turning. */
 	.lines {
 		--lines-actions: 16rem;
@@ -45,6 +46,9 @@
 		}
 		&[data-actions="below"] {
 			--lines-basis: 100%;
+			--lines-reserve: 0px;
+		}
+		&[data-actions="none"] {
 			--lines-reserve: 0px;
 		}
 
