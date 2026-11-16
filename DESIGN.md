@@ -260,7 +260,7 @@ Biome is excluded from this file because it flattens the YAML frontmatter that `
 | `border-canvas`                                   | Pace marker edge                                                             |
 | `text-chart-1`…`6`, `text-chart-unassigned`       | Spend chart only                                                             |
 
-A new token is a design decision: add it to `tokens.css`, `global.css`, this table, and the `contrast:` map together. The unlisted component specimen at `/brand/specimen` (`src/pages/brand/specimen.astro`) reads `tokens.css`, so it shows the new token with its contrast ratios automatically, and its Scale section shows every type and space step with its range, where the design tests measure them; add new primitives to it by hand. It is public, so its demos stay presentational: no actions, data, sessions, or logged errors.
+A new token is a design decision: add it to `tokens.css`, `global.css`, `utilities.css`, this table, and the `contrast:` map together. The unlisted component specimen at `/brand/specimen` (`src/pages/brand/specimen.astro`) reads `tokens.css`, so it shows the new token with its contrast ratios automatically, and its Scale section shows every type and space step with its range, where the design tests measure them; add new primitives to it by hand. It is public, so its demos stay presentational: no actions, data, sessions, or logged errors.
 
 Give an element one role per property, and choose between roles with a ternary. Tailwind orders utilities itself, not by class order, so stacking `text-fg-muted` with a conditional `text-fg-danger` lets the wrong one win.
 
@@ -347,7 +347,7 @@ Buttons are compact, transparent, and line-drawn.
 
 A text link is its text with a dashed underline, never a box.
 
-- **Recipe:** the `link` class in `src/styles/global.css` draws the dashed underline (4px offset); do not spell it out with `underline decoration-dashed`; `aubr design:lint` rejects `underline` and decoration styles outside `global.css`, so an underline always means a link. The quiet Button and the breadcrumbs use it too.
+- **Recipe:** the `link` class in `src/styles/components/link.css` draws the dashed underline (4px offset); do not spell it out with `underline decoration-dashed`; `aubr design:lint` rejects `underline` and decoration styles outside that file, so an underline always means a link. The quiet Button and the breadcrumbs use it too.
 - **Hover:** the underline turns solid and the text keeps its color, so primary, status and `text-fg-info` links keep their meaning. A link that can rest in muted text, including one that inherits it from a muted row, adds `hover:text-fg` as its only hover color. Only decoration and color change, so hovering never moves layout.
 - **Color:** a link inherits its text color or takes one role by ternary; `text-fg-info` marks links in public and account prose.
 

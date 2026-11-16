@@ -1,12 +1,46 @@
 /* Layer order, first in the bundle: a later layer wins over an earlier one
    whatever the specificity. Tailwind's theme and utilities join it while both
-   systems coexist. */
-@layer theme, reset, tokens, base, layout, components, utilities;
+   systems coexist; page holds the scoped <style> of a page. Shell.astro repeats
+   the statement, so a page's own stylesheet can never come first. */
+@layer theme, reset, tokens, base, layout, components, page, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "./reset.css";
 @import "./tokens.css";
 @import "./base.css";
 @import "./layout.css";
+@import "./components/action-banner.css";
+@import "./components/admin-projects.css";
+@import "./components/admin-worklist.css";
+@import "./components/admin.css";
+@import "./components/badge.css";
+@import "./components/breadcrumbs.css";
+@import "./components/button.css";
+@import "./components/changelog-entry.css";
+@import "./components/checkbox.css";
+@import "./components/client-worklist.css";
+@import "./components/client.css";
+@import "./components/command-palette.css";
+@import "./components/confirm-action.css";
+@import "./components/cost-split.css";
+@import "./components/delivery-form.css";
+@import "./components/disclosure-button.css";
+@import "./components/field.css";
+@import "./components/footer.css";
+@import "./components/input.css";
+@import "./components/invoice-table.css";
+@import "./components/link.css";
+@import "./components/nav-session-links.css";
+@import "./components/nav.css";
+@import "./components/page-heading.css";
+@import "./components/password-toggle.css";
+@import "./components/phase-amount-calculator.css";
+@import "./components/phase-overview.css";
+@import "./components/progress.css";
+@import "./components/project-phase-summary.css";
+@import "./components/public.css";
+@import "./components/shell.css";
+@import "./components/spend-by-year.css";
+@import "./utilities.css";
 @import "tailwindcss/utilities.css" layer(utilities);
 
 /* Each role exists only on the utility it belongs to: `text-fg` works, `bg-fg` does not. */
@@ -128,29 +162,5 @@
 @media (prefers-reduced-motion: no-preference) {
 	@view-transition {
 		navigation: auto;
-	}
-}
-
-@layer components {
-	.label-caps {
-		color: var(--fg-muted);
-		font-size: var(--step--2);
-		font-weight: 600;
-		line-height: calc(1 / 0.75);
-		text-transform: uppercase;
-	}
-
-	/* A text link keeps its text color; the pointer turns its dashed underline
-	   solid. Decoration never changes the box, so hovering moves nothing. */
-	.link {
-		text-decoration-line: underline;
-		text-decoration-style: dashed;
-		text-underline-offset: 4px;
-
-		@media (hover: hover) {
-			&:not(:disabled):hover {
-				text-decoration-style: solid;
-			}
-		}
 	}
 }

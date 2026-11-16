@@ -1,0 +1,15 @@
+@layer components {
+	/* A text link keeps its text color; the pointer turns its dashed underline
+	   solid. Decoration never changes the box, so hovering moves nothing. */
+	.link {
+		text-decoration-line: underline;
+		text-decoration-style: dashed;
+		text-underline-offset: 4px;
+
+		@media (hover: hover) {
+			&:not(:disabled):hover {
+				text-decoration-style: solid;
+			}
+		}
+	}
+}

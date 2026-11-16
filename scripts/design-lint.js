@@ -107,7 +107,7 @@ const rules = [
 		classOnly: true,
 		use: "the link class, which draws the dashed underline and its hover",
 		doc: "DESIGN.md#links",
-		ignore: "src/styles/global.css",
+		ignore: "src/styles/components/link.css",
 	},
 	// Checkbox wraps its control in its label; the cost split labels number
 	// inputs that sit in a % suffix box, which Input cannot draw yet.
