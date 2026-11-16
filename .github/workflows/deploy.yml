@@ -23,7 +23,7 @@ defaults:
 jobs:
   deploy:
     if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     name: Deploy to Production
     environment:
@@ -45,7 +45,7 @@ jobs:
 
   preview:
     if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     name: Deploy Pull Request Preview
     environment:
@@ -84,7 +84,7 @@ jobs:
 
   preview-cleanup:
     if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     name: Delete Pull Request Preview
     environment: preview
