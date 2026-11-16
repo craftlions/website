@@ -1,17 +1,19 @@
 ---
+export const prerender = true;
+
 import { ActionError } from "astro:actions";
-import ActionBanner from "../components/ActionBanner.astro";
-import Badge from "../components/Badge.astro";
-import Breadcrumbs from "../components/Breadcrumbs.astro";
-import Button from "../components/Button.astro";
-import Checkbox from "../components/Checkbox.astro";
-import ConfirmAction from "../components/ConfirmAction.astro";
-import DisclosureButton from "../components/DisclosureButton.astro";
-import Field from "../components/Field.astro";
-import PageHeading from "../components/PageHeading.astro";
-import Progress from "../components/Progress.astro";
-import Shell from "../layouts/Shell.astro";
-import tokensCss from "../styles/tokens.css?raw";
+import ActionBanner from "../../components/ActionBanner.astro";
+import Badge from "../../components/Badge.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import Button from "../../components/Button.astro";
+import Checkbox from "../../components/Checkbox.astro";
+import ConfirmAction from "../../components/ConfirmAction.astro";
+import DisclosureButton from "../../components/DisclosureButton.astro";
+import Field from "../../components/Field.astro";
+import PageHeading from "../../components/PageHeading.astro";
+import Progress from "../../components/Progress.astro";
+import Shell from "../../layouts/Shell.astro";
+import tokensCss from "../../styles/tokens.css?raw";
 
 const tokens = [
 	...tokensCss.matchAll(/--([\w-]+): light-dark\((#\w+), (#\w+)\)/g),
@@ -119,14 +121,14 @@ const typeRoles = [
 ---
 
 <Shell>
-	<Fragment slot="head"> <title>craftlions | Design</title> </Fragment>
+	<Fragment slot="head"> <title>craftlions | Design system</title> </Fragment>
 	<Fragment slot="body">
 		<body class="grid gap-6 p-4 text-pretty">
 			<header class="mx-auto grid w-full max-w-6xl gap-2">
-				<PageHeading> Design </PageHeading>
+				<PageHeading> Design system </PageHeading>
 				<p class="pl-3 text-sm text-fg-muted">
-					Dev only. Every token and primitive in both color schemes; hover and
-					tab through the controls to see their states.
+					Every token and primitive in both color schemes; hover and tab through
+					the controls to see their states.
 				</p>
 			</header>
 			<main class="mx-auto grid w-full max-w-6xl gap-4 md:grid-cols-2">
@@ -185,12 +187,12 @@ const typeRoles = [
 							<div class="grid grid-cols-[repeat(3,max-content)] justify-start gap-2 sm:grid-flow-col sm:grid-cols-none">
 								<Button>Default</Button>
 								<Button aria-pressed="true">Pressed</Button>
-								<Button href="/design" aria-current="page">
+								<Button href="/brand/system" aria-current="page">
 									Current
 								</Button>
 								<Button variant="danger">Danger</Button>
 								<Button disabled>Disabled</Button>
-								<Button href="/design">Link</Button>
+								<Button href="/brand/system">Link</Button>
 							</div>
 							<div class="grid grid-flow-col items-center justify-start gap-4">
 								<Button variant="quiet">Quiet</Button>
@@ -246,9 +248,9 @@ const typeRoles = [
 							<Breadcrumbs
 								label={`Breadcrumb, ${scheme}`}
 								items={[
-									{ label: "Admin", href: "/design" },
-									{ label: "Acme", href: "/design" },
-									{ label: "Projects", href: "/design" },
+									{ label: "Admin", href: "/brand/system" },
+									{ label: "Acme", href: "/brand/system" },
+									{ label: "Projects", href: "/brand/system" },
 									{ label: "Website relaunch" },
 								]}
 							/>
@@ -371,7 +373,7 @@ const typeRoles = [
 							<p class="border border-dashed border-line-danger p-4 text-sm text-fg-danger">
 								Danger outline
 							</p>
-							<a href="/design" class="w-max text-sm text-fg-info link">
+							<a href="/brand/system" class="w-max text-sm text-fg-info link">
 								Text link
 							</a>
 						</section>
