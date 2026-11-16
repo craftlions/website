@@ -15,6 +15,7 @@ const pages = [
 		heading: "Changelog",
 	},
 	{ path: "/imprint/", title: "craftlions | Impressum", heading: "Impressum" },
+	{ path: "/brand/", title: "craftlions | Brand", heading: "Brand" },
 	{ path: "/login", title: "craftlions | Login", heading: "Sign in" },
 	{
 		path: "/forgot-password",
@@ -149,6 +150,55 @@ test("the footer links point to contact, profiles and the legal pages", async ({
 		.getByRole("link", { name: "craftlions home" })
 		.click();
 	await expect(page).toHaveURL("/");
+});
+
+test("the brand page lists its sections in order and leaves the owner's content marked", async ({
+	page,
+}) => {
+	await page.goto("/brand/");
+	const sections = [
+		["logo", "Logo"],
+		["clear-space", "Clear space and minimum size"],
+		["dont", "Don'ts"],
+		["name", "Name"],
+		["about", "About craftlions"],
+		["colour", "Colour"],
+		["type", "Type"],
+		["linework", "Linework"],
+		["system", "The full system"],
+		["use", "Use and licence"],
+	];
+	const contents = page.getByRole("navigation", { name: "On this page" });
+	await expect(contents.getByRole("link")).toHaveText(
+		sections.map(([, title], index) => `${index + 1} ${title}`),
+	);
+	for (const [index, [id, title]] of sections.entries()) {
+		await expect(
+			contents.getByRole("link", { name: `${index + 1} ${title}` }),
+		).toHaveAttribute("href", `#${id}`);
+		await expect(
+			page.locator(`section#${id}`).getByRole("heading", { level: 2 }),
+		).toHaveText(`${index + 1} ${title}`);
+	}
+
+	await expect(page.getByText("Placeholder:", { exact: true })).toHaveCount(6);
+	await expect(page.getByText("Proposed:", { exact: true })).toHaveCount(3);
+	await expect(page.getByText("Draft:", { exact: true })).toHaveCount(2);
+	await expect(page.getByText("®")).toHaveCount(0);
+	await expect(
+		page.getByRole("link", { name: "alexander@craftlions.com" }),
+	).toHaveAttribute("href", "mailto:alexander@craftlions.com");
+	await expect(page.getByRole("link", { name: "specimen" })).toHaveAttribute(
+		"href",
+		"/brand/specimen/",
+	);
+});
+
+test("no page links to the unlisted brand page yet", async ({ page }) => {
+	for (const path of ["/", "/changelog/", "/imprint/"]) {
+		await page.goto(path);
+		await expect(page.locator('a[href^="/brand"]')).toHaveCount(0);
+	}
 });
 
 test("the changelog lists its entries newest first", async ({ page }) => {

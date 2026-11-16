@@ -44,14 +44,17 @@ for (const path of ["/", "/changelog/", "/imprint/"]) {
 	});
 }
 
-// Prerendered, so the middleware never sees it; the meta tag carries noindex.
-test("the specimen is noindex through its meta tag", async ({ page }) => {
-	await page.goto("/brand/specimen/");
-	await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-		"content",
-		"noindex",
-	);
-});
+// Prerendered, so the middleware never sees them; the meta tag carries
+// noindex. /brand stays unlisted until its content is final.
+for (const path of ["/brand/", "/brand/specimen/"]) {
+	test(`${path} is noindex through its meta tag`, async ({ page }) => {
+		await page.goto(path);
+		await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+			"content",
+			"noindex",
+		);
+	});
+}
 
 test("the sitemap lists only the public pages", async ({ request }) => {
 	const index = await (await request.get("/sitemap-index.xml")).text();
@@ -103,6 +106,7 @@ for (const path of ["/settings", "/settings/api", "/api"]) {
 for (const [path, location] of [
 	["/changelog", "/changelog/"],
 	["/imprint", "/imprint/"],
+	["/brand", "/brand/"],
 	["/brand/specimen", "/brand/specimen/"],
 	["/index.html", "/"],
 ] as const) {
