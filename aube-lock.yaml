@@ -47,9 +47,6 @@ importers:
       "@playwright/test":
         specifier: 1.65.1
         version: 1.65.1
-      "@tailwindcss/vite":
-        specifier: 4.3.5
-        version: 4.3.5(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0)(yaml@2.9.1))
       "@types/node":
         specifier: 26.6.6
         version: 26.6.6
@@ -77,9 +74,6 @@ importers:
       lightningcss:
         specifier: 1.33.0
         version: 1.33.0
-      tailwindcss:
-        specifier: 4.3.5
-        version: 4.3.5
       typescript:
         specifier: 7.1.0-beta
         version: 7.1.0-beta
@@ -1694,137 +1688,6 @@ packages:
         integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==,
       }
 
-  "@tailwindcss/node@4.3.5":
-    resolution:
-      {
-        integrity: sha512-yT53FzV4ke0cr/BguDxhWMpm5MJu1O2muzk+tKw6lKHjODAsYArBbWwFbJiaksfzFv1tpkO9QHGzmfs1hJT66g==,
-      }
-
-  "@tailwindcss/oxide-android-arm64@4.3.5":
-    resolution:
-      {
-        integrity: sha512-Se0z5xMqcSQanJD1IYmO0cGpK3iv0fp3ZsIT7xRJZ1Da5PghvNoc46zz4jIQn+aan3dV9T8AermFNN9QPmsh0Q==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [arm64]
-    os: [android]
-
-  "@tailwindcss/oxide-darwin-arm64@4.3.5":
-    resolution:
-      {
-        integrity: sha512-UPrgTDuUbvmqGMZuCnmI3FKee/tYKzKdp00/kuB4oSGB213VYg8QTdF7lVhnPoBXq/mIfJ+ILoBFqNOboWcMwQ==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [arm64]
-    os: [darwin]
-
-  "@tailwindcss/oxide-darwin-x64@4.3.5":
-    resolution:
-      {
-        integrity: sha512-E+p7HEtjI0b8D7kbbWxH067cGui6d4c79COGko9fAPVE3rwc1E7ld2HFCbaG86AOGWS5VKQYqZOaf38ya4uxTQ==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [x64]
-    os: [darwin]
-
-  "@tailwindcss/oxide-freebsd-x64@4.3.5":
-    resolution:
-      {
-        integrity: sha512-yWEWcWyAG7rWOcTpJTjdhQ3pcaFY2h+0bqTRfgU3G2fz87ZU3AKdvdZKhslD+kyHnjBUWKvNdRYwIYC5dI1tIg==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [x64]
-    os: [freebsd]
-
-  "@tailwindcss/oxide-linux-arm-gnueabihf@4.3.5":
-    resolution:
-      {
-        integrity: sha512-WmeVjtJhZlr+smpqcdR2kQkkn6arHIJnUIBxTO2EJcTLGY1ecVXNo2hbSn8xc0IH2aEtys936iMWKGyj0GaKnA==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [arm]
-    os: [linux]
-
-  "@tailwindcss/oxide-linux-arm64-gnu@4.3.5":
-    resolution:
-      {
-        integrity: sha512-DTCSyucc6ShMp1QMqV5R94Z7xlgNgUzkGmFF1rL5HH2Qjy4eSmEqy+YLGkqqYvWa4sILtgrBt1JjRKbneQtiFQ==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-
-  "@tailwindcss/oxide-linux-arm64-musl@4.3.5":
-    resolution:
-      {
-        integrity: sha512-H9lsvO4x9E4nE4Hi8h7NHHw0O/kcVSu+iOyFHNGdYzazGgDjFHZbE6S3hQ8kMcbNXSBlMdNi67LV5EVqtpaJtw==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [arm64]
-    os: [linux]
-    libc: [musl]
-
-  "@tailwindcss/oxide-linux-x64-gnu@4.3.5":
-    resolution:
-      {
-        integrity: sha512-4uxQvtBvPuIdl13WfUBj9xMZHH14PtHZ8OZdtLmdyDtG66sCa1t599NZT+jagkUzRtWhuul1qRZQ1nAJscXN5g==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-
-  "@tailwindcss/oxide-linux-x64-musl@4.3.5":
-    resolution:
-      {
-        integrity: sha512-0JQAzs7jwbA7O6+z/adU+Jk3AXwsu3npAhtr5escXS7TqEqWcaDV7qHuI+0Vy/KQRuVGnLQREcSJWYauyV3oqg==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
-
-  "@tailwindcss/oxide-wasm32-wasi@4.3.5":
-    resolution:
-      {
-        integrity: sha512-OJhFmlEfdzMr+avACdi40RPtnkW0B6hXyxL/8r+tnEHBWZji36CYRjEXrrvgBmaYsD3oEOBqwYFRKsYvzFe7Bw==,
-      }
-    engines: { node: ^20.19.0 || ^22.13.0 || >=23.5.0 }
-
-  "@tailwindcss/oxide-win32-arm64-msvc@4.3.5":
-    resolution:
-      {
-        integrity: sha512-9o8jgthi+QE5eandnboiJT64VQfnIArfZzSTdgbhEK5aafdiu2jTW9Honi/mwYHxBZuH1vAC57IFyrh+0iK5Gg==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [arm64]
-    os: [win32]
-
-  "@tailwindcss/oxide-win32-x64-msvc@4.3.5":
-    resolution:
-      {
-        integrity: sha512-XiKFfIy1RWe7qK4WqByxNW7Oz1/nkOy8o/BWhHminyV1PmpUd8Eedj5v2A8h2kpqeVlz6xRnwk9Fr/ZXNLcZfg==,
-      }
-    engines: { node: ">= 20" }
-    cpu: [x64]
-    os: [win32]
-
-  "@tailwindcss/oxide@4.3.5":
-    resolution:
-      {
-        integrity: sha512-PynqGLZsZvwM9tqD/CUxkOIfyd6K5elZ2MooauzJryP/UqXYgi3yYbtt3N0Xe+MHV/eFKPFQCEfIKAqlAS1CBg==,
-      }
-    engines: { node: ">= 20" }
-
-  "@tailwindcss/vite@4.3.5":
-    resolution:
-      {
-        integrity: sha512-BCNiY0a1ZjdOHVqw7kyb7U72BwfMF3dfUuN+tQsLWky/J5JOI/r7abibglXfygrZhVO/3u3V+E25kkKTeMkXaQ==,
-      }
-    peerDependencies:
-      vite: ^5.2.0 || ^6 || ^7 || ^8
-
   "@tybys/wasm-util@0.10.4":
     resolution:
       {
@@ -2731,13 +2594,6 @@ packages:
         integrity: sha512-pftG+ma5Lm8O6/p45bhYT6StBN5ziQymaRzmCZwFl8DwWHKPPD93FdOmP1aqftcepolQYvrcyTLa17kE8Yf+jg==,
       }
 
-  enhanced-resolve@5.26.1:
-    resolution:
-      {
-        integrity: sha512-PPnnSJq3azKOIewXR/uppBV/6h98dprBJ/WaQ9Qgj10xX1lJLNfg+XShpbsrSqcDSy2yYYyhfXM1wWhftqgyzw==,
-      }
-    engines: { node: ">=10.13.0" }
-
   entities@4.5.0:
     resolution:
       {
@@ -2864,12 +2720,6 @@ packages:
     resolution:
       {
         integrity: sha512-IaOQ9puYtjrkq7Y0Ygl9KDZnrf/aiUJYUpVf89y8kyaxbRG7Y1SrX/jaumrv81vc61+kiMempujsM3Yw7w5qcw==,
-      }
-
-  graceful-fs@4.2.11:
-    resolution:
-      {
-        integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==,
       }
 
   h3@1.15.11:
@@ -3661,19 +3511,6 @@ packages:
       }
     engines: { node: ">=16" }
     hasBin: true
-
-  tailwindcss@4.3.5:
-    resolution:
-      {
-        integrity: sha512-FcQk9BuffmEHJP2G0XmB2SplU1aLTI7j07Kunk+U74Ny+XiWOtzXz9aujFZ/avntw1e2cOv/3PkgzflQ7gX2vQ==,
-      }
-
-  tapable@2.3.3:
-    resolution:
-      {
-        integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==,
-      }
-    engines: { node: ">=6" }
 
   tiny-inflate@1.0.3:
     resolution:
@@ -5030,81 +4867,6 @@ snapshots:
 
   "@standard-schema/spec@1.1.0": {}
 
-  "@tailwindcss/node@4.3.5":
-    dependencies:
-      "@jridgewell/remapping": 2.3.5
-      enhanced-resolve: 5.26.1
-      jiti: 2.7.0
-      lightningcss: 1.33.0
-      magic-string: 1.4.5
-      source-map-js: 1.2.2
-      tailwindcss: 4.3.5
-
-  "@tailwindcss/oxide-android-arm64@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-darwin-arm64@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-darwin-x64@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-freebsd-x64@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-linux-arm-gnueabihf@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-linux-arm64-gnu@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-linux-arm64-musl@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-linux-x64-gnu@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-linux-x64-musl@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-wasm32-wasi@4.3.5":
-    optional: true
-    bundledDependencies:
-      - "@emnapi/core"
-      - "@emnapi/runtime"
-      - "@emnapi/wasi-threads"
-      - "@napi-rs/wasm-runtime"
-      - "@tybys/wasm-util"
-      - tslib
-
-  "@tailwindcss/oxide-win32-arm64-msvc@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide-win32-x64-msvc@4.3.5":
-    optional: true
-
-  "@tailwindcss/oxide@4.3.5":
-    optionalDependencies:
-      "@tailwindcss/oxide-android-arm64": 4.3.5
-      "@tailwindcss/oxide-darwin-arm64": 4.3.5
-      "@tailwindcss/oxide-darwin-x64": 4.3.5
-      "@tailwindcss/oxide-freebsd-x64": 4.3.5
-      "@tailwindcss/oxide-linux-arm-gnueabihf": 4.3.5
-      "@tailwindcss/oxide-linux-arm64-gnu": 4.3.5
-      "@tailwindcss/oxide-linux-arm64-musl": 4.3.5
-      "@tailwindcss/oxide-linux-x64-gnu": 4.3.5
-      "@tailwindcss/oxide-linux-x64-musl": 4.3.5
-      "@tailwindcss/oxide-wasm32-wasi": 4.3.5
-      "@tailwindcss/oxide-win32-arm64-msvc": 4.3.5
-      "@tailwindcss/oxide-win32-x64-msvc": 4.3.5
-
-  "@tailwindcss/vite@4.3.5(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0)(yaml@2.9.1))":
-    dependencies:
-      "@tailwindcss/node": 4.3.5
-      "@tailwindcss/oxide": 4.3.5
-      tailwindcss: 4.3.5
-      vite: 8.3.8(@types/node@26.6.6)(jiti@2.7.0)(yaml@2.9.1)
-
   "@tybys/wasm-util@0.10.4":
     dependencies:
       tslib: 2.9.1
@@ -5576,11 +5338,6 @@ snapshots:
 
   electron-to-chromium@1.5.478: {}
 
-  enhanced-resolve@5.26.1:
-    dependencies:
-      graceful-fs: 4.2.11
-      tapable: 2.3.3
-
   entities@4.5.0: {}
 
   error-stack-parser-es@1.0.5: {}
@@ -5633,8 +5390,6 @@ snapshots:
       resolve-pkg-maps: 1.0.0
 
   github-slugger@2.0.0: {}
-
-  graceful-fs@4.2.11: {}
 
   h3@1.15.11:
     dependencies:
@@ -6097,10 +5852,6 @@ snapshots:
       csso: 5.0.5
       picocolors: 1.1.1
       sax: 1.6.1
-
-  tailwindcss@4.3.5: {}
-
-  tapable@2.3.3: {}
 
   tiny-inflate@1.0.3: {}
 
