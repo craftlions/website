@@ -20,9 +20,13 @@ export default defineConfig({
 		trace: process.env.CI ? "retain-on-failure" : "off",
 		viewport: { width: 1280, height: 800 },
 	},
+	// The scans and design tests run in both schemes. The end-to-end tests check
+	// behaviour, which the scheme does not change, so they run once; the
+	// specimen shows both schemes side by side anyway.
 	projects: [
-		{ name: "light", use: { colorScheme: "light" } },
-		{ name: "dark", use: { colorScheme: "dark" } },
+		{ name: "light", use: { colorScheme: "light" }, testIgnore: "e2e/**" },
+		{ name: "dark", use: { colorScheme: "dark" }, testIgnore: "e2e/**" },
+		{ name: "e2e", testMatch: "e2e/**/*.spec.ts" },
 	],
 	...(!process.env.A11Y_BASE_URL && {
 		webServer: {
