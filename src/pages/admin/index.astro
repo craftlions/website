@@ -308,18 +308,12 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 				<table class="text-sm">
 					<thead>
 						<tr class="text-fg-muted">
-							<th scope="col" class="label-caps"> Client </th>
-							<th scope="col" class="ledger-number label-caps"> Your move </th>
-							<th scope="col" class="ledger-number label-caps">
-								Waiting on client
-							</th>
-							<th scope="col" class="ledger-number label-caps">
-								Active projects
-							</th>
-							<th scope="col" class="label-caps"> Budget used </th>
-							<th scope="col" class="ledger-number label-caps">
-								Outstanding
-							</th>
+							<th scope="col"> Client </th>
+							<th scope="col" class="ledger-number"> Your move </th>
+							<th scope="col" class="ledger-number"> Waiting on client </th>
+							<th scope="col" class="ledger-number"> Active projects </th>
+							<th scope="col"> Budget used </th>
+							<th scope="col" class="ledger-number"> Outstanding </th>
 						</tr>
 					</thead>
 					<tbody>

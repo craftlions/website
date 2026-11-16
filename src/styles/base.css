@@ -37,6 +37,15 @@
 		}
 	}
 
+	/* A column header is a caption label (label-caps). */
+	th[scope="col"] {
+		color: var(--fg-muted);
+		font-size: var(--step--2);
+		font-weight: 600;
+		line-height: calc(1 / 0.75);
+		text-transform: uppercase;
+	}
+
 	/* Like headings after the reset, table cells take their weight from a role,
 	   not from the browser's bold th. */
 	th {
