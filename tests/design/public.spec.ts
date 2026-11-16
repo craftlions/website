@@ -187,3 +187,34 @@ test("the changelog rail runs unbroken from the first dot to the last", async ({
 		}
 	}
 });
+
+// /brand lays out with the primitives alone: at the reflow width and on a wide
+// screen, nothing in a section reaches past the section's edges.
+test("each /brand section keeps its content inside at 320px and 1600px", async ({
+	page,
+}) => {
+	expect((await page.goto("/brand/"))?.status()).toBe(200);
+	for (const width of [320, 1600]) {
+		await page.setViewportSize({ width, height: 900 });
+		const sections = await page.locator("main > section").evaluateAll((found) =>
+			found.map((section) => {
+				const { left, right } = section.getBoundingClientRect();
+				return {
+					id: section.id,
+					outside: [...section.querySelectorAll("*")]
+						.filter((element) => element.checkVisibility())
+						.map((element) => element.getBoundingClientRect())
+						.filter(
+							(box) =>
+								box.width > 0 &&
+								(box.left < left - 0.5 || box.right > right + 0.5),
+						).length,
+				};
+			}),
+		);
+		expect(sections.length).toBeGreaterThan(5);
+		for (const { id, outside } of sections) {
+			expect(outside, `#${id} at ${width}px`).toBe(0);
+		}
+	}
+});
