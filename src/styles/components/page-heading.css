@@ -1,3 +1,9 @@
 @layer components {
-	/* src/components/PageHeading.astro; filled by conversion package S5a. */
+	/* src/components/PageHeading.astro: the page title behind a dashed rule at
+	   its start. */
+	.page-heading {
+		padding-inline-start: var(--space-xs);
+		border: 0 dashed var(--line-strong);
+		border-inline-start-width: var(--hairline);
+	}
 }

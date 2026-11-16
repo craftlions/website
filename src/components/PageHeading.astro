@@ -8,10 +8,7 @@ const { class: className, ...attrs } = Astro.props;
 
 {/* biome-ignore lint/a11y/useHeadingContent: the slot supplies the heading text */}
 <h1
-	class:list={[
-		"border-l border-dashed border-line-strong pl-3 text-display wrap-break-word",
-		className,
-	]}
+	class:list={["page-heading text-display wrap-break-word", className]}
 	{...attrs}
 >
 	<slot />
