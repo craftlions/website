@@ -112,12 +112,12 @@ const invoicesWhere = (statuses: string[]) =>
 const hasOverdue = rows.some((row) => row.overdueCount > 0);
 ---
 
-<phase-overview class="grid gap-3">
+<phase-overview>
 	{rows.length > 0 ? (
 		<>
-			<div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-				<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
-					<div class="grid gap-1">
+			<div class="phase-head">
+				<dl class="phase-metrics text-sm">
+					<div>
 						<dt class="label-caps">Est. Cost</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(
@@ -128,13 +128,13 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							)}
 						</dd>
 					</div>
-					<div class="grid gap-1">
+					<div>
 						<dt class="label-caps">Paid</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(invoicesWhere(["paid"]), phases[0]?.currency)}
 						</dd>
 					</div>
-					<div class="grid gap-1">
+					<div>
 						<dt class="label-caps">Outstanding</dt>
 						<dd class="tabular-nums">
 							{sumByCurrency(
@@ -143,17 +143,14 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							)}
 						</dd>
 					</div>
-					<div class="grid gap-1">
+					<div>
 						<dt class="label-caps">Overdue</dt>
 						<dd class:list={["tabular-nums", hasOverdue && "text-fg-danger"]}>
 							{sumByCurrency(invoicesWhere(["overdue"]), phases[0]?.currency)}
 						</dd>
 					</div>
 				</dl>
-				<nav
-					aria-label="Phase view"
-					class="grid grid-flow-col justify-start gap-2"
-				>
+				<nav aria-label="Phase view" class="phase-views">
 					<Button type="button" data-phase-view="compact" aria-pressed="true">
 						Compact
 					</Button>
@@ -163,31 +160,18 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 				</nav>
 			</div>
 
-			<div class="grid border border-dashed border-line md:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] md:gap-x-6">
-				<div
-					aria-hidden="true"
-					class="hidden border-b border-dashed border-line px-4 py-3 label-caps md:col-span-5 md:grid md:grid-cols-subgrid"
-				>
+			<div class="phase-table">
+				<div aria-hidden="true" class="phase-table-head label-caps">
 					<span>Phase</span>
 					<span>State</span>
-					<span class="text-right">Billing</span>
-					<span class="col-span-2">Actions</span>
+					<span>Billing</span>
+					<span>Actions</span>
 				</div>
-				<ul class="grid md:col-span-5 md:grid-cols-subgrid">
+				<ul class="phase-list">
 					{rows.map((phase) => (
-						<li
-							id={`phase-${phase.publicId}`}
-							class="grid scroll-mt-20 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 md:col-span-5 md:grid-cols-subgrid md:items-center"
-							data-phase
-						>
-							<div class="grid gap-1">
-								<h3
-									class:list={[
-										phase.state === "cancelled" && "text-fg-muted line-through",
-									]}
-								>
-									{phase.title}
-								</h3>
+						<li id={`phase-${phase.publicId}`} data-phase>
+							<div class="phase-name">
+								<h3 data-state={phase.state}>{phase.title}</h3>
 								<p class="text-sm text-fg-muted">
 									{phase.dueAt
 										? `Due ${formatDate(phase.dueAt)}`
@@ -197,31 +181,24 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							<Badge type={phaseStateToBadgeType(phase.state)}>
 								{clientPhaseLabel[phase.state]}
 							</Badge>
-							<div class="grid w-full gap-1.5 md:w-44 md:justify-items-end">
-								<p class="text-sm tabular-nums md:text-right">
+							<div class="phase-billing">
+								<p class="text-sm tabular-nums">
 									{formatMoney(phase.cost, phase.currency)}
 								</p>
 								{phase.parts.length > 0 && (
-									<ol
-										aria-label="Payment progress"
-										class="grid w-full max-w-44 auto-cols-fr grid-flow-col gap-1"
-									>
+									<ol aria-label="Payment progress" class="phase-payments">
 										{phase.parts.map((part) => (
 											<li
 												title={`${part.component}: ${part.invoice?.status ?? part.status.replaceAll("_", " ")}`}
-												class:list={[
-													"h-1.5 border",
-													// Shape carries the state without color: paid is a
-													// solid block, overdue a solid outline, invoiced a
-													// dashed one and not yet invoiced a dotted one.
+												data-state={
 													part.invoice?.status === "overdue"
-														? "border-solid border-fill-danger"
+														? "overdue"
 														: part.status === "paid"
-															? "border-solid border-fill-success bg-fill-success forced-ink"
+															? "paid"
 															: part.invoice
-																? "border-dashed border-fill-info"
-																: "border-dotted border-line-control",
-												]}
+																? "invoiced"
+																: "uninvoiced"
+												}
 											>
 												<span class="sr-only">
 													{part.component}{" "}
@@ -234,7 +211,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 								)}
 								<p
 									class:list={[
-										"text-xs md:text-right",
+										"text-xs",
 										phase.overdueCount > 0 ? "text-fg-danger" : "text-fg-muted",
 									]}
 								>
@@ -251,7 +228,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 														: "Not invoiced yet"}
 								</p>
 							</div>
-							<div class="grid grid-flow-col items-center justify-start gap-3 max-md:empty:hidden">
+							<div class="phase-actions">
 								<ClientPhaseActions
 									{phase}
 									id="phase"
@@ -261,7 +238,6 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 							</div>
 							<Button
 								type="button"
-								class="group"
 								aria-expanded="false"
 								aria-controls={`phase-${phase.publicId}-details`}
 								data-phase-toggle
@@ -270,7 +246,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 								<svg
 									aria-hidden="true"
 									viewBox="0 0 12 12"
-									class="size-3 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
+									class="phase-chevron"
 								>
 									<path
 										d="M2.5 4.5 6 8l3.5-3.5"
@@ -283,11 +259,11 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 
 							<div
 								id={`phase-${phase.publicId}-details`}
-								class="grid gap-4 border-t border-dashed border-line pt-4 md:col-span-5"
+								class="phase-details"
 								hidden
 							>
-								<dl class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-flow-col sm:grid-cols-none sm:justify-start">
-									<div class="grid gap-1">
+								<dl class="phase-metrics text-sm">
+									<div>
 										<dt class="label-caps">Epic</dt>
 										<dd>
 											{phase.externalUrl ? (
@@ -305,7 +281,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 											)}
 										</dd>
 									</div>
-									<div class="grid gap-1">
+									<div>
 										<dt class="label-caps">Delivery</dt>
 										<dd>
 											{phase.deliveryState === "url" && phase.deliveryUrl ? (
@@ -328,7 +304,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 								</dl>
 
 								<section
-									class="grid gap-2"
+									class="phase-schedule"
 									aria-labelledby={`phase-${phase.publicId}-schedule`}
 								>
 									<h4
@@ -338,11 +314,11 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 										Payment Schedule
 									</h4>
 									{phase.parts.length > 0 ? (
-										<ol class="grid border border-dashed border-line sm:grid-cols-[9rem_10rem_minmax(0,1fr)_auto] sm:gap-x-6">
+										<ol class="phase-parts">
 											{phase.parts.map((part) => (
-												<li class="grid gap-y-2 border-b border-dashed border-line p-3 text-sm last:border-b-0 sm:col-span-4 sm:grid-cols-subgrid sm:items-center">
-													<div class="grid gap-0.5">
-														<p class="capitalize">{part.component}</p>
+												<li class="text-sm">
+													<div class="phase-part">
+														<p>{part.component}</p>
 														<p class="text-xs text-fg-muted">
 															{billedOn[part.component]}
 														</p>
@@ -359,7 +335,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 																: "—"}
 														</span>
 													</p>
-													<div class="grid grid-flow-col items-center justify-start gap-2">
+													<div class="phase-part-status">
 														{part.invoice?.status === "overdue" ? (
 															<Badge type="error">Overdue</Badge>
 														) : part.invoice?.status === "open" ? (
@@ -396,7 +372,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 														</span>
 													</div>
 													{part.invoice ? (
-														<div class="grid grid-flow-col items-center justify-start gap-3 sm:justify-end">
+														<div class="phase-part-invoice">
 															<span class="text-xs tabular-nums text-fg-muted">
 																Invoice {part.invoice.number} ·{" "}
 																{formatMoney(
@@ -417,7 +393,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 															</Button>
 														</div>
 													) : (
-														<span class="text-xs text-fg-muted sm:text-right">
+														<span class="phase-part-note text-xs text-fg-muted">
 															{part.status === "invoiced"
 																? "Invoice unavailable"
 																: "No invoice yet"}
@@ -440,9 +416,7 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 			</div>
 		</>
 	) : (
-		<p class="border border-dashed border-line bg-transparent p-4 text-sm text-fg-muted">
-			No phases have been added yet.
-		</p>
+		<p class="box text-sm text-fg-muted">No phases have been added yet.</p>
 	)}
 </phase-overview>
 
@@ -456,14 +430,6 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 	// stable `phase-<publicId>` fragment. The targeted phase opens its details
 	// and is marked with a background tint plus a non-color outline cue,
 	// without motion. Runs on landing and on every fragment change.
-	const highlightClasses = [
-		"outline-2",
-		"-outline-offset-2",
-		"outline-dashed",
-		"outline-fill-info/70",
-		"bg-info-subtle",
-	];
-
 	class PhaseOverview extends HTMLElement {
 		currentTarget: HTMLElement | null = null;
 
@@ -537,14 +503,14 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 		}
 
 		applyTarget() {
-			this.currentTarget?.classList.remove(...highlightClasses);
+			this.currentTarget?.removeAttribute("data-highlight");
 			this.currentTarget = null;
 
 			const target = document.getElementById(location.hash.slice(1));
 			if (!(target instanceof HTMLElement) || !this.contains(target)) return;
 			if (!target.matches("[data-phase]")) return;
 
-			target.classList.add(...highlightClasses);
+			target.setAttribute("data-highlight", "");
 			this.currentTarget = target;
 			this.openTarget(target);
 		}
