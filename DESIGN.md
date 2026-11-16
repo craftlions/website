@@ -383,12 +383,12 @@ A form action's outcome shows once, at the top of the page, below the page headi
 
 ### One-time Secrets
 
-A secret the server returns once, such as a new API key, shows once, in the page, and nowhere else.
+A secret the server returns once shows once, in the page, and nowhere else. No page shows one today; the first, such as API keys once the API is built, follows this pattern.
 
 - **Display:** a heading, a muted sentence that it will not be shown again, then the full value as small body text in a dashed `line-control` box with `wrap-anywhere` and `select-all`, so one click selects all of it. No monospace and no truncation.
 - **Copy:** a default Button "Copy" writes it with `navigator.clipboard`; where that fails it selects the value and says which shortcut copies it. The outcome goes to a `role="status"` line beside the button.
 - **Focus:** creating moves focus to the result section (`tabindex="-1"`, named by its heading and described by the not-shown-again sentence); a failure goes to the always-rendered `role="alert"` line and focus returns to the trigger.
-- **Lifetime:** the value is set as text only, never in an attribute, the console, storage or the URL, and is cleared on `pagehide` so the back-forward cache cannot restore it. Reloading shows nothing. `src/pages/settings/api.astro` is the reference.
+- **Lifetime:** the value is set as text only, never in an attribute, the console, storage or the URL, and is cleared on `pagehide` so the back-forward cache cannot restore it. Reloading shows nothing.
 
 ### Navigation
 

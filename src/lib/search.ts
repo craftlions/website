@@ -230,7 +230,6 @@ const adminPages = (page: Page) => {
 	page("Admin", "All clients", "/admin", true);
 	page("Dashboard", "Your organizations", "/dash", true);
 	page("Profile", "Account", "/settings/profile", true);
-	page("API keys", "Account", "/settings/api", true);
 };
 
 const memberPages = (
@@ -247,7 +246,6 @@ const memberPages = (
 		page("Organizations", "Your organizations", "/dash");
 	}
 	page("Profile", "Account", "/settings/profile", true);
-	page("API keys", "Account", "/settings/api", true);
 };
 
 // What the palette shows before anything is typed: only the home pages, so

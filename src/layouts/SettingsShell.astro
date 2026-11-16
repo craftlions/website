@@ -4,13 +4,12 @@ import PageHeading from "../components/PageHeading.astro";
 import ClientShell from "./ClientShell.astro";
 
 interface Props {
-	activePage: "profile" | "api";
+	activePage: "profile";
 }
 
 const { activePage } = Astro.props;
 const pages = [
 	{ id: "profile", label: "Profile", href: "/settings/profile" },
-	{ id: "api", label: "API Keys", href: "/settings/api" },
 ] as const;
 const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 ---
