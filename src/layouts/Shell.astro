@@ -39,7 +39,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<meta property="og:site_name" content="craftlions">
 		<meta name="twitter:card" content="summary">
 		<link rel="sitemap" href="/sitemap-index.xml">
-		<link rel="icon" type="image/x-icon" href="/favicon.ico">
+		{/* The SVG mark follows the browser's scheme, ink on light and the
+		   gradient on dark; browsers without SVG icons (Safari before 26) keep
+		   the 32px raster, so it names its size and Chrome prefers the SVG. */}
+		<link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="32x32">
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 	</head>
 	{bodyClass ? (
 		<body class={bodyClass}>
