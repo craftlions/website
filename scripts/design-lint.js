@@ -224,7 +224,6 @@ const vocabulary = [
 	"switcher",
 	"cover",
 	"auto-grid",
-	"rows",
 ];
 const primitives = new Map(
 	sheet(layoutDoc)
@@ -296,7 +295,6 @@ const baselineGate = new RegExp(
 		"@property",
 		"@function",
 		"@view-transition",
-		"@container (?:style|scroll-state)\\(",
 		"(?<![\\w-])(?:if|anchor|anchor-size|round|mod|calc-size|contrast-color|sibling-index|sibling-count)\\(",
 		"attr\\([^)]*type\\(",
 		"\\(\\s*from\\s",
@@ -309,7 +307,7 @@ const baselineGate = new RegExp(
 		"ui-sans-serif",
 	].join("|"),
 );
-const wholeRuleGate = /^@(?:scope|function|container style\()/;
+const wholeRuleGate = /^@(?:scope|function)/;
 
 const layerOrder = (text = "") =>
 	text.match(/^@layer ([\w\s,-]+)$/)?.[1].split(/\s*,\s*/) ?? [];
@@ -370,17 +368,11 @@ for (const {
 				`${where} → a token with light-dark() in src/styles/tokens.css, which follows the scheme by itself  (DESIGN.md#role-tokens)`,
 			);
 		}
-		// A container query changes structure only: a rows list turning into a
-		// table at one of its three thresholds, declared in layout.css, plus
-		// companion rules for the table form of a rows list in a component
-		// stylesheet. Anything that only resizes or reflows is intrinsic.
-		if (
-			text.startsWith("@container") &&
-			(!/^@container \(inline-size >= (?:36|44|60)rem\)$/.test(text) ||
-				!(file === layoutDoc || file.startsWith("src/styles/components/")))
-		) {
+		// No container queries: a primitive or the lines pattern switches by
+		// its own width without one.
+		if (text.startsWith("@container")) {
 			violations.push(
-				`${where} → container queries are for structure only: a rows list (data-at="36", "44" or "60") and, in a component stylesheet, its table form at that threshold; for anything that resizes or reflows use with-sidebar, switcher, cluster, auto-grid, clamp() or wrapping  (${layoutDoc})`,
+				`${where} → no container queries; use a primitive  (${layoutDoc})`,
 			);
 		}
 		// The window's width says nothing about the room a component has; @media
@@ -389,18 +381,6 @@ for (const {
 		if (/^@media\b.*width/.test(text)) {
 			violations.push(
 				`${where} → a primitive that switches by its own width (with-sidebar, switcher, auto-grid, cluster) or the lines pattern; no window-width media queries  (${layoutDoc})`,
-			);
-		}
-	}
-
-	for (const { prelude, line, declarations: own } of blocks) {
-		const values = new Map(own.map(({ property, value }) => [property, value]));
-		if (
-			values.has("container-type") &&
-			/max-content|fit-content/.test(values.get("inline-size"))
-		) {
-			violations.push(
-				`${file}:${line}  ${prelude} → container-type only on a box whose width comes from outside; on one sized by its content, containment collapses it  (${layoutDoc})`,
 			);
 		}
 	}
@@ -664,46 +644,13 @@ for (const [name, files] of definitions) {
 	}
 }
 
-// A component's @container rule is a companion of a rows list in table form:
-// each rule in it styles a class or element that markup with a rows list uses.
-// Only the rows primitive declares a container.
-const rowsMarkup = new Set(
-	globSync("src/**/*.astro")
-		.map((file) => readFileSync(file, "utf8"))
-		.filter((source) => /\sclass="(?:[^"]*\s)?rows(?:\s[^"]*)?"/.test(source))
-		.flatMap((source) => [
-			...[
-				...source.matchAll(/\sclass(?::list)?=(?:"([^"]*)"|\{([^}]*)\})/g),
-			].flatMap(({ 1: plain, 2: list }) =>
-				(plain ?? list.match(/"[^"]*"/g)?.join(" ") ?? "")
-					.replaceAll('"', "")
-					.split(/\s+/)
-					.map((name) => `.${name}`),
-			),
-			...[...source.matchAll(/<([a-z][\w]*-[\w-]*)/g)].map(([, tag]) => tag),
-		]),
-);
-for (const { file, blocks, declarations } of stylesheets) {
-	for (const block of blocks) {
-		if (
-			!file.startsWith("src/styles/components/") ||
-			block.prelude.startsWith("@") ||
-			block.parents.every(({ prelude }) => !prelude.startsWith("@container"))
-		) {
-			continue;
-		}
-		for (const name of definedBy(block)) {
-			if (!rowsMarkup.has(name)) {
-				violations.push(
-					`${file}:${block.line}  ${block.prelude} → inside @container only rules for a rows list's table form, on markup that renders the rows list; ${name} is not in one. Lay it out intrinsically with with-sidebar, switcher, cluster or auto-grid  (${layoutDoc})`,
-				);
-			}
-		}
-	}
+// No container: a container query has nothing to query, and containment
+// collapses a box sized by its content.
+for (const { file, declarations } of stylesheets) {
 	for (const { property, value, line } of declarations) {
-		if (/^container(?:-type|-name)?$/.test(property) && file !== layoutDoc) {
+		if (/^container(?:-type|-name)?$/.test(property)) {
 			violations.push(
-				`${file}:${line}  ${property}: ${value} → only the rows primitive declares a container; use .rows, or an intrinsic primitive  (${layoutDoc})`,
+				`${file}:${line}  ${property}: ${value} → no container queries; use a primitive  (${layoutDoc})`,
 			);
 		}
 	}
@@ -754,7 +701,7 @@ for (const file of globSync("src/**/*.astro")) {
 }
 
 // Each primitive's data-* steps, read from the selectors that tune it
-// (`&[data-space="xs"]`, `.rows[data-at="36"]`): a step must name a value one
+// (`&[data-space="xs"]`, `&[data-padding="xs"]`): a step must name a value one
 // of the element's own primitives declares, so data-space on a box, whose step
 // is data-padding, cannot silently do nothing.
 const steps = new Map();
@@ -841,7 +788,7 @@ const native = new Set(
 		),
 );
 const pageProperty =
-	/^(?:display|grid(?:-[\w-]+)?|(?:row-|column-)?gap|(?:place|align|justify)-[\w-]+|order|(?:min-|max-)?(?:inline|block)-size|(?:margin|padding)(?:-(?:block|inline)(?:-start|-end)?)?|container(?:-type|-name)?|flex(?:-[\w-]+)?|--[\w-]+)$/;
+	/^(?:display|grid(?:-[\w-]+)?|(?:row-|column-)?gap|(?:place|align|justify)-[\w-]+|order|(?:min-|max-)?(?:inline|block)-size|(?:margin|padding)(?:-(?:block|inline)(?:-start|-end)?)?|flex(?:-[\w-]+)?|--[\w-]+)$/;
 const pageWords = new RegExp(
 	`min\\(100%,\\s*\\d*\\.?\\d+rem\\)|${functions}|${numbers}|(?<![\\w.])\\d*\\.?\\d+(?:%|fr)|(?<![\\w-])(?:auto|auto-fit|auto-fill|min-content|max-content|fit-content|span|subgrid|none|grid|inline-grid|flex|inline-flex|contents|block|start|end|center|stretch|baseline|space-between|wrap|row|column|inline-size|normal)(?![\\w-])`,
 	"g",
