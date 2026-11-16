@@ -1,7 +1,8 @@
 @layer components {
 	/* One entry of the changelog timeline: a rail with a dot beside a dashed
-	   plane. The rail's line runs down to the next entry, from the first dot
-	   on, and the last entry has none. */
+	   plane. The rail's line runs unbroken from the first entry's dot to the last
+	   one's, each dot a --space-m below its entry's top. Two fixed tracks that
+	   never wrap: a grid, not a with-sidebar. */
 	.changelog-entry {
 		display: grid;
 		grid-template-columns: 1rem minmax(0, 1fr);
@@ -21,7 +22,11 @@
 			border-inline-start-width: var(--hairline);
 
 			&[data-first] {
-				inset-block-start: 1.75rem; /* constant: from the first dot down */
+				inset-block-start: var(--space-m);
+			}
+			&[data-last] {
+				inset-block-end: auto;
+				block-size: var(--space-m);
 			}
 		}
 		& .rail-dot {
@@ -40,16 +45,6 @@
 			&:not([data-last]) {
 				margin-block-end: var(--space-m);
 			}
-		}
-		& .meta {
-			display: grid;
-			grid-template-columns: minmax(0, 1fr) auto;
-			align-items: center;
-			gap: var(--space-2xs);
-		}
-		/* The date links to its entry. */
-		& .date {
-			inline-size: max-content;
 		}
 		& .point {
 			display: grid;

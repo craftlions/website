@@ -149,3 +149,41 @@ for (const fontSize of [16, 32]) {
 		expect([...lines]).toContain(1);
 	});
 }
+
+// The changelog's rail line runs without a break from the first dot to the
+// last, at every width; the date keeps its own width at the start of its row and
+// the badge sits at the end.
+test("the changelog rail runs unbroken from the first dot to the last", async ({
+	page,
+}) => {
+	expect((await page.goto("/changelog/"))?.status()).toBe(200);
+	for (const width of [320, 768, 1280, 1600]) {
+		await page.setViewportSize({ width, height: 900 });
+		const dots = await boxes(page, ".rail-dot");
+		const segments = await boxes(page, ".rail-line");
+		const first = dots.at(0);
+		const last = dots.at(-1);
+		if (!first || !last) throw new Error("no rail dots");
+		expect(segments.at(0)?.top, `${width}px`).toBeCloseTo(first.top, 0);
+		expect(segments.at(-1)?.bottom, `${width}px`).toBeCloseTo(last.top, 0);
+		for (const [index, segment] of segments.slice(1).entries()) {
+			expect(segment.top, `${width}px`).toBeCloseTo(
+				segments[index]?.bottom ?? Number.NaN,
+				0,
+			);
+		}
+		for (const entry of await page.locator("article header > div").all()) {
+			const [date, badge] = await entry.evaluate((row) =>
+				[...row.children].map((child) =>
+					child.getBoundingClientRect().toJSON(),
+				),
+			);
+			const { left, right } = await entry.evaluate((row) =>
+				row.getBoundingClientRect().toJSON(),
+			);
+			expect(date?.left).toBeCloseTo(left, 0);
+			expect(badge?.right).toBeCloseTo(right, 0);
+			expect(date?.right).toBeLessThan(badge?.left ?? 0);
+		}
+	}
+});

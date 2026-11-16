@@ -37,13 +37,19 @@ const slug = `${datetime}-${title
 
 <li class="changelog-entry">
 	<div class="rail" aria-hidden="true">
-		{!last && <span class="rail-line" data-first={first || undefined}></span>}
+		{!(first && last) && (
+			<span
+				class="rail-line"
+				data-first={first || undefined}
+				data-last={last || undefined}
+			></span>
+		)}
 		<span class="rail-dot"></span>
 	</div>
 	<article id={slug} class="stack box" data-last={last || undefined}>
 		<header class="stack" data-space="2xs">
-			<div class="meta">
-				<a href={`#${slug}`} class="date link text-fg-muted hover-text-fg">
+			<div class="cluster" data-justify="between">
+				<a href={`#${slug}`} class="link text-fg-muted hover-text-fg">
 					<time datetime={datetime} class="text-label">
 						{date}
 					</time>
