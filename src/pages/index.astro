@@ -71,13 +71,13 @@ import { description, email, legalName } from "../lib/company.ts";
 				<section class="stack" data-space="m">
 					<div class="stack">
 						<PageHeading> Modern IT services drawn with care </PageHeading>
-						<p class="lede text-fg-muted">
+						<p class="lede measure text-fg-muted">
 							craftlions helps teams plan, build, and maintain software with a
 							practical engineering mindset. The work is modern, but the process
 							stays legible: clear lines, useful decisions, and outcomes that
 							can be explained without decoration.
 						</p>
-						<p class="lede text-fg-muted">
+						<p class="lede measure text-fg-muted">
 							From product development and technical strategy to workshops and
 							hands-on delivery, craftlions brings focused external expertise
 							into your existing process. The standard is simple:{" "}
@@ -87,12 +87,15 @@ import { description, email, legalName } from "../lib/company.ts";
 							</strong>
 						</p>
 					</div>
-					<div class="lede-action">
-						<Button href={`mailto:${email}`}> Start a project </Button>
-					</div>
+					<Button href={`mailto:${email}`} class="lede-action">
+						Start a project
+					</Button>
 				</section>
-				<section class="stack" data-space="m">
-					<h2 class="text-headline">
+				<section
+					class="auto-grid"
+					style="--grid-min: 18rem; --grid-space: var(--space-m)"
+				>
+					<h2 class="text-headline" data-span="full">
 						Services for steady technical progress
 					</h2>
 					<article class="stack service" data-space="xs">
@@ -129,18 +132,18 @@ import { description, email, legalName } from "../lib/company.ts";
 							or practical skills that make better decisions easier.
 						</p>
 					</article>
-					<section>
-						<Button href={`mailto:${email}`}> Discuss the work </Button>
-					</section>
+					<Button href={`mailto:${email}`} data-span="full">
+						Discuss the work
+					</Button>
 				</section>
 				<section class="stack section-rule" data-space="m">
 					<h2 class="text-headline">Why choose craftlions?</h2>
-					<p class="text-fg-muted">
+					<p class="measure text-fg-muted">
 						Quality is not a finish-line activity. It starts with choosing the
 						right scope, naming tradeoffs clearly, and balancing
 						maintainability, performance, and business value from the beginning.
 					</p>
-					<ul class="stack reasons text-fg-muted" data-space="2xs">
+					<ul class="stack reasons measure text-fg-muted" data-space="2xs">
 						<li>Experience with modern technology across multiple sectors.</li>
 						<li>Reliable delivery with practical technical depth.</li>
 						<li
@@ -155,26 +158,24 @@ import { description, email, legalName } from "../lib/company.ts";
 				</section>
 				<section class="stack section-rule" data-space="m">
 					<h2 class="text-headline"> Let's build something better together </h2>
-					<p class="text-fg-muted">
+					<p class="measure text-fg-muted">
 						craftlions helps businesses build smarter with modern IT services,
 						technical advisory, and hands-on product development support.
 						Whether you need a reliable technology partner, software
 						architecture expertise, or strategic technical guidance, we create
 						practical, scalable solutions built for long-term success.
 					</p>
-					<p class="text-fg-muted">
+					<p class="measure text-fg-muted">
 						The work goes beyond writing code. It strengthens the technical
 						foundation, reduces unnecessary complexity, and keeps architecture
 						aligned with the business it supports.
 					</p>
-					<p class="text-fg-muted">
+					<p class="measure text-fg-muted">
 						If you are looking for a technical partner that brings external
 						expertise, strategic clarity, creative problem-solving, and a
 						commitment to careful delivery, craftlions is ready to help.
 					</p>
-					<section>
-						<Button href={`mailto:${email}`}> Get in touch </Button>
-					</section>
+					<Button href={`mailto:${email}`}> Get in touch </Button>
 				</section>
 			</main>
 			<Footer />

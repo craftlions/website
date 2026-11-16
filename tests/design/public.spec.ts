@@ -54,3 +54,52 @@ test("the body is a cover: a short page keeps its footer at the bottom edge and 
 		expect(heading.top).toBeCloseTo(main.top, 0);
 	}
 });
+
+// One column when narrow, two by two when wide, never three or four in a row:
+// three 18rem columns need more than the 48rem page column, at any root size.
+for (const fontSize of [16, 32]) {
+	test(`the four services form one column or a 2 x 2 grid from 320px to 1920px at a ${fontSize}px default font size`, async ({
+		page,
+	}) => {
+		await (await page.context().newCDPSession(page)).send("Page.setFontSizes", {
+			fontSizes: { standard: fontSize },
+		});
+		expect((await page.goto("/"))?.status()).toBe(200);
+		const columns = new Set<number>();
+		for (let width = 320; width <= 1920; width += 16) {
+			await page.setViewportSize({ width, height: 900 });
+			const services = await boxes(page, "main article");
+			expect(services).toHaveLength(4);
+			const lefts = new Set(services.map(({ left }) => Math.round(left)));
+			const tops = new Set(services.map(({ top }) => Math.round(top)));
+			columns.add(lefts.size);
+			expect
+				.soft([lefts.size, tops.size], `${width}px`)
+				.toEqual(lefts.size === 1 ? [1, 4] : [2, 2]);
+		}
+		expect([...columns].sort()).toEqual([1, 2]);
+	});
+}
+
+test("the landing prose keeps to the measure", async ({ page }) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	expect((await page.goto("/"))?.status()).toBe(200);
+	// The measure in px, resolved from the body text's ch.
+	const measure = Number.parseFloat(
+		await page
+			.locator("main > section > p")
+			.first()
+			.evaluate((element) => getComputedStyle(element).maxInlineSize),
+	);
+	for (const { width } of await boxes(
+		page,
+		"main > section > p, .lede, .reasons",
+	)) {
+		expect(width).toBeLessThanOrEqual(measure + 0.5);
+	}
+	expect(
+		Math.max(
+			...(await boxes(page, "main > section > p")).map(({ width }) => width),
+		),
+	).toBeCloseTo(measure, 0);
+});
