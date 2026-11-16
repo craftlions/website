@@ -210,7 +210,6 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 															: "uninvoiced";
 											return (
 												<li
-													title={`${part.component}: ${part.invoice?.status ?? part.status.replaceAll("_", " ")}`}
 													data-state={state}
 													class:list={[state === "paid" && "forced-ink"]}
 												>

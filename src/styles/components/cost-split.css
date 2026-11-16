@@ -1,6 +1,6 @@
 @layer components {
 	/* src/components/CostSplit.astro: a phase's cost parts, one line each with
-	   the amount at the end. */
+	   the amount at the end; a part too long for the row wraps. */
 	.cost-split {
 		display: grid;
 		min-inline-size: 0;

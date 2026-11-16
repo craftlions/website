@@ -59,13 +59,11 @@ const accessibleSummary =
 		<figcaption class="sr-only">{accessibleSummary}</figcaption>
 		<ul class="stack" data-space="3xs" aria-label="Cost split">
 			{items.map((item) => (
-				<li
-					class="text-xs"
-					title={`${dueHint[item.component]}${showStatus ? ` · ${item.status.replaceAll("_", " ")}` : ""}`}
-				>
-					<span class="cost-split-part truncate text-fg-muted">
+				<li class="text-xs">
+					<span class="cost-split-part text-fg-muted">
 						{item.component}
 						<span> · {dueHint[item.component]}</span>
+						{showStatus && <span> · {item.status.replaceAll("_", " ")}</span>}
 					</span>
 					<span
 						class:list={[
