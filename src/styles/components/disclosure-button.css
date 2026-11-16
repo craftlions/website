@@ -15,8 +15,8 @@
 			inline-size: 0.75rem;
 			block-size: 0.75rem;
 			transition-property: transform, translate, scale, rotate;
-			transition-duration: 150ms;
-			transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+			transition-duration: var(--duration);
+			transition-timing-function: var(--ease);
 
 			@media (prefers-reduced-motion: reduce) {
 				transition-property: none;

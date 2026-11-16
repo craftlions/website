@@ -81,6 +81,11 @@
 		--dialog: 28rem;
 		--dialog-wide: 40rem;
 
+		/* Motion: every transition takes the one short duration and curve
+		   (DESIGN.md#1-overview). */
+		--duration: 150ms;
+		--ease: cubic-bezier(0.4, 0, 0.2, 1);
+
 		/* The reader's own UI font (DESIGN.md#3-typography). */
 		--font-sans: system-ui, sans-serif;
 	}

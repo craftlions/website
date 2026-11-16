@@ -486,6 +486,24 @@ for (const {
 				"src/styles/global.css",
 			);
 		}
+		// The phase amount calculator adopts the motion tokens in its own change.
+		if (
+			!tokensFile &&
+			file !== "src/styles/components/phase-amount-calculator.css" &&
+			((/^(?:transition|animation)-duration$/.test(property) &&
+				value !== "var(--duration)") ||
+				(/^(?:transition|animation)-timing-function$/.test(property) &&
+					value !== "var(--ease)") ||
+				(/^(?:transition|animation)$/.test(property) &&
+					/(?<![\w.-])\d*\.?\d+m?s(?![\w-])|(?<![\w-])(?:cubic-bezier|steps|linear)\(|(?<![\w-])(?:ease(?:-in|-out|-in-out)?|linear|step-start|step-end)(?![\w-])/.test(
+						value,
+					)))
+		) {
+			fail(
+				"var(--duration) and var(--ease), the motion tokens in src/styles/tokens.css",
+				"DESIGN.md#1-overview",
+			);
+		}
 		if (/^border(?:-[\w-]+)?-radius$/.test(property) && value !== "0") {
 			fail("square corners: leave the radius out", "DESIGN.md#5-components");
 		}

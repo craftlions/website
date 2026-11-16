@@ -59,8 +59,8 @@
 
 	.spend-segment {
 		transition-property: filter, opacity;
-		transition-duration: 150ms;
-		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+		transition-duration: var(--duration);
+		transition-timing-function: var(--ease);
 
 		&[data-state="active"] {
 			filter: brightness(125%);
@@ -111,8 +111,8 @@
 		transition-property:
 			color, background-color, border-color, outline-color,
 			text-decoration-color, fill, stroke;
-		transition-duration: 150ms;
-		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+		transition-duration: var(--duration);
+		transition-timing-function: var(--ease);
 
 		&[data-state="active"] {
 			background-color: var(--panel);

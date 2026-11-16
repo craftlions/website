@@ -202,6 +202,8 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 
 **Widths:** static tokens in `src/styles/tokens.css`, beside the scales. `--measure` (65ch) is the longest line of prose; `--column` (48rem) is the public and settings column, `--column-wide` (72rem) the dashboard and admin column and `--column-narrow` (32rem) the auth forms; `--dialog` (28rem) is a confirmation and `--dialog-wide` (40rem) the command palette. Markup still sets them through `max-w-prose`, `max-w-3xl`, `max-w-6xl`, `max-w-lg` and the dialogs' `max-w-[min(…)]` until it moves to native CSS.
 
+**Motion:** `--duration` (150ms) and `--ease` (`cubic-bezier(0.4, 0, 0.2, 1)`) in `src/styles/tokens.css` time every transition: colors on hover and focus, and the disclosure chevron's turn. Nothing moves layout, and a turn stops under `prefers-reduced-motion: reduce`; `aubr design:lint` rejects any other duration or curve.
+
 ## 2. Colors
 
 The palette is a restrained paper-and-ink system: neutral structure first, link and status colors only where the user needs action or state. The frontmatter keys every color by its token name in `src/styles/tokens.css`, with the light value under the name and the dark value under `-dark`; the names below are what the colors are called in prose, with their tokens.
