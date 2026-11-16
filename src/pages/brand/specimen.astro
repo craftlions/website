@@ -99,12 +99,8 @@ const frames = [
 					the controls to see their states.
 				</p>
 			</header>
-			<main class="center stack sections" data-width="wide">
-				<section
-					aria-labelledby="scale"
-					class="box stack panel full-row"
-					data-space="l"
-				>
+			<main class="center stack" data-width="wide">
+				<section aria-labelledby="scale" class="box stack panel" data-space="l">
 					<header class="stack" data-space="2xs">
 						<h2 id="scale" class="text-headline">Scale</h2>
 						<p class="text-sm text-fg-muted">
@@ -155,250 +151,261 @@ const frames = [
 						</ul>
 					</section>
 				</section>
-				{schemes.map(({ scheme, style, swatches }) => (
-					<section
-						aria-labelledby={`scheme-${scheme}`}
-						class="box stack panel bg-canvas text-fg"
-						data-space="l"
-						style={style}
-					>
-						<h2 id={`scheme-${scheme}`} class="scheme-name text-headline">
-							{scheme}
-						</h2>
+				<div class="switcher">
+					{schemes.map(({ scheme, style, swatches }) => (
+						<section
+							aria-labelledby={`scheme-${scheme}`}
+							class="box stack panel bg-canvas text-fg"
+							data-space="l"
+							style={style}
+						>
+							<h2 id={`scheme-${scheme}`} class="scheme-name text-headline">
+								{scheme}
+							</h2>
 
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Tokens</h3>
-							<ul class="tokens stack text-sm" data-space="2xs">
-								{swatches.map(({ name, value, minimum, checks }) => (
-									<li class="token-row">
-										<span class="swatch" style={`background-color: ${value}`} />
-										<code class="truncate">--{name}</code>
-										<span class="token-ratios text-xs tabular-nums">
-											{checks.map(({ surface, ratio }) => (
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Tokens</h3>
+								<ul class="stack text-sm" data-space="2xs">
+									{swatches.map(({ name, value, minimum, checks }) => (
+										<li
+											class="with-sidebar"
+											data-side="end"
+											data-align="center"
+											style="--content-min: 11rem"
+										>
+											<span class="token-name">
 												<span
-													class:list={[
-														minimum && ratio < minimum
-															? "text-caption text-fg-danger"
-															: "text-fg-muted",
-													]}
-												>
-													{surface} {ratio.toFixed(2)}
-												</span>
-											))}
-										</span>
-									</li>
+													class="swatch"
+													style={`background-color: ${value}`}
+												/>
+												<code class="truncate">--{name}</code>
+											</span>
+											<span
+												class="cluster text-xs tabular-nums"
+												data-space="xs"
+											>
+												{checks.map(({ surface, ratio }) => (
+													<span
+														class:list={[
+															minimum && ratio < minimum
+																? "text-caption text-fg-danger"
+																: "text-fg-muted",
+														]}
+													>
+														{surface} {ratio.toFixed(2)}
+													</span>
+												))}
+											</span>
+										</li>
+									))}
+								</ul>
+							</section>
+
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Type</h3>
+								{typeRoles.map(([role, label]) => (
+									<p class={role}>{label}</p>
 								))}
-							</ul>
-						</section>
+								<p class="text-fg-muted">Body, muted</p>
+								<p class="text-fg-danger">Danger</p>
+								<p class="text-fg-success">Success</p>
+								<p class="text-fg-info">Info</p>
+								<p class="text-fg-warning">Warning</p>
+							</section>
 
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Type</h3>
-							{typeRoles.map(([role, label]) => (
-								<p class={role}>{label}</p>
-							))}
-							<p class="text-fg-muted">Body, muted</p>
-							<p class="text-fg-danger">Danger</p>
-							<p class="text-fg-success">Success</p>
-							<p class="text-fg-info">Info</p>
-							<p class="text-fg-warning">Warning</p>
-						</section>
-
-						<section class="button-demos">
-							<h3 class="text-title">Buttons</h3>
-							<div class="buttons">
-								<Button>Default</Button>
-								<Button aria-pressed="true">Pressed</Button>
-								<Button href="/brand/specimen" aria-current="page">
-									Current
-								</Button>
-								<Button variant="danger">Danger</Button>
-								<Button disabled>Disabled</Button>
-								<Button href="/brand/specimen">Link</Button>
-							</div>
-							<div class="button-row">
-								<Button variant="quiet">Quiet</Button>
-								<Button variant="quiet" disabled>
-									Quiet disabled
-								</Button>
-								<Button variant="hint" aria-label="Hint">
-									i
-								</Button>
-							</div>
-						</section>
-
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Disclosure</h3>
-							<div class="with-sidebar" data-side="end" data-align="center">
-								<p class="label-caps">Members</p>
-								<DisclosureButton controls={`disclosure-${scheme}`}>
-									Add member
-								</DisclosureButton>
-							</div>
-							<form
-								id={`disclosure-${scheme}`}
-								method="dialog"
-								aria-label="Add member"
-								hidden
-								class="box stack panel"
-							>
-								<Field label="Email" type="email" />
-								<div class="pair">
-									<Button type="submit">Add member</Button>
-									<Button variant="quiet" data-disclosure-cancel>
-										Cancel
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Buttons</h3>
+								<div class="cluster">
+									<Button>Default</Button>
+									<Button aria-pressed="true">Pressed</Button>
+									<Button href="/brand/specimen" aria-current="page">
+										Current
+									</Button>
+									<Button variant="danger">Danger</Button>
+									<Button disabled>Disabled</Button>
+									<Button href="/brand/specimen">Link</Button>
+								</div>
+								<div class="button-row">
+									<Button variant="quiet">Quiet</Button>
+									<Button variant="quiet" disabled>
+										Quiet disabled
+									</Button>
+									<Button variant="hint" aria-label="Hint">
+										i
 									</Button>
 								</div>
-							</form>
-							<DisclosureButton
-								controls={`disclosure-row-${scheme}`}
-								variant="quiet"
-							>
-								More
-							</DisclosureButton>
-							<p
-								id={`disclosure-row-${scheme}`}
-								hidden
-								class="divided border-line text-sm text-fg-muted"
-							>
-								A row's corrections and quiet destructive actions.
-							</p>
-						</section>
+							</section>
 
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Breadcrumbs</h3>
-							<Breadcrumbs
-								label={`Breadcrumb, ${scheme}`}
-								items={[
-									{ label: "Admin", href: "/brand/specimen" },
-									{ label: "Acme", href: "/brand/specimen" },
-									{ label: "Projects", href: "/brand/specimen" },
-									{ label: "Website relaunch" },
-								]}
-							/>
-						</section>
-
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Inputs</h3>
-							<Field label="Text" placeholder="Placeholder" />
-							<Field
-								label="With hint"
-								hint="Shown to the client on every invoice."
-							/>
-							<Field
-								label="With error"
-								name="email"
-								type="email"
-								value="not-an-email"
-								error="Enter a valid email address."
-							/>
-							<Field label="Danger" danger value="Type to confirm" />
-							<Field label="Select" as="select">
-								<option>First option</option>
-								<option>Second option</option>
-							</Field>
-							<Field
-								label="Read-only"
-								readonly
-								value="cus_N1x2y3"
-								hint="Locked: shown, not edited."
-							/>
-							<Field label="Disabled" disabled value="Disabled" />
-							<Checkbox>Unchecked</Checkbox>
-							<Checkbox checked>Checked</Checkbox>
-						</section>
-
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Badges</h3>
-							<div class="badges stack" data-space="2xs">
-								<Badge type="info">Ready to start</Badge>
-								<Badge type="success">Accepted</Badge>
-								<Badge type="error">Overdue</Badge>
-								<Badge type="gray">Awaiting approval</Badge>
-							</div>
-						</section>
-
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Progress</h3>
-							<Progress percent={40} aria-label="Within budget" />
-							<Progress
-								percent={40}
-								pace={6}
-								aria-label="Within budget, with pace marker"
-							/>
-							<Progress percent={120} aria-label="Over budget" />
-						</section>
-
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Confirmation</h3>
-							<form method="dialog">
-								<ConfirmAction
-									id={`confirm-${scheme}`}
-									trigger="Remove"
-									triggerLabel="Remove Jane Doe"
-									title="Remove Jane Doe from Acme?"
-									confirm="Remove member"
-									cancel="Keep member"
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Disclosure</h3>
+								<div class="with-sidebar" data-side="end" data-align="center">
+									<p class="label-caps">Members</p>
+									<DisclosureButton controls={`disclosure-${scheme}`}>
+										Add member
+									</DisclosureButton>
+								</div>
+								<form
+									id={`disclosure-${scheme}`}
+									method="dialog"
+									aria-label="Add member"
+									hidden
+									class="box stack panel"
 								>
-									Jane loses access to the Acme dashboard. Her account stays.
-								</ConfirmAction>
-							</form>
-							<form method="dialog">
-								<ConfirmAction
-									id={`confirm-approve-${scheme}`}
-									trigger="Approve for client"
-									title="Approve Discovery for the client?"
-									confirm="Approve for client"
-									confirmVariant="default"
-									cancel="Go back"
+									<Field label="Email" type="email" />
+									<div class="pair">
+										<Button type="submit">Add member</Button>
+										<Button variant="quiet" data-disclosure-cancel>
+											Cancel
+										</Button>
+									</div>
+								</form>
+								<DisclosureButton
+									controls={`disclosure-row-${scheme}`}
+									variant="quiet"
 								>
-									You approve this phase on the client's behalf. Its upfront
-									payment becomes due.
-								</ConfirmAction>
-							</form>
-							<form method="dialog">
-								<ConfirmAction
-									id={`confirm-typed-${scheme}`}
-									trigger="Delete client"
-									triggerVariant="danger"
-									title="Delete Acme?"
-									confirm="Delete client"
-									cancel="Keep client"
-									typeToConfirm="Acme"
+									More
+								</DisclosureButton>
+								<p
+									id={`disclosure-row-${scheme}`}
+									hidden
+									class="divided border-line text-sm text-fg-muted"
 								>
-									The client and its settings are deleted for good.
-								</ConfirmAction>
-							</form>
-						</section>
+									A row's corrections and quiet destructive actions.
+								</p>
+							</section>
 
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Action feedback</h3>
-							{feedback.map((result) => (
-								<ActionBanner
-									results={[[result, "Phase sent to client."]]}
-									fieldLabels={{ email: "Email" }}
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Breadcrumbs</h3>
+								<Breadcrumbs
+									label={`Breadcrumb, ${scheme}`}
+									items={[
+										{ label: "Admin", href: "/brand/specimen" },
+										{ label: "Acme", href: "/brand/specimen" },
+										{ label: "Projects", href: "/brand/specimen" },
+										{ label: "Website relaunch" },
+									]}
 								/>
-							))}
-						</section>
+							</section>
 
-						<section class="stack" data-space="xs">
-							<h3 class="text-title">Surfaces</h3>
-							<p class="box text-sm">Dashed plane</p>
-							<p class="box bg-panel text-sm">Panel fill</p>
-							<p class="box bg-info-subtle text-sm">Info highlight</p>
-							<p class="box border-line-danger text-sm text-fg-danger">
-								Danger outline
-							</p>
-							<a href="/brand/specimen" class="fit text-sm text-fg-info link">
-								Text link
-							</a>
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Inputs</h3>
+								<Field label="Text" placeholder="Placeholder" />
+								<Field
+									label="With hint"
+									hint="Shown to the client on every invoice."
+								/>
+								<Field
+									label="With error"
+									name="email"
+									type="email"
+									value="not-an-email"
+									error="Enter a valid email address."
+								/>
+								<Field label="Danger" danger value="Type to confirm" />
+								<Field label="Select" as="select">
+									<option>First option</option>
+									<option>Second option</option>
+								</Field>
+								<Field
+									label="Read-only"
+									readonly
+									value="cus_N1x2y3"
+									hint="Locked: shown, not edited."
+								/>
+								<Field label="Disabled" disabled value="Disabled" />
+								<Checkbox>Unchecked</Checkbox>
+								<Checkbox checked>Checked</Checkbox>
+							</section>
+
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Badges</h3>
+								<div class="badges stack" data-space="2xs">
+									<Badge type="info">Ready to start</Badge>
+									<Badge type="success">Accepted</Badge>
+									<Badge type="error">Overdue</Badge>
+									<Badge type="gray">Awaiting approval</Badge>
+								</div>
+							</section>
+
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Progress</h3>
+								<Progress percent={40} aria-label="Within budget" />
+								<Progress
+									percent={40}
+									pace={6}
+									aria-label="Within budget, with pace marker"
+								/>
+								<Progress percent={120} aria-label="Over budget" />
+							</section>
+
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Confirmation</h3>
+								<form method="dialog">
+									<ConfirmAction
+										id={`confirm-${scheme}`}
+										trigger="Remove"
+										triggerLabel="Remove Jane Doe"
+										title="Remove Jane Doe from Acme?"
+										confirm="Remove member"
+										cancel="Keep member"
+									>
+										Jane loses access to the Acme dashboard. Her account stays.
+									</ConfirmAction>
+								</form>
+								<form method="dialog">
+									<ConfirmAction
+										id={`confirm-approve-${scheme}`}
+										trigger="Approve for client"
+										title="Approve Discovery for the client?"
+										confirm="Approve for client"
+										confirmVariant="default"
+										cancel="Go back"
+									>
+										You approve this phase on the client's behalf. Its upfront
+										payment becomes due.
+									</ConfirmAction>
+								</form>
+								<form method="dialog">
+									<ConfirmAction
+										id={`confirm-typed-${scheme}`}
+										trigger="Delete client"
+										triggerVariant="danger"
+										title="Delete Acme?"
+										confirm="Delete client"
+										cancel="Keep client"
+										typeToConfirm="Acme"
+									>
+										The client and its settings are deleted for good.
+									</ConfirmAction>
+								</form>
+							</section>
+
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Action feedback</h3>
+								{feedback.map((result) => (
+									<ActionBanner
+										results={[[result, "Phase sent to client."]]}
+										fieldLabels={{ email: "Email" }}
+									/>
+								))}
+							</section>
+
+							<section class="stack" data-space="xs">
+								<h3 class="text-title">Surfaces</h3>
+								<p class="box text-sm">Dashed plane</p>
+								<p class="box bg-panel text-sm">Panel fill</p>
+								<p class="box bg-info-subtle text-sm">Info highlight</p>
+								<p class="box border-line-danger text-sm text-fg-danger">
+									Danger outline
+								</p>
+								<a href="/brand/specimen" class="fit text-sm text-fg-info link">
+									Text link
+								</a>
+							</section>
 						</section>
-					</section>
-				))}
-				<section
-					aria-labelledby="layout"
-					class="box stack full-row"
-					data-space="l"
-				>
+					))}
+				</div>
+				<section aria-labelledby="layout" class="box stack" data-space="l">
 					<header class="stack" data-space="2xs">
 						<h2 id="layout" class="text-headline">Layout</h2>
 						<p class="text-sm text-fg-muted">
@@ -808,29 +815,16 @@ const frames = [
 
 <style>
 	@layer page {
-		/* The page is the container its sections and button rows switch on:
-		   its content box, the window less the fluid gutter on both sides. */
 		.specimen {
 			display: grid;
 			gap: var(--space-m-l);
 			padding: var(--space-s-m);
-			container-type: inline-size;
 		}
 		.intro {
 			padding-inline-start: var(--space-xs);
 		}
-		/* Two columns from a 768px window, whose content box is 45.49rem. */
-		@container (inline-size >= 45.49rem) {
-			.sections {
-				grid-template-columns: repeat(2, minmax(0, 1fr));
-			}
-		}
 		.panel {
 			grid-template-columns: minmax(0, 1fr);
-			min-inline-size: 0;
-		}
-		.full-row {
-			grid-column: 1 / -1;
 			min-inline-size: 0;
 		}
 		.scheme-name {
@@ -840,56 +834,18 @@ const frames = [
 			display: block;
 			block-size: 0.5rem;
 		}
-		.tokens {
-			container-type: inline-size;
-		}
 		.swatch {
 			inline-size: 1.5rem;
 			block-size: 1.5rem;
 			border: var(--rule) var(--line);
 		}
-		/* A token: its swatch (the auto column) and name, its contrast ratios
-		   below the name, or beside it once the list is 28rem wide. */
-		.token-row {
+		/* A token's swatch and name; its contrast ratios sit beside it, or
+		   below it once the name would get less than 11rem, the longest name. */
+		.token-name {
 			display: grid;
 			grid-template-columns: auto minmax(0, 1fr);
 			align-items: center;
 			column-gap: var(--space-2xs);
-		}
-		.token-ratios {
-			grid-column-start: 2;
-			display: grid;
-			grid-auto-flow: column;
-			justify-content: start;
-			gap: var(--space-xs);
-		}
-		@container (inline-size >= 28rem) {
-			.token-row {
-				grid-template-columns: auto minmax(0, 1fr) auto;
-			}
-			.token-ratios {
-				grid-column-start: auto;
-			}
-		}
-		/* Not a stack: the row of six buttons is wider than a scheme column in a
-		   768px or 1024px window, and a stack's min-inline-size: 0 on its children
-		   would narrow the track they overflow today. */
-		.button-demos {
-			display: grid;
-			gap: var(--space-xs);
-		}
-		.buttons {
-			display: grid;
-			grid-template-columns: repeat(3, max-content);
-			justify-content: start;
-			gap: var(--space-2xs);
-		}
-		/* One row from a 640px window, whose content box is 37.7rem. */
-		@container (inline-size >= 37.7rem) {
-			.buttons {
-				grid-auto-flow: column;
-				grid-template-columns: none;
-			}
 		}
 		.button-row {
 			display: grid;
