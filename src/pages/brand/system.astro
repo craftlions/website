@@ -93,15 +93,15 @@ const typeRoles = [
 
 						<section class="grid gap-3">
 							<h3 class="text-title">Tokens</h3>
-							<ul class="grid gap-2 text-sm">
+							<ul class="@container grid gap-2 text-sm">
 								{swatches.map(({ name, value, minimum, checks }) => (
-									<li class="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-2">
+									<li class="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-2 @md:grid-cols-[1.5rem_minmax(0,1fr)_auto]">
 										<span
 											class="size-6 border border-dashed border-line"
 											style={`background-color: ${value}`}
 										/>
 										<code class="truncate">--{name}</code>
-										<span class="grid grid-flow-col gap-3 text-xs tabular-nums">
+										<span class="col-start-2 grid grid-flow-col justify-start gap-3 text-xs tabular-nums @md:col-start-auto">
 											{checks.map(({ surface, ratio }) => (
 												<span
 													class:list={[
