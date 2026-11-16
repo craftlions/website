@@ -217,7 +217,7 @@ Everything a page is styled with, in `src/styles/`. Use these before writing CSS
 - `th scope="col"`: the caps label (`label-caps`).
 - `p`, `li`, `dd` avoid a short last line; `h1`–`h3` balance their lines; every `dialog` takes `--dialog`; `:focus-visible` draws the focus outline.
 
-**Layout primitives** (`layout.css`, after Every Layout). Each declares its custom properties with their defaults on itself; tune an instance with a `data-*` step or the property in `style`, on the element that carries the class.
+**Layout primitives** (`layout.css`, eight, after Every Layout). Each declares its custom properties with their defaults on itself; tune an instance with a `data-*` step or the property in `style`, on the element that carries the class.
 
 - `stack`: children one under another. `--stack-space` (`s`); `data-space` `3xs` `2xs` `xs` `m` `l` `xl`.
 - `box`: the dashed plane. `--box-space` (`s`); `data-padding="xs"`.
@@ -230,7 +230,7 @@ Everything a page is styled with, in `src/styles/`. Use these before writing CSS
 
 Which one: vertical rhythm, a stack; peers at their own widths, a cluster; one fixed or intrinsic part beside a growing one, a with-sidebar; equal peers all or nothing, a switcher; equal cells, an auto-grid; a page column, a center; a plane, a box. Set a primitive's properties on the primitive itself, never on a parent.
 
-**Lines** (`components/lines.css`): the pattern for lists of things to find and act on; see Lines. `--lines-actions` (16rem); `data-actions` `narrow` `wide` `below`.
+**Lines** (`components/lines.css`): the pattern for lists of things to find and act on; see Lines. `--lines-actions` (16rem); `data-actions` `narrow` `wide` `below` `none`.
 
 **Role utilities** (`utilities.css`): the type roles (`text-display`, `text-headline`, `text-title`, `text-label`, `text-caption`, `label-caps`, `text-sm`, `text-xs`, `leading-none`), the colour roles in Role Tokens, `hover-text-fg`, `forced-ink` and `forced-line`, and the helpers `measure`, `tabular-nums`, `capitalize`, `wrap-break-word`, `wrap-anywhere`, `truncate`, `sr-only`.
 
