@@ -1,5 +1,6 @@
 ---
 import LogoWithTextVertical from "../assets/logoWithTextVertical.svg";
+import { email, summary, tagline } from "../lib/company.ts";
 
 interface Props {
 	wide?: boolean;
@@ -16,20 +17,12 @@ const { wide = false } = Astro.props;
 		<LogoWithTextVertical class="text-fg" />
 	</a>
 	<div class="stack" data-space="2xs">
-		<p>
-			Small, focused technical work for teams that value clarity,
-			maintainability, and durable software decisions.
-		</p>
-		<p class="text-xs text-fg-muted">
-			craftlions helps teams ship technical work with less noise and clearer
-			handoffs.
-		</p>
+		<p>{tagline}</p>
+		<p class="text-xs text-fg-muted">{summary}</p>
 	</div>
 	<nav aria-label="Footer">
 		<ul class="stack" data-space="3xs">
-			<li
-				><a href="mailto:alexander@craftlions.com" class="link">Contact</a></li
-			>
+			<li><a href={`mailto:${email}`} class="link">Contact</a></li>
 			<li><a href="https://github.com/craftlions" class="link">GitHub</a></li>
 			<li>
 				<a href="https://www.linkedin.com/company/craftlions" class="link"

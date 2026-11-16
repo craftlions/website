@@ -6,15 +6,13 @@ import Footer from "../components/Footer.astro";
 import Nav from "../components/Nav.astro";
 import PageHeading from "../components/PageHeading.astro";
 import Shell from "../layouts/Shell.astro";
+import { description, email, legalName } from "../lib/company.ts";
 ---
 
 <Shell>
 	<Fragment slot="head">
 		<title>craftlions | Freelance IT Services & Technical Advisory</title>
-		<meta
-			name="description"
-			content="Freelance software development, technical advisory, and workshops that bring focused expertise into your team's process, communicated plainly."
-		>
+		<meta name="description" content={description}>
 		<meta
 			property="og:title"
 			content="craftlions | Freelance IT Services & Technical Advisory"
@@ -34,9 +32,9 @@ import Shell from "../layouts/Shell.astro";
 						"@type": "Organization",
 						"@id": "https://craftlions.com/#organization",
 						name: "craftlions",
-						legalName: "craftlions UG (haftungsbeschränkt)",
+						legalName,
 						url: "https://craftlions.com/",
-						email: "alexander@craftlions.com",
+						email,
 						description:
 							"Freelance software development, technical advisory, and workshops.",
 						address: {
@@ -90,9 +88,7 @@ import Shell from "../layouts/Shell.astro";
 						</p>
 					</div>
 					<div class="lede-action">
-						<Button href="mailto:alexander@craftlions.com">
-							Start a project
-						</Button>
+						<Button href={`mailto:${email}`}> Start a project </Button>
 					</div>
 				</section>
 				<section class="stack" data-space="m">
@@ -134,9 +130,7 @@ import Shell from "../layouts/Shell.astro";
 						</p>
 					</article>
 					<section>
-						<Button href="mailto:alexander@craftlions.com">
-							Discuss the work
-						</Button>
+						<Button href={`mailto:${email}`}> Discuss the work </Button>
 					</section>
 				</section>
 				<section class="stack section-rule" data-space="m">
@@ -179,9 +173,7 @@ import Shell from "../layouts/Shell.astro";
 						commitment to careful delivery, craftlions is ready to help.
 					</p>
 					<section>
-						<Button href="mailto:alexander@craftlions.com">
-							Get in touch
-						</Button>
+						<Button href={`mailto:${email}`}> Get in touch </Button>
 					</section>
 				</section>
 			</main>
