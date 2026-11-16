@@ -35,5 +35,8 @@
 		--chart-5: light-dark(#6d28d9b3, #c4b5fdcc);
 		--chart-6: light-dark(#065f46b3, #6ee7b7cc);
 		--chart-unassigned: light-dark(#525252b3, #a3a3a3cc);
+
+		/* The reader's own UI font (DESIGN.md#3-typography). */
+		--font-sans: system-ui, sans-serif;
 	}
 }

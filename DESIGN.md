@@ -86,43 +86,43 @@ contrast:
   chart-unassigned: { min: 3, on: [canvas, panel] }
 typography:
   display:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "system-ui, sans-serif"
     fontSize: "1.875rem"
     fontWeight: 600
     lineHeight: 1.25
     letterSpacing: "0"
   headline:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "system-ui, sans-serif"
     fontSize: "1.5rem"
     fontWeight: 600
     lineHeight: 1.333
     letterSpacing: "0"
   title:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "system-ui, sans-serif"
     fontSize: "1.25rem"
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: "0"
   body:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "0"
   body-small:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.429
     letterSpacing: "0"
   label:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 600
     lineHeight: 1.429
     letterSpacing: "0"
   caption:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "system-ui, sans-serif"
     fontSize: "0.75rem"
     fontWeight: 600
     lineHeight: 1.333
@@ -280,8 +280,8 @@ The spend chart is the portal's single colored data surface. It stays a chart, n
 
 ## 3. Typography
 
-**Display Font:** system sans (`ui-sans-serif, system-ui, sans-serif`)
-**Body Font:** system sans (`ui-sans-serif, system-ui, sans-serif`)
+**Display Font:** system sans (`system-ui, sans-serif`)
+**Body Font:** system sans (`system-ui, sans-serif`)
 **Label/Mono Font:** no distinct label or mono font; numeric data uses tabular numerals where needed.
 
 **Character:** The typography is utilitarian and exact. It uses a single system sans family, two weights, and small size steps so headings and tables stay readable without turning the client portal into a brand showpiece.
