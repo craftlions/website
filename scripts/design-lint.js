@@ -81,7 +81,7 @@ for (const file of globSync("src/**/*.astro")) {
 			/(?<![\w-])hidden(?![\w-])/.test(tag)
 		) {
 			violations.push(
-				`${file}:${source.slice(0, index).split("\n").length}  hidden live region → render it empty and set only its text, with not-empty: spacing  (DESIGN.md#action-feedback)`,
+				`${file}:${source.slice(0, index).split("\n").length}  hidden live region → render it empty and set only its text, spaced with :not(:empty)  (DESIGN.md#action-feedback)`,
 			);
 		}
 	}
@@ -561,12 +561,12 @@ for (const {
 			!order.includes(top[0].prelude?.match(/^@layer ([\w-]+)$/)?.[1])
 		) {
 			violations.push(
-				`${file}  → wrap the whole file in one @layer <name> { … }, named in the statement in src/styles/global.css  (AGENTS.md#hard-requirements)`,
+				`${file}  → wrap the whole file in one @layer <name> { … }, named in the statement in src/styles/global.css  (DESIGN.md#vocabulary)`,
 			);
 		}
 		if (!imported.has(file.slice("src/styles/".length))) {
 			violations.push(
-				`${file}  → @import it in src/styles/global.css, or it renders nothing  (AGENTS.md#hard-requirements)`,
+				`${file}  → @import it in src/styles/global.css, or it renders nothing  (DESIGN.md#vocabulary)`,
 			);
 		}
 	}
@@ -576,7 +576,7 @@ for (const {
 		String(layerOrder(statements[0].text)) !== String(order)
 	) {
 		violations.push(
-			`${file}  layer statement → copy it from src/styles/global.css, so both name the same order  (AGENTS.md#hard-requirements)`,
+			`${file}  layer statement → copy it from src/styles/global.css, so both name the same order  (DESIGN.md#vocabulary)`,
 		);
 	}
 }
@@ -634,7 +634,7 @@ for (const [name, files] of definitions) {
 		shared.length > 1 ? shared.slice(1) : shared.length === 1 ? pages : [];
 	for (const [file, line] of clash) {
 		violations.push(
-			`${file}:${line}  ${name} is also defined in ${shared[0][0]}:${shared[0][1]} → rename this one after its own component, or style the element under your own class (\`.your-area ${name}\`); every stylesheet loads on every page, so both rules reach both pages  (AGENTS.md#hard-requirements)`,
+			`${file}:${line}  ${name} is also defined in ${shared[0][0]}:${shared[0][1]} → rename this one after its own component, or style the element under your own class (\`.your-area ${name}\`); every stylesheet loads on every page, so both rules reach both pages  (DESIGN.md#vocabulary)`,
 		);
 	}
 }
