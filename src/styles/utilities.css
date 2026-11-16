@@ -102,15 +102,6 @@
 	.bg-line-strong {
 		background-color: var(--line-strong);
 	}
-	.bg-fill-danger {
-		background-color: var(--fill-danger);
-	}
-	.bg-fill-success {
-		background-color: var(--fill-success);
-	}
-	.bg-fill-info {
-		background-color: var(--fill-info);
-	}
 	.bg-info-subtle {
 		background-color: var(--info-subtle);
 	}
@@ -118,41 +109,8 @@
 	.border-line {
 		border-color: var(--line);
 	}
-	.border-line-strong {
-		border-color: var(--line-strong);
-	}
-	.border-line-control {
-		border-color: var(--line-control);
-	}
-	.border-line-active {
-		border-color: var(--line-active);
-	}
 	.border-line-danger {
 		border-color: var(--line-danger);
-	}
-	.border-line-success {
-		border-color: var(--line-success);
-	}
-	.border-line-info {
-		border-color: var(--line-info);
-	}
-	.border-fill-danger {
-		border-color: var(--fill-danger);
-	}
-	.border-fill-success {
-		border-color: var(--fill-success);
-	}
-	.border-fill-info {
-		border-color: var(--fill-info);
-	}
-	.border-canvas {
-		border-color: var(--canvas);
-	}
-	:where(.divide-line > :not(:last-child)) {
-		border-color: var(--line);
-	}
-	.outline-fill-info {
-		outline-color: var(--fill-info);
 	}
 
 	/* A link that can rest in muted text, its own or a muted row's, turns

@@ -250,7 +250,9 @@ The frontmatter `contrast:` map states each token's WCAG 2.2 AA requirement by i
 
 Biome is excluded from this file because it flattens the YAML frontmatter that `aubr design:lint` reads.
 
-| Utility                                           | Use for                                                                      |
+Roles that markup sets carry a utility in `src/styles/utilities.css`; the others live only in component stylesheets as `var(--token)`.
+
+| Utility or token                                  | Use for                                                                      |
 | ------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `text-fg`                                         | Primary text and values                                                      |
 | `text-fg-muted`                                   | All secondary text, including placeholders                                   |
@@ -258,18 +260,18 @@ Biome is excluded from this file because it flattens the YAML frontmatter that `
 | `bg-canvas`                                       | The page, and anything that must cover it                                    |
 | `bg-panel`                                        | Hover and grouped fills                                                      |
 | `bg-ink`                                          | Solid marks: progress fill, checked controls, pace marker                    |
-| `bg-fill-danger`, `-success`, `-info`             | Status fills; also on `border-`                                              |
+| `--fill-danger`, `-success`, `-info`              | Status fills and their borders: payment segments, the danger hover          |
 | `bg-info-subtle`                                  | Tinted highlight of a linked target                                          |
 | `target`                                          | An element a link points at: scroll room, then tint and dashed `fill-info` outline while targeted or `data-highlight` (`base.css`) |
-| `border-line`                                     | Default structure, also `divide-line`                                        |
-| `border-line-strong`                              | Headline rules, gray badges, the current year in the spend chart, also `bg-` |
-| `border-line-control`                             | Control and state outlines: inputs, checkbox, hint, progress track (3:1)     |
-| `border-line-active`                              | Hover, focus, and pressed borders                                            |
-| `border-line-danger`, `-success`, `-info`         | Status outlines                                                              |
-| `border-canvas`                                   | Pace marker edge                                                             |
+| `border-line`                                     | Default structure                                                            |
+| `--line-strong`, `bg-line-strong`                 | Headline rules, gray badges, the current year in the spend chart, bullets    |
+| `--line-control`                                  | Control and state outlines: inputs, checkbox, hint, progress track (3:1)     |
+| `--line-active`                                   | Hover, focus, and pressed borders                                            |
+| `border-line-danger`, `--line-success`, `-info`   | Status outlines                                                              |
+| `--canvas` on a border                            | Pace marker edge                                                             |
 | `text-chart-1`…`6`, `text-chart-unassigned`       | Spend chart only                                                             |
 
-A new token is a design decision: add it to `tokens.css`, `global.css`, `utilities.css`, this table, and the `contrast:` map together. The unlisted component specimen at `/brand/specimen` (`src/pages/brand/specimen.astro`) reads `tokens.css`, so it shows the new token with its contrast ratios automatically, and its Scale section shows every type and space step with its range, where the design tests measure them; add new primitives to it by hand. It is public, so its demos stay presentational: no actions, data, sessions, or logged errors. The brand page at `/brand` (`src/pages/brand/index.astro`), unlisted until its owner content is in, builds its colour and type sections from the same sources and shows a few components in their default state.
+A new token is a design decision: add it to `tokens.css`, `global.css`, this table and the `contrast:` map together, and to `utilities.css` once markup sets it. The unlisted component specimen at `/brand/specimen` (`src/pages/brand/specimen.astro`) reads `tokens.css`, so it shows the new token with its contrast ratios automatically, and its Scale section shows every type and space step with its range, where the design tests measure them; add new primitives to it by hand. It is public, so its demos stay presentational: no actions, data, sessions, or logged errors. The brand page at `/brand` (`src/pages/brand/index.astro`), unlisted until its owner content is in, builds its colour and type sections from the same sources and shows a few components in their default state.
 
 Give an element one role per property, and choose between roles with a ternary. Tailwind orders utilities itself, not by class order, so stacking `text-fg-muted` with a conditional `text-fg-danger` lets the wrong one win.
 
