@@ -64,7 +64,7 @@
 			font-style: normal;
 		}
 
-		/* /brand: a logo in a .box on the canvas of the scheme data-scheme
+		/* /brand: a logo file in a .box on the canvas of the scheme data-scheme
 		   names, a token's swatch, and a text to quote that one click selects. */
 		& .brand-tile {
 			display: grid;
@@ -80,8 +80,15 @@
 			&[data-scheme="dark"] {
 				color-scheme: dark;
 			}
-			& > svg {
+			& > img {
 				inline-size: min(100%, 10rem);
+				max-block-size: 70%;
+				object-fit: contain;
+			}
+
+			/* The tile keeps its canvas, so each file shows on its own ground. */
+			@media (forced-colors: active) {
+				forced-color-adjust: none;
 			}
 		}
 		& .brand-swatch {

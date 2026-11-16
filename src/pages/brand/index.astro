@@ -3,7 +3,6 @@ export const prerender = true;
 
 import designMd from "../../../DESIGN.md?raw";
 import { range, tokens as scale } from "../../../scripts/fluid-scale.js";
-import Logo from "../../assets/logoWithTextVertical.svg";
 import Badge from "../../components/Badge.astro";
 import Button from "../../components/Button.astro";
 import Checkbox from "../../components/Checkbox.astro";
@@ -61,6 +60,41 @@ const [start, end] = ["logo-start", "logo-end"].map((stop) => {
 	};
 });
 const ratio = (value = 0) => `${value.toFixed(2)}:1`;
+
+// The logo files in public/brand/, derived from src/assets/logoWithTextVertical.svg
+// with their viewBox sizes, and the variant each comes in, on its background.
+const logoFiles = [
+	[
+		"logo-vertical",
+		"Vertical lockup",
+		"The mark above the name, the logo this site uses.",
+		1000,
+		847,
+	],
+	["mark", "Mark alone", "For avatars, favicons and tight spots.", 600, 637],
+	[
+		"logo-horizontal",
+		"Horizontal lockup",
+		"The mark beside the name, for slide footers and logo rows: the name at its size in the vertical lockup, centred on the mark and as far from it as there.",
+		1639,
+		637,
+	],
+] as const;
+const logoVariants = [
+	["gradient", "dark", "Gradient, on dark backgrounds", "The official mark."],
+	[
+		"ink",
+		"light",
+		"Ink, on light backgrounds",
+		"One colour, where the gradient's cyan end fades.",
+	],
+	[
+		"paper",
+		"dark",
+		"Paper, on dark backgrounds",
+		"One colour, for print and single-colour use.",
+	],
+] as const;
 
 // Each type role in its own class, with the step it is set in.
 const typeRoles = [
@@ -137,87 +171,58 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 					<p>
 						The official mark is the gradient from purple to cyan, above the
 						name. Pick the file by the background it sits on, not by the theme
-						of your page.
+						of your page: the gradient, with the name in paper, or the paper
+						variant on dark backgrounds, and the ink variant on light ones. Each
+						file is an SVG with its colours written out.
 					</p>
-					<div class="auto-grid" style="--grid-min: 14rem">
-						<figure class="stack" data-space="2xs">
-							<div class="box brand-tile" data-scheme="dark">
-								<Logo
-									role="img"
-									aria-label="craftlions logo, vertical lockup with the gradient mark, on a dark background"
-								/>
+					{logoFiles.map(([file, title, use, width, height]) => (
+						<div class="stack" data-space="xs">
+							<h3 class="text-title">{title}</h3>
+							<p class="text-sm">
+								{file === "logo-horizontal" && (
+									<>
+										<strong class="text-label text-fg-warning">
+											Proposed:
+										</strong>{" "}
+									</>
+								)}
+								{use}
+							</p>
+							<div class="auto-grid" style="--grid-min: 14rem">
+								{logoVariants.map(([variant, scheme, label, note]) => (
+									<figure class="stack" data-space="2xs">
+										<div class="box brand-tile" data-scheme={scheme}>
+											<img
+												src={`/brand/craftlions-${file}-${variant}.svg`}
+												alt={`craftlions ${title.toLowerCase()}, ${variant}`}
+												{width}
+												{height}
+											/>
+										</div>
+										<figcaption class="stack text-sm" data-space="3xs">
+											<p>
+												<span class="text-label">{label}.</span> {note}
+											</p>
+											<p>
+												<a
+													href={`/brand/craftlions-${file}-${variant}.svg`}
+													download
+													class="text-fg-info link"
+												>
+													Download {title.toLowerCase()}, {variant}, SVG
+												</a>
+											</p>
+										</figcaption>
+									</figure>
+								))}
 							</div>
-							<figcaption class="text-sm">
-								<span class="text-label">Colour, on dark backgrounds.</span>
-								{" "}
-								The official mark, as this site draws it.
-							</figcaption>
-						</figure>
-						<figure class="stack" data-space="2xs">
-							<div class="box brand-tile" data-scheme="light">
-								<p class="text-sm">
-									<strong class="text-label text-fg-warning"
-										>Placeholder:</strong
-									>{" "}
-									one-colour lockup in ink, SVG
-								</p>
-							</div>
-							<figcaption class="text-sm">
-								<span class="text-label"
-									>One colour, on light backgrounds.</span
-								>{" "}
-								For light backgrounds, where the gradient's cyan end fades.
-							</figcaption>
-						</figure>
-						<figure class="stack" data-space="2xs">
-							<div class="box brand-tile" data-scheme="dark">
-								<p class="text-sm">
-									<strong class="text-label text-fg-warning"
-										>Placeholder:</strong
-									>{" "}
-									one-colour lockup in paper, SVG
-								</p>
-							</div>
-							<figcaption class="text-sm">
-								<span class="text-label">One colour, on dark backgrounds.</span>
-								{" "}
-								For print and single-colour use.
-							</figcaption>
-						</figure>
-						<figure class="stack" data-space="2xs">
-							<div class="box brand-tile" data-scheme="light">
-								<p class="text-sm">
-									<strong class="text-label text-fg-warning"
-										>Placeholder:</strong
-									>{" "}
-									standalone mark, SVG
-								</p>
-							</div>
-							<figcaption class="text-sm">
-								<span class="text-label">Mark alone.</span>{" "}
-								For avatars and tight spots, if the mark may stand alone.
-							</figcaption>
-						</figure>
-						<figure class="stack" data-space="2xs">
-							<div class="box brand-tile" data-scheme="light">
-								<p class="text-sm">
-									<strong class="text-label text-fg-warning"
-										>Placeholder:</strong
-									>{" "}
-									horizontal lockup, SVG
-								</p>
-							</div>
-							<figcaption class="text-sm">
-								<span class="text-label">Horizontal.</span>{" "}
-								Mark beside the name, for slide footers and logo rows.
-							</figcaption>
-						</figure>
-					</div>
+						</div>
+					))}
 					<p class="box border-line-strong text-sm">
 						<strong class="text-label text-fg-warning">Placeholder:</strong>
 						{" "}
-						downloads. Each variant as SVG with its colours written out and as
-						PNG at 512, 1024 and 2048px wide, and all of them in one ZIP.
+						downloads as PNG, at 512, 1024 and 2048px wide, and all files in one
+						ZIP.
 					</p>
 				</section>
 
@@ -392,8 +397,8 @@ const badges = (["approved", "accepted", "cancelled", "planned"] as const).map(
 						dark ink, they reach {ratio(start?.dark)} and {ratio(end?.dark)}. A
 						mark below 3:1 is hard to make out, so the gradient goes on dark
 						backgrounds, and light backgrounds take the one-colour variant. This
-						site's own header and footer still show the gradient on the light
-						paper.
+						site follows it: its header and footer show the logo in ink in the
+						light scheme and with the gradient in the dark one.
 					</p>
 
 					<h3 id="tokens" class="text-title">Role tokens</h3>

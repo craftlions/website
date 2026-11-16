@@ -181,8 +181,8 @@ test("the brand page lists its sections in order and leaves the owner's content 
 		).toHaveText(`${index + 1} ${title}`);
 	}
 
-	await expect(page.getByText("Placeholder:", { exact: true })).toHaveCount(6);
-	await expect(page.getByText("Proposed:", { exact: true })).toHaveCount(3);
+	await expect(page.getByText("Placeholder:", { exact: true })).toHaveCount(2);
+	await expect(page.getByText("Proposed:", { exact: true })).toHaveCount(4);
 	await expect(page.getByText("Draft:", { exact: true })).toHaveCount(2);
 	await expect(page.getByText("®")).toHaveCount(0);
 	await expect(
