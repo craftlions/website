@@ -1,33 +1,17 @@
 @layer components {
-	/* src/components/AdminWorklist.astro: a dashed list of items in two groups,
-	   stacked below 64rem and a five-column table from it (Status, Item,
-	   Amount, Waiting, Action), whose groups, lists and items line up on one
-	   subgrid. */
-	.worklist {
-		display: grid;
-		border: var(--rule) var(--line);
-
-		@media (width >= 64rem) {
-			grid-template-columns: auto minmax(0, 1fr) auto auto auto;
-			column-gap: var(--space-m);
-		}
-	}
-
-	/* The column heads, shown only as a table. */
+	/* src/components/AdminWorklist.astro: a dashed plane of items in two groups
+	   inside a .rows container, stacked until the container is 60rem wide and
+	   a five-column table from there (Status, Item, Amount, Waiting, Action).
+	   The groups keep their sections, so the rows primitive lays out the plane,
+	   the head and the labels, and these rules carry its subgrid down to the
+	   items. */
 	.worklist-head {
-		display: none;
 		border-block-end: var(--rule) var(--line);
 		padding: var(--space-xs) var(--space-s);
 
 		/* Amount and Action. */
 		& > :is(:nth-child(3), :nth-child(5)) {
 			text-align: end;
-		}
-
-		@media (width >= 64rem) {
-			grid-column: span 5 / span 5;
-			display: grid;
-			grid-template-columns: subgrid;
 		}
 	}
 
@@ -66,25 +50,6 @@
 				border-block-end-width: 0;
 			}
 		}
-
-		@media (width >= 64rem) {
-			grid-column: span 5 / span 5;
-			grid-template-columns: subgrid;
-
-			& > :is(h3, ul, p) {
-				grid-column: span 5 / span 5;
-			}
-
-			& > ul {
-				grid-template-columns: subgrid;
-			}
-
-			& > ul > li {
-				grid-column: span 5 / span 5;
-				grid-template-columns: subgrid;
-				align-items: center;
-			}
-		}
 	}
 
 	/* The item's client, project and phase, and its invoice or unpaid upfront
@@ -95,44 +60,42 @@
 		gap: var(--space-3xs);
 	}
 
-	.worklist-amount {
-		@media (width >= 64rem) {
-			text-align: end;
-		}
-	}
-
-	/* A cell's label, read out instead of shown once the table has heads. */
-	.worklist-label {
-		@media (width >= 64rem) {
-			position: absolute;
-			inline-size: 1px;
-			block-size: 1px;
-			padding: 0;
-			margin: calc(-1 * var(--hairline));
-			overflow: hidden;
-			clip-path: inset(50%);
-			white-space: nowrap;
-			border-width: 0;
-		}
-	}
-
 	.worklist-actions {
 		display: grid;
 		justify-items: start;
 		gap: var(--space-2xs);
-
-		@media (width >= 64rem) {
-			justify-items: end;
-		}
 	}
 
 	/* The delivery form below an in-progress item, across the whole row. */
 	.worklist-delivery {
 		display: grid;
+		grid-column: 1 / -1;
 		min-inline-size: 0;
+	}
 
-		@media (width >= 64rem) {
-			grid-column: span 5 / span 5;
+	@container (inline-size >= 60rem) {
+		.worklist-head,
+		.worklist-group,
+		.worklist-group > ul,
+		.worklist-group > ul > li {
+			grid-column: 1 / -1;
+			grid-template-columns: subgrid;
+		}
+
+		.worklist-group > :is(h3, p) {
+			grid-column: 1 / -1;
+		}
+
+		.worklist-group > ul > li {
+			align-items: center;
+		}
+
+		.worklist-amount {
+			text-align: end;
+		}
+
+		.worklist-actions {
+			justify-items: end;
 		}
 	}
 }
