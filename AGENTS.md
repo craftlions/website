@@ -80,7 +80,7 @@ aubx biome check --write
 
 ## End-to-End Tests
 
-- `aubr e2e` runs Playwright Test on `tests/e2e/`: the public pages, their links and headers, the indexing rules, the login redirects and return paths for a signed-out visitor, the sign-in and password forms up to the auth API, and the dialogs and disclosures on `/brand/specimen`. Run it on demand after changes to those; it is not part of Validation.
+- `aubr e2e` runs Playwright Test on `tests/e2e/`: the public pages, their links and headers, the indexing rules, the login redirects and return paths for a signed-out visitor, the sign-in and password forms up to the auth API, and the dialogs and disclosures on `/brand/specimen`. Run it on demand after changes to those; it is not part of Validation, but the Test workflow runs it on every pull request and push to `main`.
 - It shares `playwright.config.ts` and its server on `http://localhost:4322` (or `TEST_PORT`), so it needs no dev server, secrets or database. It runs once, in its own `e2e` project, since the colour scheme does not change behaviour; `aubr a11y` and `aubr design:test` leave it out.
 - Test only what a signed-out visitor gets without the database: anything that signs in, sends mail or reads data waits for a test database. Never mock the backend or add test-only paths to `src/`.
 
