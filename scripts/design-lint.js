@@ -89,13 +89,15 @@ for (const file of globSync("src/**/*.astro")) {
 
 // Native CSS: the stylesheets in src/styles and every <style> block, split into
 // blocks and declarations that know their line, the selectors and at-rules
-// around them, and the comment on their line, which can carry an exception:
-// /* constant: why */, /* physical: why */ or /* fallback: why */.
+// around them, and the comments that start or end on each line, which can
+// carry an exception: /* constant: why */, /* physical: why */, or for a newer
+// feature /* enhancement: what is lost without it */ or /* fallback: … */.
 const parseCss = (source, firstLine) => {
 	const blocks = [];
 	const declarations = [];
 	const statements = [];
 	const comments = new Map();
+	const ends = new Map();
 	const stack = [];
 	let buffer = "";
 	let start;
@@ -109,6 +111,7 @@ const parseCss = (source, firstLine) => {
 			const text = source.slice(index, end);
 			comments.set(line, `${comments.get(line) ?? ""}${text}`);
 			line += text.split("\n").length - 1;
+			ends.set(line, `${ends.get(line) ?? ""}${text}`);
 			index = end - 1;
 			continue;
 		}
@@ -153,7 +156,7 @@ const parseCss = (source, firstLine) => {
 		if (start === undefined && !/\s/.test(char)) start = line;
 		buffer += char;
 	}
-	return { blocks, declarations, statements, comments };
+	return { blocks, declarations, statements, comments, ends };
 };
 
 const stylesheets = [
@@ -254,8 +257,34 @@ const rest = (value, names, words) =>
 		.replace(/\s-(?=\s)|[\s(),*/+]/g, "");
 const numbers = String.raw`(?<![\w.])-?\d*\.?\d+(?![\w.%])`;
 const functions = String.raw`(?<![\w-])(?:calc|min|max|clamp|minmax|repeat)(?=\()`;
-const baselineGate =
-	/@scope|@starting-style|@property|@function|(?<![\w-])if\(|(?<![\w-])anchor\(|anchor-name|position-anchor|field-sizing|from var\(|:open(?![\w-])|@container style\(|(?<![\w-])round\(|(?<![\w-])mod\(|sibling-index\(|font-size-adjust|ui-sans-serif/;
+// Features that are not Baseline Widely available (web-features, November
+// 2026). A browser without one drops the declaration, or the whole rule, so
+// each use carries a marker on its line, on the line above, or above its
+// rule: /* enhancement: what is lost without it */ when only polish is lost,
+// /* fallback: … */ when the Widely available way stays beside it. A rule in
+// wholeRuleGate is dropped whole and can hold layout, so it takes only a
+// fallback. Move a feature out of the list once it is Widely available.
+const baselineGate = new RegExp(
+	[
+		"@scope",
+		"@starting-style",
+		"@property",
+		"@function",
+		"@view-transition",
+		"@container (?:style|scroll-state)\\(",
+		"(?<![\\w-])(?:if|anchor|anchor-size|round|mod|calc-size|contrast-color|sibling-index|sibling-count)\\(",
+		"attr\\([^)]*type\\(",
+		"\\(\\s*from\\s",
+		"(?<![\\w-])(?:anchor-name|position-anchor|position-area|position-try(?:-[\\w-]+)?|field-sizing|font-size-adjust|transition-behavior|interpolate-size|reading-flow|animation-timeline|view-timeline(?:-[\\w-]+)?|scroll-timeline(?:-[\\w-]+)?|text-box(?:-[\\w-]+)?)(?![\\w-])",
+		"(?<![\\w-])allow-discrete(?![\\w-])",
+		"text-wrap(?:-style)?: pretty",
+		":open(?![\\w-])",
+		":popover-open",
+		":interest",
+		"ui-sans-serif",
+	].join("|"),
+);
+const wholeRuleGate = /^@(?:scope|function|container style\()/;
 
 const layerOrder = (text = "") =>
 	text.match(/^@layer ([\w\s,-]+)$/)?.[1].split(/\s*,\s*/) ?? [];
@@ -277,6 +306,7 @@ for (const {
 	declarations,
 	statements,
 	comments,
+	ends,
 } of stylesheets) {
 	const tokensFile = file === "src/styles/tokens.css";
 	const resetFile = file === "src/styles/reset.css";
@@ -285,15 +315,31 @@ for (const {
 			.map(({ property }) => property)
 			.filter((property) => property.startsWith("--")),
 	);
-	const fallback = (line) => /\/\* fallback:/.test(comments.get(line));
-
-	for (const { prelude, text = prelude, line } of [...blocks, ...statements]) {
-		const where = `${file}:${line}  ${text}`;
-		if (baselineGate.test(text) && !fallback(line)) {
+	// The marker on a line, on the line above it, or above its rule.
+	const marker = ({ line, parents }) =>
+		[
+			comments.get(line),
+			ends.get(line),
+			ends.get(line - 1),
+			ends.get(parents.at(-1)?.line - 1),
+		]
+			.join("")
+			.match(/\/\* (enhancement|fallback):/)?.[1];
+	const gate = (node, text) => {
+		if (!baselineGate.test(text)) return;
+		const whole = wholeRuleGate.test(text);
+		const found = marker(node);
+		if (whole ? found !== "fallback" : !found) {
 			violations.push(
-				`${where} → a Baseline Widely available feature, or a fallback that keeps the page working, marked /* fallback: … */ on the line  (AGENTS.md#browser-support)`,
+				`${file}:${node.line}  ${text} → a Baseline Widely available feature; or keep it where a browser without it still works, marked on its line or above its rule with ${whole ? "/* fallback: … */ and the Widely available way beside it, because this rule is dropped whole" : "/* enhancement: what is lost without it */, or /* fallback: … */ with the Widely available way beside it"}  (AGENTS.md#browser-support)`,
 			);
 		}
+	};
+
+	for (const node of [...blocks, ...statements]) {
+		const { prelude, text = prelude, line } = node;
+		const where = `${file}:${line}  ${text}`;
+		gate(node, text);
 		if (text.includes("prefers-color-scheme")) {
 			violations.push(
 				`${where} → a token with light-dark() in src/styles/tokens.css, which follows the scheme by itself  (DESIGN.md#role-tokens)`,
@@ -339,12 +385,7 @@ for (const {
 		const where = `${file}:${line}  ${property}: ${value}`;
 		const comment = comments.get(line) ?? "";
 		const fail = (use, doc) => violations.push(`${where} → ${use}  (${doc})`);
-		if (baselineGate.test(`${property}: ${value}`) && !fallback(line)) {
-			fail(
-				"a Baseline Widely available feature, or a fallback that keeps the page working, marked /* fallback: … */ on the line",
-				"AGENTS.md#browser-support",
-			);
-		}
+		gate(declaration, `${property}: ${value}`);
 		if (
 			!tokensFile &&
 			/#[\da-f]{3,8}(?![\w-])|(?<![\w-])(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|light-dark)\(/i.test(
@@ -358,7 +399,9 @@ for (const {
 		}
 		if (property.startsWith("--")) continue;
 		if (colorProperty.test(property)) {
+			// A relative colour's channel keywords (r g b, l c h) are not names.
 			for (const word of value
+				.replace(/[\w-]+\(\s*from\s(?:[^()]|\([^()]*\))*\)/g, "")
 				.replace(/var\([^()]*\)|#[\da-f]+/gi, "")
 				.match(/(?<![\w-])[a-z][\w-]*(?![\w(-])/gi) ?? []) {
 				if (systemColor.test(word) && !forced(declaration)) {
@@ -471,8 +514,9 @@ for (const {
 			rest(
 				value,
 				(name) => /^--space-|^--hairline$/.test(name) || local.has(name),
+				// anchor() places a box against another, so it is no space step.
 				new RegExp(
-					`${functions}|${numbers}|(?<![\\w-])(?:auto|normal)(?![\\w-])`,
+					`(?<![\\w-])anchor(?:-size)?\\([^()]*\\)|${functions}|${numbers}|(?<![\\w-])(?:auto|normal)(?![\\w-])`,
 					"g",
 				),
 			) &&
@@ -996,6 +1040,57 @@ for (const name of native) {
 	}
 }
 
+// Newer features in markup and scripts, under the same rule as in CSS: each
+// use carries /* enhancement: … */ or /* fallback: … */ (as {/* … */},
+// <!-- … --> or // …) on its line or just above its tag, or the file holds a
+// marked comment that names the feature, as a script's fallback does.
+// Report-only (`--report` lists them) until every existing use is marked.
+const reports = [];
+const markupGate = [
+	{
+		feature: "invoker commands",
+		use: /\scommand(?:for)?=/g,
+		names: /invoker command/i,
+	},
+	{ feature: "closedby", use: /\sclosedby=/g, names: /closedby/ },
+	{
+		feature: 'hidden="until-found"',
+		use: /["']until-found["']/g,
+		names: /until-found|beforematch/,
+	},
+	{ feature: 'rel="expect"', use: /\srel="expect"/g, names: /rel="expect"/ },
+];
+for (const file of globSync("src/**/*.astro")) {
+	const source = readFileSync(file, "utf8");
+	const lineAt = (index) => source.slice(0, index).split("\n").length;
+	const marks = [
+		...source.matchAll(
+			/\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->|\/\/[^\n]*(?:\n[ \t]*\/\/[^\n]*)*/g,
+		),
+	]
+		.filter(([text]) =>
+			/^(?:\/\*|<!--|\/\/)\s*(?:enhancement|fallback):/.test(text),
+		)
+		.map(({ 0: text, index }) => ({ text, end: lineAt(index + text.length) }));
+	const tags = [...source.matchAll(/<[\w-]+\s[^<>]*>/g)];
+	for (const { feature, use, names } of markupGate) {
+		if (marks.some(({ text }) => names.test(text))) continue;
+		for (const { index } of source.matchAll(use)) {
+			const tag = tags.find(
+				(match) => match.index < index && index < match.index + match[0].length,
+			);
+			const line = lineAt(index);
+			const start = tag ? lineAt(tag.index) : line;
+			const marked = marks.some(({ end }) => end >= start - 1 && end <= line);
+			if (!marked) {
+				reports.push(
+					`${file}:${line}  ${feature} → mark it on its line or above its tag: {/* enhancement: what is lost without it */}, or {/* fallback: … */} naming where the Widely available way runs  (AGENTS.md#browser-support)`,
+				);
+			}
+		}
+	}
+}
+
 // DESIGN.md frontmatter is what design:lint reads, so it must keep up with tokens.css.
 const frontmatter = readFileSync("DESIGN.md", "utf8").split("---\n")[1] ?? "";
 if (!/^colors:\n {2}\S/m.test(frontmatter)) {
@@ -1215,6 +1310,13 @@ for (const { name, fontSize, fontWeight, lineHeight } of roles) {
 	}
 }
 
+if (process.argv.includes("--report")) {
+	console.log(reports.join("\n"));
+} else if (reports.length > 0) {
+	console.log(
+		`design:lint  ${reports.length} report-only findings (newer features in markup) → node scripts/design-lint.js --report`,
+	);
+}
 if (violations.length > 0) {
 	console.error(violations.join("\n"));
 	process.exit(1);

@@ -42,6 +42,8 @@
 
 /* Same-origin page loads cross-fade, unless the reader asks for less motion. */
 @media (prefers-reduced-motion: no-preference) {
+	/* enhancement: the cross-fade between pages (Chrome 126, Safari 18.2);
+	   Firefox changes pages without it. */
 	@view-transition {
 		navigation: auto;
 	}
