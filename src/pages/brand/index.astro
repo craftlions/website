@@ -4,7 +4,6 @@ export const prerender = true;
 import designMd from "../../../DESIGN.md?raw";
 import { range, tokens as scale } from "../../../scripts/fluid-scale.js";
 import Logo from "../../assets/logoWithTextVertical.svg";
-import logoSvg from "../../assets/logoWithTextVertical.svg?raw";
 import Badge from "../../components/Badge.astro";
 import Button from "../../components/Button.astro";
 import Checkbox from "../../components/Checkbox.astro";
@@ -45,7 +44,7 @@ const sections = [
 ] as const;
 
 // Colour comes from the same sources as the specimen and design:lint: the
-// tokens, the DESIGN.md contrast map, and the gradient stops of the logo file.
+// tokens, the DESIGN.md contrast map, and the logo tokens for the gradient.
 const tokens = parseTokens(tokensCss);
 const requirements = parseContrast(designMd);
 const [light, dark] = (["light", "dark"] as const).map((scheme) =>
@@ -53,13 +52,14 @@ const [light, dark] = (["light", "dark"] as const).map((scheme) =>
 );
 const canvas = tokens.find(({ name }) => name === "canvas");
 const ink = tokens.find(({ name }) => name === "fg");
-const [start, end] = [...logoSvg.matchAll(/stop-color:(#[\da-f]{6})/g)].map(
-	([, hex = ""]) => ({
+const [start, end] = ["logo-start", "logo-end"].map((stop) => {
+	const hex = tokens.find(({ name }) => name === stop)?.dark ?? "";
+	return {
 		hex,
 		light: contrast(hex, canvas?.light ?? ""),
 		dark: contrast(hex, canvas?.dark ?? ""),
-	}),
-);
+	};
+});
 const ratio = (value = 0) => `${value.toFixed(2)}:1`;
 
 // Each type role in its own class, with the step it is set in.

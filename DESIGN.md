@@ -42,6 +42,10 @@ colors:
   info-subtle-dark: "#082f4980"
   focus: "#404040"
   focus-dark: "#d4d4d4"
+  logo-start: "#0a0a0a"
+  logo-start-dark: "#6a4bfe"
+  logo-end: "#0a0a0a"
+  logo-end-dark: "#02fffe"
   chart-1: "#1d4ed8b3"
   chart-1-dark: "#93c5fdcc"
   chart-2: "#155e75b3"
@@ -77,6 +81,8 @@ contrast:
   fill-info: { min: 3, on: [canvas, panel] }
   info-subtle: surface
   focus: { min: 3, on: [canvas, panel, info-subtle] }
+  logo-start: { min: 3, on: [canvas, panel] }
+  logo-end: { min: 3, on: [canvas, panel] }
   chart-1: { min: 3, on: [canvas, panel] }
   chart-2: { min: 3, on: [canvas, panel] }
   chart-3: { min: 3, on: [canvas, panel] }
@@ -204,6 +210,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 
 - **Ink Neutral** (`fg`): the primary text and active mark color. Use it for body copy, headings, progress fill, checked controls, and high-confidence interface states.
 - **Paper Neutral** (`canvas`): the primary page surface. Use it for the body background and quiet page sections.
+- **Logo Mark** (`logo-start`, `logo-end`): the two stops of the logo's mark, which `src/assets/logoWithTextVertical.svg` reads itself, so they have no utility. They are ink in the light scheme and the purple-to-cyan gradient in the dark, the rule of `/brand#logo`: the cyan end reaches only 1.20:1 on the light paper. The header and footer inline that file, so they follow the rule without markup or script; the file falls back to the gradient wherever the tokens are missing.
 
 ### Secondary
 
@@ -274,6 +281,8 @@ Forced-color modes (Windows High Contrast, `forced-colors: active`) are supporte
 - `forced-line`: an element that keeps drawing itself, with its border and text color in `CanvasText`: the progress track, and the spend chart's segments and legend swatches, whose `currentColor` hatch then stays drawn. Every project shares the one hatch there; the legend and the exact-amounts table still name each one.
 
 Status hues collapse to `CanvasText` there, so state never rests on color alone. These two utilities are the only place system colors appear; do not add `forced-colors:` variants or system colors in components. Check a change with Chrome DevTools, Rendering, "Emulate CSS media feature forced-colors".
+
+The logo's mark is an SVG gradient, which forced colors keep as drawn, its cyan end included. `src/styles/base.css` paints its two stops in `currentColor` there instead, the system color of the wordmark beside it, in both schemes.
 
 ### Data Visualization
 

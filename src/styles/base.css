@@ -22,6 +22,15 @@
 		text-wrap: balance;
 	}
 
+	/* Forced colors keep the gradient of the logo's mark as drawn; its stops
+	   take the system color of the wordmark instead (DESIGN.md#forced-colors).
+	   Important, to win over the stop colours the logo file sets inline. */
+	@media (forced-colors: active) {
+		stop {
+			stop-color: currentColor !important;
+		}
+	}
+
 	:focus-visible {
 		outline: 2px solid var(--focus);
 		outline-offset: 2px;

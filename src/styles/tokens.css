@@ -28,6 +28,12 @@
 
 		--focus: light-dark(#404040, #d4d4d4);
 
+		/* The stops of the logo's mark (src/assets/logoWithTextVertical.svg):
+		   one colour, the ink, in the light scheme, where the gradient's cyan
+		   end fades into the paper, and the gradient in the dark (/brand#logo). */
+		--logo-start: light-dark(#0a0a0a, #6a4bfe);
+		--logo-end: light-dark(#0a0a0a, #02fffe);
+
 		--chart-1: light-dark(#1d4ed8b3, #93c5fdcc);
 		--chart-2: light-dark(#155e75b3, #67e8f9cc);
 		--chart-3: light-dark(#9a3412b3, #fdba74cc);
