@@ -1,5 +1,4 @@
 import type { Db } from "./database.ts";
-import { apiKey } from "@better-auth/api-key";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { dash } from "@better-auth/infra";
 import { betterAuth } from "better-auth/minimal";
@@ -105,9 +104,6 @@ export function createAuth(env: Cloudflare.Env, db: Db) {
 			admin(),
 			oAuthProxy({
 				productionURL: "https://craftlions.com",
-			}),
-			apiKey({
-				enableMetadata: true,
 			}),
 		],
 		rateLimit: {
