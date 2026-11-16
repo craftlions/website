@@ -196,7 +196,7 @@ const setupGaps = [
 		style="--sidebar-width: 20rem; --content-min: 60%; --sidebar-space: var(--space-m)"
 	>
 		<div class="stack" data-space="m">
-			<section class="stack" data-space="xs" aria-labelledby="money-heading">
+			<section aria-labelledby="money-heading">
 				<h2 id="money-heading" class="label-caps"> Money </h2>
 				<p class="measure text-sm text-fg-muted">
 					Budget for the current calendar year, and invoices waiting for payment
@@ -298,7 +298,7 @@ const setupGaps = [
 			</section>
 			<SpendByYear rows={spendRows} />
 		</div>
-		<section class="stack" data-space="xs" aria-labelledby="projects-heading">
+		<section aria-labelledby="projects-heading">
 			<div class="with-sidebar" data-side="end" data-align="center">
 				<h2 id="projects-heading" class="label-caps"> Current projects </h2>
 				{projects.length > 0 && (

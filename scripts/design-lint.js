@@ -948,6 +948,9 @@ for (const {
 		}
 		continue;
 	}
+	// The element defaults in base.css repeat a primitive on purpose, so plain
+	// markup needs no class.
+	if (file === "src/styles/base.css") continue;
 	for (const { prelude, line, declarations: own } of blocks) {
 		const values = new Map(own.map(({ property, value }) => [property, value]));
 		const keys = [...values.keys()].filter(

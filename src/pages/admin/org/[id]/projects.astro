@@ -140,11 +140,7 @@ const isCreateOpen =
 			({ archived, rows: groupRows }) => !archived || groupRows.length > 0,
 		)
 		.map(({ id: groupId, archived, rows: groupRows }) => (
-			<section
-				class="stack"
-				data-space="xs"
-				aria-labelledby={`${groupId}-heading`}
-			>
+			<section aria-labelledby={`${groupId}-heading`}>
 				<div class="with-sidebar" data-side="end" data-align="center">
 					<h2 id={`${groupId}-heading`} class="label-caps">
 						{archived ? "Archived" : "Projects"}

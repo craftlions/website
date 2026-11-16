@@ -11,6 +11,19 @@
 		-moz-osx-font-smoothing: grayscale;
 	}
 
+	/* A section without a class is a stack at the xs step: its parts one under
+	   another, free to shrink below their longest word. Any class opts out:
+	   .stack with data-space for another step, a primitive or a component. */
+	section:not([class]) {
+		display: grid;
+		align-content: start;
+		gap: var(--space-xs);
+
+		& > * {
+			min-inline-size: 0;
+		}
+	}
+
 	/* Like headings after the reset, table cells take their weight from a role,
 	   not from the browser's bold th. */
 	th {

@@ -126,7 +126,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		data-space="m"
 	>
 		<input type="hidden" name="organizationId" value={organization.id}>
-		<section aria-labelledby="identity-heading" class="stack" data-space="xs">
+		<section aria-labelledby="identity-heading">
 			<h2 id="identity-heading" class="label-caps"> Identity </h2>
 			<p class="measure text-sm text-fg-muted">
 				How this client is named in the admin area and on their dashboard.
@@ -153,7 +153,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 				/>
 			</div>
 		</section>
-		<section aria-labelledby="billing-heading" class="stack" data-space="xs">
+		<section aria-labelledby="billing-heading">
 			<h2 id="billing-heading" class="label-caps"> Billing </h2>
 			<p class="measure text-sm text-fg-muted">
 				The budget the client dashboard compares invoices against, and the
@@ -210,7 +210,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		</section>
 		<Button type="submit">Save settings</Button>
 	</form>
-	<section aria-labelledby="client-url-heading" class="stack" data-space="xs">
+	<section aria-labelledby="client-url-heading">
 		<h2 id="client-url-heading" class="label-caps"> Client URL </h2>
 		<p class="measure text-sm text-fg-muted">
 			The address members of this client use to open their dashboard. It is

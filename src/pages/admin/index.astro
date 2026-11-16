@@ -171,7 +171,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 		</div>
 	</header>
 
-	<section class="stack" data-space="xs" aria-labelledby="summary-heading">
+	<section aria-labelledby="summary-heading">
 		<h2 id="summary-heading" class="label-caps"> Summary </h2>
 		<dl class="cluster" data-space="metrics" data-align="start">
 			<div class="stack" data-space="3xs">
@@ -202,7 +202,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 		</dl>
 	</section>
 
-	<section class="stack" data-space="xs" aria-labelledby="worklist-heading">
+	<section aria-labelledby="worklist-heading">
 		<h2 id="worklist-heading" class="label-caps"> Worklist </h2>
 		<p class="measure text-sm text-fg-muted">
 			Phases that need a step from you or a client, and unpaid invoices across
@@ -213,7 +213,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 	</section>
 
 	<client-ledger>
-		<section class="stack" data-space="xs" aria-labelledby="ledger-heading">
+		<section aria-labelledby="ledger-heading">
 			<div class="with-sidebar" data-side="end" data-align="center">
 				<h2 id="ledger-heading" class="label-caps"> Client ledger </h2>
 				<DisclosureButton controls="onboard-client" open={isOnboardOpen}>

@@ -115,7 +115,7 @@ const frames = [
 						</p>
 					</header>
 
-					<section class="stack" data-space="xs">
+					<section>
 						<h3 class="text-title">Type</h3>
 						<ul class="stack" data-space="xs">
 							{typeSteps.map(([role, label, name]) => {
@@ -136,7 +136,7 @@ const frames = [
 						</ul>
 					</section>
 
-					<section class="stack" data-space="xs">
+					<section>
 						<h3 class="text-title">Space</h3>
 						<ul class="stack" data-space="xs">
 							{scale
@@ -169,7 +169,7 @@ const frames = [
 								{label}
 							</h2>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Tokens</h3>
 								<ul class="stack text-sm" data-space="2xs">
 									{swatches.map(({ name, value, minimum, checks }) => (
@@ -207,7 +207,7 @@ const frames = [
 								</ul>
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Type</h3>
 								{typeRoles.map(([role, label]) => (
 									<p class={role}>{label}</p>
@@ -219,7 +219,7 @@ const frames = [
 								<p class="text-fg-warning">Warning</p>
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Buttons</h3>
 								<div class="cluster">
 									<Button>Default</Button>
@@ -242,7 +242,7 @@ const frames = [
 								</div>
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Disclosure</h3>
 								<div class="with-sidebar" data-side="end" data-align="center">
 									<p class="label-caps">Members</p>
@@ -280,7 +280,7 @@ const frames = [
 								</p>
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Breadcrumbs</h3>
 								<Breadcrumbs
 									label={`Breadcrumb, ${scheme}`}
@@ -293,7 +293,7 @@ const frames = [
 								/>
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Inputs</h3>
 								<Field label="Text" placeholder="Placeholder" />
 								<Field
@@ -323,7 +323,7 @@ const frames = [
 								<Checkbox checked>Checked</Checkbox>
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Badges</h3>
 								<div class="badges stack" data-space="2xs">
 									<Badge type="info">Ready to start</Badge>
@@ -333,7 +333,7 @@ const frames = [
 								</div>
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Progress</h3>
 								<Progress percent={40} aria-label="Within budget" />
 								<Progress
@@ -344,7 +344,7 @@ const frames = [
 								<Progress percent={120} aria-label="Over budget" />
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Confirmation</h3>
 								<form method="dialog">
 									<ConfirmAction
@@ -386,7 +386,7 @@ const frames = [
 								</form>
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Action feedback</h3>
 								{feedback.map((result) => (
 									<ActionBanner
@@ -396,7 +396,7 @@ const frames = [
 								))}
 							</section>
 
-							<section class="stack" data-space="xs">
+							<section>
 								<h3 class="text-title">Surfaces</h3>
 								<p class="box text-sm">Dashed plane</p>
 								<p class="box bg-panel text-sm">Panel fill</p>
@@ -421,12 +421,7 @@ const frames = [
 						</p>
 					</header>
 
-					<section
-						aria-labelledby="layout-stack"
-						class="stack"
-						data-space="xs"
-						data-fixture="stack"
-					>
+					<section aria-labelledby="layout-stack" data-fixture="stack">
 						<h3 id="layout-stack" class="text-title">Stack</h3>
 						<p class="text-sm text-fg-muted">
 							The space between siblings comes from the parent; each nested
@@ -455,12 +450,7 @@ const frames = [
 						))}
 					</section>
 
-					<section
-						aria-labelledby="layout-box"
-						class="stack"
-						data-space="xs"
-						data-fixture="box"
-					>
+					<section aria-labelledby="layout-box" data-fixture="box">
 						<h3 id="layout-box" class="text-title">Box</h3>
 						<p class="text-sm text-fg-muted">
 							The dashed plane: padding inside a dashed line.
@@ -483,12 +473,7 @@ const frames = [
 						))}
 					</section>
 
-					<section
-						aria-labelledby="layout-center"
-						class="stack"
-						data-space="xs"
-						data-fixture="center"
-					>
+					<section aria-labelledby="layout-center" data-fixture="center">
 						<h3 id="layout-center" class="text-title">Center</h3>
 						<p class="text-sm text-fg-muted">
 							A column capped at its width token and centred, here the 32rem
@@ -508,12 +493,7 @@ const frames = [
 						))}
 					</section>
 
-					<section
-						aria-labelledby="layout-cluster"
-						class="stack"
-						data-space="xs"
-						data-fixture="cluster"
-					>
+					<section aria-labelledby="layout-cluster" data-fixture="cluster">
 						<h3 id="layout-cluster" class="text-title">Cluster</h3>
 						<p class="text-sm text-fg-muted">
 							Peers at their own width that wrap like words, with the same gap
@@ -537,8 +517,6 @@ const frames = [
 
 					<section
 						aria-labelledby="layout-heading-row"
-						class="stack"
-						data-space="xs"
 						data-fixture="heading-row"
 					>
 						<h3 id="layout-heading-row" class="text-title">
@@ -564,12 +542,7 @@ const frames = [
 						))}
 					</section>
 
-					<section
-						aria-labelledby="layout-sidebar"
-						class="stack"
-						data-space="xs"
-						data-fixture="sidebar"
-					>
+					<section aria-labelledby="layout-sidebar" data-fixture="sidebar">
 						<h3 id="layout-sidebar" class="text-title">Sidebar: dashboard</h3>
 						<p class="text-sm text-fg-muted">
 							Projects and a 20rem Budget side by side while Projects keeps at
@@ -603,12 +576,7 @@ const frames = [
 						))}
 					</section>
 
-					<section
-						aria-labelledby="layout-switcher"
-						class="stack"
-						data-space="xs"
-						data-fixture="switcher"
-					>
+					<section aria-labelledby="layout-switcher" data-fixture="switcher">
 						<h3 id="layout-switcher" class="text-title">Switcher</h3>
 						<p class="text-sm text-fg-muted">
 							All in one row above the threshold, all stacked below it, never in
@@ -658,12 +626,7 @@ const frames = [
 						))}
 					</section>
 
-					<section
-						aria-labelledby="layout-cover"
-						class="stack"
-						data-space="xs"
-						data-fixture="cover"
-					>
+					<section aria-labelledby="layout-cover" data-fixture="cover">
 						<h3 id="layout-cover" class="text-title">Cover</h3>
 						<p class="text-sm text-fg-muted">
 							The page shell at a 12rem minimum height: the main part grows, so
@@ -704,12 +667,7 @@ const frames = [
 						))}
 					</section>
 
-					<section
-						aria-labelledby="layout-auto-grid"
-						class="stack"
-						data-space="xs"
-						data-fixture="auto-grid"
-					>
+					<section aria-labelledby="layout-auto-grid" data-fixture="auto-grid">
 						<h3 id="layout-auto-grid" class="text-title">Grid</h3>
 						<p class="text-sm text-fg-muted">
 							Equal cells of at least 16rem that wrap, one column when the frame
@@ -739,12 +697,7 @@ const frames = [
 						))}
 					</section>
 
-					<section
-						aria-labelledby="layout-rows"
-						class="stack"
-						data-space="xs"
-						data-fixture="rows"
-					>
+					<section aria-labelledby="layout-rows" data-fixture="rows">
 						<h3 id="layout-rows" class="text-title">Rows</h3>
 						<p class="text-sm text-fg-muted">
 							A list that becomes a table from 44rem of its own width, in a
