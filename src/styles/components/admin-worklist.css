@@ -1,5 +1,0 @@
-@layer components {
-	/* src/components/AdminWorklist.astro is a grouped list of inbox lines and
-	   needs no rules of its own (lines.css). This file stays only for its
-	   import in global.css. */
-}
