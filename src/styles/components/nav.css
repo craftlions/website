@@ -15,5 +15,14 @@
 		&[data-variant="marketing"] > a > svg {
 			block-size: 6rem;
 		}
+
+		/* Stands in for the session links while their server island loads,
+		   drawn like a Button. */
+		& .nav-placeholder {
+			display: inline-grid;
+			inline-size: max-content;
+			padding: var(--space-3xs) var(--space-xs);
+			border: var(--rule) var(--line);
+		}
 	}
 }
