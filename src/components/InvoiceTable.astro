@@ -1,11 +1,17 @@
 ---
 import { clientCostPartLabel } from "../lib/client-worklist.ts";
-import { formatDate, formatMoney, sumByCurrency } from "../lib/format.ts";
+import {
+	formatDate,
+	formatDays,
+	formatMoney,
+	sumByCurrency,
+} from "../lib/format.ts";
 import { buildPhaseComponents } from "../lib/phase-billing";
-import { invoiceStatus } from "../lib/status.ts";
+import { daysOverdue, invoiceStatus } from "../lib/status.ts";
 import Badge from "./Badge.astro";
 import Button from "./Button.astro";
 import CostSplit from "./CostSplit.astro";
+import DisclosureButton from "./DisclosureButton.astro";
 
 interface Invoice {
 	id: string;
@@ -75,9 +81,29 @@ const totalWhere = (statuses: string[]) =>
 		rows[0]?.currency,
 	);
 const hasOverdue = rows.some((row) => row.status === "overdue");
-const showFilter =
-	rows.some((row) => row.status === "open" || row.status === "overdue") &&
-	rows.some((row) => row.status === "paid");
+// Open first, since it answers what is owed, and always while there are
+// invoices; then paid, then void and uncollectible ones, each in the order
+// given (newest first).
+const groups = [
+	{
+		key: "open",
+		label: "Open",
+		statuses: ["open", "overdue"],
+		empty: "Nothing to pay: every invoice is paid.",
+	},
+	{ key: "paid", label: "Paid", statuses: ["paid"], empty: null },
+	{
+		key: "not-charged",
+		label: "Not charged",
+		statuses: ["void", "uncollectible"],
+		empty: null,
+	},
+]
+	.map((group) => ({
+		...group,
+		items: rows.filter((row) => group.statuses.includes(row.status)),
+	}))
+	.filter((group) => group.empty || group.items.length > 0);
 
 // Invoiced totals grouped by cost part show all three types at a glance;
 // unattached invoices carry no component and stay a separate bucket.
@@ -113,7 +139,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 );
 ---
 
-<invoice-table class="stack" data-space="xs">
+<div class="stack" data-space="xs">
 	{rows.length > 0 && (
 		<div class="stack" data-space="xs">
 			<dl class="cluster text-sm" data-space="metrics" data-align="baseline">
@@ -152,215 +178,164 @@ const partSummaryTotal = partSummaryItems.reduce(
 			)}
 		</div>
 	)}
-	{showFilter && (
-		<nav aria-label="Filter invoices" class="cluster">
-			<Button type="button" data-invoice-filter="all" aria-pressed="true">
-				All
-			</Button>
-			<Button type="button" data-invoice-filter="open" aria-pressed="false">
-				Open
-			</Button>
-			<Button type="button" data-invoice-filter="paid" aria-pressed="false">
-				Paid
-			</Button>
-		</nav>
-	)}
 	{rows.length > 0 ? (
-		<ul class="stack" data-space="xs">
-			{rows.map((invoice) => (
-				<li
-					id={`invoice-${invoice.id}`}
-					class="box stack target"
-					data-space="2xs"
-					data-invoice-item
-					data-category={
-						invoice.status === "paid"
-							? "paid"
-							: invoice.status === "open" || invoice.status === "overdue"
-								? "open"
-								: "other"
-					}
-				>
-					<div
-						class="with-sidebar"
-						data-side="end"
-						data-align="start"
-						style="--sidebar-width: 6rem; --content-min: 66%"
-					>
-						<div class="stack" data-space="2xs">
-							<div class="stack" data-space="3xs">
-								<p class="label-caps leading-none">Invoice {invoice.number}</p>
-								<div class="cluster">
-									<p class="text-title tabular-nums leading-none">
-										{formatMoney(invoice.total, invoice.currency)}
-									</p>
-									{invoice.component &&
-									clientCostPartLabel[invoice.component] ? (
-										<Badge type="info">
-											{clientCostPartLabel[invoice.component]}
-										</Badge>
-									) : (
-										<Badge type="gray">Unassigned</Badge>
-									)}
-								</div>
-								{invoice.phase && invoice.components.length > 0 && (
-									<div class="invoice-table-split">
-										<CostSplit
-											items={invoice.components}
-											currency={invoice.phase.currency}
-											total={invoice.phase.cost}
-											highlight={
-												invoice.component === "upfront" ||
-												invoice.component === "delivery" ||
-												invoice.component === "acceptance"
-													? invoice.component
-													: null
-											}
-										/>
-									</div>
-								)}
-							</div>
-							<dl
-								class="cluster text-sm"
-								data-space="metrics"
-								data-align="baseline"
-							>
-								<div>
-									<dt class="label-caps leading-none">Due</dt>
-									<dd
-										class:list={[
-											invoice.status === "overdue" && "text-fg-danger",
-										]}
-									>
-										{invoice.dueAt ? formatDate(invoice.dueAt) : "—"}
-									</dd>
-								</div>
-								<div>
-									<dt class="label-caps leading-none">Status</dt>
-									<dd>
-										<div class="cluster">
+		<div class="lines" data-actions="below">
+			{groups.map((group) => (
+				<>
+					<h3>
+						<span id={`invoices-${group.key}`} class="text-label">
+							{group.label}{" "}
+							<span class="text-fg-muted">· {group.items.length}</span>
+						</span>
+						{group.items.length > 0 && group.key !== "not-charged" && (
+							<span class="line-figure text-sm text-fg-muted">
+								<span class="sr-only">total </span>
+								{totalWhere(group.statuses)}
+							</span>
+						)}
+					</h3>
+					{group.items.length > 0 ? (
+						<ul aria-labelledby={`invoices-${group.key}`}>
+							{group.items.map((invoice) => (
+								<li id={`invoice-${invoice.id}`} class="target">
+									<div class="line-text">
+										{invoice.phase?.project ? (
+											<h4>
+												<a
+													href={`/dash/org/${slug}/project/${invoice.phase.project.publicId}#phase-${invoice.phase.publicId}`}
+													class="link"
+												>
+													{invoice.phase.project.name} · {invoice.phase.title}
+												</a>
+											</h4>
+										) : (
+											<h4 class="text-fg-muted">Unassigned invoice</h4>
+										)}
+										<p class="cluster text-sm text-fg-muted">
 											{invoice.status === "overdue" ? (
 												<Badge type="error">Overdue</Badge>
 											) : invoice.status === "open" ? (
 												<Badge type="info">Open</Badge>
 											) : invoice.status === "paid" ? (
 												<Badge type="success">Paid</Badge>
-											) : invoice.status ? (
+											) : (
 												<Badge type="gray">
 													{invoiceStatus(invoice).label}
 												</Badge>
-											) : (
-												<span class="text-fg-muted">—</span>
 											)}
-											{invoice.status === "paid" && invoice.paidAt && (
-												<span class="text-xs text-fg-muted">
-													{formatDate(invoice.paidAt)}
-												</span>
-											)}
-										</div>
-									</dd>
-								</div>
-								<div>
-									<dt class="label-caps leading-none">Work</dt>
-									<dd>
-										{invoice.phase?.project ? (
-											<a
-												href={`/dash/org/${slug}/project/${invoice.phase.project.publicId}#phase-${invoice.phase.publicId}`}
-												class="link"
+											<span>
+												Invoice {invoice.number}
+												{invoice.component &&
+													clientCostPartLabel[invoice.component] &&
+													` · ${clientCostPartLabel[invoice.component]}`}
+												{invoice.phase?.deliveryState === "url" &&
+												invoice.phase.deliveryUrl ? (
+													<>
+														{" · "}
+														<a
+															href={invoice.phase.deliveryUrl}
+															target="_blank"
+															rel="noopener noreferrer"
+															aria-label={`Open delivery of ${invoice.phase.title} (opens in a new tab)`}
+															class="link"
+														>
+															open delivery
+														</a>
+													</>
+												) : invoice.phase?.deliveryState === "none" ? (
+													" · no delivery"
+												) : (
+													invoice.phase?.deliveryState === "not_recorded" &&
+													" · delivery not recorded"
+												)}
+											</span>
+										</p>
+									</div>
+									<p class="line-figure">
+										<span>{formatMoney(invoice.total, invoice.currency)}</span>
+										<span
+											class:list={[
+												"text-sm",
+												invoice.status === "overdue"
+													? "text-fg-danger"
+													: "text-fg-muted",
+											]}
+										>
+											{invoice.status === "overdue"
+												? `${formatDays(daysOverdue({ ...invoice, status: "open" }, now))} overdue`
+												: invoice.status === "open"
+													? invoice.dueAt
+														? `due ${formatDate(invoice.dueAt)}`
+														: "no due date"
+													: invoice.status === "paid" && invoice.paidAt
+														? `paid ${formatDate(invoice.paidAt)}`
+														: `invoiced ${formatDate(invoice.invoicedAt)}`}
+										</span>
+									</p>
+									<div class="line-actions cluster">
+										{invoice.phase && invoice.components.length > 0 && (
+											<DisclosureButton
+												controls={`invoice-${invoice.id}-details`}
+												variant="quiet"
+												aria-label={`Details: invoice ${invoice.number}`}
 											>
-												{invoice.phase.project.name} · {invoice.phase.title}
-											</a>
-										) : (
-											<span class="text-fg-muted">Unassigned</span>
+												Details
+											</DisclosureButton>
 										)}
-									</dd>
-								</div>
-								<div>
-									<dt class="label-caps leading-none">Delivery</dt>
-									<dd>
-										{invoice.phase?.deliveryState === "url" &&
-										invoice.phase.deliveryUrl ? (
-											<a
-												href={invoice.phase.deliveryUrl}
+										{invoice.status === "open" ||
+										invoice.status === "overdue" ? (
+											<Button
+												href={invoice.paymentPage}
 												target="_blank"
 												rel="noopener noreferrer"
-												aria-label={`Open Delivery for ${invoice.phase.project ? invoice.phase.title : "the invoice"}`}
-												class="link"
+												aria-label={`Pay invoice ${invoice.number} (opens in a new tab)`}
 											>
-												Open
-											</a>
-										) : invoice.phase?.deliveryState === "none" ? (
-											<span class="text-fg-muted">No delivery</span>
-										) : invoice.phase?.deliveryState === "not_recorded" ? (
-											<span class="text-fg-muted">Not recorded</span>
+												Pay
+											</Button>
 										) : (
-											<span class="text-fg-muted">Unavailable</span>
+											<Button
+												href={invoice.paymentPage}
+												target="_blank"
+												rel="noopener noreferrer"
+												variant="quiet"
+												aria-label={`${invoice.status === "paid" ? "Receipt for" : "View"} invoice ${invoice.number} (opens in a new tab)`}
+											>
+												{invoice.status === "paid" ? "Receipt" : "View"}
+											</Button>
 										)}
-									</dd>
-								</div>
-							</dl>
-						</div>
-						<div class="invoice-table-action">
-							<Button
-								href={invoice.paymentPage}
-								target="_blank"
-								rel="noopener noreferrer"
-								aria-label={`${invoice.status === "open" || invoice.status === "overdue" ? "Pay" : "Details"} invoice ${invoice.number}`}
-							>
-								{invoice.status === "open" || invoice.status === "overdue"
-									? "Pay"
-									: "Details"}
-							</Button>
-						</div>
-					</div>
-				</li>
+									</div>
+									{invoice.phase && invoice.components.length > 0 && (
+										<div
+											id={`invoice-${invoice.id}-details`}
+											class="line-details"
+											hidden
+										>
+											<div class="invoice-table-split">
+												<CostSplit
+													items={invoice.components}
+													currency={invoice.phase.currency}
+													total={invoice.phase.cost}
+													highlight={
+														invoice.component === "upfront" ||
+														invoice.component === "delivery" ||
+														invoice.component === "acceptance"
+															? invoice.component
+															: null
+													}
+												/>
+											</div>
+										</div>
+									)}
+								</li>
+							))}
+						</ul>
+					) : (
+						<p class="text-sm text-fg-muted">{group.empty}</p>
+					)}
+				</>
 			))}
-		</ul>
+		</div>
 	) : (
 		<p class="box text-sm text-fg-muted">No invoices yet.</p>
 	)}
-</invoice-table>
-
-<script>
-	class InvoiceTable extends HTMLElement {
-		filter = "all";
-
-		connectedCallback() {
-			if (this.dataset.initialized === "true") {
-				this.renderList();
-				return;
-			}
-
-			this.dataset.initialized = "true";
-			for (const button of this.querySelectorAll<HTMLButtonElement>(
-				"[data-invoice-filter]",
-			)) {
-				button.addEventListener("click", () => {
-					this.filter = button.dataset.invoiceFilter ?? "all";
-					this.renderList();
-				});
-			}
-			this.renderList();
-		}
-
-		renderList() {
-			for (const button of this.querySelectorAll<HTMLButtonElement>(
-				"[data-invoice-filter]",
-			)) {
-				button.setAttribute(
-					"aria-pressed",
-					String((button.dataset.invoiceFilter ?? "all") === this.filter),
-				);
-			}
-
-			for (const row of this.querySelectorAll<HTMLElement>(
-				"[data-invoice-item]",
-			)) {
-				row.hidden =
-					this.filter !== "all" && row.dataset.category !== this.filter;
-			}
-		}
-	}
-
-	customElements.define("invoice-table", InvoiceTable);
-</script>
+</div>

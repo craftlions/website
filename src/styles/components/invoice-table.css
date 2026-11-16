@@ -1,19 +1,12 @@
 @layer components {
-	/* src/components/InvoiceTable.astro: the client's invoices as planes, with
-	   their totals and a filter above. */
+	/* src/components/InvoiceTable.astro: the client's invoices as ledger
+	   lines (lines.css), with their totals above. The cost splits keep a
+	   readable width, the one in a line's details too. */
 	.invoice-table-parts {
 		max-inline-size: 28rem;
 	}
 
 	.invoice-table-split {
 		max-inline-size: 24rem;
-		margin-block-start: var(--space-3xs);
-	}
-
-	/* The Pay or Details button at the plane's end, beside the details or
-	   below them. */
-	.invoice-table-action {
-		display: grid;
-		justify-content: end;
 	}
 }
