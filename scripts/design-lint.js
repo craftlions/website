@@ -1,6 +1,11 @@
 // Fails on styling that bypasses the role tokens in DESIGN.md. Locking the palette
 // makes raw color classes render nothing, silently; this makes them fail loudly.
 import { globSync, readFileSync } from "node:fs";
+import {
+	contrastChecks,
+	parseContrast,
+	parseTokens,
+} from "../src/lib/contrast.ts";
 
 const hues =
 	"slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
@@ -218,6 +223,48 @@ for (const name of colors.keys()) {
 		violations.push(
 			`DESIGN.md  colors.${name} → name a token from src/styles/tokens.css`,
 		);
+	}
+}
+
+// Every token states its WCAG 2.2 requirement in the frontmatter `contrast:`
+// map, and fails below its minimum on each surface it names, in both schemes.
+// axe checks only text, so this is the gate for lines, fills and chart marks.
+const tokens = parseTokens(readFileSync("src/styles/tokens.css", "utf8"));
+const requirements = parseContrast(readFileSync("DESIGN.md", "utf8"));
+for (const { name } of tokens) {
+	if (!requirements.has(name)) {
+		violations.push(
+			`DESIGN.md  contrast.${name} → add it: { min: 4.5 or 3, on: [surfaces] }, surface, or exempt  (DESIGN.md#role-tokens)`,
+		);
+	}
+}
+for (const [name, requirement] of requirements) {
+	for (const surface of typeof requirement === "object" ? requirement.on : []) {
+		if (requirements.get(surface) !== "surface") {
+			violations.push(
+				`DESIGN.md  contrast.${name} → measure it on a surface token, not ${surface}`,
+			);
+		}
+	}
+	if (tokens.every((token) => token.name !== name)) {
+		violations.push(
+			`DESIGN.md  contrast.${name} → name a token from src/styles/tokens.css`,
+		);
+	}
+}
+for (const scheme of ["light", "dark"]) {
+	for (const { name, minimum, checks } of contrastChecks(
+		tokens,
+		requirements,
+		scheme,
+	)) {
+		for (const { surface, ratio } of checks) {
+			if (minimum && ratio < minimum) {
+				violations.push(
+					`src/styles/tokens.css  --${name} (${scheme}) is ${ratio.toFixed(2)}:1 on ${surface} → reach ${minimum}:1  (DESIGN.md#role-tokens)`,
+				);
+			}
+		}
 	}
 }
 
