@@ -73,35 +73,26 @@ const groups = [
 ---
 
 {items.length > 0 ? (
-	<div class="grid border border-dashed border-line lg:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] lg:gap-x-6">
-		<div
-			aria-hidden="true"
-			class="hidden border-b border-dashed border-line px-4 py-3 label-caps lg:col-span-5 lg:grid lg:grid-cols-subgrid"
-		>
+	<div class="client-worklist">
+		<div aria-hidden="true" class="client-worklist-head label-caps">
 			<span>Status</span>
 			<span>Item</span>
-			<span class="text-right">Amount</span>
+			<span>Amount</span>
 			<span>Due</span>
-			<span class="text-right">Action</span>
+			<span>Action</span>
 		</div>
 		{groups.map((group) => (
-			<section
-				aria-labelledby={group.id}
-				class="grid min-w-0 border-b border-dashed border-line last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid"
-			>
-				<h3
-					id={group.id}
-					class="border-b border-dashed border-line px-4 py-2 text-label lg:col-span-5"
-				>
+			<section aria-labelledby={group.id} class="client-worklist-group">
+				<h3 id={group.id} class="text-label">
 					{group.label}{" "}
 					<span class="tabular-nums text-fg-muted">· {group.items.length}</span>
 				</h3>
 				{group.items.length > 0 ? (
-					<ul class="grid min-w-0 lg:col-span-5 lg:grid-cols-subgrid">
+					<ul>
 						{group.items.map((item) => (
-							<li class="grid min-w-0 grid-cols-1 gap-y-3 border-b border-dashed border-line p-4 last:border-b-0 lg:col-span-5 lg:grid-cols-subgrid lg:items-center">
+							<li>
 								<Badge type={item.badge}>{item.label}</Badge>
-								<div class="grid min-w-0 gap-1">
+								<div class="client-worklist-subject">
 									<h4 class="wrap-anywhere">
 										{item.kind === "phase" ? (
 											<a href={item.href} class="link">
@@ -125,8 +116,8 @@ const groups = [
 										</p>
 									)}
 								</div>
-								<p class="text-sm tabular-nums lg:text-right">
-									<span class="text-fg-muted lg:sr-only">Amount </span>
+								<p class="client-worklist-amount text-sm tabular-nums">
+									<span class="text-fg-muted">Amount </span>
 									{formatMoney(item.amount, item.currency)}
 								</p>
 								<p
@@ -138,7 +129,7 @@ const groups = [
 									{item.due}
 								</p>
 								{item.kind === "invoice" ? (
-									<div class="grid justify-items-start lg:justify-items-end">
+									<div class="client-worklist-action">
 										<Button
 											href={item.invoice.paymentPage}
 											target="_blank"
@@ -149,7 +140,7 @@ const groups = [
 										</Button>
 									</div>
 								) : item.actor === "client" && canDecide ? (
-									<div class="grid justify-items-start gap-2 lg:justify-items-end">
+									<div class="client-worklist-action">
 										<ClientPhaseActions
 											phase={item.phase}
 											name={`${item.project.name} · ${item.phase.title}`}
@@ -160,7 +151,7 @@ const groups = [
 									</div>
 								) : (
 									item.actor === "client" && (
-										<p class="text-sm text-fg-muted lg:text-right">
+										<p class="client-worklist-note text-sm text-fg-muted">
 											An owner or admin decides
 										</p>
 									)
@@ -169,13 +160,15 @@ const groups = [
 						))}
 					</ul>
 				) : (
-					<p class="p-4 text-sm text-fg-muted lg:col-span-5">{group.empty}</p>
+					<p class="client-worklist-empty text-sm text-fg-muted">
+						{group.empty}
+					</p>
 				)}
 			</section>
 		))}
 	</div>
 ) : (
-	<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+	<p class="box text-sm text-fg-muted">
 		Nothing needs your attention right now. Phases to approve or accept and
 		invoices to pay will show up here, along with the work craftlions is doing
 		for you.
