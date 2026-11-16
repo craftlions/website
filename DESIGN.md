@@ -27,16 +27,16 @@ colors:
   line-active: "#525252"
   line-active-dark: "#d4d4d4"
   line-danger: "#ef4444"
-  line-danger-dark: "#b91c1c"
+  line-danger-dark: "#dc2626"
   line-success: "#34d399"
   line-success-dark: "#047857"
   line-info: "#7dd3fc"
   line-info-dark: "#0369a1"
   fill-danger: "#b91c1c"
   fill-danger-dark: "#f87171"
-  fill-success: "#10b981"
+  fill-success: "#059669"
   fill-success-dark: "#34d399"
-  fill-info: "#0ea5e9"
+  fill-info: "#0284c7"
   fill-info-dark: "#38bdf8"
   info-subtle: "#e0f2fe99"
   info-subtle-dark: "#082f4980"
@@ -44,18 +44,18 @@ colors:
   focus-dark: "#d4d4d4"
   chart-1: "#1d4ed8b3"
   chart-1-dark: "#93c5fdcc"
-  chart-2: "#0e7490b3"
+  chart-2: "#155e75b3"
   chart-2-dark: "#67e8f9cc"
-  chart-3: "#c2410cb3"
+  chart-3: "#9a3412b3"
   chart-3-dark: "#fdba74cc"
   chart-4: "#be185db3"
   chart-4-dark: "#f9a8d4cc"
   chart-5: "#6d28d9b3"
   chart-5-dark: "#c4b5fdcc"
-  chart-6: "#047857b3"
+  chart-6: "#065f46b3"
   chart-6-dark: "#6ee7b7cc"
-  chart-unassigned: "#7373738c"
-  chart-unassigned-dark: "#a3a3a38c"
+  chart-unassigned: "#525252b3"
+  chart-unassigned-dark: "#a3a3a3cc"
 typography:
   display:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
@@ -176,7 +176,7 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 ### Tertiary
 
 - **Status Green** (`fg-success`, `line-success`, `fill-success`): success or paid state.
-- **Status Red** (`fg-danger`, `line-danger`, `fill-danger`): error, cancelled, or budget-risk state. Its outline (`line-danger`) is the boundary of an invalid or destructive input, so it holds 3:1 on canvas.
+- **Status Red** (`fg-danger`, `line-danger`, `fill-danger`): error, cancelled, or budget-risk state. Its outline (`line-danger`) is the boundary of an invalid or destructive input, so it holds 3:1 on canvas and panel in both schemes.
 - **Status Info** (`fg-info`, `line-info`, `fill-info`, `info-subtle`): informational project and phase state.
 - **Status Warning** (`fg-warning`, amber): needs attention, not an error. It marks something the admin should check, such as an invoice total that differs from its cost part or attached invoices Stripe cannot return right now; text only, with no outline or fill.
 
@@ -242,7 +242,8 @@ Status hues collapse to `CanvasText` there, so state never rests on color alone.
 The spend chart is the portal's single colored data surface. It stays a chart, not a dashboard carnival: one categorical palette, assigned in stable order, with meaning carried by pattern plus the legend and the exact-amounts table.
 
 - **Categorical series** (`chart-1` to `chart-6`): project segments render as **diagonal hatching** (a 135° repeating linear gradient) in muted ink colors at reduced opacity (70% light, 80% dark), cycled in stable order; repeat when a year holds more projects than the palette. The hatch pattern, not a solid fill, separates one project from another.
-- **Unassigned** (`chart-unassigned`): phase-less spend stays a neutral gray so it reads as "not a project" and is drawn open (no fill).
+- **Unassigned** (`chart-unassigned`): phase-less spend stays a neutral gray, at the series' opacity, so it reads as "not a project" and is drawn open (no fill).
+- **Contrast**: every series and the unassigned gray hold 3:1 against canvas and panel (WCAG 1.4.11), although the legend and the table repeat what they show.
 - **State colors keep their meaning everywhere, including the chart**: never use status hues for segments or fills.
 - **Color is never the only code**: bars carry their exact year total as text (the current year's total sits on a dashed `line-strong` rule, never a text underline, which is reserved for links), each bar labels its year, the legend maps a hatch swatch to its project name, and the exact-amounts table holds the numbers.
 - **Negative adjustments**: the chart cannot draw them. When any bar holds negative spend, a note appears and directs the reader to the exact amounts for the complete breakdown.
@@ -419,7 +420,7 @@ Progress is used for budget state and remains literal.
 - **Track:** transparent track with a dashed `line-control` border.
 - **Fill:** ink neutral by default, status red only when budget use exceeds the budget.
 - **Pace Marker:** a thin neutral marker may show calendar pace, but it must not compete with the actual value.
-- **Payment progress:** a phase's cost parts render as a row of small segments, one per part. Shape carries the state and color repeats it: paid is a solid green block, overdue a solid red outline, invoiced a dashed blue outline, and not yet invoiced a dotted neutral outline. Each segment names its part and state for screen readers and in its `title`, and the line below sums it up in words.
+- **Payment progress:** a phase's cost parts render as a row of small segments, one per part. Shape carries the state and color repeats it: paid is a solid green block, overdue a solid red outline, invoiced a dashed blue outline, and not yet invoiced a dotted neutral outline. Each segment names its part and state for screen readers and in its `title`, and the line below sums it up in words. The status fills that draw the segments (`fill-success`, `fill-danger`, `fill-info`) hold 3:1 on canvas and panel, so the state reads at a glance.
 
 ## 6. Do's and Don'ts
 
