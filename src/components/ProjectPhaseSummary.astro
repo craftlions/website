@@ -15,12 +15,7 @@ const yourMove = phaseStateSummary(phases, "info");
 const waitingOnClient = phaseStateSummary(phases, "gray");
 ---
 
-<dl
-	class:list={[
-		"grid min-w-0 grid-cols-[auto_minmax(0,1fr)] content-start gap-x-3 gap-y-1 text-sm",
-		className,
-	]}
->
+<dl class:list={["phase-summary text-sm", className]}>
 	<dt class="label-caps">Phases</dt>
 	<dd class="tabular-nums wrap-break-word">
 		{counted.length > 0

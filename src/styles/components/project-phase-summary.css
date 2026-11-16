@@ -1,3 +1,12 @@
 @layer components {
-	/* src/components/ProjectPhaseSummary.astro; filled by conversion package S5e. */
+	/* src/components/ProjectPhaseSummary.astro: label and value pairs in two
+	   columns, the value wrapping beside its label. */
+	.phase-summary {
+		display: grid;
+		min-inline-size: 0;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-content: flex-start;
+		column-gap: var(--space-xs);
+		row-gap: var(--space-3xs);
+	}
 }
