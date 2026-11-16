@@ -1,3 +1,59 @@
 @layer components {
-	/* src/components/Checkbox.astro; filled by conversion package S5a. */
+	/* src/components/Checkbox.astro: a dashed square that fills with ink when
+	   checked, its tick laid over it in the same grid cell. */
+	.checkbox {
+		display: grid;
+		inline-size: max-content;
+		grid-auto-flow: column;
+		align-items: center;
+		gap: var(--space-2xs);
+		cursor: pointer;
+		user-select: none;
+
+		& > span:first-child {
+			display: grid;
+		}
+
+		& input {
+			grid-column-start: 1;
+			grid-row-start: 1;
+			inline-size: 1rem;
+			block-size: 1rem;
+			appearance: none;
+			border: var(--rule) var(--line-control);
+			background-color: transparent;
+			cursor: pointer;
+
+			&:checked {
+				background-color: var(--fg);
+			}
+
+			@media (forced-colors: active) {
+				&:checked {
+					forced-color-adjust: none;
+					background-color: CanvasText;
+					border-color: CanvasText;
+				}
+			}
+		}
+
+		/* The tick: the canvas color cut to shape by a mask. */
+		& input + span {
+			grid-column-start: 1;
+			grid-row-start: 1;
+			place-self: center;
+			inline-size: 0.75rem;
+			block-size: 0.75rem;
+			background-color: var(--canvas);
+			mask-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222%22%3E%3Cpath%20d=%22M3%208l3.5%203.5L13%205%22/%3E%3C/svg%3E");
+			mask-size: contain;
+			mask-repeat: no-repeat;
+			visibility: hidden;
+			pointer-events: none;
+		}
+
+		& input:checked + span {
+			visibility: visible;
+		}
+	}
 }
