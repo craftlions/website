@@ -6,6 +6,7 @@ import {
 	parseContrast,
 	parseTokens,
 } from "../src/lib/contrast.ts";
+import { tokens as fluidTokens } from "./fluid-scale.js";
 
 const hues =
 	"slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
@@ -265,6 +266,52 @@ for (const scheme of ["light", "dark"]) {
 				);
 			}
 		}
+	}
+}
+
+// The type and space steps are generated, so tokens.css holds exactly what
+// scripts/fluid-scale.js prints, and the frontmatter `spacing:` names each space
+// step with its token value.
+const scale = new Map(
+	[
+		...readFileSync("src/styles/tokens.css", "utf8").matchAll(
+			/--((?:step|space)-[\w-]+): ([^;]+);/g,
+		),
+	].map(([, name, value]) => [name, value]),
+);
+for (const { name, value } of fluidTokens) {
+	if (scale.get(name) !== value) {
+		violations.push(
+			`src/styles/tokens.css  --${name} → set it to ${value}, the output of node scripts/fluid-scale.js  (DESIGN.md#3-typography)`,
+		);
+	}
+}
+for (const name of scale.keys()) {
+	if (fluidTokens.every((token) => token.name !== name)) {
+		violations.push(
+			`src/styles/tokens.css  --${name} → add the step to scripts/fluid-scale.js, or remove it  (DESIGN.md#3-typography)`,
+		);
+	}
+}
+const spacing = new Map(
+	[
+		...(frontmatter.split(/^spacing:\n/m)[1]?.split(/^\S/m)[0] ?? "").matchAll(
+			/^ {2}([\w-]+): "([^"]+)"$/gm,
+		),
+	].map(([, name, value]) => [`space-${name}`, value]),
+);
+for (const [name, value] of scale) {
+	if (name.startsWith("space-") && spacing.get(name) !== value) {
+		violations.push(
+			`DESIGN.md  spacing.${name.slice(6)} → set it to "${value}", the value of --${name} in src/styles/tokens.css`,
+		);
+	}
+}
+for (const name of spacing.keys()) {
+	if (!scale.has(name)) {
+		violations.push(
+			`DESIGN.md  spacing.${name.slice(6)} → name a --space-* token from src/styles/tokens.css`,
+		);
 	}
 }
 

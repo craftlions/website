@@ -130,13 +130,19 @@ typography:
 rounded:
   none: "0px"
 spacing:
-  xs: "4px"
-  sm: "6px"
-  sm2: "8px"
-  md: "12px"
-  lg: "16px"
-  xl: "24px"
-  page: "48px"
+  3xs: "0.25rem"
+  2xs: "0.5rem"
+  xs: "0.75rem"
+  s: "clamp(0.875rem, 0.7917rem + 0.4167vw, 1.125rem)"
+  m: "clamp(1.3125rem, 1.1875rem + 0.625vw, 1.6875rem)"
+  l: "clamp(1.75rem, 1.5833rem + 0.8333vw, 2.25rem)"
+  xl: "clamp(2.625rem, 2.375rem + 1.25vw, 3.375rem)"
+  2xl: "clamp(3.5rem, 3.1667rem + 1.6667vw, 4.5rem)"
+  3xl: "clamp(5.25rem, 4.75rem + 2.5vw, 6.75rem)"
+  s-m: "clamp(0.875rem, 0.6042rem + 1.3542vw, 1.6875rem)"
+  m-l: "clamp(1.3125rem, 1rem + 1.5625vw, 2.25rem)"
+  l-xl: "clamp(1.75rem, 1.2083rem + 2.7083vw, 3.375rem)"
+  xl-2xl: "clamp(2.625rem, 2rem + 3.125vw, 4.5rem)"
 components:
   button-default:
     backgroundColor: "transparent"
