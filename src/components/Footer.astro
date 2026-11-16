@@ -9,15 +9,13 @@ const { wide = false } = Astro.props;
 ---
 
 <footer
-	class:list={[
-		"mx-auto grid w-full gap-5 border-t border-dashed border-line px-3 py-6 text-sm text-fg-muted sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start lg:grid-cols-[auto_minmax(0,1fr)_auto]",
-		wide ? "max-w-6xl" : "max-w-3xl",
-	]}
+	class="footer text-sm text-fg-muted"
+	data-width={wide ? "wide" : undefined}
 >
-	<a href="/" aria-label="craftlions home" class="grid justify-self-start">
-		<LogoWithTextVertical class="w-16 text-fg" />
+	<a href="/" aria-label="craftlions home">
+		<LogoWithTextVertical class="text-fg" />
 	</a>
-	<div class="grid max-w-prose gap-2">
+	<div class="stack" data-space="2xs">
 		<p>
 			Small, focused technical work for teams that value clarity,
 			maintainability, and durable software decisions.
@@ -27,21 +25,12 @@ const { wide = false } = Astro.props;
 			handoffs.
 		</p>
 	</div>
-	<nav
-		aria-label="Footer"
-		class="grid justify-self-start lg:justify-self-end lg:self-start"
-	>
-		<ul class="grid gap-1">
+	<nav aria-label="Footer">
+		<ul class="stack" data-space="3xs">
 			<li
-				><a href="mailto:alexander@craftlions.com" class="link hover:text-fg"
-					>Contact</a
-				></li
+				><a href="mailto:alexander@craftlions.com" class="link">Contact</a></li
 			>
-			<li
-				><a href="https://github.com/craftlions" class="link hover:text-fg"
-					>GitHub</a
-				></li
-			>
+			<li><a href="https://github.com/craftlions" class="link">GitHub</a></li>
 			<li>
 				<a
 					href="https://www.linkedin.com/company/craftlions"
@@ -49,13 +38,11 @@ const { wide = false } = Astro.props;
 					>LinkedIn</a
 				>
 			</li>
-			<li><a href="/changelog/" class="link hover:text-fg">Changelog</a></li>
-			<li><a href="/imprint/" class="link hover:text-fg">Imprint</a></li>
+			<li><a href="/changelog/" class="link">Changelog</a></li>
+			<li><a href="/imprint/" class="link">Imprint</a></li>
 		</ul>
 	</nav>
-	<p
-		class="border-t border-dashed border-line pt-4 text-xs text-fg-muted sm:col-span-2 lg:col-span-3"
-	>
+	<p class="text-xs text-fg-muted">
 		&copy; 2026 craftlions. All rights reserved.
 	</p>
 </footer>

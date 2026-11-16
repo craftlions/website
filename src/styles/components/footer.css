@@ -1,3 +1,65 @@
 @layer components {
-	/* src/components/Footer.astro; filled by conversion package S5b. */
+	/* src/components/Footer.astro: logo, about and links in two columns from
+	   sm and three from lg, the copyright across all of them. Its own gutter
+	   sits inside the column width, so it is no .center. */
+	.footer {
+		display: grid;
+		inline-size: 100%;
+		max-inline-size: var(--column);
+		gap: var(--space-s);
+		margin-inline: auto;
+		padding: var(--space-m) var(--space-xs);
+		border-block-start: var(--rule) var(--line);
+
+		&[data-width="wide"] {
+			max-inline-size: var(--column-wide);
+		}
+
+		& > a {
+			display: grid;
+			justify-self: start;
+		}
+		& > a > svg {
+			inline-size: 4rem;
+		}
+		& > div {
+			max-inline-size: var(--measure);
+		}
+		& > nav {
+			display: grid;
+			justify-self: start;
+		}
+		& .link {
+			@media (hover: hover) {
+				&:hover {
+					color: var(--fg);
+				}
+			}
+		}
+		& > p {
+			padding-block-start: var(--space-s);
+			border-block-start: var(--rule) var(--line);
+		}
+
+		@media (width >= 40rem) {
+			grid-template-columns: auto minmax(0, 1fr);
+			align-items: start;
+
+			& > p {
+				grid-column: span 2 / span 2;
+			}
+		}
+
+		@media (width >= 64rem) {
+			grid-template-columns: auto minmax(0, 1fr) auto;
+
+			& > nav {
+				justify-self: end;
+				align-self: start;
+			}
+			& > p {
+				grid-column: span 3 / span 3;
+			}
+		}
+	}
 }
