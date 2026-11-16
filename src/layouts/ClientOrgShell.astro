@@ -42,7 +42,7 @@ const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 			{organization.name}
 		</PageHeading>
 		<nav aria-label="Organization sections">
-			<ul class="tabs">
+			<ul class="cluster">
 				{pages.map((page) => (
 					<li>
 						<Button
