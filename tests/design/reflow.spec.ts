@@ -1,6 +1,7 @@
 // T4, reflow and zoom (WCAG 1.4.4, 1.4.10): no route scrolls sideways at 320px
 // (1280px at 400% zoom), at 640px with a device scale factor of 2 (1280px at
-// 200% zoom), or at 1280px with a 32px default font size (200% text size).
+// 200% zoom), or at 1280px with a 32px default font size (200% text size); nor
+// at the tablet widths between, where intrinsic layouts switch.
 // Dense tables scroll inside their own section, which the page width ignores.
 import { expect, type Page, test } from "@playwright/test";
 import { routes } from "../routes.ts";
@@ -49,6 +50,14 @@ for (const route of routes) {
 			await open(page, route);
 			expect(await audit(page)).toEqual(clean);
 		});
+
+		for (const width of [768, 1024]) {
+			test(`${width}px`, async ({ page }) => {
+				await page.setViewportSize({ width, height: 800 });
+				await open(page, route);
+				expect(await audit(page)).toEqual(clean);
+			});
+		}
 
 		test.describe("200% zoom", () => {
 			test.use({ viewport: { width: 640, height: 400 }, deviceScaleFactor: 2 });
