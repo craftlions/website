@@ -1,18 +1,12 @@
 @layer components {
-	/* src/components/Nav.astro: the logo above the links below sm, beside
-	   them from sm. The links scroll sideways when they do not fit; the
-	   negative margin keeps their focus rings inside the scroll box. */
+	/* src/components/Nav.astro, a .cluster: the logo at the start and the
+	   links at the end of one row, the links below the logo, at the start,
+	   when both do not fit. The links wrap among themselves, never scroll. */
 	.nav {
-		display: grid;
-		inline-size: 100%;
-		grid-template-columns: repeat(1, minmax(0, 1fr));
-		justify-items: center;
-		gap: var(--space-s);
 		padding-block: var(--space-s);
 
 		& > a {
 			display: grid;
-			justify-self: center;
 		}
 		& > a > svg {
 			view-transition-name: nav-logo;
@@ -21,37 +15,5 @@
 		&[data-variant="marketing"] > a > svg {
 			block-size: 6rem;
 		}
-		& > ul {
-			display: grid;
-			max-inline-size: 100%;
-			grid-auto-flow: column;
-			grid-auto-columns: max-content;
-			align-items: center;
-			justify-self: center;
-			gap: var(--space-m);
-			margin: calc(-1 * var(--space-3xs));
-			padding: var(--space-3xs);
-			overflow-x: auto;
-		}
-
-		@media (width >= 40rem) {
-			grid-template-columns: auto minmax(0, 1fr);
-			align-items: center;
-
-			& > a {
-				justify-self: start;
-			}
-			& > ul {
-				justify-self: end;
-			}
-		}
-	}
-
-	/* Stands in for the session links while the server island loads. */
-	.nav-placeholder {
-		display: inline-grid;
-		inline-size: max-content;
-		padding: var(--space-3xs) var(--space-xs);
-		border: var(--rule) var(--line);
 	}
 }

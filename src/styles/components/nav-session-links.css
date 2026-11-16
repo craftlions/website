@@ -1,15 +1,11 @@
 @layer components {
-	/* src/components/NavSessionLinks.astro: a row of grouped links, closer
-	   together than the groups themselves. */
-	.nav-group {
-		display: grid;
-		grid-auto-flow: column;
-		grid-auto-columns: max-content;
-		align-items: center;
-		gap: var(--space-2xs);
-
-		&[data-space="xs"] {
-			gap: var(--space-xs);
-		}
+	/* src/components/NavSessionLinks.astro: its groups are .cluster lists,
+	   closer together than the groups themselves. This stands in for the
+	   links while the server island loads. */
+	.nav-placeholder {
+		display: inline-grid;
+		inline-size: max-content;
+		padding: var(--space-3xs) var(--space-xs);
+		border: var(--rule) var(--line);
 	}
 }

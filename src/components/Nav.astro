@@ -17,11 +17,16 @@ const {
 
 <nav
 	aria-label="Primary"
-	class="nav"
+	class="nav cluster"
+	data-space="s"
+	data-justify="between"
 	data-variant={variant === "marketing" ? "marketing" : undefined}
 >
 	<a href="/" aria-label="craftlions home"> <LogoWithTextVertical /> </a>
-	<ul class="text-sm">
+	<ul
+		class="cluster text-sm"
+		style="--cluster-space: var(--space-xs) var(--space-m)"
+	>
 		{deferSessionLinks ? (
 			<NavSessionLinks
 				{organizationSlug}
