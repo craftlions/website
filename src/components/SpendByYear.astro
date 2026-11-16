@@ -135,65 +135,58 @@ const hasNegativeSpend = bars.some((bar) =>
 					invoice list for the complete breakdown.
 				</p>
 			) : (
-				<div class="box spend-chart" data-spend-chart>
-					<section
-						class="spend-scroll"
-						dir="rtl"
-						tabindex="0"
-						aria-labelledby="spend-heading"
-					>
-						<div
-							class="spend-bars"
-							dir="ltr"
-							style={`grid-template-columns: repeat(${bars.length}, minmax(6.5rem, 1fr))`}
-						>
-							{bars.map((bar) => {
-								const reversed = bar.segments
-									.filter((segment) => segment.total > 0)
-									.reverse();
-								return (
-									<div class="spend-bar">
-										<div class="spend-plot">
-											<div
-												class="spend-stack"
-												style={`height: ${(bar.total / maxTotal) * 100}%; grid-template-rows: ${reversed.map((segment) => `${segment.total / bar.total}fr`).join(" ")}`}
-												aria-hidden="true"
-											>
-												{reversed.map((segment) => (
-													<div
-														class:list={[
-															"spend-segment forced-line",
-															segment.mark,
-														]}
-														data-project={segment.id}
-														data-name={segment.name}
-														data-amount={currencyFormatter.format(
-															segment.total,
-														)}
-														data-year={bar.year}
-													/>
-												))}
-											</div>
-										</div>
-										<div class="spend-label">
-											<span
-												class="spend-total text-sm tabular-nums"
-												data-current={bar.year === currentYear || undefined}
-											>
-												{currencyFormatter.format(bar.total)}
-											</span>
-											<span class="label-caps">
-												{bar.year}
-												{bar.year === currentYear && (
-													<span class="sr-only"> (current year)</span>
-												)}
-											</span>
+				<div class="box stack" data-spend-chart>
+					{/* One row per year, the current one first: its year and total,
+					   then the bar across the whole width, so every year fits however
+					   narrow the box is. */}
+					<ol class="stack" data-space="xs">
+						{bars.toReversed().map((bar) => {
+							const segments = bar.segments.filter(
+								(segment) => segment.total > 0,
+							);
+							return (
+								<li class="stack" data-space="3xs">
+									<p
+										class="cluster"
+										data-justify="between"
+										data-align="baseline"
+									>
+										<span class="label-caps">
+											{bar.year}
+											{bar.year === currentYear && (
+												<span class="sr-only"> (current year)</span>
+											)}
+										</span>
+										<span
+											class="spend-total text-sm tabular-nums"
+											data-current={bar.year === currentYear || undefined}
+										>
+											{currencyFormatter.format(bar.total)}
+										</span>
+									</p>
+									<div class="spend-plot" aria-hidden="true">
+										<div
+											class="spend-stack"
+											style={`inline-size: ${(bar.total / maxTotal) * 100}%; grid-template-columns: ${segments.map((segment) => `${segment.total / bar.total}fr`).join(" ")}`}
+										>
+											{segments.map((segment) => (
+												<div
+													class:list={[
+														"spend-segment forced-line",
+														segment.mark,
+													]}
+													data-project={segment.id}
+													data-name={segment.name}
+													data-amount={currencyFormatter.format(segment.total)}
+													data-year={bar.year}
+												/>
+											))}
 										</div>
 									</div>
-								);
-							})}
-						</div>
-					</section>
+								</li>
+							);
+						})}
+					</ol>
 
 					<p class="text-sm" data-spend-status>
 						<span class="spend-line truncate" dir="auto">
@@ -204,7 +197,12 @@ const hasNegativeSpend = bars.some((bar) =>
 						</span>
 					</p>
 
-					<ul aria-label="Spend by project" class="spend-legend text-sm">
+					<ul
+						aria-label="Spend by project"
+						class="cluster text-sm"
+						data-space="s"
+						data-align="start"
+					>
 						{projectKeys.map((project) => (
 							<li
 								class="spend-key"
@@ -217,7 +215,7 @@ const hasNegativeSpend = bars.some((bar) =>
 									aria-hidden="true"
 									class:list={["spend-swatch forced-line", project.mark]}
 								/>
-								<span class="spend-name wrap-break-word" dir="auto">
+								<span class="wrap-break-word" dir="auto">
 									{project.name}
 								</span>
 								<span class="spend-amount text-xs tabular-nums text-fg-muted wrap-break-word">

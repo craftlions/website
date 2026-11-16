@@ -3,41 +3,18 @@
 	   projects' segments, a status line and the legend. Pointing at a segment
 	   or a legend entry marks that project data-state="active" and every other
 	   one "dimmed". */
-	.spend-chart {
-		display: grid;
-		grid-template-columns: repeat(1, minmax(0, 1fr));
-		gap: var(--space-xs);
-	}
 
-	/* Scrolls sideways from the end, so the current year shows first. */
-	.spend-scroll {
-		display: grid;
-		gap: var(--space-3xs);
-		overflow-x: auto;
-	}
-
-	.spend-bars {
-		display: grid;
-		inline-size: 100%;
-		min-inline-size: max-content;
-		gap: var(--space-2xs);
-	}
-
-	.spend-bar {
-		display: grid;
-		min-inline-size: 0;
-	}
-
+	/* The track a year's bar grows along from the axis, the full width of the
+	   box, so the bars stay comparable at any width. */
 	.spend-plot {
 		display: grid;
-		block-size: 9rem;
-		align-items: flex-end;
-		border-block-end: var(--rule) var(--line);
+		block-size: 1.25rem;
+		border-inline-start: var(--rule) var(--line);
 	}
 
 	.spend-stack {
 		display: grid;
-		gap: var(--hairline);
+		column-gap: var(--hairline);
 	}
 
 	/* Hatching in the project's chart colour, which a text-chart-* role sets;
@@ -64,21 +41,9 @@
 		}
 	}
 
-	.spend-label {
-		display: grid;
-		gap: var(--space-3xs);
-		padding-block-start: var(--space-3xs);
-		text-align: center;
-	}
-
-	.spend-total {
-		white-space: nowrap;
-
-		/* The current year's total is underlined by a dashed rule. */
-		&[data-current] {
-			justify-self: center;
-			border-block-end: var(--rule) var(--line-strong);
-		}
+	/* The current year's total is underlined by a dashed rule. */
+	.spend-total[data-current] {
+		border-block-end: var(--rule) var(--line-strong);
 	}
 
 	/* Two status lines of fixed height, so a longer name never moves the chart. */
@@ -87,18 +52,10 @@
 		block-size: 1.25rem;
 	}
 
-	.spend-legend {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr));
-		column-gap: var(--space-s);
-		row-gap: var(--space-2xs);
-	}
-
+	/* A legend entry: the swatch, then the name over its total. */
 	.spend-key {
 		display: grid;
-		min-inline-size: 0;
 		grid-template-columns: auto minmax(0, 1fr);
-		align-content: flex-start;
 		align-items: center;
 		column-gap: var(--space-2xs);
 		padding: var(--space-3xs);
@@ -122,12 +79,7 @@
 		border: var(--hairline) dashed currentColor;
 	}
 
-	.spend-name {
-		min-inline-size: 0;
-	}
-
 	.spend-amount {
 		grid-column-start: 2;
-		min-inline-size: 0;
 	}
 }
