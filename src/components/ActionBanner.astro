@@ -27,11 +27,12 @@ if (error?.code === "INTERNAL_SERVER_ERROR") {
 {isInputError(error) ? (
 	<div
 		role="alert"
-		class="box action-banner text-sm text-fg-danger"
+		class="box stack action-banner text-sm text-fg-danger"
 		data-padding="xs"
+		data-space="2xs"
 	>
 		<p>Check these fields and try again.</p>
-		<ul>
+		<ul class="stack" data-space="3xs">
 			{error.issues.map((issue) => (
 				<li>
 					{[fieldLabels[String(issue.path[0] ?? "")], issue.message]

@@ -8,15 +8,8 @@
 			border-color: var(--line-success);
 		}
 
-		/* The input errors: a sentence above a bulleted list. */
-		&:has(> ul) {
-			display: grid;
-			gap: var(--space-2xs);
-		}
-
+		/* The input errors, a stack: a sentence above a bulleted list. */
 		& > ul {
-			display: grid;
-			gap: var(--space-3xs);
 			padding-inline-start: 1.25rem; /* constant: room for the bullet */
 			list-style-type: disc;
 		}
