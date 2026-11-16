@@ -37,17 +37,12 @@ const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 	breadcrumbs={activePage === "overview" ? [] : [activeTab]}
 	wide
 >
-	<header
-		slot="header"
-		class="grid gap-4 border-b border-dashed border-line pb-6"
-	>
+	<header slot="header" class="masthead stack">
 		<PageHeading>
 			{organization.name}
 		</PageHeading>
 		<nav aria-label="Organization sections">
-			<ul
-				class="-m-1 grid grid-flow-col auto-cols-max gap-2 overflow-x-auto p-1"
-			>
+			<ul class="tabs">
 				{pages.map((page) => (
 					<li>
 						<Button

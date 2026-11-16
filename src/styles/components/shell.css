@@ -1,3 +1,78 @@
 @layer components {
-	/* The shells in src/layouts/; filled by conversion package S5b. */
+	/* The shells in src/layouts/. The body of AdminShell and ClientShell:
+	   header, main and footer in rows, the impersonation bar above them. */
+	.shell {
+		display: grid;
+		min-block-size: 100dvh;
+		grid-template-rows: auto 1fr auto;
+		gap: var(--space-m-l);
+		padding: var(--space-s-m);
+		text-wrap: pretty;
+
+		&:has(> .impersonation) {
+			grid-template-rows: auto auto 1fr auto;
+		}
+
+		/* The page column; its left gutter sits inside the width, so it is no
+		   .center. */
+		& > main {
+			display: grid;
+			inline-size: 100%;
+			max-inline-size: var(--column);
+			min-block-size: 0;
+			align-content: start;
+			gap: var(--space-m);
+			margin-inline: auto;
+			padding-inline-start: var(--space-xs);
+
+			&[data-width="wide"] {
+				max-inline-size: var(--column-wide);
+			}
+		}
+	}
+
+	/* Shell.astro: the bar that stays on top while an admin views as a client. */
+	.impersonation {
+		position: sticky;
+		inset-block-start: 0;
+		z-index: 50;
+		display: grid;
+		inline-size: 100%;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		column-gap: var(--space-xs);
+		padding: var(--space-xs);
+		border-block-end: var(--rule) var(--line-strong);
+		background-color: var(--panel);
+
+		& > stop-impersonating {
+			display: contents;
+		}
+		& [role="alert"] {
+			grid-column: span 2 / span 2;
+
+			&:not(:empty) {
+				margin-block-start: var(--space-xs);
+			}
+		}
+	}
+
+	/* The header slot of AdminOrgShell, ClientOrgShell and SettingsShell:
+	   the heading and its tabs above a dashed rule. */
+	.masthead {
+		padding-block-end: var(--space-m);
+		border-block-end: var(--rule) var(--line);
+	}
+
+	/* Section tabs that scroll sideways when they do not fit; the negative
+	   margin keeps their focus rings inside the scroll box. */
+	.tabs {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: max-content;
+		gap: var(--space-2xs);
+		margin: calc(-1 * var(--space-3xs));
+		padding: var(--space-3xs);
+		overflow-x: auto;
+	}
 }

@@ -75,20 +75,15 @@ const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];
 	{results}
 	{fieldLabels}
 >
-	<header
-		slot="header"
-		class="grid gap-4 border-b border-dashed border-line pb-6"
-	>
-		<div class="grid gap-1">
+	<header slot="header" class="masthead stack">
+		<div class="stack" data-space="3xs">
 			<p class="label-caps">Client</p>
 			<PageHeading>
 				{organization.name}
 			</PageHeading>
 		</div>
 		<nav aria-label="Client sections">
-			<ul
-				class="-m-1 grid grid-flow-col auto-cols-max gap-2 overflow-x-auto p-1"
-			>
+			<ul class="tabs">
 				{pages.map((page) => (
 					<li>
 						<Button

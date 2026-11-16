@@ -42,28 +42,18 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<link rel="icon" type="image/x-icon" href="/favicon.ico">
 	</head>
 	{bodyClass ? (
-		<body
-			class:list={[
-				bodyClass,
-				session?.session.impersonatedBy
-					? "grid-rows-[auto_auto_1fr_auto]"
-					: "grid-rows-[auto_1fr_auto]",
-			]}
-		>
+		<body class={bodyClass}>
 			{session?.session.impersonatedBy && (
-				<aside
-					aria-label="Impersonation"
-					class="sticky top-0 z-50 grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-b border-dashed border-line-strong bg-panel p-3"
-				>
+				<aside aria-label="Impersonation" class="impersonation">
 					<p class="text-label wrap-break-word">
 						Viewing as {session.user.name}
 					</p>
-					<stop-impersonating class="contents">
+					<stop-impersonating>
 						<Button aria-describedby="stop-impersonating-error">Stop</Button>
 						<p
 							id="stop-impersonating-error"
 							role="alert"
-							class="col-span-2 text-sm text-fg-danger not-empty:mt-3"
+							class="text-sm text-fg-danger"
 						/>
 					</stop-impersonating>
 				</aside>
