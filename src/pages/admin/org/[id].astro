@@ -148,13 +148,17 @@ const setupGaps = [
 	fieldLabels={{ deliveryChoice: "Delivery", deliveryUrl: "Delivery URL" }}
 >
 	{setupGaps.length > 0 && (
-		<section class="grid min-w-0 gap-3" aria-labelledby="setup-heading">
+		<section
+			class="stack org-overview"
+			data-space="xs"
+			aria-labelledby="setup-heading"
+		>
 			<h2 id="setup-heading" class="label-caps">
 				Setup
 			</h2>
-			<ul class="grid border border-dashed border-line">
+			<ul class="admin-list org-setup">
 				{setupGaps.map((gap) => (
-					<li class="grid min-w-0 gap-2 border-b border-dashed border-line p-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6">
+					<li class="stack" data-space="2xs">
 						<p class="text-sm wrap-break-word">{gap.text}</p>
 						<Button href={gap.href} variant="quiet">
 							{gap.action}
@@ -164,9 +168,13 @@ const setupGaps = [
 			</ul>
 		</section>
 	)}
-	<section class="grid min-w-0 gap-3" aria-labelledby="worklist-heading">
+	<section
+		class="stack org-overview"
+		data-space="xs"
+		aria-labelledby="worklist-heading"
+	>
 		<h2 id="worklist-heading" class="label-caps"> Worklist </h2>
-		<p class="max-w-prose text-sm text-fg-muted">
+		<p class="admin-intro text-sm text-fg-muted">
 			Phases that need a step from you or the client, and unpaid invoices:
 			overdue ones always, open ones only when their phase is not listed.
 		</p>
@@ -182,27 +190,23 @@ const setupGaps = [
 			id="overview-worklist"
 		/>
 	</section>
-	<div
-		class="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-start"
-	>
-		<div class="grid min-w-0 content-start gap-6">
-			<section class="grid content-start gap-3" aria-labelledby="money-heading">
+	<div class="stack org-columns org-overview" data-space="m">
+		<div class="stack" data-space="m">
+			<section class="stack" data-space="xs" aria-labelledby="money-heading">
 				<h2 id="money-heading" class="label-caps"> Money </h2>
-				<p class="max-w-prose text-sm text-fg-muted">
+				<p class="admin-intro text-sm text-fg-muted">
 					Budget for the current calendar year, and invoices waiting for payment
 					or to be sent.
 				</p>
-				<dl class="grid border-t border-dashed border-line">
-					<div
-						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
-					>
+				<dl class="org-money">
+					<div class="stack" data-space="3xs">
 						<dt class="label-caps">Yearly budget</dt>
 						{yearlyBudget > 0 ? (
 							<dd class="text-title tabular-nums wrap-break-word">
 								{formatMoney(yearlyBudget, "EUR")}
 							</dd>
 						) : (
-							<dd class="grid gap-1 text-sm">
+							<dd class="stack text-sm" data-space="3xs">
 								<span class="text-fg-muted">No yearly budget set.</span>
 								<Button
 									href={`/admin/org/${organization.id}/settings#billing-heading`}
@@ -213,16 +217,14 @@ const setupGaps = [
 							</dd>
 						)}
 					</div>
-					<div
-						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
-					>
+					<div class="stack" data-space="3xs">
 						<dt class="label-caps">Invoiced this year</dt>
 						<dd class="text-title tabular-nums wrap-break-word">
 							{formatMoney(currentYearTotal, "EUR")}
 						</dd>
 					</div>
 					{yearlyBudget > 0 && (
-						<div class="grid min-w-0 gap-2 border-b border-dashed border-line p-4">
+						<div class="stack" data-space="2xs">
 							<dt class="label-caps">Budget used</dt>
 							<dd
 								class:list={[
@@ -232,14 +234,12 @@ const setupGaps = [
 							>
 								{formatPercent(usagePercentage)}
 							</dd>
-							<dd class="grid">
+							<dd class="org-meter">
 								<Progress percent={usagePercentage} aria-label="Budget used" />
 							</dd>
 						</div>
 					)}
-					<div
-						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
-					>
+					<div class="stack" data-space="3xs">
 						<dt class="label-caps">Outstanding</dt>
 						<dd class="text-title tabular-nums wrap-break-word">
 							<a href={`${invoicesHref}#invoices`} class="link">
@@ -253,9 +253,7 @@ const setupGaps = [
 							</a>
 						</dd>
 					</div>
-					<div
-						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
-					>
+					<div class="stack" data-space="3xs">
 						<dt class="label-caps">Overdue</dt>
 						<dd
 							class:list={[
@@ -274,9 +272,7 @@ const setupGaps = [
 							</a>
 						</dd>
 					</div>
-					<div
-						class="grid min-w-0 gap-1 border-b border-dashed border-line p-4"
-					>
+					<div class="stack" data-space="3xs">
 						<dt class="label-caps">To invoice</dt>
 						<dd class="text-title tabular-nums wrap-break-word">
 							<a href={`${invoicesHref}#to-invoice`} class="link">
@@ -298,11 +294,8 @@ const setupGaps = [
 			</section>
 			<SpendByYear rows={spendRows} />
 		</div>
-		<section
-			class="grid min-w-0 content-start gap-3"
-			aria-labelledby="projects-heading"
-		>
-			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+		<section class="stack" data-space="xs" aria-labelledby="projects-heading">
+			<div class="admin-section-head">
 				<h2 id="projects-heading" class="label-caps"> Current projects </h2>
 				{projects.length > 0 && (
 					<Button
@@ -313,14 +306,14 @@ const setupGaps = [
 					</Button>
 				)}
 			</div>
-			<p class="max-w-prose text-sm text-fg-muted">
+			<p class="admin-intro text-sm text-fg-muted">
 				Active projects first, then drafts waiting for you to activate them.
 			</p>
 			{currentProjects.length > 0 ? (
-				<ul class="grid border border-dashed border-line">
+				<ul class="admin-list org-projects">
 					{currentProjects.map((project) => (
-						<li class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line p-4 last:border-b-0">
-							<h3 class="min-w-0 wrap-break-word">
+						<li>
+							<h3 class="wrap-break-word">
 								<a
 									href={`/admin/org/${organization.id}/projects/${project.publicId}`}
 									class="link"
@@ -331,12 +324,15 @@ const setupGaps = [
 							<Badge type={projectStatus[project.state].badge}>
 								{projectStatus[project.state].label}
 							</Badge>
-							<ProjectPhaseSummary phases={project.phases} class="col-span-2" />
+							<ProjectPhaseSummary
+								phases={project.phases}
+								class="org-project-phases"
+							/>
 						</li>
 					))}
 				</ul>
 			) : (
-				<p class="border border-dashed border-line p-4 text-sm text-fg-muted">
+				<p class="box text-sm text-fg-muted">
 					{projects.length > 0
 						? "No active or draft projects. Completed and archived projects are on the Projects tab."
 						: "No projects yet."}

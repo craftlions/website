@@ -48,6 +48,22 @@
 		}
 	}
 
+	/* A dashed list whose items are divided by rules. */
+	.admin-list {
+		display: grid;
+		border: var(--rule) var(--line);
+
+		& > li {
+			min-inline-size: 0;
+			border-block-end: var(--rule) var(--line);
+			padding: var(--space-s);
+
+			&:last-child {
+				border-block-end-width: 0;
+			}
+		}
+	}
+
 	/* /admin: the summary figures, as many per row as fit at 10rem. */
 	.admin-summary {
 		display: grid;
@@ -133,5 +149,61 @@
 
 	.ledger-progress {
 		inline-size: 6rem;
+	}
+
+	/* /admin/org/[id]: the overview's parts may shrink below their longest word
+	   inside the shell's grid. */
+	.org-overview {
+		min-inline-size: 0;
+	}
+
+	/* The setup steps still missing, each with its action beside it from
+	   40rem. */
+	.org-setup > li {
+		@media (width >= 40rem) {
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: center;
+			gap: var(--space-m);
+		}
+	}
+
+	/* Money and spend beside the current projects from 64rem, one to two. */
+	.org-columns {
+		@media (width >= 64rem) {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+			align-items: start;
+		}
+	}
+
+	/* The money figures, each above a rule. */
+	.org-money {
+		display: grid;
+		border-block-start: var(--rule) var(--line);
+
+		& > div {
+			min-inline-size: 0;
+			border-block-end: var(--rule) var(--line);
+			padding: var(--space-s);
+		}
+	}
+
+	.org-meter {
+		display: grid;
+	}
+
+	/* A current project: name and status, its phases below both. */
+	.org-projects > li {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: start;
+		gap: var(--space-xs);
+
+		& > h3 {
+			min-inline-size: 0;
+		}
+	}
+
+	.org-project-phases {
+		grid-column: span 2 / span 2;
 	}
 }
