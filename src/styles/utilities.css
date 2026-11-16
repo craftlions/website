@@ -137,6 +137,10 @@
 	.tabular-nums {
 		font-variant-numeric: tabular-nums;
 	}
+	/* A stored name shown as a word, such as a payment part. */
+	.capitalize {
+		text-transform: capitalize;
+	}
 	.wrap-break-word {
 		overflow-wrap: break-word;
 	}
