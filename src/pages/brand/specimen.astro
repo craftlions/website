@@ -92,14 +92,14 @@ const frames = [
 	<Fragment slot="head"> <title>craftlions | Specimen</title> </Fragment>
 	<Fragment slot="body">
 		<body class="specimen">
-			<header class="column stack" data-space="2xs">
+			<header class="center stack" data-width="wide" data-space="2xs">
 				<PageHeading> Specimen </PageHeading>
 				<p class="intro text-sm text-fg-muted">
 					Every token and primitive in both color schemes; hover and tab through
 					the controls to see their states.
 				</p>
 			</header>
-			<main class="column stack sections">
+			<main class="center stack sections" data-width="wide">
 				<section
 					aria-labelledby="scale"
 					class="box stack panel full-row"
@@ -813,11 +813,6 @@ const frames = [
 			gap: var(--space-m-l);
 			padding: var(--space-s-m);
 			text-wrap: pretty;
-		}
-		.column {
-			inline-size: 100%;
-			max-inline-size: var(--column-wide);
-			margin-inline: auto;
 		}
 		.intro {
 			padding-inline-start: var(--space-xs);

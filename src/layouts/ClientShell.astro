@@ -44,7 +44,7 @@ const trail = organization
 		>
 			<Nav organizationSlug={organization?.slug} />
 		</header>
-		<main data-width={wide ? "wide" : undefined}>
+		<main class="center" data-width={wide ? "wide" : undefined}>
 			{trail.length > 1 && <Breadcrumbs items={trail} />}
 			<slot name="header" />
 			<slot />

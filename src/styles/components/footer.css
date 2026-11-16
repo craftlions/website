@@ -1,19 +1,12 @@
 @layer components {
-	/* src/components/Footer.astro: logo, about and links in two columns from
-	   sm and three from lg, the copyright across all of them. Its own gutter
-	   sits inside the column width, so it is no .center. */
+	/* src/components/Footer.astro, a .center: logo, about and links in two
+	   columns from sm and three from lg, the copyright across all of them. Its
+	   inset sits inside the column width. */
 	.footer {
 		display: grid;
-		inline-size: 100%;
-		max-inline-size: var(--column);
 		gap: var(--space-s);
-		margin-inline: auto;
 		padding: var(--space-m) var(--space-xs);
 		border-block-start: var(--rule) var(--line);
-
-		&[data-width="wide"] {
-			max-inline-size: var(--column-wide);
-		}
 
 		& > a {
 			display: grid;
