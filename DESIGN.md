@@ -184,8 +184,8 @@ The palette is a restrained paper-and-ink system: neutral structure first, link 
 
 - **Panel Neutral** (`panel`): low-emphasis hover and grouped-surface color.
 - **Dashed Line** (`line`): the default line color for borders, dividers, tables, and empty states.
-- **Dashed Line Strong** (`line-strong`): the headline rule and stronger structural line color.
-- **Dashed Line Control** (`line-control`): the boundary of a control the user operates: input and select borders, the checkbox outline, and the progress track. It holds 3:1 against canvas and panel in both schemes, because that line is the only thing that shows the control is there.
+- **Dashed Line Strong** (`line-strong`): the headline rule and stronger structural line color. It is decorative and below 3:1, so it never alone marks a control or a state.
+- **Dashed Line Control** (`line-control`): the boundary of a control the user operates or of a state it alone shows: input and select borders, the checkbox outline, the hint button, the progress track, and the dotted outline of a payment segment not yet invoiced. It holds 3:1 against canvas and panel in both schemes, because that line is the only thing that shows the control is there.
 - **Dashed Line Active** (`line-active`): the hover, focus, and pressed border of a control.
 - **Focus Ring** (`focus`): the global `:focus-visible` outline.
 - **Muted Text** (`fg-muted`): secondary text of every kind: body copy, table values, labels, metadata, placeholders, and helper text. There is one muted tier; express further hierarchy with size or weight.
@@ -216,7 +216,7 @@ Biome is excluded from this file because it flattens the YAML frontmatter that `
 | `outline-fill-info`                               | Dashed outline of a linked target, with `bg-info-subtle`                     |
 | `border-line`                                     | Default structure, also `divide-line`                                        |
 | `border-line-strong`                              | Headline rules, gray badges, the current year in the spend chart, also `bg-` |
-| `border-line-control`                             | Input, select and checkbox outlines and the progress track (3:1)             |
+| `border-line-control`                             | Control and state outlines: inputs, checkbox, hint, progress track (3:1)     |
 | `border-line-active`                              | Hover, focus, and pressed borders                                            |
 | `border-line-danger`, `-success`, `-info`         | Status outlines                                                              |
 | `border-canvas`                                   | Pace marker edge                                                             |
@@ -301,7 +301,7 @@ Buttons are compact, transparent, and line-drawn.
 - **Component:** every action is `src/components/Button.astro`; `aubr design:lint` rejects a raw `<button>`. It renders `<a>` with `href`.
 - **Danger:** `variant="danger"` draws the border and text in status red. It is for the one button that starts a destructive action, such as Delete client; inside dense rows a destructive trigger stays `quiet` and the danger style moves to the confirmation.
 - **Quiet:** `variant="quiet"` is a muted text link (see Links) for secondary actions in dense admin rows.
-- **Hint:** `variant="hint"` is the 1rem square that opens a tooltip.
+- **Hint:** `variant="hint"` is the 1rem square that opens a tooltip; its dashed `line-control` border is the only sign that it is a control.
 
 ### Links
 
@@ -420,7 +420,7 @@ Progress is used for budget state and remains literal.
 - **Track:** transparent track with a dashed `line-control` border.
 - **Fill:** ink neutral by default, status red only when budget use exceeds the budget.
 - **Pace Marker:** a thin neutral marker may show calendar pace, but it must not compete with the actual value.
-- **Payment progress:** a phase's cost parts render as a row of small segments, one per part. Shape carries the state and color repeats it: paid is a solid green block, overdue a solid red outline, invoiced a dashed blue outline, and not yet invoiced a dotted neutral outline. Each segment names its part and state for screen readers and in its `title`, and the line below sums it up in words. The status fills that draw the segments (`fill-success`, `fill-danger`, `fill-info`) hold 3:1 on canvas and panel, so the state reads at a glance.
+- **Payment progress:** a phase's cost parts render as a row of small segments, one per part. Shape carries the state and color repeats it: paid is a solid green block, overdue a solid red outline, invoiced a dashed blue outline, and not yet invoiced a dotted neutral outline. Each segment names its part and state for screen readers and in its `title`, and the line below sums it up in words. The status fills that draw the segments (`fill-success`, `fill-danger`, `fill-info`) and the dotted `line-control` outline hold 3:1 on canvas and panel, so the state reads at a glance.
 
 ## 6. Do's and Don'ts
 
