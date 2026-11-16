@@ -30,14 +30,6 @@
 		}
 	}
 
-	/* A section's heading with its control at the end. */
-	.client-section-head {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: center;
-		gap: var(--space-xs);
-	}
-
 	/* "Hide completed" hides the completed projects; when that hides all of
 	   them, a note says so. */
 	.client-projects:has(:checked) [data-state="completed"] {

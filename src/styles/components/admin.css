@@ -16,14 +16,6 @@
 		max-inline-size: var(--measure);
 	}
 
-	/* A section heading with its action at the end of the row. */
-	.admin-section-head {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: center;
-		gap: var(--space-xs);
-	}
-
 	/* A form's fields in one column, in two from 48rem. */
 	.admin-form {
 		display: grid;

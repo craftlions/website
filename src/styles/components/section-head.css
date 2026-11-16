@@ -1,0 +1,11 @@
+@layer components {
+	/* A section's heading with its action at the end of the row: the action
+	   keeps its width and the heading takes the rest, in one row at every
+	   width (DESIGN.md#disclosure). */
+	.section-head {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+}
