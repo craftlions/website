@@ -1,34 +1,5 @@
 @layer components {
-	/* src/components/ClientWorklist.astro: a rows list whose groups are
-	   introduced by a heading row; from 60rem of its own width a table on five
-	   columns (status, item, amount, due, action). */
-	.client-worklist {
-		& [data-head] {
-			padding-block: var(--space-xs);
-
-			& > :nth-child(3),
-			& > :nth-child(5) {
-				text-align: end;
-			}
-		}
-
-		/* A group's heading, or the note that it is empty, spans the row. */
-		& li > :only-child {
-			grid-column: 1 / -1;
-		}
-		& li:has(> h3) {
-			padding-block: var(--space-2xs);
-		}
-	}
-
-	/* Amount, actions and the "who decides" note sit at the column's end in
-	   the table. */
-	@container (inline-size >= 60rem) {
-		.client-worklist-end {
-			text-align: end;
-		}
-		.client-worklist-action {
-			justify-content: flex-end;
-		}
-	}
+	/* src/components/ClientWorklist.astro is a list of inbox lines and needs
+	   no rules of its own (lines.css). This file stays only for its import in
+	   global.css. */
 }

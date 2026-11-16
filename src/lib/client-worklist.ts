@@ -97,7 +97,8 @@ type ItemBase = {
 	priority: number;
 	amount: number;
 	currency: string;
-	// The due date or days overdue, as labelled copy.
+	// The due date or days overdue, worded to stand alone: "due 26.11.2026",
+	// "5 days overdue".
 	due: string;
 	overdue: boolean;
 };
@@ -156,8 +157,8 @@ export const deriveClientWorklist = <
 									amount: phase.cost,
 									currency: phase.currency,
 									due: phase.dueAt
-										? `Due ${formatDate(phase.dueAt)}`
-										: "Not scheduled",
+										? `due ${formatDate(phase.dueAt)}`
+										: "not scheduled",
 									overdue: false,
 									project,
 									phase,
@@ -187,8 +188,8 @@ export const deriveClientWorklist = <
 					due: overdue
 						? `${formatDays(daysOverdue(invoice, now))} overdue`
 						: invoice.dueAt
-							? `Due ${formatDate(invoice.dueAt)}`
-							: "No due date",
+							? `due ${formatDate(invoice.dueAt)}`
+							: "no due date",
 					overdue,
 					invoice,
 				};
