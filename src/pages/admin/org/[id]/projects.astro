@@ -145,7 +145,7 @@ const isCreateOpen =
 				data-space="xs"
 				aria-labelledby={`${groupId}-heading`}
 			>
-				<div class="projects-head">
+				<div class="section-head">
 					<h2 id={`${groupId}-heading`} class="label-caps">
 						{archived ? "Archived" : "Projects"}
 					</h2>
@@ -166,7 +166,7 @@ const isCreateOpen =
 				</div>
 				{!archived && (
 					<>
-						<p class="projects-note text-sm text-fg-muted">
+						<p class="measure text-sm text-fg-muted">
 							Projects where it is your move come first, then active, draft and
 							completed ones.
 						</p>
@@ -218,7 +218,7 @@ const isCreateOpen =
 								<h3 class="project-name wrap-break-word">
 									<a
 										href={`/admin/org/${organization.id}/projects/${project.publicId}`}
-										class="link"
+										class="link hover-text-fg"
 									>
 										{project.name}
 									</a>

@@ -303,12 +303,12 @@ const attachBlocker = (invoice: { currency: string }) => {
 		<h2 id="to-invoice-heading" class="label-caps">
 			To invoice ({dueParts.length})
 		</h2>
-		<p class="projects-note text-sm text-fg-muted">
+		<p class="measure text-sm text-fg-muted">
 			Cost parts that are due and have no invoice yet. Create the invoice in
 			Stripe, then attach it under To attach.
 		</p>
 		{!organizationData?.stripeCustomerId && (
-			<div class="box stack text-sm" style="--stack-space: var(--space-xs)">
+			<div class="box stack text-sm" data-space="xs">
 				<p>
 					No Stripe customer linked.{" "}
 					<span class="text-fg-muted">
@@ -370,7 +370,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 		<h2 id="to-attach-heading" class="label-caps">
 			To attach ({unattachedInvoices.length})
 		</h2>
-		<p class="projects-note text-sm text-fg-muted">
+		<p class="measure text-sm text-fg-muted">
 			Stripe invoices for this client that are not linked to a cost part yet.
 		</p>
 		{unattachedInvoices.length > 0 ? (
@@ -398,7 +398,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 							part.component === pickedComponent,
 					);
 					return (
-						<li id={`invoice-${invoice.id}`} class="attach-row">
+						<li id={`invoice-${invoice.id}`} class="target attach-row">
 							<div class="stack" data-space="3xs">
 								<p class="label-caps">
 									Invoice{" "}
@@ -509,7 +509,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 		<h2 id="invoices-heading" class="label-caps">
 			Invoices ({recorded.length})
 		</h2>
-		<p class="projects-note text-sm text-fg-muted">
+		<p class="measure text-sm text-fg-muted">
 			Invoices attached to a cost part, overdue first.
 		</p>
 		{unavailableCount > 0 && (
@@ -542,8 +542,8 @@ const attachBlocker = (invoice: { currency: string }) => {
 						return (
 							<li
 								id={`invoice-${row.invoice.id}`}
-								class="box stack invoice-card"
-								style="--stack-space: var(--space-xs)"
+								class="box stack target"
+								data-space="xs"
 								data-invoice-item
 								data-category={
 									row.invoice.status === "open" || row.invoice.status === "paid"
@@ -627,7 +627,7 @@ const attachBlocker = (invoice: { currency: string }) => {
 				</p>
 			</admin-invoice-list>
 		) : (
-			<div class="box stack text-sm" style="--stack-space: var(--space-xs)">
+			<div class="box stack text-sm" data-space="xs">
 				<p class="text-fg-muted">
 					{parts.length === 0
 						? "No priced phases yet. Add a priced phase to a project to start billing."

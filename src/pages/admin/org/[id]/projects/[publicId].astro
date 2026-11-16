@@ -218,7 +218,7 @@ const phases = project.phases
 						nextState="completed"
 						button={{ disabled: true, "aria-describedby": "complete-blocked" }}
 					/>
-					<p id="complete-blocked" class="projects-note text-sm text-fg-muted">
+					<p id="complete-blocked" class="measure text-sm text-fg-muted">
 						{openPhaseCount === 1
 							? "1 phase is still open. Accept or cancel it to complete the project."
 							: `${openPhaseCount} phases are still open. Accept or cancel them to complete the project.`}
@@ -250,7 +250,7 @@ const phases = project.phases
 	</header>
 
 	<section class="stack" data-space="xs" aria-labelledby="phases-heading">
-		<div class="projects-head">
+		<div class="section-head">
 			<h3 id="phases-heading" class="label-caps"> Phases </h3>
 			{canAddPhase && (
 				<DisclosureButton controls="add-phase" open={isAddPhaseOpen}>
@@ -258,7 +258,7 @@ const phases = project.phases
 				</DisclosureButton>
 			)}
 		</div>
-		<p class="projects-note text-sm text-fg-muted">
+		<p class="measure text-sm text-fg-muted">
 			Open phases come first. Each row offers its next step; corrections and
 			cancelling sit under More.
 			{!canAddPhase && " Phases can only be added to draft or active projects."}
@@ -488,7 +488,7 @@ const phases = project.phases
 												method="POST"
 												action={actions.updatePhaseAmounts}
 												class="box stack phase-split-form"
-												style="--stack-space: var(--space-xs)"
+												data-space="xs"
 											>
 												<input type="hidden" name="phaseId" value={phase.id}>
 												<input
@@ -533,7 +533,7 @@ const phases = project.phases
 <script>
 	// Deep links (`#phase-<publicId>`, from the worklist and invoices) and the
 	// row the last action came from (`data-acted`, set by the server) are
-	// marked with `data-highlight`, which admin-projects.css draws as a
+	// marked with `data-highlight`, which src/styles/base.css draws as a
 	// background tint plus a non-color outline cue, without motion. A
 	// deep-linked row also opens its More panel, the way its DisclosureButton
 	// does; the server already rendered the acted row's panel open when its

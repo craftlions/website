@@ -3,19 +3,6 @@
 	   columns at today's sm, md and lg widths until the primitives replace the
 	   media queries. */
 
-	/* A section heading with its action at the end. */
-	.projects-head {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: center;
-		gap: var(--space-xs);
-	}
-
-	/* The explanation under a heading. */
-	.projects-note {
-		max-inline-size: var(--measure);
-	}
-
 	/* A form's submit and cancel buttons. */
 	.projects-actions {
 		display: grid;
@@ -23,17 +10,6 @@
 		align-items: center;
 		justify-content: start;
 		gap: var(--space-xs);
-	}
-
-	/* A deep-linked row (:target) or the row the last action came from
-	   (data-highlight, set by the project page's script): a tint plus a
-	   dashed outline, so the cue is not color alone. */
-	.attach-row:target,
-	.invoice-card:target,
-	.phase-row[data-highlight] {
-		outline: 2px dashed color-mix(in oklab, var(--fill-info) 70%, transparent);
-		outline-offset: -2px;
-		background-color: var(--info-subtle);
 	}
 
 	/* Project list. */
@@ -80,13 +56,6 @@
 
 	.project-name {
 		min-inline-size: 0;
-
-		/* An archived row is muted; its link turns primary under the pointer. */
-		@media (hover: hover) {
-			& a:hover {
-				color: var(--fg);
-			}
-		}
 
 		@media (width >= 40rem) {
 			grid-column: span 2 / span 2;
@@ -341,7 +310,6 @@
 		display: grid;
 		gap: var(--space-xs) var(--space-m);
 		padding: var(--space-s);
-		scroll-margin-block-start: var(--space-2xl);
 
 		& > * {
 			min-inline-size: 0;
@@ -373,10 +341,6 @@
 		grid-auto-flow: column;
 		justify-content: start;
 		gap: var(--space-2xs);
-	}
-
-	.invoice-card {
-		scroll-margin-block-start: var(--space-2xl);
 	}
 
 	/* Status, phase, cost part and payment: two columns from sm, four from

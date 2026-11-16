@@ -493,10 +493,8 @@ for (const {
 				"src/styles/global.css",
 			);
 		}
-		// The phase amount calculator adopts the motion tokens in its own change.
 		if (
 			!tokensFile &&
-			file !== "src/styles/components/phase-amount-calculator.css" &&
 			((/^(?:transition|animation)-duration$/.test(property) &&
 				value !== "var(--duration)") ||
 				(/^(?:transition|animation)-timing-function$/.test(property) &&

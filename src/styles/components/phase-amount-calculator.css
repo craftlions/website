@@ -2,10 +2,6 @@
 	/* The cost split of a phase form: Upfront and Delivery shares typed in a %
 	   box, Acceptance the calculated remainder, each with its amount below the
 	   label and the total under them. */
-	.split-note {
-		max-inline-size: var(--measure);
-	}
-
 	.split-part {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) 7rem;
@@ -29,8 +25,8 @@
 		transition-property:
 			color, background-color, border-color, outline-color,
 			text-decoration-color, fill, stroke;
-		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-		transition-duration: 150ms;
+		transition-duration: var(--duration);
+		transition-timing-function: var(--ease);
 
 		&:focus-within {
 			border-color: var(--line-active);
