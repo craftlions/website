@@ -226,7 +226,8 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 				action={actions.onboardOrganization}
 				aria-label="Onboard client"
 				hidden={!isOnboardOpen}
-				class="box admin-form"
+				class="box auto-grid"
+				style="--grid-min: 24rem"
 			>
 				<Field
 					label="Client name"
@@ -273,7 +274,7 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 					hint="Whole euros per calendar year, January to December. Leave empty for no budget."
 					result={onboardResult}
 				/>
-				<div class="admin-form-actions">
+				<div class="cluster" data-space="xs" data-span="full">
 					<Button type="submit">Onboard client</Button>
 					<Button variant="quiet" data-disclosure-cancel> Cancel </Button>
 				</div>

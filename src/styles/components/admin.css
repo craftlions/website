@@ -11,37 +11,10 @@
 		padding-block-end: var(--space-m);
 	}
 
-	/* A form's fields in one column, in two from 48rem. */
-	.admin-form {
-		display: grid;
-		grid-template-columns: repeat(1, minmax(0, 1fr));
-		gap: var(--space-s);
-
-		@media (width >= 48rem) {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-
-	/* A field or group across both columns of an admin form. */
+	/* A field across every column of an admin form, an .auto-grid; a plain
+	   element there takes data-span="full" instead. */
 	.admin-form-full {
-		display: grid;
-
-		@media (width >= 48rem) {
-			grid-column: span 2 / span 2;
-		}
-	}
-
-	/* Submit and cancel side by side, across both columns of an admin form. */
-	.admin-form-actions {
-		display: grid;
-		grid-template-columns: auto auto;
-		align-items: center;
-		justify-content: start;
-		gap: var(--space-xs);
-
-		@media (width >= 48rem) {
-			grid-column: span 2 / span 2;
-		}
+		grid-column: 1 / -1;
 	}
 
 	/* A dashed list whose items are divided by rules. */

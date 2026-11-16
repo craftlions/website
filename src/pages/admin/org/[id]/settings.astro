@@ -131,7 +131,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 			<p class="measure text-sm text-fg-muted">
 				How this client is named in the admin area and on their dashboard.
 			</p>
-			<div class="box admin-form">
+			<div class="box auto-grid" style="--grid-min: 24rem">
 				<Field
 					label="Name"
 					name="name"
@@ -159,7 +159,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 				The budget the client dashboard compares invoices against, and the
 				Stripe customer whose invoices belong to this client.
 			</p>
-			<div class="box admin-form">
+			<div class="box auto-grid" style="--grid-min: 24rem">
 				<Field
 					label="Yearly budget (EUR)"
 					name="yearlyBudget"
@@ -220,7 +220,8 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		<form
 			method="POST"
 			action={actions.updateOrganizationSlug}
-			class="box admin-form"
+			class="box auto-grid"
+			style="--grid-min: 24rem"
 			data-client-url-form
 		>
 			<input type="hidden" name="organizationId" value={organization.id}>
@@ -240,7 +241,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 				hint={`Currently ${Astro.url.origin}/dash/org/${organization.slug}. Lowercase letters, digits and single hyphens. Changing it breaks existing links and bookmarks to the dashboard.`}
 				result={slugResult}
 			/>
-			<div class="admin-form-full">
+			<div data-span="full">
 				<ConfirmAction
 					id="confirm-client-url"
 					trigger="Change client URL"

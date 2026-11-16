@@ -109,7 +109,8 @@ const otherClients = (count: number) =>
 			method="POST"
 			action={actions.addOrganizationMember}
 			aria-label="Add member"
-			class="box admin-form"
+			class="box auto-grid"
+			style="--grid-min: 24rem"
 			hidden={!isAddOpen}
 		>
 			<input type="hidden" name="organizationId" value={organization.id}>
@@ -142,7 +143,7 @@ const otherClients = (count: number) =>
 				<option value="member" selected>Member</option>
 				<option value="owner">Owner</option>
 			</Field>
-			<div class="admin-form-actions">
+			<div class="cluster" data-space="xs" data-span="full">
 				<Button type="submit">Add member</Button>
 				<Button variant="quiet" data-disclosure-cancel>Cancel</Button>
 			</div>
