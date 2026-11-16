@@ -1,5 +1,6 @@
-// Scans the public pages and the /brand/system design reference with axe-core; the light
-// and dark projects in playwright.config.ts run each route in both schemes.
+// Scans the public pages, the design reference at /brand/system included, with
+// axe-core; the light and dark projects in playwright.config.ts run each route
+// in both schemes.
 // Every violation fails, best-practice included, so fix it instead of excluding it.
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
