@@ -35,7 +35,7 @@ Four values are secret. Three are Worker secrets that Cloudflare keeps between d
 
 Run every step yourself, in your own terminal in the repository root, outside any agent session. No command prints a value. Steps 1 to 5 change nothing that others depend on; until step 9, `.env` and `aubx drizzle-kit check` keep working.
 
-1. Install the pinned fnox and check mise (2026.10.4 or newer):
+1. Install the pinned fnox and check mise (2026.11.8 or newer):
 
    ```sh
    mise i
