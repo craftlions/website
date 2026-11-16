@@ -39,7 +39,7 @@ const submitLabel = mode === "record" ? recordDeliveryLabel : "Update delivery";
 		action={mode === "record"
 			? actions.recordDelivery
 			: actions.updatePhaseDelivery}
-		class:list={["box stack", className]}
+		class:list={["stack", className]}
 		{...attrs}
 	>
 		<input type="hidden" name="phaseId" value={phase.id}>
