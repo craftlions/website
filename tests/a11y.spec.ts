@@ -1,4 +1,4 @@
-// Scans the public pages and the dev-only /design page with axe-core; the light
+// Scans the public pages and the /brand/system design reference with axe-core; the light
 // and dark projects in playwright.config.ts run each route in both schemes.
 // Every violation fails, best-practice included, so fix it instead of excluding it.
 import { AxeBuilder } from "@axe-core/playwright";
@@ -22,7 +22,7 @@ for (const route of [
 	"/reset-password",
 	"/imprint/",
 	"/changelog/",
-	"/design",
+	"/brand/system/",
 ]) {
 	test(route, async ({ page }) => {
 		expect((await page.goto(route))?.status()).toBe(200);

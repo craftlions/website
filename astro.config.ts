@@ -21,6 +21,10 @@ export default defineConfig({
 	experimental: {
 		contentIntellisense: true,
 	},
+	// The design reference lived at /design while it was dev only.
+	redirects: {
+		"/design": "/brand/system/",
+	},
 	prefetch: {
 		prefetchAll: true,
 		defaultStrategy: "hover",
@@ -29,20 +33,6 @@ export default defineConfig({
 		sitemap({
 			filter: (page) => !isPrivatePath(new URL(page).pathname),
 		}),
-		{
-			// Registered only in dev so production never contains the page.
-			name: "design-page",
-			hooks: {
-				"astro:config:setup": ({ command, injectRoute }) => {
-					if (command === "dev") {
-						injectRoute({
-							pattern: "/design",
-							entrypoint: "./src/pages/_design.astro",
-						});
-					}
-				},
-			},
-		},
 	],
 	devToolbar: {
 		enabled: false,
