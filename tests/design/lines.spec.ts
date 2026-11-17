@@ -65,6 +65,23 @@ const measure = (locator: Locator) =>
 				const amount = line.querySelector(
 					":scope > .line-figure > :not(.sr-only)",
 				);
+				// What the figure needs beside the text: its max-content width
+				// and the margin that keeps it clear of the slot.
+				const figure = line.querySelector(":scope > .line-figure");
+				const needs = figure?.checkVisibility()
+					? (() => {
+							const { style } = figure as HTMLElement;
+							const before = style.cssText;
+							style.cssText += ";inline-size: max-content; flex: none";
+							const width = figure.getBoundingClientRect().width;
+							style.cssText = before;
+							return (
+								width +
+								Number.parseFloat(getComputedStyle(figure).marginInlineEnd) +
+								Number.parseFloat(getComputedStyle(line).columnGap)
+							);
+						})()
+					: null;
 				// Everything inside the line but the details, whose own lines
 				// are measured as their own list.
 				const inside = [...line.querySelectorAll("*")].filter(
@@ -75,6 +92,7 @@ const measure = (locator: Locator) =>
 				);
 				return {
 					heading: /^H\d$/.test(line.tagName),
+					needs,
 					content,
 					scrolls: line.scrollWidth > line.clientWidth,
 					text: part(":first-child"),
@@ -125,9 +143,6 @@ for (const fixture of fixtures) {
 		page,
 	}) => {
 		const seen = new Set<string>();
-		// Where lines of one list differ, some figures beside their text and
-		// some below it, while the edge check above still held.
-		const mixed: string[] = [];
 		for (const width of widths) {
 			await resize(frame(page, fixture), width);
 			expect(
@@ -147,7 +162,6 @@ for (const fixture of fixtures) {
 				for (const edge of edges) {
 					expect(Math.abs(edge - (edges[0] ?? edge)), where).toBeLessThan(0.5);
 				}
-				const figures = new Set<string>();
 				for (const line of list.lines) {
 					if (line.figure && line.amount) {
 						expect(
@@ -162,7 +176,14 @@ for (const fixture of fixtures) {
 							line.figure.left >= line.text.right - 0.5;
 						const below = line.figure.top >= line.text.bottom - 0.5;
 						expect(beside || below, where).toBe(true);
-						if (!line.heading) figures.add(beside ? "beside" : "below");
+						// Lines of one list may differ (DESIGN.md#lines): a figure
+						// drops below only where beside it the text would get
+						// less than 12rem, or less than the whole line.
+						const room = line.content.right - line.content.left;
+						const short = Math.min(12 * 16, room) + (line.needs ?? 0) - room;
+						if (!line.heading && Math.abs(short) > 1) {
+							expect(below, `${where}: figure below`).toBe(short > 0);
+						}
 					}
 					// A line's text keeps 12rem, or the whole line where that is
 					// less.
@@ -191,13 +212,8 @@ for (const fixture of fixtures) {
 				expect(states.size, where).toBeLessThanOrEqual(1);
 				if (list.ledger) expect([...states], where).not.toContain("beside");
 				for (const state of states) seen.add(`${list.ledger}-${state}`);
-				if (figures.size > 1) mixed.push(where);
 			}
 		}
-		test.info().annotations.push({
-			type: "figures beside and below in one list",
-			description: mixed.join("; ") || "none",
-		});
 		// The sweep crosses the threshold of every inbox list.
 		if (fixture === "lines-worklist" || fixture === "lines-phases") {
 			expect([...seen]).toEqual(
