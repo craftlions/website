@@ -354,7 +354,9 @@ test("details open across the line and keep the edge", async ({ page }) => {
 	const toggle = fixture.getByRole("button", {
 		name: "Details: invoice A-0042",
 	});
-	const details = fixture.locator(".line-details");
+	const details = fixture.locator(
+		`#${await toggle.getAttribute("aria-controls")}`,
+	);
 	await expect(details).toBeHidden();
 	await toggle.click();
 	await expect(toggle).toHaveAttribute("aria-expanded", "true");

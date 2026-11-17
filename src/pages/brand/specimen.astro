@@ -13,6 +13,7 @@ import CommandPalette from "../../components/CommandPalette.astro";
 import ConfirmAction from "../../components/ConfirmAction.astro";
 import DisclosureButton from "../../components/DisclosureButton.astro";
 import Field from "../../components/Field.astro";
+import InvoiceTable from "../../components/InvoiceTable.astro";
 import PageHeading from "../../components/PageHeading.astro";
 import Progress from "../../components/Progress.astro";
 import SkipLink from "../../components/SkipLink.astro";
@@ -94,6 +95,103 @@ const frames = [
 	["narrow", "20rem"],
 	["wide", "60rem"],
 ] as const;
+
+// The ledger fixture's invoices for InvoiceTable, dated from the build: an
+// overdue one and a paid one, each with its phase's split, an unassigned one
+// and a void one, with ids unique per frame.
+const day = 86_400_000;
+const ago = (days: number) => new Date(Date.now() - days * day);
+const invoicePhase = (
+	publicId: string,
+	project: string,
+	title: string,
+	state: "delivered" | "accepted",
+	paid: string[],
+) => ({
+	publicId,
+	title,
+	cost: 24_000,
+	upfrontAmount: 7_200,
+	deliveryAmount: 12_000,
+	acceptanceAmount: 4_800,
+	currency: "EUR",
+	state,
+	deliveryState: "url" as const,
+	deliveryUrl: "https://example.com/pull/42",
+	project: { publicId: `${publicId}-project`, name: project },
+	invoices: ["upfront", "delivery", "acceptance"]
+		.slice(0, state === "accepted" ? 3 : 2)
+		.map((component) => ({
+			component,
+			stripe: { status: paid.includes(component) ? "paid" : "open" },
+		})),
+});
+const ledgerInvoices = (frame: string) => [
+	{
+		id: `${frame}-a0042`,
+		component: "delivery",
+		number: "A-0042",
+		paymentPage: "https://example.com/invoice/A-0042",
+		invoicedAt: ago(28),
+		status: "open",
+		paidAt: null,
+		dueAt: ago(14),
+		total: 12_000,
+		currency: "EUR",
+		phase: invoicePhase(
+			"ingestion",
+			"Fleet Telemetry Platform Rebuild",
+			"Ingestion pipeline",
+			"delivered",
+			["upfront"],
+		),
+	},
+	{
+		id: `${frame}-a0031`,
+		component: "upfront",
+		number: "A-0031",
+		paymentPage: "https://example.com/invoice/A-0031",
+		invoicedAt: ago(320),
+		status: "paid",
+		paidAt: ago(310),
+		dueAt: ago(306),
+		total: 148_750,
+		currency: "EUR",
+		phase: invoicePhase(
+			"relaunch",
+			"Hafenwerk Kiel Website",
+			"Relaunch",
+			"accepted",
+			["upfront", "delivery", "acceptance"],
+		),
+	},
+	{
+		id: `${frame}-a0029`,
+		component: null,
+		number: "A-0029",
+		paymentPage: "https://example.com/invoice/A-0029",
+		invoicedAt: ago(350),
+		status: "paid",
+		paidAt: ago(340),
+		dueAt: ago(336),
+		total: 7_200,
+		currency: "EUR",
+		phase: null,
+	},
+	{
+		id: `${frame}-a0027`,
+		component: null,
+		number: "A-0027",
+		paymentPage: "https://example.com/invoice/A-0027",
+		invoicedAt: ago(400),
+		status: "void",
+		paidAt: null,
+		dueAt: null,
+		total: 2_400,
+		currency: "EUR",
+		phase: null,
+	},
+];
 ---
 
 <Shell>
@@ -1059,123 +1157,19 @@ const frames = [
 							Ledger line: invoices
 						</h3>
 						<p class="text-sm text-fg-muted">
-							Open, then paid, each with its total on the amounts' edge; the
-							actions always on their own row; the highlighted line is the one a
-							link points at.
+							The client's InvoiceTable on fixture data: its totals, the split
+							by cost part, then open, paid and not charged, each with its total
+							on the amounts' edge and the actions always on their own row.
 						</p>
 						{frames.map(([frame, width]) => (
 							<figure class="stack" data-space="3xs">
 								<figcaption class="label-caps">{width}</figcaption>
 								<div class="frame box" data-frame={frame}>
-									<div class="lines" data-actions="below">
-										<h4>
-											<span id={`lines-${frame}-open`} class="text-label">
-												Open <span class="text-fg-muted">· 1</span>
-											</span>
-											<span class="line-figure text-sm text-fg-muted">
-												<span class="sr-only">total </span>12.000,00 €
-											</span>
-										</h4>
-										<ul aria-labelledby={`lines-${frame}-open`}>
-											<li data-highlight>
-												<div class="line-text">
-													<h5>
-														<a href="#lines" class="link">
-															Fleet Telemetry Platform Rebuild · Ingestion
-															pipeline
-														</a>
-													</h5>
-													<p class="cluster text-sm text-fg-muted">
-														<Badge type="error">Overdue</Badge>
-														<span>Invoice A-0042 · Delivery</span>
-													</p>
-												</div>
-												<p class="line-figure">
-													<span>12.000,00 €</span>
-													<span class="text-sm text-fg-danger">
-														14 days overdue
-													</span>
-												</p>
-												<div class="line-actions cluster">
-													<DisclosureButton
-														controls={`lines-${frame}-invoice`}
-														variant="quiet"
-														aria-label="Details: invoice A-0042"
-													>
-														Details
-													</DisclosureButton>
-													<Button aria-label="Pay invoice A-0042">Pay</Button>
-												</div>
-												<p
-													id={`lines-${frame}-invoice`}
-													hidden
-													class="line-details text-sm text-fg-muted"
-												>
-													Due 02.11.2026 · Delivery 50% of 24.000,00 €
-												</p>
-											</li>
-										</ul>
-										<h4>
-											<span id={`lines-${frame}-paid`} class="text-label">
-												Paid <span class="text-fg-muted">· 2</span>
-											</span>
-											<span class="line-figure text-sm text-fg-muted">
-												<span class="sr-only">total </span>155.950,00 €
-											</span>
-										</h4>
-										<ul aria-labelledby={`lines-${frame}-paid`}>
-											<li>
-												<div class="line-text">
-													<h5>
-														<a href="#lines" class="link">
-															Hafenwerk Kiel Website · Relaunch
-														</a>
-													</h5>
-													<p class="cluster text-sm text-fg-muted">
-														<Badge type="success">Paid</Badge>
-														<span>Invoice A-0031 · Upfront</span>
-													</p>
-												</div>
-												<p class="line-figure">
-													<span>148.750,00 €</span>
-													<span class="text-sm text-fg-muted">
-														paid 10.01.2026
-													</span>
-												</p>
-												<div class="line-actions cluster">
-													<Button
-														variant="quiet"
-														aria-label="Receipt for invoice A-0031"
-													>
-														Receipt
-													</Button>
-												</div>
-											</li>
-											<li>
-												<div class="line-text">
-													<h5 class="text-fg-muted">Unassigned invoice</h5>
-													<p class="cluster text-sm text-fg-muted">
-														<Badge type="success">Paid</Badge>
-														<span>Invoice A-0029</span>
-													</p>
-												</div>
-												<p class="line-figure">
-													<span>7.200,00 €</span>
-													<span class="text-sm text-fg-muted">
-														paid 12.12.2025
-													</span>
-												</p>
-												<div class="line-actions cluster">
-													<Button
-														variant="quiet"
-														aria-label="Receipt for invoice A-0029"
-													>
-														Receipt
-													</Button>
-												</div>
-											</li>
-										</ul>
-									</div>
+									<InvoiceTable
+										invoices={ledgerInvoices(frame)}
+										slug="specimen"
+										id={`lines-${frame}-invoices`}
+									/>
 								</div>
 							</figure>
 						))}

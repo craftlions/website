@@ -53,9 +53,11 @@ interface Invoice {
 interface Props {
 	invoices: Invoice[];
 	slug: string;
+	// Prefix for the group headings' ids; unique per page.
+	id?: string;
 }
 
-const { invoices, slug } = Astro.props;
+const { invoices, slug, id = "invoices" } = Astro.props;
 const now = new Date();
 const rows = invoices.map((invoice) => ({
 	...invoice,
@@ -183,7 +185,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 			{groups.map((group) => (
 				<>
 					<h3>
-						<span id={`invoices-${group.key}`} class="text-label">
+						<span id={`${id}-${group.key}`} class="text-label">
 							{group.label}{" "}
 							<span class="text-fg-muted">· {group.items.length}</span>
 						</span>
@@ -195,7 +197,7 @@ const partSummaryTotal = partSummaryItems.reduce(
 						)}
 					</h3>
 					{group.items.length > 0 ? (
-						<ul aria-labelledby={`invoices-${group.key}`}>
+						<ul aria-labelledby={`${id}-${group.key}`}>
 							{group.items.map((invoice) => (
 								<li id={`invoice-${invoice.id}`} class="target">
 									<div class="line-text">
