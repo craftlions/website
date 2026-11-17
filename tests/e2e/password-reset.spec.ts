@@ -102,52 +102,67 @@ test.describe("with a token", () => {
 		await expect(page.getByRole("status")).toBeEmpty();
 	});
 
-	test("different passwords are reported", async ({ page }) => {
-		await page.getByLabel("New password").fill("longpassword1");
-		await page.getByLabel("Confirm password").fill("longpassword2");
-		await page.getByRole("button", { name: "Reset password" }).click();
-		await expect(page.getByRole("status")).toHaveText(
-			"Passwords do not match.",
-		);
-		await expect(
-			page.getByRole("button", { name: "Reset password" }),
-		).toBeEnabled();
-	});
-
-	test("Show passwords reveals both fields and submitting hides them", async ({
+	test("different passwords mark the confirmation until they match", async ({
 		page,
 	}) => {
-		const toggle = page.getByRole("button", { name: "Show passwords" });
-		await expect(toggle).toHaveAttribute(
-			"aria-controls",
-			"password confirm-password",
-		);
-		await page.getByLabel("New password").fill("longpassword1");
-		await page.getByLabel("Confirm password").fill("longpassword2");
-
-		await toggle.click();
-		await expect(toggle).toHaveAttribute("aria-pressed", "true");
-		await expect(page.getByLabel("New password")).toHaveAttribute(
-			"type",
-			"text",
-		);
-		await expect(page.getByLabel("Confirm password")).toHaveAttribute(
-			"type",
-			"text",
-		);
-
-		// Submitted as text, a password could land in the form history.
+		const password = page.getByLabel("New password");
+		const confirmation = page.getByLabel("Confirm password");
+		await password.fill("longpassword1");
+		await confirmation.fill("longpassword2");
 		await page.getByRole("button", { name: "Reset password" }).click();
-		await expect(toggle).toHaveAttribute("aria-pressed", "false");
-		await expect(page.getByLabel("New password")).toHaveAttribute(
-			"type",
-			"password",
+		await expect(confirmation).toBeFocused();
+		await expect(confirmation).toHaveAttribute("aria-invalid", "true");
+		await expect(confirmation).toHaveAccessibleDescription(
+			"Passwords do not match.",
 		);
-		await expect(page.getByLabel("Confirm password")).toHaveAttribute(
-			"type",
-			"password",
-		);
+		await expect(page.getByRole("status")).toBeEmpty();
+
+		// Fixing the new password rather than the confirmation clears it too.
+		await password.fill("longpassword2");
+		await expect(confirmation).toHaveAttribute("aria-invalid", "false");
+		await expect(confirmation).toHaveAccessibleDescription("");
+
+		await confirmation.fill("longpassword3");
+		await expect(confirmation).toHaveAttribute("aria-invalid", "true");
+		await confirmation.fill("longpassword2");
+		await expect(confirmation).toHaveAttribute("aria-invalid", "false");
 	});
+});
+
+test("Show passwords reveals both fields and submitting hides them", async ({
+	page,
+}) => {
+	// Only a submit that passes validation hides them; the request it sends is
+	// aborted before the auth API.
+	await page.route("**/api/auth/**", (route) => route.abort());
+	await page.goto("/reset-password?token=dummy");
+	const toggle = page.getByRole("button", { name: "Show passwords" });
+	await expect(toggle).toHaveAttribute(
+		"aria-controls",
+		"password confirm-password",
+	);
+	await page.getByLabel("New password").fill("longpassword1");
+	await page.getByLabel("Confirm password").fill("longpassword1");
+
+	await toggle.click();
+	await expect(toggle).toHaveAttribute("aria-pressed", "true");
+	await expect(page.getByLabel("New password")).toHaveAttribute("type", "text");
+	await expect(page.getByLabel("Confirm password")).toHaveAttribute(
+		"type",
+		"text",
+	);
+
+	// Submitted as text, a password could land in the form history.
+	await page.getByRole("button", { name: "Reset password" }).click();
+	await expect(toggle).toHaveAttribute("aria-pressed", "false");
+	await expect(page.getByLabel("New password")).toHaveAttribute(
+		"type",
+		"password",
+	);
+	await expect(page.getByLabel("Confirm password")).toHaveAttribute(
+		"type",
+		"password",
+	);
 });
 
 test.describe("without scripts", () => {
