@@ -49,3 +49,33 @@ const { wide = false } = Astro.props;
 		&copy; 2026 craftlions. All rights reserved.
 	</p>
 </footer>
+
+<style>
+	@layer components {
+		/* A .center and a .stack: logo, about and links in a .switcher, all in
+		   one row or all stacked, the copyright below them. Its inset sits
+		   inside the column width. */
+		.footer {
+			padding: var(--space-m) var(--space-xs);
+			border-block-start: var(--rule) var(--line);
+
+			/* The logo and the links keep their own width, so the about text
+			   takes the rest of the row and the links end it; the logo's focus
+			   ring fits the logo. */
+			& > .switcher > :is(a, nav) {
+				max-inline-size: max-content;
+			}
+			& > .switcher > a {
+				display: grid;
+			}
+			/* The logo's svg comes from its own component. */
+			& > .switcher > a > :global(svg) {
+				inline-size: 4rem;
+			}
+			& > p {
+				padding-block-start: var(--space-s);
+				border-block-start: var(--rule) var(--line);
+			}
+		}
+	}
+</style>
