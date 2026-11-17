@@ -58,6 +58,13 @@
 		font-weight: inherit;
 	}
 
+	/* Emphasis takes the label weight, not the browser's bolder 700: text is
+	   400 or 600 (DESIGN.md#3-typography). */
+	b,
+	strong {
+		font-weight: 600;
+	}
+
 	/* Headings break into lines of even length where the browser supports it;
 	   elsewhere they wrap as before. */
 	h1,
