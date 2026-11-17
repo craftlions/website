@@ -764,7 +764,7 @@ const pageArtwork = new Map([
 // - the line of the lines pattern, which wraps like a cluster but sizes its
 //   first part to take the room the figure and the actions leave.
 const oneOffExceptions = new Map([
-	["src/styles/components/button.css", /^\.button:is\(/],
+	["src/components/Button.astro", /^\.button:is\(/],
 	["src/styles/components/input.css", /^\.input$/],
 	["src/styles/components/nav.css", /^& \.nav-placeholder$/],
 	["src/styles/components/phase-amount-calculator.css", /^\.split-share,/],
