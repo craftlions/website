@@ -42,3 +42,35 @@ const {
 		)}
 	</ul>
 </nav>
+
+<style>
+	@layer components {
+		/* A .cluster: the logo at the start and the links at the end of one
+		   row, the links below the logo, at the start, when both do not fit.
+		   The links wrap among themselves, never scroll. */
+		.nav {
+			padding-block: var(--space-s);
+
+			& > a {
+				display: grid;
+			}
+			/* The logo's svg comes from its own component. */
+			& > a > :global(svg) {
+				view-transition-name: nav-logo;
+				block-size: 2.25rem;
+			}
+			&[data-variant="marketing"] > a > :global(svg) {
+				block-size: 6rem;
+			}
+
+			/* Stands in for the session links while their server island loads,
+			   drawn like a Button. */
+			& .nav-placeholder {
+				display: inline-grid;
+				inline-size: max-content;
+				padding: var(--space-3xs) var(--space-xs);
+				border: var(--rule) var(--line);
+			}
+		}
+	}
+</style>

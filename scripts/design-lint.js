@@ -766,7 +766,7 @@ const pageArtwork = new Map([
 const oneOffExceptions = new Map([
 	["src/components/Button.astro", /^\.button:is\(/],
 	["src/components/Input.astro", /^\.input$/],
-	["src/styles/components/nav.css", /^& \.nav-placeholder$/],
+	["src/components/Nav.astro", /^& \.nav-placeholder$/],
 	["src/styles/components/phase-amount-calculator.css", /^\.split-share,/],
 	["src/styles/components/lines.css", /^:is\(\s*\.lines > li,/],
 ]);
