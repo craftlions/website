@@ -767,7 +767,7 @@ const oneOffExceptions = new Map([
 	["src/components/Button.astro", /^\.button:is\(/],
 	["src/components/Input.astro", /^\.input$/],
 	["src/components/Nav.astro", /^& \.nav-placeholder$/],
-	["src/styles/components/phase-amount-calculator.css", /^\.split-share,/],
+	["src/components/PhaseAmountCalculator.astro", /^\.split-share,/],
 	["src/styles/components/lines.css", /^:is\(\s*\.lines > li,/],
 ]);
 const native = new Set(

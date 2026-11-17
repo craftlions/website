@@ -291,3 +291,51 @@ const percentages = [
 		customElements.define("phase-amount-calculator", PhaseAmountCalculator);
 	}
 </script>
+
+<style>
+	@layer components {
+		/* The cost split of a phase form: Upfront and Delivery shares typed in a %
+		   box, Acceptance the calculated remainder. Each box sits at the end of its
+		   row beside the label and amount, below them once the label would get
+		   less than 40% of the row (not at 320px, but with large text), and the
+		   total is under them. The box is drawn like an Input. */
+		.split-share,
+		.split-remainder {
+			padding: var(--space-2xs) var(--space-xs);
+			border: var(--rule) var(--line-control);
+		}
+
+		.split-share {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: center;
+			gap: var(--space-3xs);
+			transition-property:
+				color, background-color, border-color, outline-color,
+				text-decoration-color, fill, stroke;
+			transition-duration: var(--duration);
+			transition-timing-function: var(--ease);
+
+			&:focus-within {
+				border-color: var(--line-active);
+			}
+
+			& input {
+				min-inline-size: 0;
+			}
+		}
+
+		.split-result {
+			display: grid;
+		}
+
+		.split-total {
+			padding-block-start: var(--space-2xs);
+			border-block-start: var(--rule) var(--line);
+		}
+
+		.split-error:not(:empty) {
+			margin-block-start: var(--space-xs);
+		}
+	}
+</style>
