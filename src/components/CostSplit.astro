@@ -87,3 +87,39 @@ const accessibleSummary =
 		)}
 	</figure>
 )}
+
+<style>
+	@layer components {
+		/* A phase's cost parts, one line each with
+		   the amount at the end; a part too long for the row wraps. */
+		.cost-split {
+			display: grid;
+			min-inline-size: 0;
+			gap: var(--space-3xs);
+
+			& li {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) auto;
+				align-items: baseline;
+				column-gap: var(--space-2xs);
+
+				& > :first-child {
+					min-inline-size: 0;
+				}
+			}
+		}
+
+		/* The part's name is capitalized, its due hint is not. */
+		.cost-split-part {
+			text-transform: capitalize;
+
+			& > span {
+				text-transform: none;
+			}
+		}
+
+		.cost-split-amount {
+			white-space: nowrap;
+		}
+	}
+</style>
