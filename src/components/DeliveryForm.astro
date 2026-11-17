@@ -133,3 +133,15 @@ const submitLabel = mode === "record" ? recordDeliveryLabel : "Update delivery";
 		customElements.define("delivery-form", DeliveryForm);
 	}
 </script>
+
+<style>
+	@layer components {
+		/* A stack whose delivery choice keeps
+		   its width beside the URL (with-sidebar) and moves above it when the URL
+		   would get less than half the row; the note and the submit button below
+		   them. */
+		delivery-form {
+			display: grid;
+		}
+	}
+</style>
