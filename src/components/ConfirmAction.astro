@@ -148,3 +148,20 @@ const {
 		customElements.define("confirm-action", ConfirmAction);
 	}
 </script>
+
+<style>
+	@layer components {
+		/* The trigger, and the modal that
+		   confirms its action, cancel and confirm in a .cluster at its end. */
+		confirm-action {
+			display: grid;
+			justify-items: start;
+
+			/* The base dialog, its parts one column apart. */
+			& dialog {
+				grid-template-columns: repeat(1, minmax(0, 1fr));
+				gap: var(--space-s);
+			}
+		}
+	}
+</style>
