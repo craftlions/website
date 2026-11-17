@@ -25,3 +25,23 @@ const { items, label = "Breadcrumb" } = Astro.props;
 		))}
 	</ol>
 </nav>
+
+<style>
+	@layer components {
+		/* One wrapping line of muted links,
+		   separated by slashes, ending on the current page in primary text. */
+		.crumbs {
+			& > li {
+				display: inline;
+			}
+
+			& [aria-hidden="true"] {
+				padding-inline: var(--space-2xs);
+			}
+
+			& span[aria-current="page"] {
+				color: var(--fg);
+			}
+		}
+	}
+</style>
