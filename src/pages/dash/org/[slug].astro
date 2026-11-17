@@ -253,80 +253,58 @@ const worklist = deriveClientWorklist({
 				{completedProjectCount > 0 && <Checkbox>Hide completed</Checkbox>}
 			</div>
 			{projects.length > 0 ? (
-				<section
-					class="client-projects-table"
-					tabindex="0"
-					aria-label="Projects table"
+				<ul
+					class="lines"
+					data-actions="none"
+					aria-labelledby="projects-heading"
 				>
-					<table class="text-sm">
-						<thead>
-							<tr class="text-fg-muted">
-								<th scope="col">Name</th>
-								<th scope="col">Status</th>
-								<th scope="col">Total cost</th>
-							</tr>
-						</thead>
-						<tbody>
-							{projects.map((project) => (
-								<tr data-state={project.state}>
-									<th
-										scope="row"
-										class:list={[
-											project.state === "completed" && "text-fg-muted",
-										]}
+					{projects.map((project) => (
+						<li
+							data-state={project.state}
+							class={
+								project.state === "completed" ? "text-fg-muted" : undefined
+							}
+						>
+							<div class="line-text">
+								<h3>
+									<a
+										href={`/dash/org/${slug}/project/${project.publicId}`}
+										class="link hover-text-fg"
 									>
-										<a
-											href={`/dash/org/${slug}/project/${project.publicId}`}
-											class="link hover-text-fg"
-										>
-											{project.name}
-										</a>
-									</th>
-									<td>
-										<Badge type={projectStateToBadgeType(project.state)}>
-											{projectStatus[project.state].label}
-										</Badge>
-									</td>
-									<td
-										class:list={[
-											"tabular-nums",
-											project.state === "completed"
-												? "text-fg-muted"
-												: "text-fg",
-										]}
-									>
-										{project.splits.length > 0 ? (
-											<div class="client-splits">
-												{project.splits.map((split) => (
-													<div class="client-split">
-														<p>{formatMoney(split.total, split.currency)}</p>
-														{split.items.length > 0 && (
-															<CostSplit
-																items={split.items}
-																currency={split.currency}
-																total={split.total}
-																showStatus={false}
-															/>
-														)}
-													</div>
-												))}
-											</div>
-										) : (
-											"—"
-										)}
-									</td>
-								</tr>
-							))}
-							{completedProjectCount === projects.length && (
-								<tr class="client-projects-note">
-									<td colspan="3" class="text-fg-muted">
-										All projects are completed and currently hidden.
-									</td>
-								</tr>
+										{project.name}
+									</a>
+								</h3>
+								<p class="cluster text-sm">
+									<Badge type={projectStateToBadgeType(project.state)}>
+										{projectStatus[project.state].label}
+									</Badge>
+								</p>
+							</div>
+							{project.splits.length > 0 && (
+								<div class="line-figure">
+									{project.splits.map((split) => (
+										<div class="client-split">
+											<p>{formatMoney(split.total, split.currency)}</p>
+											{split.items.length > 0 && (
+												<CostSplit
+													items={split.items}
+													currency={split.currency}
+													total={split.total}
+													showStatus={false}
+												/>
+											)}
+										</div>
+									))}
+								</div>
 							)}
-						</tbody>
-					</table>
-				</section>
+						</li>
+					))}
+					{completedProjectCount === projects.length && (
+						<li class="client-projects-note text-fg-muted">
+							All projects are completed and currently hidden.
+						</li>
+					)}
+				</ul>
 			) : (
 				<p class="box text-sm text-fg-muted">No projects yet.</p>
 			)}

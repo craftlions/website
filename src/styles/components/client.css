@@ -26,52 +26,14 @@
 		}
 	}
 
-	/* The projects table scrolls sideways inside its plane. */
-	.client-projects-table {
-		overflow-x: auto;
-		border: var(--rule) var(--line);
-
-		& table {
-			inline-size: 100%;
-			min-inline-size: 28rem;
-		}
-		& thead tr,
-		& tbody > :not(:last-child) {
-			border-block-end: var(--rule) var(--line);
-		}
-		& :is(th, td) {
-			padding: var(--space-xs) var(--space-s);
-		}
-		& th {
-			text-align: start;
-		}
-		/* Total cost */
-		& :is(th, td):nth-child(3) {
-			text-align: end;
-		}
-	}
-
-	/* After the table's cells, which it overrides. */
+	/* Shown only while "Hide completed" hides every project. */
 	.client-projects-note {
-		display: none;
-
-		.client-projects:has(:checked) & {
-			display: table-row;
-		}
-
-		& > td {
-			padding-block: var(--space-m);
-			text-align: center;
+		.client-projects:not(:has(:checked)) & {
+			display: none;
 		}
 	}
 
-	/* A project's cost per currency, each with its parts. */
-	.client-splits {
-		display: grid;
-		justify-items: end;
-		gap: var(--space-2xs);
-	}
-
+	/* A project's cost in one currency above its parts, in the line's figure. */
 	.client-split {
 		display: grid;
 		inline-size: 100%;
