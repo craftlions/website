@@ -29,7 +29,13 @@ const rejected: Record<string, string> = {
 	"title-tooltip": "title on <span> → no tooltips",
 	"undefined-class": "text-purple → a class from DESIGN.md#vocabulary",
 	"assembled-class": "never assembled with",
-	"style-block": "<style → use the component's stylesheet",
+	"unlayered-component-style":
+		"one @layer components { … } holding the whole block",
+	"global-component-style": "is:global → a scoped <style>",
+	"unscoped-component-selector":
+		":global(p) → start with a class or custom element",
+	"unused-component-class":
+		".lint-elsewhere → use it in this component's markup",
 	"unmarked-markup-feature": 'hidden="until-found" → mark it',
 	"container-query": "container-type: inline-size → no container queries",
 	"window-media-query": "no window-width media queries",

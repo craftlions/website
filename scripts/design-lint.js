@@ -20,13 +20,6 @@ const rules = [
 		doc: "DESIGN.md#buttons",
 		ignore: "src/components/Button.astro",
 	},
-	{
-		id: "style-block",
-		pattern: /<style\b/g,
-		use: "the component's stylesheet in src/styles/components/, built on the classes in DESIGN.md#vocabulary",
-		doc: "AGENTS.md#styling",
-		only: "src/components/",
-	},
 	// Checkbox wraps its control in its label; the cost split labels number
 	// inputs that sit in a % suffix box, which Input cannot draw yet.
 	{
@@ -887,6 +880,67 @@ for (const {
 			}
 		}
 	}
+	// A component keeps its own rules in one scoped <style>: Astro adds its
+	// data-astro-cid-* attribute to every compound, so a rule reaches only the
+	// elements the component renders. Each top-level selector starts with a
+	// class or custom element of the component; an element a child component
+	// or a script renders is reached after it with :global(), never alone.
+	if (file.startsWith("src/components/")) {
+		const report = (line, text, use) =>
+			violations.push(
+				`${file}:${line}  ${text} → ${use}  (DESIGN.md#component-styles)`,
+			);
+		const top = [...blocks, ...statements, ...declarations].filter(
+			({ parents }) => parents.length === 0,
+		);
+		if (/is:global|is:inline/.test(attributes)) {
+			report(
+				top[0]?.line,
+				attributes.trim(),
+				"a scoped <style>, without is:global or is:inline",
+			);
+		}
+		if (top.length !== 1 || top[0].prelude !== "@layer components") {
+			report(
+				top[0]?.line,
+				"<style>",
+				"one @layer components { … } holding the whole block",
+			);
+		}
+		// The outermost selectors, inside the layer and any at-rule.
+		for (const { prelude, line } of blocks.filter(
+			({ prelude, parents }) =>
+				!prelude.startsWith("@") &&
+				parents.every((parent) => parent.prelude.startsWith("@")),
+		)) {
+			for (const selector of splitList(prelude)) {
+				if (!/^(?:\.-?[_a-zA-Z]|[a-z][\w]*-[\w-]*(?![\w(]))/.test(selector)) {
+					report(
+						line,
+						selector,
+						"start with a class or custom element this component renders, so the rule stays scoped; reach a child component's or a script's element after it with :global()",
+					);
+				}
+			}
+		}
+		const markup = readFileSync(file, "utf8").replace(
+			/<style\b[\s\S]*?<\/style>/g,
+			"",
+		);
+		for (const { prelude, line } of blocks) {
+			for (const name of classesIn(
+				prelude.replace(/:global\((?:[^()]|\([^()]*\))*\)/g, ""),
+			)) {
+				if (!new RegExp(`(?<![\\w-])${name}(?![\\w-])`).test(markup)) {
+					report(
+						line,
+						`.${name}`,
+						"use it in this component's markup or remove its rule; a scoped rule reaches no other file",
+					);
+				}
+			}
+		}
+	}
 	if (file === layoutDoc) {
 		for (const name of primitives.keys()) {
 			if (!vocabulary.includes(name)) {
@@ -992,7 +1046,7 @@ for (const file of globSync("src/**/*.astro")) {
 			)) {
 			if (attribute && !native.has(name) && !local.has(name)) {
 				violations.push(
-					`${file}:${source.slice(0, index).split("\n").length}  ${name} → a class from DESIGN.md#vocabulary, the component's own stylesheet in src/styles/components/, or this page's <style>; this one renders nothing  (DESIGN.md#vocabulary)`,
+					`${file}:${source.slice(0, index).split("\n").length}  ${name} → a class from DESIGN.md#vocabulary, a shared stylesheet in src/styles/components/, or this component's or page's own <style>; this one renders nothing  (DESIGN.md#vocabulary)`,
 				);
 			}
 		}

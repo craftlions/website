@@ -1,0 +1,16 @@
+<p class="lint-fixture text-sm"
+	>Styled locally, <a href="/" class="link">with a link</a>.</p
+>
+
+<style>
+	@layer components {
+		.lint-fixture {
+			padding-block: var(--space-2xs);
+
+			/* A script's element, reached after the component's own class. */
+			& :global([role="option"]) {
+				padding-inline: var(--space-2xs);
+			}
+		}
+	}
+</style>

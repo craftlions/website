@@ -24,7 +24,7 @@ aubx astro sync
 
 - Style with the native CSS in `src/styles/`; `global.css` imports every file and declares the cascade layers. Read `DESIGN.md#vocabulary` before writing CSS: it lists the tokens, element defaults, layout primitives, the lines pattern and the role utilities.
 - Compose layouts from the primitives in `src/styles/layout.css` before writing layout CSS, and let them switch on their own width rather than the window's: no container queries and no window-width media queries.
-- Put a component's rules in its own `src/styles/components/<name>.css`, never in a `<style>` in a component; a page keeps only its one-off layout in a scoped `<style>` holding `@layer page { … }`.
+- Put the rules only one component uses in a scoped `<style>` in that component, holding `@layer components { … }` (`DESIGN.md#component-styles`). Keep global in `src/styles/` the tokens, reset, element defaults, primitives, utilities, and any class several files use or another stylesheet configures, such as the lines and `.link`. A page keeps only its one-off layout in a scoped `<style>` holding `@layer page { … }`.
 - Show a list of things to find and act on as lines (`DESIGN.md#lines`), with no column heads; keep a real `<table>` only for data compared across rows, in a labelled scroll region with `tabindex="0"`.
 - Set a variant with a `data-*` attribute from the owning component and a state with ARIA or a native pseudo-class; a class says what a thing is.
 - `aubr design:lint` enforces the tokens, layers, vocabulary and primitives; its message names what to use instead.

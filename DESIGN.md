@@ -206,9 +206,9 @@ This system explicitly rejects overdesigned SaaS gloss, decorative dashboards, m
 
 ## Vocabulary
 
-Everything a page is styled with, in `src/styles/`. Use these before writing CSS; `aubr design:lint` fails on a class no stylesheet defines, on a defined class nothing uses, and on a rule that repeats a primitive.
+Everything a page is styled with, in `src/styles/` and in the components' own `<style>`. Use these before writing CSS; `aubr design:lint` fails on a class no stylesheet defines, on a defined class nothing uses, and on a rule that repeats a primitive.
 
-**Layers** (`global.css`, a later one wins whatever the specificity): `reset` (the browser defaults the markup relies on), `tokens` (`tokens.css`: colour roles with `light-dark()`, the fluid `--step-*` and `--space-*` scales from `scripts/fluid-scale.js`, widths, motion, logo stops, `--dimmed`), `base` (element defaults), `layout` (the primitives), `components` (one stylesheet per component, `components/<name>.css`), `page` (a page's scoped `<style>`), `utilities` (role utilities). Each stylesheet is one `@layer`, imported by `global.css`.
+**Layers** (`global.css`, a later one wins whatever the specificity): `reset` (the browser defaults the markup relies on), `tokens` (`tokens.css`: colour roles with `light-dark()`, the fluid `--step-*` and `--space-*` scales from `scripts/fluid-scale.js`, widths, motion, logo stops, `--dimmed`), `base` (element defaults), `layout` (the primitives), `components` (each component's scoped `<style>`, and `components/<name>.css` for a class several files share), `page` (a page's scoped `<style>`), `utilities` (role utilities). Each stylesheet in `src/styles/` is one `@layer`, imported by `global.css`; each scoped `<style>` is one `@layer` too.
 
 **Element defaults** (`base.css`), so plain markup needs no class; any class opts out:
 
@@ -238,7 +238,15 @@ Which one: vertical rhythm, a stack; peers at their own widths, a cluster; one f
 
 ### Page Styles
 
-A page may keep its one-off layout in one scoped `<style>` holding `@layer page { … }`: page classes only, layout properties only (display, grid, gap, alignment, sizes, margin and padding), with steps, width tokens, `%`, `fr` or a `min(100%, Nrem)` floor. Colour, type and lines come from the role utilities and components; a primitive is tuned through its properties in `style`. Components have no `<style>`.
+A page may keep its one-off layout in one scoped `<style>` holding `@layer page { … }`: page classes only, layout properties only (display, grid, gap, alignment, sizes, margin and padding), with steps, width tokens, `%`, `fr` or a `min(100%, Nrem)` floor. Colour, type and lines come from the role utilities and components; a primitive is tuned through its properties in `style`.
+
+### Component Styles
+
+A component keeps the rules only it uses in one scoped `<style>` after its markup, holding `@layer components { … }`. Astro adds the component's `data-astro-cid-*` attribute to every compound of every selector, so a rule reaches only the elements the component renders; the layers still order it against everything else, because `Shell.astro` states their order ahead of every stylesheet.
+
+- **Selectors:** start every outermost selector with a class or custom element the component renders. An element a child component or a script renders is reached after it with `:global()` (`& :global([role="option"])`), never on its own, so nothing leaks to the rest of the page.
+- **Weight:** a scoped rule weighs one attribute more per compound than the same rule in `src/styles/`. `scopedStyleStrategy` stays `attribute`: `where` and `class` add a class to every element, which would opt `section` and `dl > div` out of their element defaults.
+- **Shared stays global:** a class several components or pages use, or that another stylesheet configures (`.line-text .badge`, `.client-projects .checkbox`), stays in `src/styles/components/<name>.css`, where both rules weigh the same and the order of the bundle cannot decide between them.
 
 ## 2. Colors
 
