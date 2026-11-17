@@ -1,7 +1,7 @@
-// T5, token audit, report-only until the conversion to native CSS: lists every
-// computed font size that is no --step-*, every padding, block margin, gap and
-// scroll margin that is no --space-* at the current width, and other weights,
-// radius and shadow. The list is attached to each test's result.
+// T5, token audit: every computed font size is a --step-*, every padding,
+// block margin, gap and scroll margin a --space-* at the current width, every
+// weight 400 or 600, and nothing has a radius or a shadow. A failure lists
+// each off-token value with up to three of its elements.
 import { expect, test } from "@playwright/test";
 import { px, tokens } from "../../scripts/fluid-scale.js";
 import { routes } from "../routes.ts";
@@ -88,11 +88,7 @@ for (const route of routes) {
 				},
 				{ sizes, constants },
 			);
-			await info.attach("off-token", { body: report.join("\n") });
-			info.annotations.push({
-				type: "off-token",
-				description: `${report.length} kinds`,
-			});
+			expect(report).toEqual([]);
 		});
 	}
 }
