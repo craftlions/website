@@ -41,3 +41,46 @@ const options =
 		{...attrs}
 	/>
 )}
+
+<style>
+	@layer components {
+		/* A text input or select on a dashed line that
+		   darkens on focus. A danger line marks a destructive confirmation
+		   (data-variant="danger") or an invalid value (aria-invalid, which Field
+		   sets for a server error and, through its script, while :user-invalid
+		   matches). */
+		.input {
+			padding: var(--space-2xs) var(--space-xs);
+			border: var(--rule) var(--line-control);
+			background-color: transparent;
+			transition-property:
+				color, background-color, border-color, outline-color,
+				text-decoration-color, fill, stroke;
+			transition-duration: var(--duration);
+			transition-timing-function: var(--ease);
+
+			&::placeholder {
+				color: var(--fg-muted);
+			}
+
+			/* A read-only value is shown, not edited: muted like a calculated
+			   output, and still focusable and selectable. */
+			&:is(input)[readonly] {
+				color: var(--fg-muted);
+			}
+
+			&:is([data-variant="danger"], [aria-invalid="true"]) {
+				border-color: var(--line-danger);
+			}
+
+			&:focus {
+				border-color: var(--line-active);
+			}
+
+			&:disabled {
+				cursor: not-allowed;
+				opacity: 0.5;
+			}
+		}
+	}
+</style>

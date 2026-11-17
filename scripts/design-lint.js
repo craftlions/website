@@ -765,7 +765,7 @@ const pageArtwork = new Map([
 //   first part to take the room the figure and the actions leave.
 const oneOffExceptions = new Map([
 	["src/components/Button.astro", /^\.button:is\(/],
-	["src/styles/components/input.css", /^\.input$/],
+	["src/components/Input.astro", /^\.input$/],
 	["src/styles/components/nav.css", /^& \.nav-placeholder$/],
 	["src/styles/components/phase-amount-calculator.css", /^\.split-share,/],
 	["src/styles/components/lines.css", /^:is\(\s*\.lines > li,/],
