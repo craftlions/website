@@ -269,3 +269,91 @@ const hasNegativeSpend = bars.some((bar) =>
 		}
 	}
 </script>
+
+<style>
+	@layer components {
+		/* A hatched bar per year stacked from the
+		   projects' segments, a status line and the legend. Pointing at a segment
+		   or a legend entry marks that project data-state="active" and every other
+		   one "dimmed". */
+
+		/* The track a year's bar grows along from the axis, the full width of the
+		   box, so the bars stay comparable at any width. */
+		.spend-plot {
+			display: grid;
+			block-size: 1.25rem;
+			border-inline-start: var(--rule) var(--line);
+		}
+
+		.spend-stack {
+			display: grid;
+			column-gap: var(--hairline);
+		}
+
+		/* Hatching in the project's chart colour, which a text-chart-* role sets;
+		   forced-line keeps it drawn in CanvasText under forced colors. */
+		.spend-segment,
+		.spend-swatch {
+			background-image: repeating-linear-gradient(
+				135deg,
+				transparent 0 3px,
+				currentColor 3px 4px
+			);
+		}
+
+		.spend-segment {
+			transition-property: filter, opacity;
+			transition-duration: var(--duration);
+			transition-timing-function: var(--ease);
+
+			&[data-state="active"] {
+				filter: brightness(125%);
+			}
+			&[data-state="dimmed"] {
+				opacity: var(--dimmed);
+			}
+		}
+
+		/* The current year's total is underlined by a dashed rule. */
+		.spend-total[data-current] {
+			border-block-end: var(--rule) var(--line-strong);
+		}
+
+		/* Two status lines of fixed height, so a longer name never moves the chart. */
+		.spend-line {
+			display: block;
+			block-size: 1.25rem;
+		}
+
+		/* A legend entry: the swatch, then the name over its total. */
+		.spend-key {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
+			align-items: center;
+			column-gap: var(--space-2xs);
+			padding: var(--space-3xs);
+			transition-property:
+				color, background-color, border-color, outline-color,
+				text-decoration-color, fill, stroke;
+			transition-duration: var(--duration);
+			transition-timing-function: var(--ease);
+
+			&[data-state="active"] {
+				background-color: var(--panel);
+			}
+			&[data-state="dimmed"] {
+				color: var(--fg-muted);
+			}
+		}
+
+		.spend-swatch {
+			inline-size: 0.75rem;
+			block-size: 0.75rem;
+			border: var(--hairline) dashed currentColor;
+		}
+
+		.spend-amount {
+			grid-column-start: 2;
+		}
+	}
+</style>

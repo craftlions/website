@@ -17,7 +17,6 @@
 @import "./components/link.css";
 @import "./components/public.css";
 @import "./components/shell.css";
-@import "./components/spend-by-year.css";
 @import "./utilities.css";
 
 /* Same-origin page loads cross-fade, unless the reader asks for less motion. */
