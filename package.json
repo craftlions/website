@@ -15,7 +15,7 @@
     "a11y": "playwright test tests/a11y.spec.ts",
     "design:test": "playwright test tests/design",
     "e2e": "playwright test tests/e2e",
-    "unit": "node --test tests/unit",
+    "unit": "node --test tests/unit tests/design-lint",
     "cf-check": "cf workers types --include-runtime && git diff --exit-code -- .cloudflare/types"
   },
   "devDependencies": {

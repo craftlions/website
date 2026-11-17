@@ -1,0 +1,7 @@
+@layer components {
+	@media (width >= 40rem) {
+		.lint-fixture {
+			padding-block: var(--space-2xs);
+		}
+	}
+}

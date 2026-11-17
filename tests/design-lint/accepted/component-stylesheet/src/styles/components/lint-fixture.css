@@ -1,0 +1,7 @@
+@layer components {
+	.lint-fixture {
+		padding-block: var(--space-2xs);
+		/* enhancement: the text box trims to the cap height where supported */
+		text-box: trim-both cap alphabetic;
+	}
+}

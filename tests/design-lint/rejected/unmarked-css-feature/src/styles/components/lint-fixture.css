@@ -1,0 +1,5 @@
+@layer components {
+	.lint-fixture {
+		text-box: trim-both cap alphabetic;
+	}
+}

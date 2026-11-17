@@ -1,0 +1,8 @@
+@layer components {
+	/* enhancement: only polish is lost */
+	@scope (.lint-fixture) {
+		p {
+			padding-block: var(--space-2xs);
+		}
+	}
+}
