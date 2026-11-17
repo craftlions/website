@@ -1,7 +1,9 @@
 /* Layer order, first in the bundle: a later layer wins over an earlier one
-   whatever the specificity; page holds the scoped <style> of a page.
-   Shell.astro repeats the statement, so a page's own stylesheet can never come
-   first. */
+   whatever the specificity. components holds the shared stylesheets below and
+   each component's scoped <style>; page holds the scoped <style> of a page.
+   Shell.astro repeats the statement ahead of every stylesheet, so a
+   component's or a page's own <style>, which Astro may inline before this
+   file, can never set the order. */
 @layer reset, tokens, base, layout, components, page, utilities;
 @import "./reset.css";
 @import "./tokens.css";
