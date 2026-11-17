@@ -123,6 +123,48 @@ for (const { path, form, submit, fields, invalid, valid } of forms) {
 	});
 }
 
+// With the first field valid, a submit focuses the first one still invalid,
+// and only that one shows an error; no request leaves the page.
+for (const { path, form, submit, first, value, next } of [
+	{
+		path: "/login",
+		form: "Sign in form",
+		submit: "Sign in",
+		first: "Email address",
+		value: "owner@example.com",
+		next: "Password",
+	},
+	{
+		path: "/reset-password?token=dummy",
+		form: "Reset password form",
+		submit: "Reset password",
+		first: "New password",
+		value: "longpassword1",
+		next: "Confirm password",
+	},
+]) {
+	test(`${path} focuses the first invalid field on submit`, async ({
+		page,
+	}) => {
+		const requests: string[] = [];
+		page.on("request", (request) => {
+			if (new URL(request.url()).pathname.startsWith("/api/auth/")) {
+				requests.push(request.url());
+			}
+		});
+		await page.goto(path);
+		await field(page, first).fill(value);
+		await page
+			.getByRole("form", { name: form })
+			.getByRole("button", { name: submit })
+			.click();
+		await expect(field(page, next)).toBeFocused();
+		await expectInvalid(field(page, next));
+		await expectValid(field(page, first));
+		expect(requests).toEqual([]);
+	});
+}
+
 test.describe("without scripts", () => {
 	test.use({ javaScriptEnabled: false });
 
