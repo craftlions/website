@@ -1,9 +1,0 @@
-@layer components {
-	/* src/components/Field.astro: the error message is rendered empty as well,
-	   for the script to show a constraint error in. Empty, it takes no place in
-	   the field's stack, so the stack's gap does not open below the input. It
-	   is not a live region: Field's script announces through its own. */
-	.field-error:empty {
-		display: none;
-	}
-}
