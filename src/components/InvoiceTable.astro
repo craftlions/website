@@ -341,3 +341,18 @@ const partSummaryTotal = partSummaryItems.reduce(
 		<p class="box text-sm text-fg-muted">No invoices yet.</p>
 	)}
 </div>
+
+<style>
+	@layer components {
+		/* The client's invoices as ledger
+		   lines (lines.css), with their totals above. The cost splits keep a
+		   readable width, the one in a line's details too. */
+		.invoice-table-parts {
+			max-inline-size: 28rem;
+		}
+
+		.invoice-table-split {
+			max-inline-size: 24rem;
+		}
+	}
+</style>
