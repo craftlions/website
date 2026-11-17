@@ -13,3 +13,15 @@ const { class: className, ...attrs } = Astro.props;
 >
 	<slot />
 </h1>
+
+<style>
+	@layer components {
+		/* The page title behind a dashed rule at
+		   its start. */
+		.page-heading {
+			padding-inline-start: var(--space-xs);
+			border: 0 dashed var(--line-strong);
+			border-inline-start-width: var(--hairline);
+		}
+	}
+</style>
