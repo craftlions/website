@@ -1,17 +1,19 @@
 // PhaseOverview's closed details panels stay findable (hidden="until-found"):
 // a text fragment, the mechanism find in page shares, opens the panel and its
 // toggle; a browser without beforematch keeps it plainly hidden. The overview
-// renders only behind login, so the test serves its script, with the site's
-// stylesheets, on a fixture of one phase that it routes itself.
+// renders only behind login, so the test serves its script and its own
+// <style>, with the site's stylesheets, on a fixture of one phase that it
+// routes itself.
 import { readFileSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
 import { expect, type Page, test } from "@playwright/test";
 
+const source = readFileSync("src/components/PhaseOverview.astro", "utf8");
 const script = stripTypeScriptTypes(
-	readFileSync("src/components/PhaseOverview.astro", "utf8").match(
-		/<script>([\s\S]*)<\/script>/,
-	)?.[1] ?? "",
+	source.match(/<script>([\s\S]*)<\/script>/)?.[1] ?? "",
 );
+// The scoped rules unscoped, which the fixture's markup needs without Astro.
+const style = source.match(/<style>([\s\S]*)<\/style>/)?.[1] ?? "";
 
 const fixture = async (page: Page) => {
 	await page.goto("/brand/specimen/");
@@ -23,7 +25,7 @@ const fixture = async (page: Page) => {
 	await page.route("**/phase-overview-fixture", (route) =>
 		route.fulfill({
 			contentType: "text/html",
-			body: `<!doctype html><html lang="en"><head><title>Fixture</title>${styles}</head><body>
+			body: `<!doctype html><html lang="en"><head><title>Fixture</title>${styles}<style>${style}</style></head><body>
 <phase-overview><ol class="lines" aria-label="Phases">
 <li id="phase-a" class="target" data-phase><div class="line-text"><h3>Discovery</h3></div>
 <p class="line-figure"><span>30.000,00 €</span></p>
