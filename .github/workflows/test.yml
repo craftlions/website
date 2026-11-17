@@ -20,6 +20,28 @@ defaults:
     shell: bash
 
 jobs:
+  # The Validation checks that need no secret and change no tracked file; the
+  # migration check needs the database URL and stays local.
+  static:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    name: Static Checks
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@236a21c3b91f5db6d4e174b348674a0f0caac06d # v5.2.9
+        with:
+          experimental: true
+      - run: aube ci
+      - run: aubr cf-check
+      - run: aubx astro sync
+      - run: aubr check
+      - run: aubr design:lint
+      - run: aubr unit
+      - run: aubx biome ci
+      - run: jactionlint --no-online --strict-exit .github/workflows/*.yml
+
   browser:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
