@@ -993,10 +993,10 @@ export const onboardOrganization = async (
 ) => {
 	const email = input.email.trim().toLowerCase();
 	const slug = toSlug(input.slug);
-	let [, selectedUser, existingOrganization] = await Promise.all([
+	let [, selectedUser, organization] = await Promise.all([
 		assertAdminUser(db, actorId),
 		db.query.user.findFirst({
-			columns: { id: true },
+			columns: { id: true, lastActiveAt: true },
 			where: { email },
 		}),
 		db.query.organization.findFirst({
@@ -1004,9 +1004,8 @@ export const onboardOrganization = async (
 			where: { slug },
 		}),
 	]);
-	let createdUser = false;
 
-	if (existingOrganization) {
+	if (organization) {
 		if (!selectedUser) {
 			throw new DomainError(
 				"AlreadyExists",
@@ -1017,7 +1016,7 @@ export const onboardOrganization = async (
 		const existingMember = await db.query.member.findFirst({
 			columns: { id: true },
 			where: {
-				organizationId: existingOrganization.id,
+				organizationId: organization.id,
 				userId: selectedUser.id,
 			},
 		});
@@ -1029,48 +1028,44 @@ export const onboardOrganization = async (
 			);
 		}
 
-		await writeOrganizationOnboardingRemainder(db, actorId, {
-			organizationId: existingOrganization.id,
-			yearlyBudget: input.yearlyBudget,
-		});
-
 		// A retried onboarding: the organization keeps its stored name, which
 		// may differ from the one submitted again.
-		return existingOrganization;
-	}
+	} else {
+		if (!selectedUser) {
+			const result = await auth.api.createUser({
+				body: {
+					email,
+					name: input.name.trim(),
+					password: crypto.randomUUID(),
+				},
+			});
+			selectedUser = { id: result.user.id, lastActiveAt: null };
+		}
 
-	if (!selectedUser) {
-		const result = await auth.api.createUser({
+		organization = await auth.api.createOrganization({
 			body: {
-				email,
-				name: input.name.trim(),
-				password: crypto.randomUUID(),
+				name: input.organizationName.trim(),
+				slug,
+				userId: selectedUser.id,
 			},
 		});
-		selectedUser = { id: result.user.id };
-		createdUser = true;
 	}
 
-	const createdOrganization = await auth.api.createOrganization({
-		body: {
-			name: input.organizationName.trim(),
-			slug,
-			userId: selectedUser.id,
-		},
-	});
-
 	await writeOrganizationOnboardingRemainder(db, actorId, {
-		organizationId: createdOrganization.id,
+		organizationId: organization.id,
 		yearlyBudget: input.yearlyBudget,
 	});
 
-	if (createdUser) {
+	// Sent while the account is unused, not only when this call created it: a
+	// retry after a failure between creating the user and sending the email
+	// finds the user and the organization and still sends it.
+	if (!selectedUser.lastActiveAt) {
 		await auth.api.requestPasswordReset({
 			body: { email, redirectTo: "/reset-password" },
 		});
 	}
 
-	return createdOrganization;
+	return organization;
 };
 
 export const addOrganizationMember = async (
