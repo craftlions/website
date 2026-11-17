@@ -119,14 +119,22 @@ if (session) {
 		submitBtn.textContent = "Signing in…";
 		message.textContent = "";
 
-		const { error } = await authClient.signIn.email({
-			email,
-			password,
-			rememberMe: true,
-			callbackURL:
-				(form.dataset.returnTo ?? "/dash") +
-				(form.dataset.returnTo?.includes("#") ? "" : location.hash),
-		});
+		const { error } = await authClient.signIn
+			.email({
+				email,
+				password,
+				rememberMe: true,
+				callbackURL:
+					(form.dataset.returnTo ?? "/dash") +
+					(form.dataset.returnTo?.includes("#") ? "" : location.hash),
+			})
+			.catch(() => ({
+				// The request never got an answer, such as when offline.
+				error: {
+					message:
+						"Could not reach the server. Check your connection and try again.",
+				},
+			}));
 
 		if (error) {
 			submitBtn.disabled = false;
