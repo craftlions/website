@@ -378,10 +378,11 @@ test("primitive children shrink below their longest word", async ({ page }) => {
 	expect(content).toBe("60%");
 });
 
-// Report-only until the markup uses the primitives: no Button on a page is
-// wider than its text, the sign of a capped sibling handing over its share.
+// No Button on a page is wider than its text, the sign of a capped sibling
+// handing over its share. The hint button is exempt: it is a fixed 24px
+// square around one character, a target size (DESIGN.md#buttons).
 for (const route of routes) {
-	test(`${route} buttons keep their width`, async ({ page }, info) => {
+	test(`${route} buttons keep their width`, async ({ page }) => {
 		expect((await page.goto(route))?.status()).toBe(200);
 		const wide = await page.locator("button, a").evaluateAll((elements) =>
 			elements
@@ -389,7 +390,8 @@ for (const route of routes) {
 					(element) =>
 						element.checkVisibility() &&
 						getComputedStyle(element).display.includes("grid") &&
-						getComputedStyle(element).borderTopStyle === "dashed",
+						getComputedStyle(element).borderTopStyle === "dashed" &&
+						!element.matches('[data-variant="hint"]'),
 				)
 				.flatMap((element) => {
 					const { style } = element as HTMLElement;
@@ -403,9 +405,6 @@ for (const route of routes) {
 						: [];
 				}),
 		);
-		info.annotations.push({
-			type: "wide buttons",
-			description: wide.join("; ") || "none",
-		});
+		expect(wide).toEqual([]);
 	});
 }
