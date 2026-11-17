@@ -246,7 +246,7 @@ A component keeps the rules only it uses in one scoped `<style>` after its marku
 
 - **Selectors:** start every outermost selector with a class or custom element the component renders. An element a child component or a script renders is reached after it with `:global()` (`& :global([role="option"])`), never on its own, so nothing leaks to the rest of the page.
 - **Weight:** a scoped rule weighs one attribute more per compound than the same rule in `src/styles/`. `scopedStyleStrategy` stays `attribute`: `where` and `class` add a class to every element, which would opt `section` and `dl > div` out of their element defaults.
-- **Shared stays global:** a class several components or pages use, or that another stylesheet configures (`.line-text .badge`, `.client-projects .checkbox`), stays in `src/styles/components/<name>.css`, where both rules weigh the same and the order of the bundle cannot decide between them.
+- **Shared stays global:** a class several components or pages use, or that another stylesheet configures (`.line-text .badge`, `.client-projects .checkbox`), stays in `src/styles/components/<name>.css`, where both rules weigh the same and the order of the bundle cannot decide between them. `aubr design:lint` fails on a stylesheet there that only one component uses.
 
 ## 2. Colors
 

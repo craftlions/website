@@ -36,6 +36,8 @@ const rejected: Record<string, string> = {
 		":global(p) → start with a class or custom element",
 	"unused-component-class":
 		".lint-elsewhere → use it in this component's markup",
+	"single-use-stylesheet":
+		"only src/components/LintFixture.astro uses it: move its rules into that component's scoped <style>",
 	"unmarked-markup-feature": 'hidden="until-found" → mark it',
 	"container-query": "container-type: inline-size → no container queries",
 	"window-media-query": "no window-width media queries",
@@ -105,10 +107,14 @@ for (const [name, message] of Object.entries(rejected)) {
 		);
 		assert.equal(code, 1, output);
 		const lines = output.trim().split("\n");
-		// Only the fixture's files fail, and one of them with the message.
+		// Only the fixture's files fail, and one of them with the message; a
+		// message about a whole file names it without a line.
 		assert.deepEqual(
 			lines.filter((line) =>
-				files.every((file) => !line.startsWith(`${file}:`)),
+				files.every(
+					(file) =>
+						!line.startsWith(`${file}:`) && !line.startsWith(`${file}  `),
+				),
 			),
 			[],
 		);

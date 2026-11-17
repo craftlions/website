@@ -636,6 +636,50 @@ for (const [name, files] of definitions) {
 	}
 }
 
+// A stylesheet in src/styles/components/ holds what several files share: a
+// class more than one component or page uses, or one another stylesheet
+// configures (`.line-text .badge`). Rules only one component uses belong in
+// its scoped <style>.
+const sources = globSync("src/**/*.{astro,ts}").map((file) => [
+	file,
+	readFileSync(file, "utf8").replace(/<style\b[\s\S]*?<\/style>/g, ""),
+]);
+for (const { file, blocks } of stylesheets.filter(({ file }) =>
+	file.startsWith("src/styles/components/"),
+)) {
+	const users = new Set();
+	for (const name of new Set(
+		blocks
+			.filter(
+				(block) =>
+					!block.prelude.startsWith("@") &&
+					block.parents.every(
+						({ prelude }) => !prelude.startsWith("@keyframes"),
+					),
+			)
+			.flatMap(definedBy),
+	)) {
+		const word = new RegExp(`(?<![\\w-])${name.replace(/^\./, "")}(?![\\w-])`);
+		for (const [source, text] of sources) {
+			if (word.test(text)) users.add(source);
+		}
+		for (const other of stylesheets) {
+			if (
+				other.file !== file &&
+				other.blocks.some(({ prelude }) => word.test(prelude))
+			) {
+				users.add(other.file);
+			}
+		}
+	}
+	const [only] = users;
+	if (users.size === 1 && only.startsWith("src/components/")) {
+		violations.push(
+			`${file}  → only ${only} uses it: move its rules into that component's scoped <style> and drop the file and its @import  (DESIGN.md#component-styles)`,
+		);
+	}
+}
+
 // No container: a container query has nothing to query, and containment
 // collapses a box sized by its content.
 for (const { file, declarations } of stylesheets) {
