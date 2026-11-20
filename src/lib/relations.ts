@@ -26,6 +26,10 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.organization.id,
 			to: r.invoices.organizationId,
 		}),
+		files: r.many.files({
+			from: r.organization.id,
+			to: r.files.organizationId,
+		}),
 	},
 	member: {
 		user: r.one.user({
@@ -97,6 +101,13 @@ export const relations = defineRelations(schema, (r) => ({
 		stripe: r.one.stripeInvoices({
 			from: r.invoices.stripeId,
 			to: r.stripeInvoices.id,
+		}),
+	},
+	files: {
+		organization: r.one.organization({
+			from: r.files.organizationId,
+			to: r.organization.id,
+			optional: false,
 		}),
 	},
 	stripeInvoices: {

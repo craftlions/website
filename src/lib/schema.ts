@@ -463,5 +463,42 @@ export const organizationMetadata = t.pgTable(
 	],
 );
 
+// One row per object in the drive bucket. The row decides who may read the
+// object: a file belongs to one organization, and its key never comes from
+// the request (see src/lib/files.ts). The id is set by the upload, because
+// the key holds it before the row exists.
+export const files = t.pgTable(
+	"files",
+	{
+		id: t.uuid("id").notNull(),
+		publicId: t.text("public_id").notNull(),
+		organizationId: t.text("organization_id").notNull(),
+		r2Key: t.text("r2_key").notNull(),
+		filename: t.text("filename").notNull(),
+		contentType: t.text("content_type").notNull(),
+		size: t.bigint("size", { mode: "number" }).notNull(),
+		uploadedBy: t
+			.text("uploaded_by")
+			.references(() => user.id, { onDelete: "set null" }),
+	},
+	(table) => [
+		t.primaryKey({
+			columns: [table.id],
+		}),
+		t.uniqueIndex().on(table.publicId),
+		t.uniqueIndex().on(table.r2Key),
+		t
+			.index("files_organization_id_filename_idx")
+			.on(table.organizationId, table.filename),
+		t
+			.foreignKey({
+				columns: [table.organizationId],
+				foreignColumns: [organization.id],
+			})
+			.onUpdate("cascade")
+			.onDelete("restrict"),
+	],
+);
+
 export type projectSelectType = typeof projects.$inferSelect;
 export type phaseSelectType = typeof phases.$inferSelect;

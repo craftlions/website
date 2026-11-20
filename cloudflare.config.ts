@@ -52,6 +52,9 @@ export default defineConfig({
 				namespace: "1001",
 				simple: { limit: 30, period: 10 },
 			}),
+			// The drive: every client's files in one private bucket. The Worker
+			// is its only door; see src/lib/files.ts.
+			DRIVE: bindings.r2({ name: "craftlions-website", jurisdiction: "eu" }),
 			MAIL: bindings.sendEmail(),
 			IMAGES: bindings.images(),
 			CF_VERSION_METADATA: bindings.versionMetadata(),

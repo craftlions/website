@@ -1390,7 +1390,10 @@ export const hardDeleteOrganization = async (
 		assertAdminUser(db, actorId),
 		db.query.organization.findFirst({
 			columns: { id: true, name: true },
-			with: { projects: { columns: { id: true }, limit: 1 } },
+			with: {
+				projects: { columns: { id: true }, limit: 1 },
+				files: { columns: { id: true }, limit: 1 },
+			},
 			where: { id: input.organizationId },
 		}),
 	]);
@@ -1406,10 +1409,13 @@ export const hardDeleteOrganization = async (
 		);
 	}
 
-	if (selectedOrganization.projects.length > 0) {
+	if (
+		selectedOrganization.projects.length > 0 ||
+		selectedOrganization.files.length > 0
+	) {
 		throw new DomainError(
 			"InvalidTransition",
-			"Only organizations with zero projects can be deleted.",
+			"Only organizations with zero projects and zero files can be deleted.",
 		);
 	}
 

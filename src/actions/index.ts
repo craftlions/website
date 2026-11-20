@@ -1,4 +1,5 @@
 import { ActionError, defineAction } from "astro:actions";
+import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
 import {
 	acceptPhaseAsClient,
@@ -25,6 +26,7 @@ import {
 	deliveryUrlSchema,
 } from "../lib/delivery.ts";
 import { DomainError } from "../lib/domain.ts";
+import { deleteFile } from "../lib/file-mutations.ts";
 
 type ActionContext = Parameters<
 	Parameters<typeof defineAction>[0]["handler"]
@@ -469,5 +471,15 @@ export const server = {
 			// The client's pages are gone; the admin continues on /admin.
 			return { name, next: "/admin" };
 		}),
+	}),
+	deleteFile: defineAction({
+		accept: "form",
+		input: z.object({
+			organizationId: z.string().trim().min(1),
+			filePublicId: z.string().trim().min(1),
+		}),
+		handler: adminHandler(async (input, context, actorId) =>
+			deleteFile(context.locals.db, env.DRIVE, actorId, input),
+		),
 	}),
 };
