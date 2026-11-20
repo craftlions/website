@@ -1,5 +1,6 @@
 import type { Auth } from "./auth.ts";
 import type { Db } from "./database.ts";
+import type { PublicIdPrefix } from "./public-id.ts";
 import { getOrgAdapter } from "better-auth/plugins/organization";
 import { and, eq, sql } from "drizzle-orm";
 import { resolveDelivery } from "./delivery.ts";
@@ -8,7 +9,7 @@ import {
 	type InvoiceComponent,
 	isInvoiceComponentDue,
 } from "./phase-billing.ts";
-import { type PublicIdPrefix, publicId } from "./public-id.ts";
+import { publicId } from "./public-id.ts";
 import {
 	events,
 	invoices,
