@@ -8,7 +8,7 @@ import {
 	type InvoiceComponent,
 	isInvoiceComponentDue,
 } from "./phase-billing.ts";
-import { publicId } from "./public-id.ts";
+import { type PublicIdPrefix, publicId } from "./public-id.ts";
 import {
 	events,
 	invoices,
@@ -146,6 +146,22 @@ const insertEvent = async (
 	}
 };
 
+// Six random characters can repeat. Each insert skips a taken public id with
+// ON CONFLICT DO NOTHING, which keeps the transaction usable, and returns no
+// row; then it runs again with a new id.
+const insertWithPublicId = async <Row>(
+	prefix: PublicIdPrefix,
+	insert: (id: string) => Promise<Row[]>,
+) => {
+	for (;;) {
+		const [row] = await insert(publicId(prefix));
+
+		if (row) {
+			return row;
+		}
+	}
+};
+
 const getAuthorizedClientPhaseId = async (
 	db: Db,
 	actorId: string,
@@ -256,33 +272,32 @@ export const createProject = async (
 	}
 
 	return db.transaction(async (tx) => {
-		const rows = await tx
-			.insert(projects)
-			.values({
-				publicId: publicId("proj"),
-				organizationId: input.organizationId,
-				name: input.name.trim(),
-				state: "draft",
-			})
-			.returning({
-				id: projects.id,
-				publicId: projects.publicId,
-				version: projects.version,
-			});
-
-		if (!rows[0]) {
-			throw new DomainError("Validation", "Project could not be created.");
-		}
+		const project = await insertWithPublicId("proj", (id) =>
+			tx
+				.insert(projects)
+				.values({
+					publicId: id,
+					organizationId: input.organizationId,
+					name: input.name.trim(),
+					state: "draft",
+				})
+				.onConflictDoNothing({ target: projects.publicId })
+				.returning({
+					id: projects.id,
+					publicId: projects.publicId,
+					version: projects.version,
+				}),
+		);
 
 		await insertEvent(tx, {
 			aggregateType: "project",
-			aggregateId: rows[0].id,
-			aggregateVersion: rows[0].version,
+			aggregateId: project.id,
+			aggregateVersion: project.version,
 			event: "created",
 			actorId,
 		});
 
-		return rows[0];
+		return project;
 	});
 };
 
@@ -437,37 +452,36 @@ export const createPhase = async (
 			);
 		}
 
-		const rows = await tx
-			.insert(phases)
-			.values({
-				publicId: publicId("phs"),
-				projectId: project.id,
-				title: input.title.trim(),
-				cost: input.cost,
-				...amounts,
-				currency: input.currency.toUpperCase(),
-				state: "submitted",
-				dueAt: input.dueAt ?? null,
-			})
-			.returning({
-				id: phases.id,
-				publicId: phases.publicId,
-				version: phases.version,
-			});
-
-		if (!rows[0]) {
-			throw new DomainError("Validation", "Phase could not be created.");
-		}
+		const phase = await insertWithPublicId("phs", (id) =>
+			tx
+				.insert(phases)
+				.values({
+					publicId: id,
+					projectId: project.id,
+					title: input.title.trim(),
+					cost: input.cost,
+					...amounts,
+					currency: input.currency.toUpperCase(),
+					state: "submitted",
+					dueAt: input.dueAt ?? null,
+				})
+				.onConflictDoNothing({ target: phases.publicId })
+				.returning({
+					id: phases.id,
+					publicId: phases.publicId,
+					version: phases.version,
+				}),
+		);
 
 		await insertEvent(tx, {
 			aggregateType: "phase",
-			aggregateId: rows[0].id,
-			aggregateVersion: rows[0].version,
+			aggregateId: phase.id,
+			aggregateVersion: phase.version,
 			event: "created",
 			actorId,
 		});
 
-		return rows[0];
+		return phase;
 	});
 };
 
@@ -832,26 +846,38 @@ export const attachInvoiceToPhase = async (
 			);
 		}
 
-		const rows = await tx
-			.insert(invoices)
-			.values({
-				publicId: publicId("inv"),
-				organizationId: phase.organizationId,
-				phaseId: phase.id,
-				component: input.component,
-				stripeId: input.stripeId,
-			})
-			.onConflictDoNothing()
-			.returning({ id: invoices.id, publicId: invoices.publicId });
+		// The untargeted conflict also catches a Stripe invoice that another
+		// request attached first; only a taken public id is drawn again.
+		const invoice = await insertWithPublicId("inv", async (id) => {
+			const rows = await tx
+				.insert(invoices)
+				.values({
+					publicId: id,
+					organizationId: phase.organizationId,
+					phaseId: phase.id,
+					component: input.component,
+					stripeId: input.stripeId,
+				})
+				.onConflictDoNothing()
+				.returning({ id: invoices.id, publicId: invoices.publicId });
 
-		if (!rows[0]) {
+			if (
+				rows[0] ||
+				(await tx.query.invoices.findFirst({
+					columns: { id: true },
+					where: { publicId: id },
+				}))
+			) {
+				return rows;
+			}
+
 			throw new DomainError(
 				"Conflict",
 				"This invoice was attached by another request. Refresh and try again.",
 			);
-		}
+		});
 
-		return { invoice: rows[0], created: true };
+		return { invoice, created: true };
 	});
 };
 
