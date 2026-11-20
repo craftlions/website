@@ -8,6 +8,7 @@ import {
 	type InvoiceComponent,
 	isInvoiceComponentDue,
 } from "./phase-billing.ts";
+import { publicId } from "./public-id.ts";
 import {
 	events,
 	invoices,
@@ -109,7 +110,7 @@ type EventInput = {
 };
 
 const eventValues = (input: EventInput) => ({
-	publicId: crypto.randomUUID(),
+	publicId: publicId("evt"),
 	aggregateType: input.aggregateType,
 	aggregateId: input.aggregateId,
 	aggregateVersion: input.aggregateVersion,
@@ -258,7 +259,7 @@ export const createProject = async (
 		const rows = await tx
 			.insert(projects)
 			.values({
-				publicId: crypto.randomUUID(),
+				publicId: publicId("proj"),
 				organizationId: input.organizationId,
 				name: input.name.trim(),
 				state: "draft",
@@ -439,7 +440,7 @@ export const createPhase = async (
 		const rows = await tx
 			.insert(phases)
 			.values({
-				publicId: crypto.randomUUID(),
+				publicId: publicId("phs"),
 				projectId: project.id,
 				title: input.title.trim(),
 				cost: input.cost,
@@ -834,7 +835,7 @@ export const attachInvoiceToPhase = async (
 		const rows = await tx
 			.insert(invoices)
 			.values({
-				publicId: crypto.randomUUID(),
+				publicId: publicId("inv"),
 				organizationId: phase.organizationId,
 				phaseId: phase.id,
 				component: input.component,
