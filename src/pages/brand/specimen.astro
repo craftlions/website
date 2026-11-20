@@ -13,6 +13,7 @@ import CommandPalette from "../../components/CommandPalette.astro";
 import ConfirmAction from "../../components/ConfirmAction.astro";
 import DisclosureButton from "../../components/DisclosureButton.astro";
 import Field from "../../components/Field.astro";
+import FileCards from "../../components/FileCards.astro";
 import InvoiceTable from "../../components/InvoiceTable.astro";
 import PageHeading from "../../components/PageHeading.astro";
 import Progress from "../../components/Progress.astro";
@@ -95,6 +96,37 @@ const frames = [
 	["narrow", "20rem"],
 	["wide", "60rem"],
 ] as const;
+
+// The drive fixture's files: a PDF, a long name, a video and a file with no
+// extension, with public ids unique per frame.
+const specimenFiles = (frame: string) =>
+	[
+		[
+			"019a6b2c-1d00-7000-8000-000000000001",
+			"Statement of Work 2026.pdf",
+			"application/pdf",
+			284_113,
+		],
+		[
+			"019a5f10-2e00-7000-8000-000000000002",
+			"hafenwerk-kiel-brand-guidelines-final-v3-approved.zip",
+			"application/zip",
+			48_300_000,
+		],
+		[
+			"019a4e00-3f00-7000-8000-000000000003",
+			"Kickoff recording.mp4",
+			"video/mp4",
+			1_830_000_000,
+		],
+		["019a3d00-4a00-7000-8000-000000000004", "LICENSE", "text/plain", 1_071],
+	].map(([id, filename, contentType, size], index) => ({
+		id: String(id),
+		publicId: `file_${frame}${index}`,
+		filename: String(filename),
+		contentType: String(contentType),
+		size: Number(size),
+	}));
 
 // The ledger fixture's invoices for InvoiceTable, dated from the build: an
 // overdue one and a paid one, each with its phase's split, an unassigned one
@@ -1263,6 +1295,31 @@ const ledgerInvoices = (frame: string) => [
 							</figure>
 						))}
 					</section>
+				</section>
+				<section aria-labelledby="files" class="box stack" data-space="l">
+					<header class="stack" data-space="2xs">
+						<h2 id="files" class="text-headline">Files</h2>
+						<p class="text-sm text-fg-muted">
+							FileCards, the client's drive, in a 20rem and a 60rem frame: cards
+							keep 13rem and wrap to the room they have; the admin's carry a
+							Delete.
+						</p>
+					</header>
+					{frames.map(([frame, width]) => (
+						<figure class="stack" data-space="3xs" data-fixture="files">
+							<figcaption class="label-caps">{width}</figcaption>
+							<div class="frame box" data-frame={frame}>
+								<FileCards
+									files={specimenFiles(frame)}
+									base="/brand/specimen#files"
+									deleteFrom={{
+										organizationId: "specimen",
+										organizationName: "Hafenwerk Kiel",
+									}}
+								/>
+							</div>
+						</figure>
+					))}
 				</section>
 			</main>
 			{/* One palette for both sections: signed out, it offers only Sign in. */}

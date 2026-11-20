@@ -5,7 +5,7 @@ import ClientShell from "./ClientShell.astro";
 
 interface Props {
 	organization: { name: string; slug: string };
-	activePage: "overview" | "invoices" | "spend";
+	activePage: "overview" | "invoices" | "spend" | "files";
 }
 
 const { organization, activePage } = Astro.props;
@@ -24,6 +24,11 @@ const pages = [
 		id: "spend",
 		label: "Spend by year",
 		href: `/dash/org/${organization.slug}/spend`,
+	},
+	{
+		id: "files",
+		label: "Files",
+		href: `/dash/org/${organization.slug}/files`,
 	},
 ] as const;
 const activeTab = pages.find((page) => page.id === activePage) ?? pages[0];

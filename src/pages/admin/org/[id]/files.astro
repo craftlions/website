@@ -1,0 +1,76 @@
+---
+export const prerender = false;
+
+import { actions } from "astro:actions";
+import FileCards from "../../../../components/FileCards.astro";
+import FileUpload from "../../../../components/FileUpload.astro";
+import AdminOrgShell from "../../../../layouts/AdminOrgShell.astro";
+import { successMessage } from "../../../../lib/action-feedback.ts";
+
+const { id } = Astro.params;
+
+if (!id) {
+	return Astro.redirect("/admin");
+}
+
+const organization = await Astro.locals.db.query.organization.findFirst({
+	columns: {
+		id: true,
+		name: true,
+	},
+	with: {
+		files: {
+			columns: {
+				id: true,
+				publicId: true,
+				filename: true,
+				contentType: true,
+				size: true,
+			},
+			orderBy: { id: "desc" },
+		},
+	},
+	where: {
+		id,
+	},
+});
+
+if (!organization) {
+	return Astro.redirect("/admin");
+}
+---
+
+<AdminOrgShell
+	{organization}
+	activePage="files"
+	results={[
+		successMessage(
+			Astro.getActionResult(actions.deleteFile),
+			({ filename }) => `${filename} deleted.`,
+		),
+	]}
+>
+	<section aria-labelledby="upload-heading">
+		<h2 id="upload-heading" class="label-caps">Upload</h2>
+		<p class="measure text-sm text-fg-muted">
+			Every member of {organization.name} can open the files here, and nobody
+			else.
+		</p>
+		<FileUpload organizationId={organization.id} />
+	</section>
+	<section aria-labelledby="files-heading">
+		<h2 id="files-heading" class="label-caps">Files</h2>
+		{organization.files.length > 0 ? (
+			<FileCards
+				files={organization.files}
+				base={`/admin/org/${organization.id}/files`}
+				deleteFrom={{
+					organizationId: organization.id,
+					organizationName: organization.name,
+				}}
+			/>
+		) : (
+			<p class="box text-sm text-fg-muted">No files yet.</p>
+		)}
+	</section>
+</AdminOrgShell>

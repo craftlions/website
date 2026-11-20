@@ -15,6 +15,7 @@ interface Props
 		| "worklist"
 		| "projects"
 		| "invoices"
+		| "files"
 		| "members"
 		| "settings";
 	breadcrumbs?: ComponentProps<typeof AdminShell>["breadcrumbs"];
@@ -49,6 +50,11 @@ const pages = [
 		id: "invoices",
 		label: "Invoices",
 		href: `/admin/org/${organization.id}/invoices`,
+	},
+	{
+		id: "files",
+		label: "Files",
+		href: `/admin/org/${organization.id}/files`,
 	},
 	{
 		id: "members",

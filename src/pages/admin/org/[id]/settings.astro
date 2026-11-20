@@ -11,7 +11,7 @@ import {
 	clientDeletedMessage,
 	successMessage,
 } from "../../../../lib/action-feedback.ts";
-import { member, projects } from "../../../../lib/schema.ts";
+import { files, member, projects } from "../../../../lib/schema.ts";
 import { submittedValues } from "../../../../lib/submitted-values.ts";
 
 const { id } = Astro.params;
@@ -49,6 +49,15 @@ const organization = await Astro.locals.db.query.organization.findFirst({
 						ne(projects.state, "archived"),
 					),
 				)
+				.getSQL()
+				.mapWith(Number),
+		fileCount: (organization) =>
+			Astro.locals.db
+				.select({
+					value: count(),
+				})
+				.from(files)
+				.where(eq(files.organizationId, organization.id))
 				.getSQL()
 				.mapWith(Number),
 		memberCount: (organization) =>
@@ -271,7 +280,7 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		<p class="measure text-sm text-fg-muted">
 			Deleting a client is permanent and cannot be undone.
 		</p>
-		{organization.projectCount === 0 ? (
+		{organization.projectCount === 0 && organization.fileCount === 0 ? (
 			<form
 				method="POST"
 				action={actions.hardDeleteOrganization}
@@ -311,9 +320,10 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 		) : (
 			<div class="box stack border-line-danger wrap-anywhere">
 				<p class="measure text-sm">
-					Only a client without projects can be deleted. Projects cannot be
-					deleted, archived ones included, so {organization.name} stays. To
-					offboard the client, archive its projects and remove its members.
+					Only a client without projects and files can be deleted. Projects
+					cannot be deleted, archived ones included, so a client with projects
+					stays. To offboard the client, archive its projects, delete its files
+					and remove its members.
 				</p>
 				<ul class="stack" data-space="2xs">
 					<li>
@@ -323,6 +333,15 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 							class="admin-long-label"
 						>
 							{`${organization.projectCount} ${organization.projectCount === 1 ? "project" : "projects"}, ${organization.unarchivedProjectCount} not archived`}
+						</Button>
+					</li>
+					<li>
+						<Button
+							variant="quiet"
+							href={`/admin/org/${organization.id}/files`}
+							class="admin-long-label"
+						>
+							{`${organization.fileCount} ${organization.fileCount === 1 ? "file" : "files"}`}
 						</Button>
 					</li>
 					<li>

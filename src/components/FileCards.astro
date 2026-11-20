@@ -1,0 +1,81 @@
+---
+import { actions } from "astro:actions";
+import { fileFacts, fileKind } from "../lib/files.ts";
+import ConfirmAction from "./ConfirmAction.astro";
+
+// A client's drive as small cards that wrap to the room they have, newest
+// first. Each card names the kind of file, links its name to `base` plus the
+// public id, and states its size and upload date. With `deleteFrom`, the admin
+// can delete a file from its card.
+interface Props {
+	files: {
+		id: string;
+		publicId: string;
+		filename: string;
+		contentType: string;
+		size: number;
+	}[];
+	base: string;
+	deleteFrom?: { organizationId: string; organizationName: string };
+}
+
+const { files, base, deleteFrom } = Astro.props;
+---
+
+<ul class="file-cards auto-grid">
+	{files.map((file) => (
+		<li class="file-card box stack" data-space="2xs" id={file.publicId}>
+			<p class="label-caps text-fg-muted">
+				{fileKind(file.filename, file.contentType)}
+			</p>
+			<a
+				class="link text-label wrap-anywhere"
+				href={`${base}/${file.publicId}`}
+			>
+				{file.filename}
+			</a>
+			<p class="text-xs text-fg-muted">{fileFacts(file)}</p>
+			{deleteFrom && (
+				<form method="POST" action={actions.deleteFile}>
+					<input
+						type="hidden"
+						name="organizationId"
+						value={deleteFrom.organizationId}
+					/>
+					<input type="hidden" name="filePublicId" value={file.publicId} />
+					<ConfirmAction
+						id={`delete-file-${file.publicId}`}
+						trigger="Delete"
+						triggerLabel={`Delete ${file.filename}`}
+						triggerVariant="quiet"
+						title={`Delete ${file.filename}?`}
+						confirm="Delete file"
+						cancel="Keep file"
+					>
+						{`${deleteFrom.organizationName} can no longer open ${file.filename}, and links to it stop working. This cannot be undone.`}
+					</ConfirmAction>
+				</form>
+			)}
+		</li>
+	))}
+</ul>
+
+<style>
+	@layer components {
+		/* Cards keep 13rem and wrap like words; one card fills a narrow row. */
+		.file-cards {
+			--grid-min: 13rem;
+		}
+
+		/* The facts and the delete action sit at the foot of every card, so a
+		   row of cards with long and short names ends on one line. */
+		.file-card {
+			grid-template-rows: auto 1fr auto;
+			align-content: start;
+
+			&:has(form) {
+				grid-template-rows: auto 1fr auto auto;
+			}
+		}
+	}
+</style>

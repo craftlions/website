@@ -1,0 +1,88 @@
+---
+export const prerender = false;
+
+import { isAPIError } from "better-auth/api";
+import FileCards from "../../../../components/FileCards.astro";
+import ClientOrgShell from "../../../../layouts/ClientOrgShell.astro";
+
+const { slug } = Astro.params;
+
+if (!slug) {
+	return Astro.redirect("/dash");
+}
+
+const session = Astro.locals.session;
+
+if (!session) {
+	return Astro.redirect(
+		`/login?returnTo=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+	);
+}
+
+if (!session.session.activeOrganizationId) {
+	try {
+		await Astro.locals.auth.api.setActiveOrganization({
+			body: {
+				organizationSlug: slug,
+			},
+			headers: Astro.request.headers,
+		});
+	} catch (error) {
+		if (isAPIError(error) && error.body?.code === "ORGANIZATION_NOT_FOUND") {
+			return Astro.redirect("/dash");
+		}
+	}
+}
+
+// One read resolves the slug, checks this user's membership and loads the
+// files, newest first.
+const organization = await Astro.locals.db.query.organization.findFirst({
+	columns: {
+		name: true,
+	},
+	with: {
+		members: {
+			columns: {
+				role: true,
+			},
+			where: {
+				userId: session.user.id,
+			},
+		},
+		files: {
+			columns: {
+				id: true,
+				publicId: true,
+				filename: true,
+				contentType: true,
+				size: true,
+			},
+			orderBy: { id: "desc" },
+		},
+	},
+	where: {
+		slug,
+	},
+});
+
+if (!organization?.members[0]) {
+	return Astro.redirect("/dash");
+}
+---
+
+<ClientOrgShell
+	organization={{ name: organization.name, slug }}
+	activePage="files"
+>
+	<section aria-labelledby="files-heading">
+		<h2 id="files-heading" class="label-caps">Files</h2>
+		{organization.files.length > 0 ? (
+			<FileCards files={organization.files} base={`/dash/org/${slug}/files`} />
+		) : (
+			<p class="box text-sm text-fg-muted">
+				No files yet. Documents and assets craftlions shares with{" "}
+				{organization.name} appear here.
+			</p>
+		)}
+	</section>
+</ClientOrgShell>

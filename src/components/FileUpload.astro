@@ -1,0 +1,196 @@
+---
+import Button from "./Button.astro";
+import Checkbox from "./Checkbox.astro";
+import Field from "./Field.astro";
+
+// Uploads files into a client's drive from the browser, in parts, so a file
+// of any size passes under the Worker's request limit: start an upload, send
+// each part, complete it (src/pages/api/admin/org/[id]/uploads). The page
+// reloads once every file is in, and shows the new cards.
+interface Props {
+	organizationId: string;
+}
+
+const { organizationId } = Astro.props;
+---
+
+<file-upload data-endpoint={`/api/admin/org/${organizationId}/uploads`}>
+	<form class="box stack" data-space="xs">
+		<Field
+			label="Files"
+			name="files"
+			type="file"
+			multiple
+			required
+			hint="Any type and size. Keep this page open until the upload is done."
+		/>
+		<Checkbox name="replace" checked>
+			Replace files with the same name
+		</Checkbox>
+		<p class="cluster">
+			<Button type="submit">Upload files</Button>
+		</p>
+	</form>
+	<p role="status" class="text-sm"></p>
+	<p role="alert" class="text-sm text-fg-danger"></p>
+</file-upload>
+
+<script>
+	type Part = { partNumber: number; etag: string };
+
+	// Parts go up a few at a time: one at a time leaves the line idle between
+	// parts, many at once only queue in the browser.
+	const parallelParts = 3;
+
+	const fail = async (response: Response) => {
+		const body = (await response.json().catch(() => null)) as {
+			detail?: unknown;
+		} | null;
+		throw new Error(
+			typeof body?.detail === "string"
+				? body.detail
+				: `The server answered ${response.status}.`,
+		);
+	};
+
+	const send = async (url: string, init: RequestInit) => {
+		const response = await fetch(url, init);
+		if (!response.ok) await fail(response);
+		return response;
+	};
+
+	class FileUpload extends HTMLElement {
+		connectedCallback() {
+			if (this.dataset.initialized === "true") return;
+			this.dataset.initialized = "true";
+
+			const form = this.querySelector("form");
+			const input = this.querySelector<HTMLInputElement>('input[type="file"]');
+			const replace = this.querySelector<HTMLInputElement>(
+				'input[name="replace"]',
+			);
+			const submit = this.querySelector<HTMLButtonElement>(
+				'button[type="submit"]',
+			);
+			const status = this.querySelector('[role="status"]');
+			const alert = this.querySelector('[role="alert"]');
+			const endpoint = this.dataset.endpoint;
+
+			if (!form || !input || !replace || !submit || !status || !alert) return;
+			if (!endpoint) return;
+
+			const upload = async (file: File, index: number, total: number) => {
+				const name =
+					total > 1 ? `${file.name} (${index + 1} of ${total})` : file.name;
+				const json = { "Content-Type": "application/json" };
+				const started = await send(endpoint, {
+					method: "POST",
+					headers: json,
+					body: JSON.stringify({
+						filename: file.name,
+						contentType: file.type,
+					}),
+				});
+				const { key, uploadId, partSize } = (await started.json()) as {
+					key: string;
+					uploadId: string;
+					partSize: number;
+				};
+				const uploadUrl = `${endpoint}/${encodeURIComponent(uploadId)}`;
+				const count = Math.max(1, Math.ceil(file.size / partSize));
+				const parts: Part[] = [];
+				let next = 0;
+				let sent = 0;
+
+				status.textContent = `Uploading ${name}: 0%.`;
+
+				const worker = async () => {
+					while (next < count) {
+						const partNumber = ++next;
+						const chunk = file.slice(
+							(partNumber - 1) * partSize,
+							partNumber * partSize,
+						);
+						const response = await send(
+							`${uploadUrl}?key=${encodeURIComponent(key)}&part=${partNumber}`,
+							{
+								method: "PUT",
+								headers: { "Content-Type": "application/octet-stream" },
+								body: chunk,
+							},
+						);
+						parts.push((await response.json()) as Part);
+						sent += chunk.size;
+						status.textContent = `Uploading ${name}: ${Math.floor((sent / Math.max(file.size, 1)) * 100)}%.`;
+					}
+				};
+
+				try {
+					await Promise.all(
+						Array.from({ length: Math.min(parallelParts, count) }, worker),
+					);
+					await send(uploadUrl, {
+						method: "POST",
+						headers: json,
+						body: JSON.stringify({
+							key,
+							filename: file.name,
+							contentType: file.type,
+							replace: replace.checked,
+							parts: parts.sort((a, b) => a.partNumber - b.partNumber),
+						}),
+					});
+				} catch (error) {
+					// The parts already sent would wait for R2's cleanup otherwise.
+					fetch(`${uploadUrl}?key=${encodeURIComponent(key)}`, {
+						method: "DELETE",
+					}).catch(() => {});
+					throw error;
+				}
+			};
+
+			form.addEventListener("submit", async (event) => {
+				event.preventDefault();
+
+				const files = [...(input.files ?? [])];
+				if (files.length === 0) return;
+
+				submit.disabled = true;
+				alert.textContent = "";
+
+				try {
+					for (const [index, file] of files.entries()) {
+						await upload(file, index, files.length);
+					}
+					status.textContent =
+						files.length === 1
+							? `${files[0]?.name} uploaded.`
+							: `${files.length} files uploaded.`;
+					location.reload();
+				} catch (error) {
+					status.textContent = "";
+					alert.textContent = `Upload stopped: ${error instanceof Error ? error.message : "the connection failed."} Files finished before it are kept.`;
+					submit.disabled = false;
+				}
+			});
+		}
+	}
+
+	if (!customElements.get("file-upload")) {
+		customElements.define("file-upload", FileUpload);
+	}
+</script>
+
+<style>
+	@layer components {
+		file-upload {
+			display: grid;
+		}
+
+		/* The live regions are rendered empty, so a script can fill them and be
+		   heard; they take room only once they have something to say. */
+		file-upload > p:not(:empty) {
+			margin-block-start: var(--space-xs);
+		}
+	}
+</style>
