@@ -50,6 +50,7 @@ aubr types
 aubr cf-check
 aubx astro sync
 aubr check
+aubr comment:lint
 aubr design:lint
 aubr unit
 aubx biome check --write

@@ -37,6 +37,7 @@ jobs:
       - run: aubr cf-check
       - run: aubx astro sync
       - run: aubr check
+      - run: aubr comment:lint
       - run: aubr design:lint
       - run: aubr unit
       - run: aubx biome ci

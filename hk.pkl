@@ -15,6 +15,10 @@ local linters = new Mapping<String, Step> {
 		glob = List("src/**/*.astro", "src/**/*.ts", "src/**/*.css", "DESIGN.md")
 		check = "aubr design:lint"
 	}
+	["comment-lint"] {
+		glob = List("src/**/*.astro", "src/**/*.ts", "src/**/*.css", "tests/**/*.ts", "scripts/**/*.js", "*.ts", "*.pkl")
+		check = "aubr comment:lint"
+	}
 }
 
 local online = new Mapping<String, Step> {
@@ -36,7 +40,6 @@ hooks {
 		fix = true
 		stash = "git"
 		steps = (linters) {
-			// Rejects staged content that holds a value from fnox.toml; decrypting needs the age key.
 			["fnox-scan"] {
 				check = "fnox scan --values --staged"
 			}

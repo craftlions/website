@@ -11,6 +11,7 @@
     "dev": "astro dev",
     "preview": "astro build && astro preview",
     "types": "cf workers types --include-runtime",
+    "comment:lint": "node scripts/comment-lint.js",
     "design:lint": "node scripts/design-lint.js",
     "a11y": "playwright test tests/a11y.spec.ts",
     "design:test": "playwright test tests/design",
