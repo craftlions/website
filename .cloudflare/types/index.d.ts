@@ -13,7 +13,7 @@ declare namespace Cloudflare {
 }
 interface Env extends Cloudflare.Env {}
 
-// Runtime types generated with workerd@1.20261119.1 2026-11-01 nodejs_compat
+// Runtime types generated with workerd@1.20261119.1 2026-11-17 nodejs_compat
 // Begin runtime types
 /*! *****************************************************************************
 Copyright (c) Cloudflare. All rights reserved.
