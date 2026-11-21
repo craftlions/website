@@ -1,0 +1,534 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "2c62bca8-7eb5-4796-900d-dd78aaa1d9cb",
+  "prevIds": [
+    "685dacaf-9410-4a2c-bf6f-330326bfad9b"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "files"
+      ],
+      "writes": [
+        "s|tbl|public.files",
+        "n|tbl|public.files",
+        "e|tbl|public.files",
+        "n|rel|public.files",
+        "n|type|public.files",
+        "n|rel|public.files_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "apikey"
+      ],
+      "writes": [
+        "s|tbl|public.apikey",
+        "n|tbl|public.apikey",
+        "e|tbl|public.apikey",
+        "n|rel|public.apikey",
+        "n|type|public.apikey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "files",
+        "files_public_id_index"
+      ],
+      "writes": [
+        "s|idx|public.files_public_id_index",
+        "n|idx|public.files_public_id_index",
+        "e|idx|public.files_public_id_index",
+        "n|rel|public.files_public_id_index"
+      ],
+      "reads": [
+        "n|tbl|public.files",
+        "n|sch|public",
+        "n|col|public.files.public_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "files",
+        "files_r2_key_index"
+      ],
+      "writes": [
+        "s|idx|public.files_r2_key_index",
+        "n|idx|public.files_r2_key_index",
+        "e|idx|public.files_r2_key_index",
+        "n|rel|public.files_r2_key_index"
+      ],
+      "reads": [
+        "n|tbl|public.files",
+        "n|sch|public",
+        "n|col|public.files.r2_key"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "files",
+        "files_organization_id_filename_idx"
+      ],
+      "writes": [
+        "s|idx|public.files_organization_id_filename_idx",
+        "n|idx|public.files_organization_id_filename_idx",
+        "e|idx|public.files_organization_id_filename_idx",
+        "n|rel|public.files_organization_id_filename_idx"
+      ],
+      "reads": [
+        "n|tbl|public.files",
+        "n|sch|public",
+        "n|col|public.files.organization_id",
+        "n|col|public.files.filename"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "files"
+      ],
+      "writes": [
+        "s|fk|public.files.files_uploaded_by_user_id_fkey",
+        "n|fk|public.files.files_uploaded_by_user_id_fkey",
+        "e|fk|public.files.files_uploaded_by_user_id_fkey",
+        "n|con|public.files.files_uploaded_by_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.files",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.files.uploaded_by",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "files"
+      ],
+      "writes": [
+        "s|fk|public.files.files_organization_id_organization_id_fkey",
+        "n|fk|public.files.files_organization_id_organization_id_fkey",
+        "e|fk|public.files.files_organization_id_organization_id_fkey",
+        "n|con|public.files.files_organization_id_organization_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.files",
+        "n|sch|public",
+        "n|tbl|public.organization",
+        "n|sch|public",
+        "n|col|public.files.organization_id",
+        "n|col|public.organization.id",
+        "e|uniqueness|public.organization.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "files",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "public_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "organization_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "r2_key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "filename",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "content_type",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "size",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "uploaded_by",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "files_public_id_index",
+        "nameExplicit": false,
+        "columns": [
+          {
+            "value": "public_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "files_r2_key_index",
+        "nameExplicit": false,
+        "columns": [
+          {
+            "value": "r2_key",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "files_organization_id_filename_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "organization_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "filename",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "files_uploaded_by_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "uploaded_by"
+        ],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "files_organization_id_organization_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "organization_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "organization",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "CASCADE",
+        "onDelete": "RESTRICT",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "files",
+        "name": "files_pkey",
+        "columns": [
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "drop",
+      "key": "tables\u0000[\"public\",\"apikey\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"id\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"config_id\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"name\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"start\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"prefix\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"key\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"reference_id\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"refill_interval\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"refill_amount\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"last_refill_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"enabled\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"rate_limit_enabled\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"rate_limit_time_window\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"rate_limit_max\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"request_count\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"remaining\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"last_request\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"expires_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"created_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"updated_at\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"permissions\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"apikey\",\"metadata\"]"
+    },
+    {
+      "op": "drop",
+      "key": "indexes\u0000[\"public\",\"apikey_reference_id_index\"]"
+    },
+    {
+      "op": "drop",
+      "key": "indexes\u0000[\"public\",\"apikey_config_id_index\"]"
+    },
+    {
+      "op": "drop",
+      "key": "pks\u0000[\"public\",\"apikey\",\"apikey_pkey\"]"
+    },
+    {
+      "op": "drop",
+      "key": "uniques\u0000[\"public\",\"apikey\",\"apikey_key_unique\"]"
+    }
+  ]
+}
