@@ -1327,23 +1327,35 @@ export const updateOrganizationSettings = async (
 		...(stripeCustomerId !== undefined && { stripeCustomerId }),
 	};
 
-	await db.transaction(async (tx) => {
-		if (Object.keys(metadataFields).length > 0) {
-			await tx
-				.insert(organizationMetadata)
-				.values({ organizationId: input.organizationId, ...metadataFields })
-				.onConflictDoUpdate({
-					target: organizationMetadata.organizationId,
-					set: metadataFields,
-				});
-		}
-		await insertEvent(tx, {
+	const updatedEvent = db.insert(events).values(
+		eventValues({
 			aggregateType: "organization",
 			aggregateId: input.organizationId,
 			event: "updated",
 			actorId,
-		});
-	});
+		}),
+	);
+	const { metrics } =
+		Object.keys(metadataFields).length > 0
+			? await db.batch(
+					[
+						db
+							.insert(organizationMetadata)
+							.values({
+								organizationId: input.organizationId,
+								...metadataFields,
+							})
+							.onConflictDoUpdate({
+								target: organizationMetadata.organizationId,
+								set: metadataFields,
+							}),
+						updatedEvent,
+					],
+					{ metrics: "ms" },
+				)
+			: await db.batch([updatedEvent], { metrics: "ms" });
+	const { queries, ...batch } = metrics;
+	console.log("Organization settings batch", batch);
 };
 
 export const hardDeleteOrganization = async (
