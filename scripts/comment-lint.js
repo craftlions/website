@@ -282,6 +282,7 @@ export const collectFiles = (rootDir) => {
 };
 
 export const lintComments = (rootDir, baseline = {}, explicitFiles) => {
+	const linted = collectFiles(rootDir);
 	const files = explicitFiles
 		? explicitFiles
 				.map((file) =>
@@ -289,8 +290,8 @@ export const lintComments = (rootDir, baseline = {}, explicitFiles) => {
 						.relative(rootDir, path.resolve(rootDir, file))
 						.replaceAll("\\", "/"),
 				)
-				.filter((file) => !isIgnored(file))
-		: collectFiles(rootDir);
+				.filter((file) => linted.includes(file))
+		: linted;
 
 	const counts = {};
 	const violations = [];

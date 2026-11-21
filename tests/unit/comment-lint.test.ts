@@ -187,6 +187,16 @@ describe("lintComments ratchet", () => {
 			]);
 			assert.deepEqual(scopedClean.violations, []);
 			assert.deepEqual(scopedClean.staleBaseline, []);
+
+			mkdirSync(path.join(dir, ".cloudflare/types"), { recursive: true });
+			writeFileSync(
+				path.join(dir, ".cloudflare/types/index.d.ts"),
+				"/** generated */\nexport {};\n",
+			);
+			const outsideGlobs = lintComments(dir, { "src/legacy.ts": 1 }, [
+				".cloudflare/types/index.d.ts",
+			]);
+			assert.deepEqual(outsideGlobs.violations, []);
 		} finally {
 			rmSync(dir, { recursive: true, force: true });
 		}
