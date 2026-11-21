@@ -23,6 +23,10 @@ secrets = [
 ]
 run = "aubr dev"
 
+[tasks."actions:lock"]
+description = "Regenerate .github/workflows/actions.lock, keeping the commit SHA pins in the workflows"
+run = "gh actions-lock --no-interactive --no-narrow"
+
 [tasks."db:check"]
 description = "Check the Drizzle migrations with the direct database URL from fnox"
 secrets = ["DATABASE_DIRECT_URL"]

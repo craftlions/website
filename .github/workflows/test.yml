@@ -45,6 +45,12 @@ jobs:
       - run: aubr unit
       - run: aubx biome ci
       - run: jactionlint --no-online --strict-exit .github/workflows/*.yml
+      - name: Verify Actions Lockfile
+        run: |
+          gh extension install github/gh-actions-lock --pin v0.5.1
+          gh actions-lock --verify
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   browser:
     runs-on: ubuntu-26.04
