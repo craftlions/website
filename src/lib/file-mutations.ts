@@ -3,7 +3,13 @@
 import type { Db } from "./database.ts";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { assertAdminUser, DomainError } from "./domain.ts";
-import { cleanFilename, fileIdFromKey, fileKey, partSize } from "./files.ts";
+import {
+	cleanFilename,
+	fileIdFromKey,
+	fileKey,
+	maxParts,
+	partSize,
+} from "./files.ts";
 import { publicId } from "./public-id.ts";
 import { files } from "./schema.ts";
 import { uuidV7 } from "./uuid.ts";
@@ -81,9 +87,12 @@ export const uploadPart = async (
 	if (
 		!Number.isInteger(input.partNumber) ||
 		input.partNumber < 1 ||
-		input.partNumber > 10000
+		input.partNumber > maxParts
 	) {
-		throw new DomainError("Validation", "Part numbers run from 1 to 10000.");
+		throw new DomainError(
+			"Validation",
+			`Part numbers run from 1 to ${maxParts}.`,
+		);
 	}
 
 	return uploadOf(bucket, input).upload.uploadPart(
@@ -93,8 +102,10 @@ export const uploadPart = async (
 };
 
 // Completes the object, then records it. With `replace`, the files of this
-// client with the same name go once the new one is recorded, so a failed
-// upload never loses the file it was meant to replace.
+// client with the same name go in the same transaction, objects before the
+// commit: if any step fails, nothing is recorded or replaced, and the new
+// object is deleted again, so a failed upload never loses the file it was
+// meant to replace and leaves no object without a row.
 export const completeUpload = async (
 	db: Db,
 	bucket: R2Bucket,
@@ -120,57 +131,62 @@ export const completeUpload = async (
 	const { fileId, upload } = uploadOf(bucket, input);
 	const object = await upload.complete(input.parts);
 
-	const replaced = await db.transaction(async (tx) => {
-		const [file] = await tx
-			.insert(files)
-			.values({
-				id: fileId,
-				publicId: publicId("file", 12),
-				organizationId: input.organizationId,
-				r2Key: object.key,
-				filename,
-				contentType: cleanContentType(input.contentType),
-				size: object.size,
-				uploadedBy: actorId,
-			})
-			.returning({ publicId: files.publicId });
+	try {
+		const replaced = await db.transaction(async (tx) => {
+			const [file] = await tx
+				.insert(files)
+				.values({
+					id: fileId,
+					publicId: publicId("file", 12),
+					organizationId: input.organizationId,
+					r2Key: object.key,
+					filename,
+					contentType: cleanContentType(input.contentType),
+					size: object.size,
+					uploadedBy: actorId,
+				})
+				.returning({ publicId: files.publicId });
 
-		if (!file) {
-			throw new DomainError("Validation", "The file could not be recorded.");
-		}
+			if (!file) {
+				throw new DomainError("Validation", "The file could not be recorded.");
+			}
 
-		if (!input.replace) {
-			return [];
-		}
+			if (!input.replace) {
+				return 0;
+			}
 
-		const sameName = await tx
-			.select({ id: files.id, r2Key: files.r2Key })
-			.from(files)
-			.where(
-				and(
-					eq(files.organizationId, input.organizationId),
-					eq(files.filename, filename),
-					ne(files.id, fileId),
-				),
-			);
+			const sameName = await tx
+				.select({ id: files.id, r2Key: files.r2Key })
+				.from(files)
+				.where(
+					and(
+						eq(files.organizationId, input.organizationId),
+						eq(files.filename, filename),
+						ne(files.id, fileId),
+					),
+				);
 
-		if (sameName.length > 0) {
-			await tx.delete(files).where(
-				inArray(
-					files.id,
-					sameName.map((row) => row.id),
-				),
-			);
-		}
+			if (sameName.length > 0) {
+				await tx.delete(files).where(
+					inArray(
+						files.id,
+						sameName.map((row) => row.id),
+					),
+				);
+				await bucket.delete(sameName.map((row) => row.r2Key));
+			}
 
-		return sameName.map((row) => row.r2Key);
-	});
+			return sameName.length;
+		});
 
-	if (replaced.length > 0) {
-		await bucket.delete(replaced);
+		return { filename, replaced };
+	} catch (error) {
+		// Logs the key, so the object can be removed by hand.
+		await bucket.delete(object.key).catch(() => {
+			console.error("Deleting an unrecorded upload failed", object.key);
+		});
+		throw error;
 	}
-
-	return { filename, replaced: replaced.length };
 };
 
 export const abortUpload = async (
@@ -183,7 +199,9 @@ export const abortUpload = async (
 	await uploadOf(bucket, input).upload.abort();
 };
 
-// The row goes first, so no client is ever shown a file whose object is gone.
+// The row and the object go in one transaction, the object before the
+// commit: if R2 fails, the row stays and the admin can try again, so no object
+// is left without a row.
 export const deleteFile = async (
 	db: Db,
 	bucket: R2Bucket,
@@ -192,21 +210,23 @@ export const deleteFile = async (
 ) => {
 	await assertAdminUser(db, actorId);
 
-	const [file] = await db
-		.delete(files)
-		.where(
-			and(
-				eq(files.organizationId, input.organizationId),
-				eq(files.publicId, input.filePublicId),
-			),
-		)
-		.returning({ filename: files.filename, r2Key: files.r2Key });
+	return db.transaction(async (tx) => {
+		const [file] = await tx
+			.delete(files)
+			.where(
+				and(
+					eq(files.organizationId, input.organizationId),
+					eq(files.publicId, input.filePublicId),
+				),
+			)
+			.returning({ filename: files.filename, r2Key: files.r2Key });
 
-	if (!file) {
-		throw new DomainError("NotFound", "File not found.");
-	}
+		if (!file) {
+			throw new DomainError("NotFound", "File not found.");
+		}
 
-	await bucket.delete(file.r2Key);
+		await bucket.delete(file.r2Key);
 
-	return { filename: file.filename };
+		return { filename: file.filename };
+	});
 };
