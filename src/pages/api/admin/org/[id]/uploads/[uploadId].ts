@@ -9,6 +9,7 @@ import {
 	completeUpload,
 	uploadPart,
 } from "../../../../../../lib/file-mutations.ts";
+import { maxParts } from "../../../../../../lib/files.ts";
 
 export const prerender = false;
 
@@ -30,6 +31,7 @@ export const PUT = withAdminSession("Upload", async (context, session) => {
 			key,
 			uploadId,
 			partNumber: Number(context.url.searchParams.get("part")),
+			size: Number(context.request.headers.get("Content-Length") ?? Number.NaN),
 			body: context.request.body,
 		}),
 	);
@@ -43,12 +45,12 @@ const completeSchema = z.object({
 	parts: z
 		.array(
 			z.object({
-				partNumber: z.number().int().min(1).max(10000),
+				partNumber: z.number().int().min(1).max(maxParts),
 				etag: z.string().min(1),
 			}),
 		)
 		.min(1)
-		.max(10000),
+		.max(maxParts),
 });
 
 export const POST = withAdminSession("Upload", async (context, session) => {

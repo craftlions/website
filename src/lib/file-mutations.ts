@@ -79,6 +79,7 @@ export const uploadPart = async (
 		key: string;
 		uploadId: string;
 		partNumber: number;
+		size: number;
 		body: ReadableStream;
 	},
 ) => {
@@ -92,6 +93,19 @@ export const uploadPart = async (
 		throw new DomainError(
 			"Validation",
 			`Part numbers run from 1 to ${maxParts}.`,
+		);
+	}
+
+	// The runtime holds the body to its Content-Length, so parts of at most
+	// partSize keep a file within maxFileSize, as the form promises.
+	if (
+		!Number.isInteger(input.size) ||
+		input.size < 0 ||
+		input.size > partSize
+	) {
+		throw new DomainError(
+			"Validation",
+			`Send each part with a Content-Length of at most ${partSize} bytes.`,
 		);
 	}
 
