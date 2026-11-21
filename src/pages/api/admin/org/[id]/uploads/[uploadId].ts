@@ -1,6 +1,9 @@
 import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
-import { problem, withSession } from "../../../../../../lib/api-adapters.ts";
+import {
+	problem,
+	withAdminSession,
+} from "../../../../../../lib/api-adapters.ts";
 import {
 	abortUpload,
 	completeUpload,
@@ -11,9 +14,9 @@ export const prerender = false;
 
 // One multipart upload, named by its key (`?key=`) and upload id:
 // PUT a part (`&part=N`, the bytes as the body), POST to complete it, DELETE
-// to abort it. Admin only.
+// to abort it. Admin only: anyone else gets 403 before the body is read.
 
-export const PUT = withSession("Upload", async (context, session) => {
+export const PUT = withAdminSession("Upload", async (context, session) => {
 	const key = context.url.searchParams.get("key");
 	const { id, uploadId } = context.params;
 
@@ -48,7 +51,7 @@ const completeSchema = z.object({
 		.max(10000),
 });
 
-export const POST = withSession("Upload", async (context, session) => {
+export const POST = withAdminSession("Upload", async (context, session) => {
 	const input = completeSchema.safeParse(
 		await context.request.json().catch(() => null),
 	);
@@ -67,7 +70,7 @@ export const POST = withSession("Upload", async (context, session) => {
 	);
 });
 
-export const DELETE = withSession("Upload", async (context, session) => {
+export const DELETE = withAdminSession("Upload", async (context, session) => {
 	const key = context.url.searchParams.get("key");
 	const { id, uploadId } = context.params;
 

@@ -57,3 +57,18 @@ export const withSession =
 			return problem(500, "Internal Server Error", `${label} failed.`);
 		}
 	};
+
+// withSession for an admin-only handler: 403 for anyone else, before the
+// handler reads the request body. The domain function still checks the role.
+export const withAdminSession = (
+	label: string,
+	handler: (
+		context: APIContext,
+		session: NonNullable<App.Locals["session"]>,
+	) => Promise<Response>,
+): APIRoute =>
+	withSession(label, async (context, session) =>
+		session.user.role === "admin"
+			? handler(context, session)
+			: problem(403, "Forbidden", "Only admins can do this."),
+	);

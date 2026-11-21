@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { z } from "astro/zod";
-import { problem, withSession } from "../../../../../lib/api-adapters.ts";
+import { problem, withAdminSession } from "../../../../../lib/api-adapters.ts";
 import { startUpload } from "../../../../../lib/file-mutations.ts";
 
 export const prerender = false;
@@ -11,8 +11,9 @@ const startSchema = z.object({
 });
 
 // Starts a multipart upload into this client's drive; the browser then sends
-// the parts to ./uploads/[uploadId]. Admin only.
-export const POST = withSession("Upload", async (context, session) => {
+// the parts to ./uploads/[uploadId]. Admin only: anyone else gets 403
+// before the body is read.
+export const POST = withAdminSession("Upload", async (context, session) => {
 	const input = startSchema.safeParse(
 		await context.request.json().catch(() => null),
 	);
