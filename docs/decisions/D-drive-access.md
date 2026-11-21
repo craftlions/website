@@ -8,6 +8,8 @@ Uploads are admin only and go through the Worker in 16 MiB multipart parts, so a
 
 Only the types in the `inlineTypes` allowlist in `src/lib/files.ts` open inline: PDF, MP3, Ogg and WAV audio, AVIF, GIF, JPEG, PNG and WebP images, plain text, and MP4 and WebM video. Every other type downloads, SVG, HTML and CSV included. Every file response gets `nosniff`, and every type but PDF gets a sandbox policy, so an uploaded file never runs as a page of this site. A PDF gets only `frame-ancestors 'self'`, because Chromium's PDF viewer does not open in a sandboxed document. A PDF can hold script, but the browser's PDF viewer runs it inside the viewer, not as a page of this site: it reaches neither the site's cookies nor its pages. Only admins upload, so every PDF is one the studio chose to share.
 
+File deletion and replacement delete replaced R2 objects inside the database transaction before commit so an R2 failure rolls back the row change and leaves no unreferenced row. When recording a completed upload fails, the Worker deletes the newly completed object in a compensating step. Conditional downloads follow RFC 9110 precedence: failed `If-Match` or `If-Unmodified-Since` returns 412 before failed `If-None-Match` or `If-Modified-Since` returns 304.
+
 **Alternatives considered:** Presigned R2 URLs. They need S3 credentials as a new secret. Anyone who holds a link can use it until it expires, and removing a member does not end that access.
 
 **Revisit when:** people without an account need a file, or clients upload. Both would need short-lived links signed by the Worker, and client uploads also need quotas and type checks.
