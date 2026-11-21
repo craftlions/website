@@ -33,7 +33,7 @@
     "@drizzle-team/minipg": "0.4.4",
     "@playwright/test": "1.65.1",
     "@types/node": "26.6.6",
-    "astro": "7.4.12",
+    "astro": "7.4.13",
     "auth": "1.7.25",
     "better-auth": "1.7.25",
     "browserslist": "4.29.5",
