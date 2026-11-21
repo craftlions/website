@@ -11,6 +11,7 @@
       "**",
       "!**/.cloudflare",
       "!**/drizzle",
+      "!aube-lock.yaml",
       "!**/.agents",
       "!**/.claude",
       "!DESIGN.md"
