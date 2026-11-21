@@ -10,9 +10,9 @@ import {
 } from "../../scripts/comment-lint.js";
 
 describe("scanComments", () => {
-	it("finds line and block comments in TypeScript while ignoring strings, templates, regexes, and division", () => {
+	it("parses TypeScript comments via oxc-parser while ignoring strings, templates, regexes, division, and multibyte characters", () => {
 		const source = [
-			'const url = "https://craftlions.com//path";',
+			'const url = "https://craftlions.com//path · 24×24 🔥";',
 			"const regex = /https?:\\/\\//g;",
 			"const charClass = /[/\\\\]/;",
 			"const quotient = a / b / c;",
@@ -25,25 +25,31 @@ describe("scanComments", () => {
 		const comments = scanComments("src/example.ts", source);
 		assert.equal(comments.length, 3);
 		assert.equal(comments[0]?.text, "/* inside */");
+		assert.equal(comments[0]?.line, 5);
 		assert.equal(comments[1]?.text, "// banned line 1\n// banned line 2");
+		assert.equal(comments[1]?.line, 6);
 		assert.equal(comments[2]?.text, "// trailing");
+		assert.equal(comments[2]?.line, 8);
 	});
 
-	it("scans CSS block comments and ignores quoted URLs", () => {
+	it("parses CSS comments via PostCSS and ignores quoted URLs", () => {
 		const source = [
-			'background: url("https://example.com/a.svg");',
+			'a { background: url("https://example.com/a.svg"); }',
 			"/* banned */",
-			"padding-inline: 1rem; /* constant: fixed inset */",
+			".badge { padding-inline: 1rem; /* constant: fixed inset */ }",
 		].join("\n");
 
 		const comments = scanComments("src/styles/example.css", source);
 		assert.equal(comments.length, 2);
 		assert.equal(comments[0]?.text, "/* banned */");
-		assert.equal(isAllowedComment(comments[0]?.text ?? ""), false);
-		assert.equal(isAllowedComment(comments[1]?.text ?? ""), true);
+		assert.equal(comments[0]?.line, 2);
+		assert.equal(isAllowedComment(comments[0]?.text ?? "", "css"), false);
+		assert.equal(comments[1]?.text, "/* constant: fixed inset */");
+		assert.equal(comments[1]?.line, 3);
+		assert.equal(isAllowedComment(comments[1]?.text ?? "", "css"), true);
 	});
 
-	it("scans Astro frontmatter, nested JSX with apostrophes, tags, scripts, and styles", () => {
+	it("parses Astro frontmatter, nested JSX with apostrophes, tags, HTML comments, scripts, and styles", () => {
 		const source = [
 			"---",
 			"// frontmatter comment",
@@ -55,7 +61,7 @@ describe("scanComments", () => {
 			">",
 			"  {items.map((item) => (",
 			"    <section>",
-			"      <p>Client's dashboard isn't empty</p>",
+			"      <p>Client's dashboard isn't empty — 24×24</p>",
 			"      {/* fallback: opens dialog */}",
 			"      {/* banned jsx comment */}",
 			"    </section>",
@@ -67,6 +73,7 @@ describe("scanComments", () => {
 			"</script>",
 			"<style>",
 			"  /* enhancement: polish only */",
+			"  .box { padding-inline: 1rem; /* constant: fixed */ }",
 			"  /* banned style comment */",
 			"</style>",
 		].join("\n");
@@ -81,35 +88,80 @@ describe("scanComments", () => {
 			"<!-- banned html comment -->",
 			"// banned script comment",
 			"/* enhancement: polish only */",
+			"/* constant: fixed */",
 			"/* banned style comment */",
 		]);
 
-		const banned = comments.filter((c) => !isAllowedComment(c.text));
+		const banned = comments.filter((c) => !isAllowedComment(c.text, c.kind));
 		assert.equal(banned.length, 5);
+	});
+
+	it("scans Pkl comments while ignoring strings and multiline strings", () => {
+		const source = [
+			'amends "package://example.com/Config.pkl"',
+			'text = """',
+			"// not a comment inside triple quotes",
+			'"""',
+			"// real pkl comment",
+		].join("\n");
+
+		const comments = scanComments("hk.pkl", source);
+		assert.equal(comments.length, 1);
+		assert.equal(comments[0]?.text, "// real pkl comment");
+		assert.equal(comments[0]?.line, 5);
+	});
+
+	it("fails loudly on syntax errors instead of silently passing", () => {
+		assert.throws(
+			() => scanComments("src/broken.ts", "const = ;"),
+			SyntaxError,
+		);
+		assert.throws(
+			() => scanComments("src/styles/broken.css", ".a { color: "),
+			/Unclosed block/,
+		);
 	});
 });
 
 describe("isAllowedComment", () => {
-	it("allows design-lint markers, biome-ignore directives, and license headers", () => {
-		assert.equal(isAllowedComment("/* enhancement: polish */"), true);
-		assert.equal(isAllowedComment("{/* fallback: script handles it */}"), true);
-		assert.equal(isAllowedComment("// fallback: browsers without it"), true);
-		assert.equal(isAllowedComment("/* constant: room for bullet */"), true);
-		assert.equal(isAllowedComment("/* physical: square icon */"), true);
+	it("allows design-lint markers in valid contexts, biome-ignore directives, and license headers", () => {
+		assert.equal(isAllowedComment("/* enhancement: polish */", "css"), true);
+		assert.equal(
+			isAllowedComment("{/* fallback: script handles it */}", "jsx"),
+			true,
+		);
+		assert.equal(
+			isAllowedComment("// fallback: browsers without it", "line"),
+			true,
+		);
+		assert.equal(
+			isAllowedComment("/* constant: room for bullet */", "css"),
+			true,
+		);
+		assert.equal(isAllowedComment("/* physical: square icon */", "css"), true);
+		assert.equal(isAllowedComment("/* constant: sneak */", "block"), false);
+		assert.equal(isAllowedComment("/* physical: sneak */", "block"), false);
 		assert.equal(
 			isAllowedComment(
 				"{/* biome-ignore lint/a11y/useHeadingContent: slot */}",
+				"jsx",
 			),
 			true,
 		);
-		assert.equal(isAllowedComment("// SPDX-License-Identifier: MIT"), true);
-		assert.equal(isAllowedComment("/* Copyright 2026 craftlions */"), true);
-		assert.equal(isAllowedComment("// regular explanation"), false);
+		assert.equal(
+			isAllowedComment("// SPDX-License-Identifier: MIT", "line"),
+			true,
+		);
+		assert.equal(
+			isAllowedComment("/* Copyright 2026 craftlions */", "block"),
+			true,
+		);
+		assert.equal(isAllowedComment("// regular explanation", "line"), false);
 	});
 });
 
 describe("lintComments ratchet", () => {
-	it("enforces baseline ceilings and flags stale baselines for ratcheting down", () => {
+	it("enforces baseline ceilings, flags stale baselines, and supports explicit file lists", () => {
 		const dir = mkdtempSync(path.join(tmpdir(), "comment-lint-"));
 		try {
 			mkdirSync(path.join(dir, "src"), { recursive: true });
@@ -129,6 +181,12 @@ describe("lintComments ratchet", () => {
 			const underBaseline = lintComments(dir, { "src/legacy.ts": 2 });
 			assert.deepEqual(underBaseline.violations, []);
 			assert.equal(underBaseline.staleBaseline.length, 1);
+
+			const scopedClean = lintComments(dir, { "src/legacy.ts": 1 }, [
+				"src/clean.ts",
+			]);
+			assert.deepEqual(scopedClean.violations, []);
+			assert.deepEqual(scopedClean.staleBaseline, []);
 		} finally {
 			rmSync(dir, { recursive: true, force: true });
 		}

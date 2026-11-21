@@ -17,7 +17,8 @@ local linters = new Mapping<String, Step> {
 	}
 	["comment-lint"] {
 		glob = List("src/**/*.astro", "src/**/*.ts", "src/**/*.css", "tests/**/*.ts", "scripts/**/*.js", "*.ts", "*.pkl")
-		check = "aubr comment:lint"
+		batch = true
+		check = "aubr comment:lint {{files}}"
 	}
 }
 

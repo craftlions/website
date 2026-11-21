@@ -1,659 +1,234 @@
 import { globSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse as parseAstro } from "@astrojs/compiler-rs";
+import { parseSync as parseJs } from "oxc-parser";
+import postcss from "postcss";
 
-const REGEX_PREV_KEYWORDS = new Set([
-	"return",
-	"case",
-	"throw",
-	"in",
-	"of",
-	"typeof",
-	"void",
-	"delete",
-	"new",
-	"else",
-	"do",
-	"yield",
-	"await",
-]);
-
-const REGEX_PREV_CHARS = new Set([
-	"(",
-	"[",
-	"{",
-	",",
-	";",
-	":",
-	"=",
-	"!",
-	"&",
-	"|",
-	"?",
-	"+",
-	"-",
-	"*",
-	"%",
-	"^",
-	"~",
-	"<",
-	">",
-]);
-
-const ALLOWED_PATTERNS = [
-	/^(?:\/\/|\{\/\*|\/\*)\s*(?:enhancement|fallback|constant|physical):/,
+const SHARED_ALLOWED_PATTERNS = [
+	/^(?:\/\/|\{\/\*|\/\*)\s*(?:enhancement|fallback):/,
 	/^(?:\/\/|\{\/\*|\/\*)\s*biome-ignore\b/,
 	/SPDX-License-Identifier:/,
 	/\bCopyright\s+(?:\(c\)|©|\d{4})/i,
 ];
 
-export const isAllowedComment = (text) =>
-	ALLOWED_PATTERNS.some((pattern) => pattern.test(text.trim()));
+const CSS_ALLOWED_PATTERNS = [/^\/\*\s*(?:constant|physical):/];
 
-const countNewlines = (text) => {
-	let count = 0;
-	for (let i = 0; i < text.length; i++) {
-		if (text.charCodeAt(i) === 10) count++;
+export const isAllowedComment = (text, kind) => {
+	const trimmed = text.trim();
+	if (SHARED_ALLOWED_PATTERNS.some((pattern) => pattern.test(trimmed))) {
+		return true;
 	}
-	return count;
-};
-
-const canStartRegex = (source, start, index) => {
-	let cursor = index - 1;
-	while (cursor >= start && /\s/.test(source[cursor])) cursor--;
-	if (cursor < start) return true;
-	const ch = source[cursor];
-	if (ch === "+" && source[cursor - 1] === "+") return false;
-	if (ch === "-" && source[cursor - 1] === "-") return false;
-	if (REGEX_PREV_CHARS.has(ch)) return true;
-	if (/[\w$]/.test(ch)) {
-		let wordStart = cursor;
-		while (wordStart > start && /[\w$]/.test(source[wordStart - 1])) {
-			wordStart--;
-		}
-		return REGEX_PREV_KEYWORDS.has(source.slice(wordStart, cursor + 1));
+	if (kind === undefined || kind === "css") {
+		return CSS_ALLOWED_PATTERNS.some((pattern) => pattern.test(trimmed));
 	}
 	return false;
 };
 
-const scanJsRange = (source, start, end, startLine, out, options = {}) => {
-	const {
-		stopOnClosingBrace = false,
-		allowRegex = true,
-		allowJsx = false,
-	} = options;
-	let i = start;
-	let line = startLine;
-	let braceDepth = 0;
-	const templateBraceStack = [];
-
-	while (i < end) {
-		const c = source[i];
-		const next = source[i + 1];
-
-		if (c === "\n") {
-			line++;
-			i++;
-			continue;
-		}
-
-		if (c === '"' || c === "'") {
-			const quote = c;
-			i++;
-			while (i < end && source[i] !== quote) {
-				if (source[i] === "\\") {
-					if (source[i + 1] === "\n") line++;
-					i += 2;
-					continue;
-				}
-				if (source[i] === "\n") line++;
-				i++;
-			}
-			i++;
-			continue;
-		}
-
-		if (c === "`") {
-			i++;
-			while (i < end) {
-				if (source[i] === "\\") {
-					if (source[i + 1] === "\n") line++;
-					i += 2;
-					continue;
-				}
-				if (source[i] === "$" && source[i + 1] === "{") {
-					templateBraceStack.push(braceDepth);
-					braceDepth++;
-					i += 2;
-					break;
-				}
-				if (source[i] === "`") {
-					i++;
-					break;
-				}
-				if (source[i] === "\n") line++;
-				i++;
-			}
-			continue;
-		}
-
-		if (c === "{") {
-			braceDepth++;
-			i++;
-			continue;
-		}
-
-		if (c === "}") {
-			if (stopOnClosingBrace && braceDepth === 0) {
-				return { index: i + 1, line };
-			}
-			braceDepth = Math.max(0, braceDepth - 1);
-			if (
-				templateBraceStack.length > 0 &&
-				templateBraceStack.at(-1) === braceDepth
-			) {
-				templateBraceStack.pop();
-				i++;
-				while (i < end) {
-					if (source[i] === "\\") {
-						if (source[i + 1] === "\n") line++;
-						i += 2;
-						continue;
-					}
-					if (source[i] === "$" && source[i + 1] === "{") {
-						templateBraceStack.push(braceDepth);
-						braceDepth++;
-						i += 2;
-						break;
-					}
-					if (source[i] === "`") {
-						i++;
-						break;
-					}
-					if (source[i] === "\n") line++;
-					i++;
-				}
-				continue;
-			}
-			i++;
-			continue;
-		}
-
-		if (c === "/" && next === "/") {
-			const commentStart = i;
-			let commentEnd = source.indexOf("\n", i + 2);
-			if (commentEnd === -1 || commentEnd > end) commentEnd = end;
-			out.push({
-				start: commentStart,
-				end: commentEnd,
-				line,
-				endLine: line,
-				kind: "line",
-				text: source.slice(commentStart, commentEnd),
-			});
-			i = commentEnd;
-			continue;
-		}
-
-		if (c === "/" && next === "*") {
-			const commentStart = i;
-			const commentStartLine = line;
-			let commentEnd = source.indexOf("*/", i + 2);
-			if (commentEnd === -1 || commentEnd > end) commentEnd = end;
-			else commentEnd += 2;
-			const text = source.slice(commentStart, commentEnd);
-			const endLine = commentStartLine + countNewlines(text);
-			out.push({
-				start: commentStart,
-				end: commentEnd,
-				line: commentStartLine,
-				endLine,
-				kind: "block",
-				text,
-			});
-			line = endLine;
-			i = commentEnd;
-			continue;
-		}
-
-		if (
-			allowJsx &&
-			c === "<" &&
-			(next === ">" || /[a-zA-Z]/.test(next ?? "")) &&
-			canStartRegex(source, start, i)
-		) {
-			const result = scanAstroElement(source, i, end, line, out);
-			i = result.index;
-			line = result.line;
-			continue;
-		}
-
-		if (
-			allowRegex &&
-			c === "/" &&
-			next !== "/" &&
-			next !== "*" &&
-			canStartRegex(source, start, i)
-		) {
-			i++;
-			let inClass = false;
-			while (i < end && source[i] !== "\n") {
-				if (source[i] === "\\") {
-					i += 2;
-					continue;
-				}
-				if (source[i] === "[") inClass = true;
-				else if (source[i] === "]") inClass = false;
-				else if (source[i] === "/" && !inClass) {
-					i++;
-					while (i < end && /[a-z]/i.test(source[i])) i++;
-					break;
-				}
-				i++;
-			}
-			continue;
-		}
-
-		i++;
+const buildLineIndex = (source) => {
+	const lineStarts = [0];
+	for (let i = 0; i < source.length; i++) {
+		if (source.charCodeAt(i) === 10) lineStarts.push(i + 1);
 	}
-
-	return { index: end, line };
+	return (offset) => {
+		let lo = 0;
+		let hi = lineStarts.length - 1;
+		while (lo < hi) {
+			const mid = (lo + hi + 1) >> 1;
+			if (lineStarts[mid] <= offset) lo = mid;
+			else hi = mid - 1;
+		}
+		return lo + 1;
+	};
 };
 
-const scanCssRange = (source, start, end, startLine, out) => {
-	let i = start;
-	let line = startLine;
-
-	while (i < end) {
-		const c = source[i];
-		const next = source[i + 1];
-
-		if (c === "\n") {
-			line++;
-			i++;
-			continue;
-		}
-
-		if (c === '"' || c === "'") {
-			const quote = c;
-			i++;
-			while (i < end && source[i] !== quote) {
-				if (source[i] === "\\") {
-					if (source[i + 1] === "\n") line++;
-					i += 2;
-					continue;
-				}
-				if (source[i] === "\n") line++;
-				i++;
-			}
-			i++;
-			continue;
-		}
-
-		if (c === "/" && next === "*") {
-			const commentStart = i;
-			const commentStartLine = line;
-			let commentEnd = source.indexOf("*/", i + 2);
-			if (commentEnd === -1 || commentEnd > end) commentEnd = end;
-			else commentEnd += 2;
-			const text = source.slice(commentStart, commentEnd);
-			const endLine = commentStartLine + countNewlines(text);
-			out.push({
-				start: commentStart,
-				end: commentEnd,
-				line: commentStartLine,
-				endLine,
-				kind: "css",
-				text,
-			});
-			line = endLine;
-			i = commentEnd;
-			continue;
-		}
-
-		i++;
-	}
+const scanCss = (file, source, baseOffset, lineOf, out) => {
+	const root = postcss.parse(source, { from: file });
+	root.walkComments((comment) => {
+		const startOffset = comment.source?.start?.offset;
+		const endOffset = comment.source?.end?.offset;
+		if (startOffset === undefined || endOffset === undefined) return;
+		const start = baseOffset + startOffset;
+		const end = baseOffset + endOffset;
+		const text = source.slice(startOffset, endOffset);
+		out.push({
+			start,
+			end,
+			line: lineOf(start),
+			endLine: lineOf(Math.max(start, end - 1)),
+			kind: "css",
+			text,
+		});
+	});
 };
 
-const scanAstroTag = (source, start, end, startLine, out) => {
-	let i = start;
-	let line = startLine;
-
-	while (i < end) {
-		const c = source[i];
-		const next = source[i + 1];
-
-		if (c === "\n") {
-			line++;
-			i++;
-			continue;
-		}
-
-		if (c === '"' || c === "'") {
-			const quote = c;
-			i++;
-			while (i < end && source[i] !== quote) {
-				if (source[i] === "\n") line++;
-				i++;
-			}
-			i++;
-			continue;
-		}
-
-		if (c === "{") {
-			const result = scanJsRange(source, i + 1, end, line, out, {
-				stopOnClosingBrace: true,
-			});
-			i = result.index;
-			line = result.line;
-			continue;
-		}
-
-		if (c === "/" && next === "/") {
-			const commentStart = i;
-			let commentEnd = source.indexOf("\n", i + 2);
-			if (commentEnd === -1 || commentEnd > end) commentEnd = end;
-			out.push({
-				start: commentStart,
-				end: commentEnd,
-				line,
-				endLine: line,
-				kind: "line",
-				text: source.slice(commentStart, commentEnd),
-			});
-			i = commentEnd;
-			continue;
-		}
-
-		if (c === "/" && next === "*") {
-			const commentStart = i;
-			const commentStartLine = line;
-			let commentEnd = source.indexOf("*/", i + 2);
-			if (commentEnd === -1 || commentEnd > end) commentEnd = end;
-			else commentEnd += 2;
-			const text = source.slice(commentStart, commentEnd);
-			const endLine = commentStartLine + countNewlines(text);
-			out.push({
-				start: commentStart,
-				end: commentEnd,
-				line: commentStartLine,
-				endLine,
-				kind: "block",
-				text,
-			});
-			line = endLine;
-			i = commentEnd;
-			continue;
-		}
-
-		if (c === ">") {
-			return { index: i + 1, line };
-		}
-
-		i++;
-	}
-
-	return { index: end, line };
-};
-
-const VOID_ELEMENTS = new Set([
-	"area",
-	"base",
-	"br",
-	"col",
-	"embed",
-	"hr",
-	"img",
-	"input",
-	"link",
-	"meta",
-	"param",
-	"source",
-	"track",
-	"wbr",
-]);
-
-const scanAstroElement = (source, start, end, startLine, out) => {
-	let i = start;
-	let line = startLine;
-	const stack = [];
-
-	while (i < end) {
-		const c = source[i];
-
-		if (c === "\n") {
-			line++;
-			i++;
-			continue;
-		}
-
-		if (source.startsWith("<!--", i)) {
-			const commentStart = i;
-			const commentStartLine = line;
-			let commentEnd = source.indexOf("-->", i + 4);
-			if (commentEnd === -1 || commentEnd > end) commentEnd = end;
-			else commentEnd += 3;
-			const text = source.slice(commentStart, commentEnd);
-			const endLine = commentStartLine + countNewlines(text);
-			out.push({
-				start: commentStart,
-				end: commentEnd,
-				line: commentStartLine,
-				endLine,
-				kind: "html",
-				text,
-			});
-			line = endLine;
-			i = commentEnd;
-			continue;
-		}
-
-		if (source.startsWith("{/*", i)) {
-			const commentStart = i;
-			const commentStartLine = line;
-			let commentEnd = source.indexOf("*/}", i + 3);
-			if (commentEnd === -1 || commentEnd > end) commentEnd = end;
-			else commentEnd += 3;
-			const text = source.slice(commentStart, commentEnd);
-			const endLine = commentStartLine + countNewlines(text);
-			out.push({
-				start: commentStart,
-				end: commentEnd,
-				line: commentStartLine,
-				endLine,
-				kind: "jsx",
-				text,
-			});
-			line = endLine;
-			i = commentEnd;
-			continue;
-		}
-
-		if (c === "{") {
-			const result = scanJsRange(source, i + 1, end, line, out, {
-				stopOnClosingBrace: true,
-				allowJsx: true,
-			});
-			i = result.index;
-			line = result.line;
-			continue;
-		}
-
-		if (c === "<" && source[i + 1] === "/") {
-			const closeEnd = source.indexOf(">", i + 2);
-			const nextIndex = closeEnd === -1 || closeEnd >= end ? end : closeEnd + 1;
-			line += countNewlines(source.slice(i, nextIndex));
-			i = nextIndex;
-			stack.pop();
-			if (stack.length === 0) return { index: i, line };
-			continue;
-		}
-
-		if (
-			c === "<" &&
-			(source[i + 1] === ">" || /[a-zA-Z]/.test(source[i + 1] ?? ""))
-		) {
-			if (source[i + 1] === ">") {
-				stack.push("");
-				i += 2;
-				continue;
-			}
-			const tagNameMatch = source.slice(i + 1).match(/^([a-zA-Z][\w.:-]*)/);
-			const tagName = tagNameMatch?.[1] ?? "";
-			const lowerTag = tagName.toLowerCase();
-			const tagResult = scanAstroTag(source, i + 1, end, line, out);
-			const selfClosing = source[tagResult.index - 2] === "/";
-			i = tagResult.index;
-			line = tagResult.line;
-
-			if (!selfClosing && (lowerTag === "script" || lowerTag === "style")) {
-				const closeTag = `</${lowerTag}>`;
-				const closePos = source.indexOf(closeTag, i);
-				const bodyEnd = closePos === -1 ? end : closePos;
-				if (lowerTag === "script") {
-					scanJsRange(source, i, bodyEnd, line, out);
-				} else {
-					scanCssRange(source, i, bodyEnd, line, out);
-				}
-				const nextIndex = closePos === -1 ? end : closePos + closeTag.length;
-				line += countNewlines(source.slice(i, nextIndex));
-				i = nextIndex;
-				if (stack.length === 0) return { index: i, line };
-				continue;
-			}
-
-			if (!selfClosing && !VOID_ELEMENTS.has(lowerTag)) {
-				stack.push(tagName);
-			} else if (stack.length === 0) {
-				return { index: i, line };
-			}
-			continue;
-		}
-
-		i++;
-	}
-
-	return { index: end, line };
-};
-
-const scanAstro = (source, out) => {
+const scanPkl = (source, lineOf, out) => {
 	let i = 0;
-	let line = 1;
 	const end = source.length;
 
-	if (source.startsWith("---\n") || source.startsWith("---\r\n")) {
-		const fenceOffset = source.indexOf("\n") + 1;
-		const closeIndex = source.indexOf("\n---", fenceOffset - 1);
-		if (closeIndex !== -1) {
-			scanJsRange(source, fenceOffset, closeIndex, 2, out);
-			const afterFence = closeIndex + 4;
-			line = 1 + countNewlines(source.slice(0, afterFence));
-			i = afterFence;
-		}
-	}
-
 	while (i < end) {
 		const c = source[i];
+		const next = source[i + 1];
 
-		if (c === "\n") {
-			line++;
+		if (c === '"') {
+			if (source[i + 1] === '"' && source[i + 2] === '"') {
+				const close = source.indexOf('"""', i + 3);
+				i = close === -1 ? end : close + 3;
+				continue;
+			}
+			i++;
+			while (i < end && source[i] !== '"') {
+				if (source[i] === "\\") i += 2;
+				else i++;
+			}
 			i++;
 			continue;
 		}
 
-		if (source.startsWith("<!--", i)) {
-			const commentStart = i;
-			const commentStartLine = line;
-			let commentEnd = source.indexOf("-->", i + 4);
+		if (c === "/" && next === "/") {
+			const start = i;
+			let commentEnd = source.indexOf("\n", i + 2);
 			if (commentEnd === -1) commentEnd = end;
-			else commentEnd += 3;
-			const text = source.slice(commentStart, commentEnd);
-			const endLine = commentStartLine + countNewlines(text);
 			out.push({
-				start: commentStart,
+				start,
 				end: commentEnd,
-				line: commentStartLine,
-				endLine,
-				kind: "html",
-				text,
+				line: lineOf(start),
+				endLine: lineOf(start),
+				kind: "line",
+				text: source.slice(start, commentEnd),
 			});
-			line = endLine;
 			i = commentEnd;
 			continue;
 		}
 
-		if (source.startsWith("{/*", i)) {
-			const commentStart = i;
-			const commentStartLine = line;
-			let commentEnd = source.indexOf("*/}", i + 3);
+		if (c === "/" && next === "*") {
+			const start = i;
+			let commentEnd = source.indexOf("*/", i + 2);
 			if (commentEnd === -1) commentEnd = end;
-			else commentEnd += 3;
-			const text = source.slice(commentStart, commentEnd);
-			const endLine = commentStartLine + countNewlines(text);
+			else commentEnd += 2;
 			out.push({
-				start: commentStart,
+				start,
 				end: commentEnd,
-				line: commentStartLine,
-				endLine,
-				kind: "jsx",
-				text,
+				line: lineOf(start),
+				endLine: lineOf(Math.max(start, commentEnd - 1)),
+				kind: "block",
+				text: source.slice(start, commentEnd),
 			});
-			line = endLine;
 			i = commentEnd;
-			continue;
-		}
-
-		if (c === "{") {
-			const result = scanJsRange(source, i + 1, end, line, out, {
-				stopOnClosingBrace: true,
-				allowJsx: true,
-			});
-			i = result.index;
-			line = result.line;
-			continue;
-		}
-
-		if (c === "<" && /[a-zA-Z]/.test(source[i + 1] ?? "")) {
-			const tagNameMatch = source.slice(i + 1).match(/^([a-zA-Z][\w:-]*)/);
-			const tagName = tagNameMatch?.[1]?.toLowerCase() ?? "";
-			const tagResult = scanAstroTag(source, i + 1, end, line, out);
-			const selfClosing = source[tagResult.index - 2] === "/";
-			i = tagResult.index;
-			line = tagResult.line;
-
-			if (!selfClosing && (tagName === "script" || tagName === "style")) {
-				const closeTag = `</${tagName}>`;
-				const closePos = source.indexOf(closeTag, i);
-				const bodyEnd = closePos === -1 ? end : closePos;
-				if (tagName === "script") {
-					scanJsRange(source, i, bodyEnd, line, out);
-				} else {
-					scanCssRange(source, i, bodyEnd, line, out);
-				}
-				const nextIndex = closePos === -1 ? end : closePos + closeTag.length;
-				line += countNewlines(source.slice(i, nextIndex));
-				i = nextIndex;
-			}
 			continue;
 		}
 
 		i++;
 	}
+};
+
+const scanJs = (file, source, lineOf, out) => {
+	const result = parseJs(file, source);
+	if (result.errors.length > 0) {
+		const first = result.errors[0];
+		throw new SyntaxError(
+			`Failed to parse ${file}: ${first.message ?? String(first)}`,
+		);
+	}
+	for (const comment of result.comments) {
+		const start = comment.start;
+		const end = comment.end;
+		out.push({
+			start,
+			end,
+			line: lineOf(start),
+			endLine: lineOf(Math.max(start, end - 1)),
+			kind: comment.type === "Line" ? "line" : "block",
+			text: source.slice(start, end),
+		});
+	}
+};
+
+const walkAstroAst = (node, file, source, lineOf, out) => {
+	if (!node || typeof node !== "object") return;
+	if (Array.isArray(node)) {
+		for (const item of node) walkAstroAst(item, file, source, lineOf, out);
+		return;
+	}
+
+	if (node.type === "AstroComment") {
+		out.push({
+			start: node.start,
+			end: node.end,
+			line: lineOf(node.start),
+			endLine: lineOf(Math.max(node.start, node.end - 1)),
+			kind: "html",
+			text: source.slice(node.start, node.end),
+		});
+		return;
+	}
+
+	if (
+		node.type === "JSXElement" &&
+		node.openingElement?.name?.name?.toLowerCase() === "style"
+	) {
+		for (const child of node.children ?? []) {
+			if (child.type === "JSXText" && typeof child.start === "number") {
+				const css = source.slice(child.start, child.end);
+				scanCss(file, css, child.start, lineOf, out);
+			}
+		}
+		return;
+	}
+
+	for (const [key, value] of Object.entries(node)) {
+		if (key === "comments") continue;
+		if (value && typeof value === "object") {
+			walkAstroAst(value, file, source, lineOf, out);
+		}
+	}
+};
+
+const scanAstro = (file, source, lineOf, out) => {
+	const result = parseAstro(source);
+	const firstError = result.diagnostics.find(
+		(diagnostic) => diagnostic.severity === "error",
+	);
+	if (firstError) {
+		throw new SyntaxError(`Failed to parse ${file}: ${firstError.text}`);
+	}
+
+	for (const comment of result.ast.comments ?? []) {
+		const isJsxWrapped =
+			comment.type === "Block" &&
+			source[comment.start - 1] === "{" &&
+			source[comment.end] === "}";
+		const start = isJsxWrapped ? comment.start - 1 : comment.start;
+		const end = isJsxWrapped ? comment.end + 1 : comment.end;
+		out.push({
+			start,
+			end,
+			line: lineOf(start),
+			endLine: lineOf(Math.max(start, end - 1)),
+			kind: isJsxWrapped ? "jsx" : comment.type === "Line" ? "line" : "block",
+			text: source.slice(start, end),
+		});
+	}
+
+	walkAstroAst(result.ast, file, source, lineOf, out);
 };
 
 export const scanComments = (file, source) => {
 	const raw = [];
+	const lineOf = buildLineIndex(source);
 	const ext = path.extname(file);
 
 	if (ext === ".css") {
-		scanCssRange(source, 0, source.length, 1, raw);
+		scanCss(file, source, 0, lineOf, raw);
 	} else if (ext === ".astro") {
-		scanAstro(source, raw);
+		scanAstro(file, source, lineOf, raw);
 	} else if (ext === ".pkl") {
-		scanJsRange(source, 0, source.length, 1, raw, { allowRegex: false });
+		scanPkl(source, lineOf, raw);
 	} else {
-		scanJsRange(source, 0, source.length, 1, raw);
+		scanJs(file, source, lineOf, raw);
 	}
+
+	raw.sort((a, b) => a.start - b.start);
 
 	const grouped = [];
 	for (const comment of raw) {
@@ -663,9 +238,9 @@ export const scanComments = (file, source) => {
 			previous.kind === "line" &&
 			comment.kind === "line" &&
 			comment.line === previous.endLine + 1 &&
-			!isAllowedComment(comment.text) &&
-			(!isAllowedComment(previous.text) ||
-				/^(?:\/\/)\s*(?:enhancement|fallback):/.test(previous.text.trim()))
+			!isAllowedComment(comment.text, comment.kind) &&
+			(!isAllowedComment(previous.text, previous.kind) ||
+				/^\/\/\s*(?:enhancement|fallback):/.test(previous.text.trim()))
 		) {
 			const between = source.slice(previous.end, comment.start);
 			if (/^\r?\n[ \t]*$/.test(between)) {
@@ -675,7 +250,7 @@ export const scanComments = (file, source) => {
 				continue;
 			}
 		}
-		grouped.push({ ...comment });
+		grouped.push(comment);
 	}
 
 	return grouped;
@@ -691,25 +266,32 @@ const DEFAULT_GLOBS = [
 const IGNORED_FILES = new Set(["scripts/design-lint.js"]);
 const IGNORED_PREFIXES = ["tests/design-lint/"];
 
+const isIgnored = (file) =>
+	IGNORED_FILES.has(file) ||
+	IGNORED_PREFIXES.some((prefix) => file.startsWith(prefix));
+
 export const collectFiles = (rootDir) => {
 	const seen = new Set();
 	for (const pattern of DEFAULT_GLOBS) {
 		for (const file of globSync(pattern, { cwd: rootDir })) {
 			const normalized = file.replaceAll("\\", "/");
-			if (
-				IGNORED_FILES.has(normalized) ||
-				IGNORED_PREFIXES.some((prefix) => normalized.startsWith(prefix))
-			) {
-				continue;
-			}
-			seen.add(normalized);
+			if (!isIgnored(normalized)) seen.add(normalized);
 		}
 	}
 	return [...seen].sort();
 };
 
-export const lintComments = (rootDir, baseline = {}) => {
-	const files = collectFiles(rootDir);
+export const lintComments = (rootDir, baseline = {}, explicitFiles) => {
+	const files = explicitFiles
+		? explicitFiles
+				.map((file) =>
+					path
+						.relative(rootDir, path.resolve(rootDir, file))
+						.replaceAll("\\", "/"),
+				)
+				.filter((file) => !isIgnored(file))
+		: collectFiles(rootDir);
+
 	const counts = {};
 	const violations = [];
 	const staleBaseline = [];
@@ -717,7 +299,7 @@ export const lintComments = (rootDir, baseline = {}) => {
 	for (const file of files) {
 		const source = readFileSync(path.join(rootDir, file), "utf8");
 		const banned = scanComments(file, source).filter(
-			(comment) => !isAllowedComment(comment.text),
+			(comment) => !isAllowedComment(comment.text, comment.kind),
 		);
 		if (banned.length > 0) counts[file] = banned.length;
 
@@ -736,11 +318,13 @@ export const lintComments = (rootDir, baseline = {}) => {
 		}
 	}
 
-	for (const [file, allowed] of Object.entries(baseline)) {
-		if (!files.includes(file) && allowed > 0) {
-			staleBaseline.push(
-				`${file}: baseline entry no longer matches a file — run \`node scripts/comment-lint.js --update-baseline\``,
-			);
+	if (!explicitFiles) {
+		for (const [file, allowed] of Object.entries(baseline)) {
+			if (!files.includes(file) && allowed > 0) {
+				staleBaseline.push(
+					`${file}: baseline entry no longer matches a file — run \`node scripts/comment-lint.js --update-baseline\``,
+				);
+			}
 		}
 	}
 
@@ -761,8 +345,14 @@ if (isMain) {
 		if (error?.code !== "ENOENT") throw error;
 	}
 
-	const updateBaseline = process.argv.includes("--update-baseline");
-	const { counts, violations, staleBaseline } = lintComments(rootDir, baseline);
+	const args = process.argv.slice(2);
+	const updateBaseline = args.includes("--update-baseline");
+	const explicitFiles = args.filter((arg) => !arg.startsWith("--"));
+	const { counts, violations, staleBaseline } = lintComments(
+		rootDir,
+		baseline,
+		explicitFiles.length > 0 ? explicitFiles : undefined,
+	);
 
 	if (updateBaseline) {
 		const increased = Object.entries(counts).filter(
