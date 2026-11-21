@@ -24,16 +24,16 @@ secrets = [
 run = "aubr dev"
 
 [tasks."db:check"]
-description = "Check the Drizzle migrations with the database URL from fnox"
-secrets = ["CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE"]
+description = "Check the Drizzle migrations with the direct database URL from fnox"
+secrets = ["DATABASE_DIRECT_URL"]
 run = "aubx drizzle-kit check"
 
 [tasks."db:migrate"]
-description = "Apply the Drizzle migrations to the database from fnox (owner only)"
+description = "Apply the Drizzle migrations over the direct database URL from fnox (owner only)"
 depends = ["db:check"]
 confirm = "Apply the migrations in drizzle/ to the database?"
 lock = true
-secrets = ["CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE"]
+secrets = ["DATABASE_DIRECT_URL"]
 run = "aubx drizzle-kit migrate"
 
 [tasks.build]

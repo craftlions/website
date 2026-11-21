@@ -5,7 +5,9 @@ export default defineConfig({
 	schema: "./src/lib/schema.ts",
 	dialect: "postgresql",
 	dbCredentials: {
-		// biome-ignore lint/style/noNonNullAssertion: .env file
-		url: process.env.CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE!,
+		// The direct port (5432): DDL needs a session, which PgBouncer's
+		// transaction pooling does not keep. See docs/notes/secrets.md.
+		// biome-ignore lint/style/noNonNullAssertion: granted by the mise task
+		url: process.env.DATABASE_DIRECT_URL!,
 	},
 });
