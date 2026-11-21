@@ -1,6 +1,3 @@
-// The logo files on /brand and the favicon: each download link serves an SVG
-// that stands on its own (colours written out, no script, nothing fetched from
-// elsewhere) and draws only paths of the source logo, so no variant is redrawn.
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 

@@ -1,9 +1,6 @@
 ---
 import { type PhaseState, phaseStateSummary } from "../lib/status.ts";
 
-// A project's phases at a glance: how many are accepted, and which states
-// are the admin's move or wait on the client. Cancelled phases do not count;
-// a project whose phases are all cancelled says so instead of "None yet".
 interface Props {
 	phases: ReadonlyArray<{ state: PhaseState }>;
 	class?: string | undefined;

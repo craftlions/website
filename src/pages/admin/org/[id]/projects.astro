@@ -64,7 +64,6 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-// Projects needing the admin come first (rank 0), then by project state.
 const stateRank = { active: 1, draft: 2, completed: 3, archived: 4 } as const;
 
 const rows = projects
@@ -72,7 +71,6 @@ const rows = projects
 		const phases = project.phases.filter(
 			(phase) => phase.state !== "cancelled",
 		);
-		// Issued invoices only: drafts are unsent and void ones never count.
 		const invoices = phases.flatMap((phase) =>
 			phase.invoices.flatMap((invoice) =>
 				invoice.stripe &&
@@ -111,7 +109,6 @@ const rows = projects
 				overdueInvoices.length > 0 ? sumByCurrency(overdueInvoices) : null,
 		};
 	})
-	// Stable sort keeps the name order from the query inside each rank.
 	.toSorted((a, b) => a.rank - b.rank);
 
 const groups = [
@@ -127,8 +124,6 @@ const groups = [
 	},
 ];
 
-// The form starts open after a failed create and when there is nothing to
-// list yet, so the first project is one step away.
 const isCreateOpen =
 	Boolean(actionResult?.error) || groups[0]?.rows.length === 0;
 ---

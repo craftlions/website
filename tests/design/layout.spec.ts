@@ -1,7 +1,3 @@
-// The layout primitives in src/styles/layout.css on their /brand/specimen
-// fixtures: each one sits in a narrow (20rem) and a wide (60rem) frame, and at
-// 1280px both frames get their full width, so each test asserts what the
-// primitive does with the room it gets, not at which breakpoint.
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { px, tokens } from "../../scripts/fluid-scale.js";
 import { routes } from "../routes.ts";
@@ -28,7 +24,6 @@ const item = <T>(list: T[], index: number) => {
 	return found;
 };
 
-// The box of the element and of each child, in px.
 const layout = (locator: Locator) =>
 	locator.evaluate((element) => {
 		const box = (node: Element) => {
@@ -39,8 +34,6 @@ const layout = (locator: Locator) =>
 		return { ...box(element), children: [...element.children].map(box) };
 	});
 
-// Each child's width at max-content, measured with the primitive's sizing
-// switched off and then restored.
 const maxContent = (locator: Locator) =>
 	locator.evaluate((element) =>
 		[...element.children].map((child) => {
@@ -53,8 +46,6 @@ const maxContent = (locator: Locator) =>
 		}),
 	);
 
-// How many lines the boxes form: a box starts a new line when it begins below
-// every box of the line before it, whatever their vertical alignment.
 const lines = (boxes: Box[]) =>
 	[...boxes]
 		.sort((a, b) => a.top - b.top)
@@ -105,8 +96,6 @@ test("stack: each stack spaces its children with its own step", async ({
 				Number.parseFloat(getComputedStyle(node).rowGap),
 			),
 		);
-		// data-space="l" outside; inside, data-space="2xs" and the default s,
-		// never the outer step inherited.
 		expect(gaps.map((gap) => gap.toFixed(2))).toEqual(
 			["l", "2xs", "s"].map((step) => space(step).toFixed(2)),
 		);
@@ -137,8 +126,6 @@ test("box: padding inside a dashed line", async ({ page }) => {
 	]);
 });
 
-// A box that is also a stack: data-padding sets the box's step and
-// data-space the stack's, each without the other.
 test("box and stack on one element take their own steps", async ({ page }) => {
 	const steps = await frame(page, "box", "wide").evaluate((element) => {
 		element.insertAdjacentHTML(
@@ -188,8 +175,6 @@ test("cluster: wraps at the items' own widths without overflow", async ({
 	}
 });
 
-// Side by side only while the content side keeps its minimum share; stacked,
-// both take the full width.
 const sidebar = async (outer: Locator, content: number, minimum: number) => {
 	const box = await layout(outer);
 	if (lines(box.children) === 1) {
@@ -211,18 +196,14 @@ test("with-sidebar: the dashboard switches when the content would get under 60%"
 	const wide = frame(page, "sidebar", "wide").locator(".with-sidebar");
 	expect(await sidebar(narrow, 0, 0.6)).toBe("stacked");
 	expect(await sidebar(wide, 0, 0.6)).toBe("row");
-	// The sidebar keeps its 20rem, give or take its 1/1000 share of the rest.
 	expect(
 		Math.abs(item((await layout(wide)).children, 1).width - 20 * 16),
 	).toBeLessThan(1);
 });
 
-// The action's width beyond its max-content.
 const growth = async (row: Locator) =>
 	item((await layout(row)).children, 1).width - item(await maxContent(row), 1);
 
-// In the narrow frame the heading and the action just about fit side by side,
-// so either arrangement is right there, as long as it is a whole one.
 test("with-sidebar: the action keeps its width beside a heading", async ({
 	page,
 }) => {
@@ -236,9 +217,6 @@ test("with-sidebar: the action keeps its width beside a heading", async ({
 	}
 });
 
-// A measure cap on the heading from the base layer, as element defaults will
-// set it, must not hand its share of the row to the button; the same cap
-// above the layout layer shows what the primitive prevents.
 test("with-sidebar: a measure cap on the heading does not widen the action", async ({
 	page,
 }) => {
@@ -255,7 +233,6 @@ test("with-sidebar: a measure cap on the heading does not widen the action", asy
 	expect(await growth(row)).toBeGreaterThan(100);
 });
 
-// All children in one row or all stacked at full width, never in between.
 const switched = async (outer: Locator) => {
 	const box = await layout(outer);
 	const count = lines(box.children);
@@ -278,7 +255,6 @@ test("switcher: all in a row or all stacked", async ({ page }) => {
 			expect(await switched(outer)).toBe(expected);
 		}
 	}
-	// The cost split takes the larger share of the row.
 	const { children } = await layout(
 		frame(page, "switcher", "wide").locator(".switcher").first(),
 	);
@@ -340,10 +316,6 @@ test("auto-grid: equal cells, as many columns as fit at 16rem", async ({
 	}
 });
 
-// A child a primitive sizes may shrink below its longest word: an unbreakable
-// word added to it overflows the child's text, never the primitive, and the
-// child's minimum is 0 rather than its content. The with-sidebar content side
-// keeps its own minimum share, which the shared rule must not override.
 test("primitive children shrink below their longest word", async ({ page }) => {
 	for (const [fixture, name, outer, child] of [
 		["stack", "narrow", ".stack", ":scope > :first-child"],
@@ -378,9 +350,6 @@ test("primitive children shrink below their longest word", async ({ page }) => {
 	expect(content).toBe("60%");
 });
 
-// No Button on a page is wider than its text, the sign of a capped sibling
-// handing over its share. The hint button is exempt: it is a fixed 24px
-// square around one character, a target size (DESIGN.md#buttons).
 for (const route of routes) {
 	test(`${route} buttons keep their width`, async ({ page }) => {
 		expect((await page.goto(route))?.status()).toBe(200);

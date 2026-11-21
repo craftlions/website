@@ -43,18 +43,13 @@ type WorklistInvoice = {
 };
 
 interface Props {
-	// From `deriveClientWorklist`.
 	items: ReadonlyArray<ClientWorklistItem<WorklistProject, WorklistInvoice>>;
-	// Whether this member may approve, decline and accept phases.
 	canDecide: boolean;
-	// Prefix for element ids; unique per page.
 	id?: string;
 }
 
 const { items, canDecide, id = "worklist" } = Astro.props;
 
-// The client's own group always shows, since "nothing to do" answers their
-// first question; craftlions' group shows only when it holds work.
 const groups = [
 	{
 		key: "your-move",

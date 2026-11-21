@@ -2,7 +2,6 @@ import { inArray, type SQLWrapper, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { stripeInvoices } from "./schema.ts";
 
-// Core joins with public.invoices need this: both tables are named "invoices".
 export const liveInvoices = alias(stripeInvoices, "live_invoices");
 
 const zeroDecimalCurrencies = [
@@ -46,7 +45,6 @@ export const stripeInvoiceFields = {
 	},
 } as const;
 
-// Drafts are unnumbered and not yet sent, so no surface shows them.
 export const organizationStripeInvoices = (organizationId: string) => ({
 	status: { ne: "draft" },
 	metadata: { organizationId },

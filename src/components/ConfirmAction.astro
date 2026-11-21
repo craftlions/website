@@ -9,11 +9,8 @@ interface Props {
 	triggerVariant?: "default" | "danger" | "quiet";
 	title: string;
 	confirm: string;
-	// Danger for destructive or irreversible actions; default for deliberate
-	// steps that need a second look but destroy nothing.
 	confirmVariant?: "default" | "danger";
 	cancel?: string;
-	// Text the admin must type before confirming, sent as `confirmation`.
 	typeToConfirm?: string | undefined;
 }
 
@@ -41,8 +38,6 @@ const {
 	>
 		{trigger}
 	</Button>
-	{/* Esc closes it, but a stray click on the backdrop must not cancel a
-	   decision: what a modal dialog does without closedby. */}
 	<dialog
 		{id}
 		aria-labelledby={`${id}-title`}
@@ -67,7 +62,6 @@ const {
 			/>
 		)}
 		<div class="cluster" data-justify="end">
-			{/* The dialog opens on the safe action, so Enter cannot confirm by accident. */}
 			<Button command="close" commandfor={id} autofocus data-confirm-cancel>
 				{cancel}
 			</Button>
@@ -94,11 +88,6 @@ const {
 
 			if (!dialog || !trigger || !submit) return;
 
-			// The open dialog makes the rest of the form inert, so the browser could
-			// not point at an invalid field behind it: report the first invalid field
-			// instead of opening. Fields inside confirmation dialogs are skipped,
-			// since they are filled in once their dialog is open. Cancelling the
-			// click also cancels the trigger's invoker command.
 			trigger.addEventListener("click", (event) => {
 				if (event.defaultPrevented) return;
 
@@ -131,10 +120,8 @@ const {
 				);
 			}
 
-			// Safari does not focus a clicked button, so focus would not return to it.
 			dialog.addEventListener("close", () => trigger.focus());
 
-			// Enter in another field of the form must not confirm past the dialog.
 			submit.form?.addEventListener("submit", (event) => {
 				if (event.submitter === submit && !dialog.open) {
 					event.preventDefault();
@@ -151,13 +138,10 @@ const {
 
 <style>
 	@layer components {
-		/* The trigger, and the modal that
-		   confirms its action, cancel and confirm in a .cluster at its end. */
 		confirm-action {
 			display: grid;
 			justify-items: start;
 
-			/* The base dialog, its parts one column apart. */
 			& dialog {
 				grid-template-columns: repeat(1, minmax(0, 1fr));
 				gap: var(--space-s);

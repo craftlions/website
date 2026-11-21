@@ -4,9 +4,6 @@ import { serveFile } from "../../../../../lib/files.ts";
 
 export const prerender = false;
 
-// A client's file. One query finds it only when it belongs to the
-// organization in the URL and the signed-in person is a member there; for
-// anyone else the file does not exist.
 export const GET: APIRoute = async (context) => {
 	const session = context.locals.session;
 

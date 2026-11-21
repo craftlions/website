@@ -1,10 +1,6 @@
 import { sql } from "drizzle-orm";
 import * as t from "drizzle-orm/pg-core";
 
-/**
- * BETTER-AUTH TABLES
- */
-
 export const user = t.pgTable("user", {
 	id: t.text("id").primaryKey(),
 	name: t.text("name").notNull(),
@@ -182,10 +178,6 @@ export const rateLimit = t.pgTable("rate_limit", {
 	lastRequest: t.bigint("last_request", { mode: "number" }).notNull(),
 });
 
-/**
- * APPLICATION-SPECIFIC TABLES
- */
-
 export const aggregateType = t.pgEnum("aggregate_type", [
 	"invoice",
 	"organization",
@@ -326,8 +318,6 @@ export const phases = t.pgTable(
 	],
 );
 
-// Links a Stripe invoice to the phase component it bills. Everything else about
-// the invoice is read live from stripeInvoices.
 export const invoices = t.pgTable(
 	"invoices",
 	{
@@ -364,12 +354,6 @@ export const invoices = t.pgTable(
 			.onDelete("restrict"),
 	],
 );
-
-/**
- * STRIPE DATA PIPELINE
- * Stripe creates and writes the `stripe` schema. Its tables are declared as
- * existing views because drizzle-kit still emits tables in an existing schema.
- */
 
 const stripeDate = t.customType<{ data: Date; driverData: number }>({
 	dataType: () => "bigint",
@@ -463,11 +447,6 @@ export const organizationMetadata = t.pgTable(
 	],
 );
 
-// One row per object in the drive bucket. The row decides who may read the
-// object: a file belongs to one organization. The server makes the key when
-// the upload starts; each later step checks that the key the browser sends
-// back belongs to this organization (see src/lib/files.ts). The id is set by
-// the upload, because the key holds it before the row exists.
 export const files = t.pgTable(
 	"files",
 	{

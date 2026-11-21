@@ -35,7 +35,6 @@ if (!session.session.activeOrganizationId) {
 	}
 }
 
-// One read resolves the slug and checks this user's membership.
 const organization = await Astro.locals.db.query.organization.findFirst({
 	columns: {
 		id: true,
@@ -61,8 +60,6 @@ if (!organization || !currentMember) {
 	return Astro.redirect("/dash");
 }
 
-// S-004 R2/R3: one shared-module read returns the full spend history for
-// this organization.
 const spendRows = await getSpendByYear(Astro.locals.db, organization.id);
 ---
 

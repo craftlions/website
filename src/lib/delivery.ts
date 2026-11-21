@@ -1,17 +1,6 @@
 import { z } from "astro/zod";
 import { DomainError } from "./domain.ts";
 
-/**
- * Phase-owned Delivery capture.
- *
- * Recording an invoice requires exactly one explicit Delivery choice:
- * - `url` — one canonical HTTPS delivery PR or MR link.
- * - `none` — the absence of a delivery PR or MR was explicitly confirmed.
- *
- * Legacy phases carry `not_recorded` (schema default) until a choice exists.
- * No provider API, reachability check, or metadata sync is performed.
- */
-
 export const deliveryChoiceSchema = z.enum(["url", "none"]);
 
 export const deliveryUrlSchema = z.preprocess(

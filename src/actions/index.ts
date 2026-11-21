@@ -32,8 +32,6 @@ type ActionContext = Parameters<
 	Parameters<typeof defineAction>[0]["handler"]
 >[1];
 
-// Form actions run inside the middleware, which already loaded the session for
-// /admin and /dash pages; only RPC calls need their own session read.
 const getSession = async (context: ActionContext) =>
 	context.locals.session === undefined
 		? context.locals.auth.api.getSession({ headers: context.request.headers })
@@ -147,8 +145,6 @@ const optionalPhaseAmount = z.preprocess(
 	z.number().nonnegative().nullable(),
 );
 
-// Checked after normalising, so input like "!!!" that normalises to nothing
-// is rejected instead of saved as an empty slug.
 const slugSchema = z
 	.string()
 	.transform(toSlug)
@@ -213,8 +209,6 @@ export const server = {
 				actorId,
 				input,
 			);
-			// A repeated onboarding returns the existing client under its stored
-			// name, not the name submitted again.
 			return { id: organization.id, name: organization.name };
 		}),
 	}),
@@ -226,7 +220,6 @@ export const server = {
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			const project = await createProject(context.locals.db, actorId, input);
-			// The admin continues on the new project's page to add its phases.
 			return {
 				publicId: project.publicId,
 				next: `/admin/org/${encodeURIComponent(input.organizationId)}/projects/${project.publicId}`,
@@ -298,7 +291,6 @@ export const server = {
 		}),
 		handler: adminHandler(async (input, context, actorId) => {
 			await transitionPhaseAsAdmin(context.locals.db, actorId, input);
-			// A transition only succeeds once the phase is in the requested state.
 			return { phaseId: input.phaseId, state: input.nextState };
 		}),
 	}),
@@ -408,8 +400,6 @@ export const server = {
 			return { success: true };
 		}),
 	}),
-	// The settings page saves the client URL with its own form and action, so
-	// neither form can overwrite the other's fields from a stale page.
 	updateOrganizationSettings: defineAction({
 		accept: "form",
 		input: z.object({
@@ -419,7 +409,6 @@ export const server = {
 				(value) => (value === "" ? null : value),
 				z.string().trim().pipe(z.url()).nullable().optional(),
 			),
-			// An empty field removes the budget.
 			yearlyBudget: z.preprocess(
 				(value) => (value === "" ? null : value),
 				z.coerce.number().int().positive().nullable(),
@@ -468,7 +457,6 @@ export const server = {
 				actorId,
 				input,
 			);
-			// The client's pages are gone; the admin continues on /admin.
 			return { name, next: "/admin" };
 		}),
 	}),

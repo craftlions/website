@@ -52,10 +52,6 @@ const [organizations, projects, latestStateEventIds, openStripeInvoices] =
 		}),
 		getWorklistProjects(Astro.locals.db),
 		getLatestPhaseStateEventIds(Astro.locals.db),
-		// Open invoices of every client, attached or not, counted as on each
-		// client's Invoices tab: an attached invoice belongs to the client of its
-		// cost part, an unattached one to the client its Stripe customer is linked
-		// to.
 		Astro.locals.db.query.stripeInvoices.findMany({
 			columns: {
 				status: true,
@@ -95,9 +91,6 @@ const worklist = organizations
 	)
 	.toSorted(compareWorklistItems);
 
-// S-004 R1/R5: budget usage is the shared module's current-year percentage
-// (D-budget-consumption-definition, uncapped); null without a positive yearly
-// budget (R7 "No budget"). Any read failure aborts the render (R8).
 const ledger = await Promise.all(
 	organizations.map(async (organization) => ({
 		id: organization.id,
@@ -132,8 +125,6 @@ const ledger = await Promise.all(
 );
 const openInvoices = ledger.flatMap((client) => client.openInvoices);
 
-// The form starts open after a failed onboarding and while there is no
-// client yet.
 const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 ---
 
@@ -436,8 +427,6 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 </AdminShell>
 
 <script>
-	// The slug follows the client name until the admin edits it. A form filled
-	// in again after a failed submit keeps a slug that was edited by hand.
 	const organizationName =
 		document.querySelector<HTMLInputElement>("#organization-name");
 	const organizationSlug =
@@ -461,7 +450,6 @@ const isOnboardOpen = Boolean(onboardResult?.error) || ledger.length === 0;
 </script>
 
 <script>
-	// Filters the ledger rows by client name and announces the match count.
 	class ClientLedger extends HTMLElement {
 		connectedCallback() {
 			if (this.dataset.initialized === "true") return;

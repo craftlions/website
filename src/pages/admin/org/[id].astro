@@ -55,7 +55,6 @@ const [organization, projects, latestStateEventIds, openInvoices, spendRows] =
 						stripeCustomerId: true,
 					},
 				},
-				// One row tells whether anyone can see the client dashboard.
 				members: {
 					columns: {
 						id: true,
@@ -67,12 +66,8 @@ const [organization, projects, latestStateEventIds, openInvoices, spendRows] =
 				id,
 			},
 		}),
-		// The worklist page's query, so the preview lists the same items.
 		getWorklistProjects(Astro.locals.db, id),
 		getLatestPhaseStateEventIds(Astro.locals.db, id),
-		// Attached and unattached, as in the Invoices tab's summary: attached
-		// ones by their cost part's client, unattached ones by the linked Stripe
-		// customer.
 		Astro.locals.db.query.stripeInvoices.findMany({
 			columns: {
 				status: true,
@@ -90,8 +85,6 @@ const [organization, projects, latestStateEventIds, openInvoices, spendRows] =
 				],
 			},
 		}),
-		// The client dashboard's spend history: the one grouped aggregate here,
-		// since the relational API cannot group by year.
 		getSpendByYear(Astro.locals.db, id),
 	]);
 
@@ -110,12 +103,10 @@ const overdueInvoices = openInvoices.filter((invoice) =>
 	isInvoiceOverdue(invoice, now),
 );
 const invoicesHref = `/admin/org/${organization.id}/invoices`;
-// Active projects, then drafts, which wait for the admin to activate them.
 const currentProjects = [
 	...projects.filter((project) => project.state === "active"),
 	...projects.filter((project) => project.state === "draft"),
 ];
-// Setup steps still missing, each listed only while it is.
 const setupGaps = [
 	organization.members.length === 0 && {
 		text: `Nobody at ${organization.name} can see their dashboard yet.`,

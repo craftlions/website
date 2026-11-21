@@ -35,8 +35,6 @@ export function createAuth(env: Cloudflare.Env, db: Db) {
 		appName: "craftlions website",
 		baseURL: {
 			allowedHosts: ["craftlions.com", "*.craftlions.com", "localhost:*"],
-			// 1.7 fails closed without a request host; server-side calls such as
-			// createUser and requestPasswordReset run without request headers.
 			fallback: "https://craftlions.com",
 			protocol: "auto",
 		},
@@ -95,7 +93,7 @@ export function createAuth(env: Cloudflare.Env, db: Db) {
 			dash({
 				activityTracking: {
 					enabled: true,
-					updateInterval: 300000, // Update interval in ms (default: 5 minutes)
+					updateInterval: 300000,
 				},
 			}),
 			organization({
@@ -112,9 +110,6 @@ export function createAuth(env: Cloudflare.Env, db: Db) {
 			max: 100,
 		},
 		session: {
-			// Serves getSession from an encrypted cookie for up to five minutes
-			// instead of reading the session and user rows on every request; role,
-			// ban, and sign-out changes elsewhere can lag by that window.
 			cookieCache: {
 				enabled: true,
 				maxAge: 5 * 60,

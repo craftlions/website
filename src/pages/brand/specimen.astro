@@ -63,8 +63,6 @@ const feedback = [
 			],
 		}),
 	},
-	// Without a message the banner shows its generic server-error text, as it
-	// does for INTERNAL_SERVER_ERROR, but nothing is logged.
 	{ data: undefined, error: new ActionError({ code: "BAD_GATEWAY" }) },
 ];
 
@@ -79,8 +77,6 @@ const typeRoles = [
 	["label-caps", "Label caps"],
 ];
 
-// Each step shows its range from scripts/fluid-scale.js, which the design tests
-// measure each probe against.
 const typeSteps = [
 	["text-display", "Display", "step-3"],
 	["text-headline", "Headline", "step-2"],
@@ -90,15 +86,11 @@ const typeSteps = [
 	["text-xs", "Extra small body", "step--2"],
 ] as const;
 
-// Each layout primitive renders in a narrow and a wide frame, so the design
-// tests and a reader see what it does with the room it gets.
 const frames = [
 	["narrow", "20rem"],
 	["wide", "60rem"],
 ] as const;
 
-// The drive fixture's files: a PDF, a long name, a video and a file with no
-// extension, with public ids unique per frame.
 const specimenFiles = (frame: string) =>
 	[
 		[
@@ -128,9 +120,6 @@ const specimenFiles = (frame: string) =>
 		size: Number(size),
 	}));
 
-// The ledger fixture's invoices for InvoiceTable, dated from the build: an
-// overdue one and a paid one, each with its phase's split, an unassigned one
-// and a void one, with ids unique per frame.
 const day = 86_400_000;
 const ago = (days: number) => new Date(Date.now() - days * day);
 const invoicePhase = (
@@ -1322,7 +1311,6 @@ const ledgerInvoices = (frame: string) => [
 					))}
 				</section>
 			</main>
-			{/* One palette for both sections: signed out, it offers only Sign in. */}
 			<CommandPalette />
 		</body>
 	</Fragment>
@@ -1351,8 +1339,6 @@ const ledgerInvoices = (frame: string) => [
 			block-size: 1.5rem;
 			border: var(--rule) var(--line);
 		}
-		/* A token's swatch and name; its contrast ratios sit beside it, or
-		   below it once the name would get less than 11rem, the longest name. */
 		.token-name {
 			display: grid;
 			grid-template-columns: auto minmax(0, 1fr);

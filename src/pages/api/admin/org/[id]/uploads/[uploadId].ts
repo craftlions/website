@@ -13,10 +13,6 @@ import { maxParts } from "../../../../../../lib/files.ts";
 
 export const prerender = false;
 
-// One multipart upload, named by its key (`?key=`) and upload id:
-// PUT a part (`&part=N`, the bytes as the body), POST to complete it, DELETE
-// to abort it. Admin only: anyone else gets 403 before the body is read.
-
 export const PUT = withAdminSession("Upload", async (context, session) => {
 	const key = context.url.searchParams.get("key");
 	const { id, uploadId } = context.params;

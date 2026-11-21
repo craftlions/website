@@ -4,8 +4,6 @@ import { serveFile } from "../../../../../lib/files.ts";
 
 export const prerender = false;
 
-// A client's file for the admin; the middleware already turned away anyone
-// who is not one.
 export const GET: APIRoute = async (context) => {
 	const { id, publicId } = context.params;
 	const file =

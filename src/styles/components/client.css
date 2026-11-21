@@ -1,7 +1,4 @@
 @layer components {
-	/* The client pages under src/pages/dash/. */
-
-	/* /dash: the organizations to choose from, one per row. */
 	.client-orgs {
 		display: grid;
 		border: var(--rule) var(--line);
@@ -14,9 +11,6 @@
 		}
 	}
 
-	/* "Hide completed" hides the completed projects; when that hides all of
-	   them, a note says so. Below the heading it keeps its own width, so the
-	   label's columns do not spread. */
 	.client-projects {
 		&:has(:checked) [data-state="completed"] {
 			display: none;
@@ -26,14 +20,12 @@
 		}
 	}
 
-	/* Shown only while "Hide completed" hides every project. */
 	.client-projects-note {
 		.client-projects:not(:has(:checked)) & {
 			display: none;
 		}
 	}
 
-	/* A project's cost in one currency above its parts, in the line's figure. */
 	.client-split {
 		display: grid;
 		inline-size: 100%;
@@ -46,15 +38,11 @@
 		}
 	}
 
-	/* The budget: the share used across the top, then label and amount
-	   rows on the plane's two columns. */
 	.client-budget {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;
 		border: var(--rule) var(--line);
 
-		/* Its groups are rows of the plane, not the base stack of a group:
-		   their label and amount keep their content's minimum width. */
 		& > div {
 			grid-column: span 2 / span 2;
 			display: grid;

@@ -1,9 +1,5 @@
-// P-3 and P-9: what a signed-out visitor gets from the protected areas, the
-// login page's return path, the search API and the command palette.
 import { expect, test } from "@playwright/test";
 
-// The client and account pages send the visitor back after login; admin
-// pages send a plain /login, since a return path may only name /dash or /settings.
 for (const [path, location] of [
 	["/dash", "/login?returnTo=%2Fdash"],
 	["/dash/", "/login?returnTo=%2Fdash%2F"],
@@ -46,7 +42,6 @@ test("a deep link keeps its fragment through the login redirect", async ({
 	);
 });
 
-// The form carries the parsed return path that sign-in hands Better Auth.
 for (const [returnTo, parsed] of [
 	["/dash/org/acme/invoices?x=1", "/dash/org/acme/invoices?x=1"],
 	["/settings/profile", "/settings/profile"],
@@ -85,14 +80,12 @@ test("search rejects a signed-out caller", async ({ request }) => {
 	});
 });
 
-// The session check comes first, so an overlong query is still a 401.
 test("search checks the session before the query", async ({ request }) => {
 	expect((await request.get(`/api/search?q=${"a".repeat(201)}`)).status()).toBe(
 		401,
 	);
 });
 
-// Without a session cookie Better Auth answers these without the database.
 test("the auth API reports no session to a signed-out caller", async ({
 	request,
 }) => {

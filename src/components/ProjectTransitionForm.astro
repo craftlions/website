@@ -10,16 +10,11 @@ import Button from "./Button.astro";
 
 interface Props extends HTMLAttributes<"form"> {
 	project: { id: string; name: string; state: ProjectState; version: number };
-	// Archiving is final and goes through a ConfirmAction on the project page,
-	// so this unconfirmed one-button form cannot archive.
 	nextState: Exclude<ProjectTransitionTarget, "archived">;
-	// Passed through to the submit Button, e.g. `variant` or data attributes.
 	button?: Omit<ComponentProps<typeof Button>, "as" | "href" | "type">;
 }
 
 const { project, nextState, button, ...attrs } = Astro.props;
-// The status vocabulary's name for this transition from the project's state
-// ("Activate", "Complete", "Reopen").
 const label =
 	projectTransitions[project.state].find(
 		(transition) => transition.nextState === nextState,

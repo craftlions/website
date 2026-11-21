@@ -1,5 +1,3 @@
-// Prose avoids short last lines and headings balance their lines; labels and
-// controls keep the browser's plain wrapping (DESIGN.md#3-typography).
 import { expect, test } from "@playwright/test";
 
 test("text-wrap reaches prose and headings only", async ({ page }) => {

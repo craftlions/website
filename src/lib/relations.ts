@@ -2,7 +2,6 @@ import { defineRelations } from "drizzle-orm";
 import * as schema from "./schema.ts";
 
 export const relations = defineRelations(schema, (r) => ({
-	// BETTER-AUTH
 	account: {
 		user: r.one.user({
 			from: r.account.userId,
@@ -62,7 +61,6 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.member.userId,
 		}),
 	},
-	// CUSTOM
 	organizationMetadata: {
 		organization: r.one.organization({
 			from: r.organizationMetadata.organizationId,

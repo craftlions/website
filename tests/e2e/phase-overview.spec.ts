@@ -1,9 +1,3 @@
-// PhaseOverview's closed details panels stay findable (hidden="until-found"):
-// a text fragment, the mechanism find in page shares, opens the panel and its
-// toggle; a browser without beforematch keeps it plainly hidden. The overview
-// renders only behind login, so the test serves its script and its own
-// <style>, with the site's stylesheets, on a fixture of one phase that it
-// routes itself.
 import { readFileSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
 import { expect, type Page, test } from "@playwright/test";
@@ -12,7 +6,6 @@ const source = readFileSync("src/components/PhaseOverview.astro", "utf8");
 const script = stripTypeScriptTypes(
 	source.match(/<script>([\s\S]*)<\/script>/)?.[1] ?? "",
 );
-// The scoped rules unscoped, which the fixture's markup needs without Astro.
 const style = source.match(/<style>([\s\S]*)<\/style>/)?.[1] ?? "";
 
 const fixture = async (page: Page) => {
@@ -45,7 +38,6 @@ test("a text fragment opens a closed payment schedule", async ({ page }) => {
 	await page.goto("/phase-overview-fixture");
 	await expect(panel).toHaveAttribute("hidden", "until-found");
 	await expect(toggle).toHaveAttribute("aria-expanded", "false");
-	// The closed panel draws nothing and takes no room in its line.
 	expect(await panel.boundingBox()).toMatchObject({ width: 0, height: 0 });
 
 	await page.goto("/phase-overview-fixture#:~:text=billed%20on%20approval");

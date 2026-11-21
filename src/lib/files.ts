@@ -1,22 +1,6 @@
-// The drive: every client's files in one private R2 bucket (`DRIVE`). The
-// bucket has no public URL; the Worker is its only door. A request reaches an
-// object only through a `files` row that the caller's query found, so which
-// files someone sees is decided by that query, never by the key or a URL.
-//
-// - Keys are `org/<organization id>/<file id>`, made by the server, so a
-//   filename never becomes a path and an organization's objects share a
-//   prefix for housekeeping.
-// - Uploads are multipart through the binding, in parts of `partSize`, so a
-//   file of any size passes under the Worker's request body limit.
-// - Downloads stream the object with its range and conditional headers. Only
-//   types a browser shows without running code open inline; everything else
-//   downloads, and a sandbox policy keeps a file from acting as a page.
-
 import { formatDate } from "./format.ts";
 import { getUuidV7Date } from "./uuid.ts";
 
-// R2 needs every part but the last to be the same size, of at least 5 MiB,
-// and takes at most 10,000 parts, so one file holds up to about 167.8 GB.
 export const partSize = 16 * 1024 * 1024;
 export const maxParts = 10_000;
 export const maxFileSize = partSize * maxParts;
@@ -27,7 +11,6 @@ const uuidPattern =
 export const fileKey = (organizationId: string, fileId: string) =>
 	`org/${organizationId}/${fileId}`;
 
-// The file id a key names, when the key is this organization's.
 export const fileIdFromKey = (organizationId: string, key: string) => {
 	const prefix = `org/${organizationId}/`;
 	const id = key.startsWith(prefix) ? key.slice(prefix.length) : "";
@@ -35,8 +18,6 @@ export const fileIdFromKey = (organizationId: string, key: string) => {
 	return new RegExp(`^${uuidPattern}$`).test(id) ? id : null;
 };
 
-// Types a browser renders as media, with no script and no markup of their own.
-// SVG and HTML are markup, so they download.
 const inlineTypes = new Set([
 	"application/pdf",
 	"audio/mpeg",
@@ -55,8 +36,6 @@ const inlineTypes = new Set([
 export const opensInline = (contentType: string) =>
 	inlineTypes.has(contentType.split(";")[0]?.trim().toLowerCase() ?? "");
 
-// The name as typed in the header, plus an ASCII copy for old clients:
-// quotes, backslashes and anything outside printable ASCII become `_`.
 export const contentDisposition = (filename: string, contentType: string) => {
 	const fallback = filename.replace(/[^\x20-\x7e]|["\\]/g, "_");
 	const encoded = encodeURIComponent(filename).replace(
@@ -67,8 +46,6 @@ export const contentDisposition = (filename: string, contentType: string) => {
 	return `${opensInline(contentType) ? "inline" : "attachment"}; filename="${fallback}"; filename*=UTF-8''${encoded}`;
 };
 
-// A file's name as it may be stored: no path, no control characters, at most
-// 255 characters. Null when nothing is left.
 export const cleanFilename = (filename: string) => {
 	const name = (filename.split(/[/\\]/).at(-1) ?? "")
 		.replace(/\p{Cc}/gu, "")
@@ -92,8 +69,6 @@ export const formatBytes = (bytes: number) => {
 	return `${byteFormatter.format(bytes / 1000 ** exponent)} ${units[exponent]}`;
 };
 
-// What kind of file it is, in a few letters: the extension, else the subtype
-// in words people use.
 const subtypeKinds = new Map([
 	["octet-stream", "file"],
 	["plain", "text"],
@@ -112,7 +87,6 @@ export const fileKind = (filename: string, contentType: string) => {
 	).toUpperCase();
 };
 
-// "2.4 MB · uploaded 10.11.2026": the facts a file card shows below the name.
 export const fileFacts = (file: { id: string; size: number }) => {
 	const uploaded = getUuidV7Date(file.id);
 
@@ -124,9 +98,6 @@ export const fileFacts = (file: { id: string; size: number }) => {
 		.join(" · ");
 };
 
-// When R2 sends no body, one of the request's conditions failed. A failed
-// If-Match or If-Unmodified-Since answers 412 (RFC 9110 checks them first);
-// otherwise If-None-Match or If-Modified-Since failed, and that answers 304.
 const preconditionFailed = (object: R2Object, headers: Headers) => {
 	const ifMatch = headers.get("If-Match");
 
@@ -147,9 +118,6 @@ const preconditionFailed = (object: R2Object, headers: Headers) => {
 	);
 };
 
-// Streams a file the caller's query already found. Range requests answer 206
-// so video seeks and large PDFs load in pieces; failed conditions answer 304
-// or 412.
 export const serveFile = async (
 	bucket: R2Bucket,
 	file: { r2Key: string; filename: string; contentType: string },
@@ -163,8 +131,6 @@ export const serveFile = async (
 			onlyIf: request.headers,
 		});
 	} catch (error) {
-		// R2 rejects a range outside the object with InvalidRange, whose code
-		// ends the message; any other error is a failure.
 		if (error instanceof Error && error.message.endsWith("(10039)")) {
 			return new Response(null, { status: 416 });
 		}
@@ -184,9 +150,6 @@ export const serveFile = async (
 		"X-Content-Type-Options": "nosniff",
 	});
 
-	// Chromium's PDF viewer does not open in a sandboxed document or under
-	// `object-src 'none'`, so a PDF keeps only who may frame it. A PDF's own
-	// script runs inside the viewer, not as a page of this site's origin.
 	headers.set(
 		"Content-Security-Policy",
 		file.contentType === "application/pdf"

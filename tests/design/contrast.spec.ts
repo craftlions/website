@@ -1,7 +1,3 @@
-// prefers-contrast: more strengthens the quiet roles in tokens.css: muted text
-// reaches 7:1 (WCAG 1.4.6), every dashed line and the control boundary 3:1
-// (WCAG 1.4.11), on canvas and panel in the project's scheme, each stronger
-// than without the preference; the chart's dimmed projects fade less.
 import { expect, type Page, test } from "@playwright/test";
 import { contrast } from "../../src/lib/contrast.ts";
 
@@ -15,7 +11,6 @@ const roles = {
 	"line-info": 3,
 };
 
-// Each role and surface as the page computes it, as #rrggbb, and --dimmed.
 const resolve = (page: Page) =>
 	page.evaluate((names) => {
 		const probe = document.body.appendChild(document.createElement("i"));

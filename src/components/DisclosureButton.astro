@@ -2,12 +2,6 @@
 import type { ComponentProps } from "astro/types";
 import Button from "./Button.astro";
 
-// A Button that shows and hides the element whose id is `controls`: a form
-// opened from a section heading, or a row's extra panel. The page renders
-// that panel with `hidden={!open}`, passing the same `open`, so a form whose
-// submit failed comes back open. Opening focuses the panel's first field; a
-// `data-disclosure-cancel` Button inside the panel resets its forms, closes
-// it and returns focus here.
 interface Props
 	extends Omit<ComponentProps<typeof Button>, "as" | "href" | "type"> {
 	controls: string;
@@ -36,9 +30,6 @@ const { controls, open = false, class: className, ...attrs } = Astro.props;
 </Button>
 
 <script>
-	// One listener serves every disclosure on the page. State lives in
-	// `aria-expanded` and `hidden` only, so a page script may open a panel the
-	// same way (the project page does for deep links).
 	const fields =
 		"input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])";
 
@@ -51,9 +42,6 @@ const { controls, open = false, class: className, ...attrs } = Astro.props;
 		panel.hidden = !open;
 	};
 
-	// A URL fragment that names a panel (`#create-project`, from search) opens
-	// it. A hidden target cannot be scrolled to, so focusing its first field
-	// brings it into view instead. Runs on landing and on every fragment change.
 	const openFromHash = () => {
 		const panel = document.getElementById(location.hash.slice(1));
 		if (
@@ -85,7 +73,6 @@ const { controls, open = false, class: className, ...attrs } = Astro.props;
 		}
 
 		const cancel = event.target.closest("[data-disclosure-cancel]");
-		// The panel is the nearest ancestor some toggle controls.
 		for (
 			let panel = cancel?.parentElement?.closest<HTMLElement>("[id]");
 			panel;
@@ -99,7 +86,6 @@ const { controls, open = false, class: className, ...attrs } = Astro.props;
 				? [panel]
 				: panel.querySelectorAll("form")) {
 				form.reset();
-				// Live helpers such as the cost split recompute from the reset values.
 				form.dispatchEvent(new Event("input"));
 			}
 			setOpen(panel, false);

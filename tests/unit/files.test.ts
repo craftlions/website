@@ -1,5 +1,3 @@
-// The drive's pure helpers: which keys belong to an organization, which files
-// open in the browser, the download header, stored names and the card facts.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {

@@ -6,10 +6,10 @@ interface Props extends Omit<HTMLAttributes<"input">, "type"> {}
 const { class: className, ...attrs } = Astro.props;
 ---
 
+{/* biome-ignore lint/a11y/noLabelWithoutControl: the slot supplies the label text */}
 <label class:list={["checkbox text-label text-fg-muted", className]}>
 	<span>
 		<input type="checkbox" {...attrs}>
-		{/* The tick is the surface color cut to shape, so it follows the scheme. */}
 		<span aria-hidden="true"></span>
 	</span>
 	<slot />

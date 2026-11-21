@@ -1,9 +1,4 @@
 ---
-// Cost split editor for a phase form. Upfront and Delivery are entered as
-// percentages; Acceptance is always the remainder, so editing one part never
-// changes another part the admin typed. The enclosing form supplies the cost
-// (a `cost` field, else the `cost` prop) and the currency (a `currency` field,
-// else the `currency` prop), and receives the three amounts as hidden fields.
 interface Props {
 	cost: number;
 	currency: string;
@@ -24,16 +19,11 @@ const {
 const id = `split-${crypto.randomUUID()}`;
 const formatAmount = (amount: number | null) =>
 	amount === null ? "" : amount.toFixed(4).replace(/\.?0+$/, "") || "0";
-// A zero-cost phase has no ratio; its first stored part then carries 100%.
 const firstStoredPart = [
 	upfrontAmount,
 	deliveryAmount,
 	acceptanceAmount,
 ].findIndex((amount) => amount !== null);
-// Shares in ten-thousandths of a percent, rounded cumulatively: Delivery
-// shows the rounded Upfront+Delivery share minus the rounded Upfront share,
-// so the two shown shares never add up to more than 100% (rounding each on
-// its own can turn 66.6667 + 133.3333 of 200 into 33.3334% + 66.6667%).
 const [upfrontShare = 0, upfrontDeliveryShare = 0] = [
 	upfrontAmount ?? 0,
 	(upfrontAmount ?? 0) + (deliveryAmount ?? 0),
@@ -158,9 +148,6 @@ const percentages = [
 <script>
 	import { formatMoney, formatShare } from "../lib/format.ts";
 
-	// Amounts are kept in ten-thousandths, the precision the server stores, so
-	// the three parts always add up to the cost exactly. The currency is an
-	// ISO code from the phase or the add-phase form's currency select.
 	const units = (value: number) => Math.round(value * 10_000);
 	const formatAmount = (amountUnits: number) =>
 		(amountUnits / 10_000).toFixed(4).replace(/\.?0+$/, "") || "0";
@@ -190,10 +177,6 @@ const percentages = [
 
 			if (!form || !remainder || !total || !error) return;
 
-			// Until the admin edits a share or the cost, the parts are the amounts
-			// the server rendered (a stored or submitted split, which adds up to the
-			// cost), so an untouched form posts them unchanged. The shown shares are
-			// rounded, and recomputing from them could move a part by a unit.
 			let edited = false;
 
 			const sync = () => {
@@ -221,8 +204,6 @@ const percentages = [
 					Math.max(0, units(100 - enteredSum) / 10_000),
 				];
 
-				// Each part rounds to the stored precision; the last part with a
-				// share takes what is left so the parts sum to the cost.
 				const lastPart = percentages.findLastIndex((value) => value > 0);
 				let assigned = 0;
 				const partUnits = edited
@@ -294,11 +275,6 @@ const percentages = [
 
 <style>
 	@layer components {
-		/* The cost split of a phase form: Upfront and Delivery shares typed in a %
-		   box, Acceptance the calculated remainder. Each box sits at the end of its
-		   row beside the label and amount, below them once the label would get
-		   less than 40% of the row (not at 320px, but with large text), and the
-		   total is under them. The box is drawn like an Input. */
 		.split-share,
 		.split-remainder {
 			padding: var(--space-2xs) var(--space-xs);

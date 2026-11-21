@@ -54,7 +54,6 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-// The form starts open after a failed add and while nobody is a member yet.
 const isAddOpen = Boolean(addResult?.error) || members.length === 0;
 
 const otherClients = (count: number) =>

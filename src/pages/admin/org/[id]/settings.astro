@@ -93,10 +93,6 @@ if (!organization) {
 	return Astro.redirect("/admin");
 }
 
-// The settings form and the client URL form post separate actions that each
-// write only their own fields, so a stale tab cannot overwrite the other
-// form's fields. After a failed save, only the failed form shows what was
-// submitted.
 const settingsResult = Astro.getActionResult(
 	actions.updateOrganizationSettings,
 );
@@ -367,8 +363,6 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 	const output = form?.querySelector("output");
 
 	if (form && slug instanceof HTMLInputElement && output) {
-		// The field can start with a slug that failed to save, so compare with
-		// the client's current slug rather than the field's initial value.
 		const sync = () => {
 			slug.setCustomValidity(
 				slug.value === slug.dataset.currentSlug
@@ -377,7 +371,6 @@ const submitted = submittedValues(Astro.locals, settingsResult);
 			);
 			output.value = `${window.location.origin}/dash/org/${slug.value}`;
 		};
-		// ConfirmAction reports this validity before its dialog opens.
 		slug.addEventListener("input", sync);
 		sync();
 	}

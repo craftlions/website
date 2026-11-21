@@ -1,8 +1,4 @@
-/* Role utilities (DESIGN.md#role-tokens): what a piece of text or a line is,
-   with the names markup already uses. */
 @layer utilities {
-	/* Type roles carry size, line height and weight together
-	   (DESIGN.md#3-typography). */
 	.text-display {
 		font-size: var(--step-3);
 		line-height: 1.25;
@@ -43,7 +39,6 @@
 		line-height: calc(1 / 0.75);
 		text-transform: uppercase;
 	}
-	/* After the roles, so it wins in a tight metric row and a one-line box. */
 	.leading-none {
 		line-height: 1;
 	}
@@ -117,8 +112,6 @@
 		border-color: var(--line-danger);
 	}
 
-	/* A link that can rest in muted text, its own or a muted row's, turns
-	   primary under the pointer (DESIGN.md#links). */
 	.hover-text-fg {
 		@media (hover: hover) {
 			&:hover {
@@ -127,15 +120,12 @@
 		}
 	}
 
-	/* Helpers. */
-	/* Prose no wider than its longest comfortable line. */
 	.measure {
 		max-inline-size: var(--measure);
 	}
 	.tabular-nums {
 		font-variant-numeric: tabular-nums;
 	}
-	/* A stored name shown as a word, such as a payment part. */
 	.capitalize {
 		text-transform: capitalize;
 	}
@@ -150,19 +140,12 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	/* Forced colors (Windows High Contrast, DESIGN.md#forced-colors) repaint
-	   every background as Canvas and drop gradients, so a mark drawn as a fill
-	   disappears. These opt one element out and paint it in system colors;
-	   outside forced colors they do nothing. They are important so they win
-	   over the role utilities on the same element. */
 	@media (forced-colors: active) {
-		/* A solid mark. */
 		.forced-ink {
 			forced-color-adjust: none;
 			background-color: CanvasText !important;
 			border-color: CanvasText !important;
 		}
-		/* An element that keeps drawing itself in its text color. */
 		.forced-line {
 			forced-color-adjust: none;
 			border-color: CanvasText !important;
@@ -170,7 +153,6 @@
 		}
 	}
 
-	/* Read out, not shown. */
 	.sr-only {
 		position: absolute;
 		inline-size: 1px;

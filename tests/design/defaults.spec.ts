@@ -1,7 +1,3 @@
-// The element defaults in src/styles/base.css: a section without a class is a
-// stack at the xs step, a description list's group without a class one at the
-// 3xs step, and their children may shrink below their longest word. A class on
-// the element opts out, so only class-less ones are checked.
 import { expect, test } from "@playwright/test";
 import { px, tokens } from "../../scripts/fluid-scale.js";
 import { routes } from "../routes.ts";

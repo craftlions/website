@@ -10,9 +10,6 @@ const startSchema = z.object({
 	contentType: z.string().max(255),
 });
 
-// Starts a multipart upload into this client's drive; the browser then sends
-// the parts to ./uploads/[uploadId]. Admin only: anyone else gets 403
-// before the body is read.
 export const POST = withAdminSession("Upload", async (context, session) => {
 	const input = startSchema.safeParse(
 		await context.request.json().catch(() => null),

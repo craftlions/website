@@ -1,7 +1,3 @@
-// P-7: Field shows a constraint error once the user has changed and left the
-// field, or tried to submit (:user-invalid), with aria-invalid, the message and
-// aria-describedby in step, on the sign-in and password forms. Every test
-// stops before the auth API, which needs the database.
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 const forms: {
@@ -41,7 +37,6 @@ const forms: {
 const field = (page: Page, label: string) =>
 	page.getByLabel(label, { exact: true });
 
-// The message is the field's description only while it is invalid.
 const expectValid = async (input: Locator) => {
 	await expect(input).toHaveAttribute("aria-invalid", "false");
 	await expect(input).toHaveAccessibleDescription("");
@@ -86,7 +81,6 @@ for (const { path, form, submit, fields, invalid, valid } of forms) {
 			for (const label of fields) {
 				await expectValid(field(page, label));
 			}
-			// Focusing and leaving an untouched field is no interaction yet.
 			await field(page, fields[0]).focus();
 			await field(page, fields[0]).blur();
 			await expectValid(field(page, fields[0]));
@@ -123,8 +117,6 @@ for (const { path, form, submit, fields, invalid, valid } of forms) {
 	});
 }
 
-// With the first field valid, a submit focuses the first one still invalid,
-// and only that one shows an error; no request leaves the page.
 for (const { path, form, submit, first, value, next } of [
 	{
 		path: "/login",
@@ -178,14 +170,11 @@ test.describe("without scripts", () => {
 				.click();
 			await expect(field(page, fields[0])).toBeFocused();
 			expect(page.url()).toBe(before);
-			// The browser's own message reports it; nothing claims an error
-			// that is not shown.
 			await expect(field(page, fields[0])).not.toHaveAttribute("aria-invalid");
 		});
 	}
 });
 
-// The specimen renders a field as the server returns it after a rejection.
 test("a server error stays until the value changes", async ({ page }) => {
 	await page.goto("/brand/specimen/");
 	const input = page.getByLabel("With error", { exact: true }).first();
@@ -201,7 +190,6 @@ test("a server error stays until the value changes", async ({ page }) => {
 		"Enter a valid email address.",
 	);
 
-	// Changed but still malformed, the browser's message replaces it.
 	await input.fill("still-not-an-email");
 	await input.blur();
 	await expectInvalid(input);

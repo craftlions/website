@@ -1,6 +1,4 @@
-/* Element defaults, after the reset and before any class. */
 @layer base {
-	/* Every page sits on the canvas in primary text; layout stays per page. */
 	body {
 		background-color: var(--canvas);
 		color: var(--fg);
@@ -8,9 +6,6 @@
 		-moz-osx-font-smoothing: grayscale;
 	}
 
-	/* A section without a class is a stack at the xs step: its parts one under
-	   another, free to shrink below their longest word. Any class opts out:
-	   .stack with data-space for another step, a primitive or a component. */
 	section:not([class]) {
 		display: grid;
 		align-content: start;
@@ -21,9 +16,6 @@
 		}
 	}
 
-	/* A description list's group without a class stacks its term above its
-	   details at the 3xs step, free to shrink below their longest word; any
-	   class opts out. */
 	dl > div:not([class]) {
 		display: grid;
 		align-content: start;
@@ -34,7 +26,6 @@
 		}
 	}
 
-	/* A column header is a caption label (label-caps). */
 	th[scope="col"] {
 		color: var(--fg-muted);
 		font-size: var(--step--2);
@@ -52,30 +43,21 @@
 		text-wrap: pretty;
 	}
 
-	/* Like headings after the reset, table cells take their weight from a role,
-	   not from the browser's bold th. */
 	th {
 		font-weight: inherit;
 	}
 
-	/* Emphasis takes the label weight, not the browser's bolder 700: text is
-	   400 or 600 (DESIGN.md#3-typography). */
 	b,
 	strong {
 		font-weight: 600;
 	}
 
-	/* Headings break into lines of even length where the browser supports it;
-	   elsewhere they wrap as before. */
 	h1,
 	h2,
 	h3 {
 		text-wrap: balance;
 	}
 
-	/* Forced colors keep the gradient of the logo's mark as drawn; its stops
-	   take the system color of the wordmark instead (DESIGN.md#forced-colors).
-	   Important, to win over the stop colours the logo file sets inline. */
 	@media (forced-colors: active) {
 		stop {
 			stop-color: currentColor !important;
@@ -87,9 +69,6 @@
 		outline-offset: 2px;
 	}
 
-	/* A modal on the canvas, as wide as a confirmation (--dialog) and never
-	   wider than the window less a margin, over a backdrop that dims the page.
-	   Scrolling inside it or on the backdrop never scrolls the page behind. */
 	dialog {
 		inline-size: 100%;
 		max-inline-size: min(var(--dialog), 100% - 2rem);
@@ -107,10 +86,6 @@
 		}
 	}
 
-	/* An element a link points at (#id) scrolls into view with room above it
-	   and is marked while it is the target; [data-highlight] marks the one a
-	   script points at instead. A tint and a dashed outline, so the mark does
-	   not rely on colour alone; forced colors keep the outline. */
 	.target {
 		scroll-margin-block-start: var(--space-2xl);
 	}

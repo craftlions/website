@@ -1,13 +1,6 @@
-// T4, reflow and zoom (WCAG 1.4.4, 1.4.10): no route scrolls sideways at 320px
-// (1280px at 400% zoom), at 640px with a device scale factor of 2 (1280px at
-// 200% zoom), or at 1280px with a 32px default font size (200% text size); nor
-// at the tablet widths between, where intrinsic layouts switch.
-// Dense tables scroll inside their own section, which the page width ignores.
 import { expect, type Page, test } from "@playwright/test";
 import { routes } from "../routes.ts";
 
-// No text sits in a collapsed box, and no control clips its own text unless it
-// truncates on purpose.
 const audit = (page: Page) =>
 	page.evaluate(() => ({
 		overflow: document.documentElement.scrollWidth - window.innerWidth,
@@ -68,7 +61,6 @@ for (const route of routes) {
 		});
 
 		test("200% text size", async ({ page }) => {
-			// Chromium's default font size setting, which rem follows.
 			await (await page.context().newCDPSession(page)).send(
 				"Page.setFontSizes",
 				{ fontSizes: { standard: 32 } },

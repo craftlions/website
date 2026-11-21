@@ -1,28 +1,12 @@
-/* Layout primitives: eight classes that compose every layout, after the Every
-   Layout patterns. Grid where grid and flexbox behave the same (stack,
-   auto-grid); flexbox where it behaves better (cluster, with-sidebar,
-   switcher, cover); box and center are single blocks. Each primitive declares its own custom properties with
-   their defaults on itself, so a nested primitive never inherits a parent's
-   value; an instance overrides one with a data-* step or an inline style. */
 @layer layout {
-	/* A child sized by its primitive may shrink below its longest word, which
-	   then wraps instead of overflowing: a grid item or flex item otherwise
-	   keeps its content's minimum and widens its track or line. Each child's
-	   own children keep theirs. */
 	:where(.stack, .cluster, .with-sidebar, .switcher, .auto-grid) > * {
 		min-inline-size: 0;
 	}
 
-	/* A flex item capped by the measure stops growing and hands its share to its
-	   sibling: a capped heading made the button beside it grow. The primitive
-	   sizes its children, so the cap is lifted on them; text inside a child stays
-	   capped. */
 	:where(.cluster, .with-sidebar, .switcher) > * {
 		max-inline-size: none;
 	}
 
-	/* Vertical rhythm: the space between siblings comes from their parent. Nest
-	   stacks for a different space; a child never adds its own margin. */
 	.stack {
 		--stack-space: var(--space-s);
 		display: grid;
@@ -49,9 +33,6 @@
 		}
 	}
 
-	/* The dashed plane (DESIGN.md#4-elevation): padding inside a dashed line.
-	   Its step is data-padding, so a box that is also a stack sets its gap
-	   with data-space independently. */
 	.box {
 		--box-space: var(--space-s);
 		padding: var(--box-space);
@@ -62,11 +43,6 @@
 		}
 	}
 
-	/* A column capped at a width and centred. Border-box like every other box:
-	   the page gutter comes from the body, so an inline padding the column adds
-	   itself (an indent to a heading's rule, a footer's inset) sits inside the
-	   cap instead of widening it. The inline size makes it fill a grid or flex
-	   parent too, where auto margins alone would shrink it. */
 	.center {
 		--center-max: var(--column);
 		inline-size: 100%;
@@ -81,8 +57,6 @@
 		}
 	}
 
-	/* Peers that keep their own width and wrap like words, with the same gap
-	   between rows as between items. */
 	.cluster {
 		--cluster-space: var(--space-2xs);
 		display: flex;
@@ -96,7 +70,6 @@
 		&[data-space="s"] {
 			--cluster-space: var(--space-s);
 		}
-		/* Metric rows: tight between wrapped rows, wide between metrics. */
 		&[data-space="metrics"] {
 			--cluster-space: var(--space-xs) var(--space-l);
 		}
@@ -114,11 +87,6 @@
 		}
 	}
 
-	/* Two children: the sidebar keeps its width (intrinsic by default), the
-	   content takes the rest. When the content would drop below its minimum
-	   share, both stack at full width; the switch point follows from the
-	   content, not from a breakpoint. The sidebar is the first child, or the
-	   last with data-side="end". */
 	.with-sidebar {
 		--sidebar-width: auto;
 		--content-min: 50%;
@@ -145,10 +113,6 @@
 		}
 	}
 
-	/* Peers all in one row above the threshold and all stacked below it, never
-	   in between: the basis is hugely positive or negative around it. Five or
-	   more always stack. A child takes a larger share with an inline
-	   flex-grow. */
 	.switcher {
 		--switcher-threshold: var(--column);
 		--switcher-space: var(--space-s);
@@ -165,9 +129,6 @@
 		}
 	}
 
-	/* A box at least as tall as its minimum, whose main child grows, so the
-	   first child sits at the top edge and the last at the bottom edge however
-	   many children there are. The page shell. */
 	.cover {
 		--cover-min: 100dvh;
 		--cover-space: var(--space-m-l);
@@ -184,8 +145,6 @@
 		}
 	}
 
-	/* Equal cells that wrap, each at least the minimum unless the container is
-	   narrower. */
 	.auto-grid {
 		--grid-min: 16rem;
 		--grid-space: var(--space-s);

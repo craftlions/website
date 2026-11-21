@@ -1,5 +1,3 @@
-// parseReturnTo keeps a sign-in redirect on this site's portal: anything that
-// could leave the origin or land outside /dash and /settings falls back.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { parseReturnTo } from "../../src/lib/return-to.ts";

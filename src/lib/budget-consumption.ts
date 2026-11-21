@@ -3,11 +3,6 @@ import { and, eq, notInArray, sql } from "drizzle-orm";
 import { invoices, organizationMetadata, phases, projects } from "./schema.ts";
 import { liveInvoices, stripeInvoiceTotal } from "./stripe.ts";
 
-/**
- * S-004 R2 / S-002 R5–R7 row: one organization's complete spend history
- * grouped by UTC calendar year × project, phase-less invoices bucketed as
- * "Unassigned", with void and uncollectible invoice rows excluded.
- */
 export interface SpendByYearRow {
 	year: number;
 	projectId: string | null;
@@ -16,22 +11,11 @@ export interface SpendByYearRow {
 }
 
 export interface BudgetConsumption {
-	/** Sum of eligible invoices in the current UTC calendar year. */
 	currentYearTotal: number;
-	/** yearlyBudget − currentYearTotal; negative when the budget is exceeded. */
 	remainingBudget: number;
-	/**
-	 * currentYearTotal ÷ yearlyBudget, uncapped (D-budget-consumption-definition);
-	 * 0 when there is no positive yearly budget.
-	 */
 	usagePercentage: number;
 }
 
-/**
- * S-004 R2: one module read accepts one organization id and returns its
- * complete spend history — no batched or current-year-only variant. The
- * group-by is the sole core-select read; every other read stays RQB v2.
- */
 export async function getSpendByYear(
 	db: Db,
 	organizationId: string,
@@ -64,11 +48,6 @@ export async function getSpendByYear(
 		);
 }
 
-/**
- * S-004 R3 + R5 / D-budget-consumption-definition: the current-year invoice
- * total and derived budget figures come from the module's full-history rows —
- * no product surface computes consumption locally.
- */
 export function deriveBudgetConsumption(
 	rows: SpendByYearRow[],
 	yearlyBudget: number,

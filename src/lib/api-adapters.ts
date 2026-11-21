@@ -21,9 +21,6 @@ const statusForDomainError: Record<DomainError["code"], [number, string]> = {
 	Validation: [400, "Bad Request"],
 };
 
-// Runs an /api handler for the signed-in person: 401 without a session, 403
-// for a request from another origin, a problem for a DomainError, and a
-// logged 500 for anything else.
 export const withSession =
 	(
 		label: string,
@@ -58,8 +55,6 @@ export const withSession =
 		}
 	};
 
-// withSession for an admin-only handler: 403 for anyone else, before the
-// handler reads the request body. The domain function still checks the role.
 export const withAdminSession = (
 	label: string,
 	handler: (

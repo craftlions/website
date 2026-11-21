@@ -46,8 +46,6 @@ const { title, breadcrumbs = [], results, fieldLabels } = Astro.props;
 			return;
 		}
 
-		// Disabling waits a task, because the form leaves a disabled submitter's
-		// name and value out of the data it sends.
 		const { elements } = event.target;
 		window.setTimeout(() => {
 			for (const element of elements) {

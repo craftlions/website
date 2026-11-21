@@ -1,6 +1,3 @@
-// The admin worklist: the one definition of which phases and invoices need
-// action, shared by /admin, the organization worklist and its count.
-
 import type { Db } from "./database.ts";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { formatDays } from "./format.ts";
@@ -16,7 +13,6 @@ import {
 import { stripeInvoiceFields } from "./stripe.ts";
 import { getUuidV7Date } from "./uuid.ts";
 
-// Phase states that are a worklist item on their own, in priority order.
 const worklistPhaseStates = [
 	"submitted",
 	"planned",
@@ -35,8 +31,6 @@ const phaseActor: Record<WorklistPhaseState, "admin" | "client"> = {
 	delivered: "client",
 };
 
-// Events that change a phase's state; amount and delivery edits do not reset
-// the age.
 const phaseStateEvents = [
 	"created",
 	"planned",
@@ -50,11 +44,6 @@ const phaseStateEvents = [
 	"accepted_on_behalf",
 ];
 
-/**
- * Latest state-change event id per phase that can be a worklist phase item,
- * for `deriveWorklist`'s age. uuidv7 ids sort by time, so the text max is the
- * newest. Without `organizationId` it covers every organization.
- */
 export const getLatestPhaseStateEventIds = async (
 	db: Db,
 	organizationId?: string,
@@ -91,12 +80,6 @@ export const getLatestPhaseStateEventIds = async (
 	return new Map(rows.map((row) => [row.phaseId, row.eventId]));
 };
 
-/**
- * Projects with every phase and invoice field `deriveWorklist` and
- * `AdminWorklist` read, plus the project state and the cost parts the client
- * overview lists and adds up. Without `organizationId` it covers every
- * organization.
- */
 export const getWorklistProjects = (db: Db, organizationId?: string) =>
 	db.query.projects.findMany({
 		columns: {
@@ -163,17 +146,13 @@ type LiveInvoice<Invoice extends { stripe: unknown }> = Invoice & {
 };
 
 export type WorklistItem<Project extends WorklistProjectInput> = {
-	// Unique per page, for keys and ids.
 	key: string;
 	kind: "phase" | "invoice";
-	// The phase state for phase items, the invoice status for invoice items.
 	status: WorklistPhaseState | "overdue" | "open";
 	label: string;
 	badge: BadgeType;
 	actor: "admin" | "client";
-	// Days in the current state; days overdue for overdue invoices.
 	ageDays: number;
-	// `ageDays` as copy: "12 days" or "12 days overdue".
 	age: string;
 	href: string;
 	priority: number;
@@ -192,19 +171,9 @@ export const compareWorklistItems = (
 	b: { priority: number; ageDays: number },
 ) => a.priority - b.priority || b.ageDays - a.ageDays;
 
-/**
- * Per phase: a phase in a `worklistPhaseStates` state is an item, and so is
- * each overdue invoice, next to it: an unpaid invoice never hides the
- * admin's next step (recording a delivery does not wait for payment).
- * Without a phase item, each open invoice that is not overdue is an item too.
- * Billing derives from the Stripe status alone (D-phase-billing-truth).
- * Sorted by priority, then oldest first.
- */
 export const deriveWorklist = <Project extends WorklistProjectInput>(input: {
 	organizationId: string;
 	projects: ReadonlyArray<Project>;
-	// From `getLatestPhaseStateEventIds`; phases without an event age from
-	// their creation.
 	latestStateEventIds?: ReadonlyMap<string, string>;
 	now?: Date;
 }): WorklistItem<Project>[] => {

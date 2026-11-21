@@ -2,17 +2,11 @@
 import Button from "./Button.astro";
 import Input from "./Input.astro";
 
-// The command palette: Ctrl+K (Cmd+K on a Mac) or the nav's Search button
-// opens a modal combobox over /api/search. Results are links; nothing is
-// executed from here. Shell renders it only for a signed-in session, and
-// /brand/specimen for the tests.
 const idleStatus =
 	"Type to search. Filters: open, paid, overdue, 2025, >1000 EUR.";
 ---
 
 <command-palette data-idle-status={idleStatus}>
-	{/* A click on the backdrop closes it, as Esc does; the script's fallback
-	   does it where closedby is missing. */}
 	<dialog
 		id="command-palette"
 		aria-label="Search"
@@ -62,7 +56,6 @@ const idleStatus =
 <script>
 	import type { SearchResponse } from "../lib/search-query.ts";
 
-	// Ctrl+K stays the line-kill key in macOS text fields.
 	const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 
 	class CommandPalette extends HTMLElement {
@@ -83,8 +76,6 @@ const idleStatus =
 			let debounce: ReturnType<typeof setTimeout> | undefined;
 			let busy: ReturnType<typeof setTimeout> | undefined;
 			let retry: ReturnType<typeof setTimeout> | undefined;
-			// The query the list shows and the one in flight. While they differ
-			// from the field, Enter waits for the field's results (`onResults`).
 			let shown: string | undefined;
 			let requested: string | undefined;
 			let onResults: ((first: HTMLAnchorElement) => void) | undefined;
@@ -122,8 +113,6 @@ const idleStatus =
 				link.tabIndex = -1;
 				link.setAttribute("role", "option");
 				link.setAttribute("aria-selected", "false");
-				// Hovering a result must not load its page: some page loads change
-				// state, such as the active organization.
 				link.setAttribute("data-astro-prefetch", "false");
 				link.className = "text-sm";
 				const primary = document.createElement("span");
@@ -137,7 +126,6 @@ const idleStatus =
 				return link;
 			};
 
-			// Labels hold client data, so options are built as text, never as HTML.
 			const render = (groups: SearchResponse["groups"]) => {
 				let id = 0;
 				listbox.replaceChildren(
@@ -224,7 +212,6 @@ const idleStatus =
 						throw new Error(`Search answered ${response.status}`);
 
 					const data: SearchResponse = await response.json();
-					// A slower answer to an earlier query must not replace a newer one.
 					if (data.query !== input.value.trim()) return;
 
 					render(data.groups);
@@ -250,7 +237,6 @@ const idleStatus =
 				}
 			};
 
-			// The list now shows `query`; an Enter that waited for it is answered.
 			const landed = (query: string) => {
 				shown = query;
 				const first = options()[0];
@@ -259,13 +245,11 @@ const idleStatus =
 				if (then && first) then(first);
 			};
 
-			// Opening lists the first results and remembers where focus returns.
 			const open = (from: Element | null) => {
 				opener = from instanceof HTMLElement ? from : null;
 				search("");
 			};
 
-			// The trigger's invoker command opens the dialog and names the trigger.
 			dialog.addEventListener("command", (event) => {
 				if (event instanceof CommandEvent && event.command === "show-modal") {
 					open(event.source);
@@ -273,7 +257,6 @@ const idleStatus =
 			});
 
 			dialog.addEventListener("close", () => {
-				// The event is queued: a quick reopen may already have searched.
 				if (dialog.open) return;
 				controller?.abort();
 				clearTimeout(debounce);
@@ -286,11 +269,9 @@ const idleStatus =
 				input.setAttribute("aria-expanded", "false");
 				input.removeAttribute("aria-activedescendant");
 				status.textContent = idleStatus;
-				// Safari does not focus a clicked button, so focus would not return.
 				if (opener?.isConnected) opener.focus();
 			});
 
-			// The old results stay visible, but none of them is chosen any more.
 			input.addEventListener("input", () => {
 				activate(undefined);
 				onResults = undefined;
@@ -298,7 +279,6 @@ const idleStatus =
 				debounce = setTimeout(() => search(input.value.trim()), 150);
 			});
 
-			// Closing first empties the list, so the link is followed by hand.
 			const follow = (link: HTMLAnchorElement) => {
 				const href = link.href;
 				dialog.close();
@@ -344,8 +324,6 @@ const idleStatus =
 						go(current);
 						return;
 					}
-					// The list is older than the field: take the first result of
-					// the field's own search, starting it now unless it is in flight.
 					event.preventDefault();
 					onResults = go;
 					if (requested !== query) {
@@ -368,7 +346,6 @@ const idleStatus =
 					event.target instanceof Element
 						? event.target.closest<HTMLAnchorElement>("[role=option]")
 						: null;
-				// A modified click opens a tab or window and keeps the palette open.
 				if (
 					!link ||
 					event.button !== 0 ||
@@ -420,7 +397,6 @@ const idleStatus =
 				});
 			}
 
-			// Invoker commands answer only a button, so the shortcut stays here.
 			document.addEventListener("keydown", (event) => {
 				if (
 					event.isComposing ||
@@ -431,7 +407,6 @@ const idleStatus =
 				) {
 					return;
 				}
-				// Another open dialog, such as a confirmation, keeps the keyboard.
 				if (!dialog.open && document.querySelector("dialog[open]")) return;
 				event.preventDefault();
 				if (dialog.open) {
@@ -451,10 +426,7 @@ const idleStatus =
 
 <style>
 	@layer components {
-		/* The search field, its status line
-		   and the results, which scroll inside the modal. */
 		command-palette {
-			/* The base dialog, at the wide dialog width. */
 			& dialog {
 				max-inline-size: min(var(--dialog-wide), 100% - 2rem);
 				max-block-size: min(36rem, 100dvh - 4rem);
@@ -468,7 +440,6 @@ const idleStatus =
 				align-items: center;
 				gap: var(--space-2xs);
 			}
-			/* The combobox is an Input, a component of its own. */
 			& :global([role="combobox"]) {
 				inline-size: 100%;
 			}
@@ -478,8 +449,6 @@ const idleStatus =
 				overflow-y: auto;
 				overscroll-behavior: contain;
 			}
-			/* Groups and options are built by the script, so these rules select
-			   them by role, outside the component's scope. */
 			& :global([role="group"]) {
 				display: grid;
 

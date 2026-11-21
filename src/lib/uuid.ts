@@ -11,9 +11,6 @@ export const getUuidV7Date = (uuid: string) => {
 	);
 };
 
-// A uuidv7 made here, for a row whose id something else holds before the row
-// exists (a drive object's key). The time is the creation time, as the
-// database's uuidv7() would set it.
 export const uuidV7 = () => {
 	const bytes = crypto.getRandomValues(new Uint8Array(16));
 	const time = Date.now();

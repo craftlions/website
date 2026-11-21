@@ -1,9 +1,5 @@
 @layer components {
-	/* The parts of the public pages, whose body is a .cover: header, main and
-	   footer, the main taking the rest of the viewport. */
 	.public {
-		/* The landing page: its intro lines up with the heading's rule, and the
-		   page ends with room under the last section. */
 		& .landing {
 			padding-block-end: var(--space-m);
 		}
@@ -32,8 +28,6 @@
 			}
 		}
 
-		/* The imprint column, a .center: its text indented to the heading's
-		   rule, inside the column width. */
 		& .imprint {
 			padding-inline-start: var(--space-xs);
 		}
@@ -41,8 +35,6 @@
 			font-style: normal;
 		}
 
-		/* /brand: a logo file in a .box on the canvas of the scheme data-scheme
-		   names, a token's swatch, and a text to quote that one click selects. */
 		& .brand-tile {
 			display: grid;
 			place-items: center;
@@ -63,7 +55,6 @@
 				object-fit: contain;
 			}
 
-			/* The tile keeps its canvas, so each file shows on its own ground. */
 			@media (forced-colors: active) {
 				forced-color-adjust: none;
 			}
@@ -77,16 +68,13 @@
 			user-select: all;
 		}
 
-		/* The changelog: the entries, whose rail runs from one into the next. */
 		& .timeline {
 			display: grid;
 		}
 
-		/* The sign-in forms. */
 		& .request {
 			display: grid;
 		}
-		/* The live region takes its space only once it has something to say. */
 		& .form-message:not(:empty) {
 			margin-block-start: var(--space-m);
 		}

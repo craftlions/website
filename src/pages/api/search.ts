@@ -6,10 +6,6 @@ import { type SearchResponse, searchItems } from "../../lib/search-query.ts";
 
 export const prerender = false;
 
-// The command palette's search. What it returns depends only on the signed-in
-// user and `q`: an admin searches every client, anyone else (including an
-// admin viewing as a client) the organizations they belong to. The middleware
-// already sends /api with Cache-Control: no-store and X-Robots-Tag: noindex.
 export const GET: APIRoute = async (context) => {
 	const session = await context.locals.auth.api.getSession({
 		headers: context.request.headers,
@@ -21,9 +17,6 @@ export const GET: APIRoute = async (context) => {
 		return problem(400, "Bad Request", "Search for 200 characters or fewer.");
 	}
 
-	// Keyed by the acting person, so viewing as a client spends the admin's
-	// budget, never the client's. The limiter guards the database and must not
-	// take search down with it, so a failing limiter lets the request through.
 	try {
 		const { success } = await env.SEARCH_RATE_LIMIT.limit({
 			key: session.session.impersonatedBy ?? session.user.id,
@@ -43,7 +36,6 @@ export const GET: APIRoute = async (context) => {
 
 	try {
 		const now = new Date();
-		// The empty query shows only the home pages, which need no slice.
 		const { items, currencies } = query
 			? await loadSearchSlice(context.locals.db, session, now)
 			: await loadSearchHome(context.locals.db, session);

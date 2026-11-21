@@ -22,10 +22,6 @@ const {
 	...attrs
 } = Astro.props;
 
-// After `result` failed, the field shows what was submitted under its name:
-// the text, the selected options, or whether a checkbox or radio was checked.
-// An explicit `value` (or `checked`) wins; hidden, file and password fields
-// are never restored.
 const submitted =
 	attrs.name && !["hidden", "file", "password"].includes(String(attrs.type))
 		? submittedValues(Astro.locals, result)
@@ -47,7 +43,6 @@ const restored =
 				}
 		: {};
 
-// An explicit error wins; otherwise the action's input error for this field's name.
 const errors = [
 	error ??
 		(isInputError(result?.error) && attrs.name
@@ -81,7 +76,6 @@ const errors = [
 			{hint}
 		</p>
 	)}
-	{/* Rendered empty as well, for the script to show a constraint error in. */}
 	<p
 		id={`${id}-error`}
 		class="field-error text-sm text-fg-danger"
@@ -90,12 +84,6 @@ const errors = [
 </div>
 
 <script>
-	// A field shows its constraint error once the user has changed and left it,
-	// or tried to submit (:user-invalid), and drops it once the value is valid:
-	// aria-invalid, the danger line and the message (listed in aria-describedby)
-	// follow that state. A server error rendered with the page stays until the
-	// user changes the value. Without this script the browser still blocks the
-	// submit with its own message, and server errors render as before.
 	type Control = HTMLInputElement | HTMLSelectElement;
 
 	const control = (target: unknown) =>
@@ -106,7 +94,6 @@ const errors = [
 			: undefined;
 	const server = new WeakSet<Control>();
 	const announced = new WeakSet<Control>();
-	// One polite region announces an error that appears on leaving a field.
 	const announcer = document.createElement("p");
 	announcer.className = "sr-only";
 	announcer.setAttribute("aria-live", "polite");
@@ -131,7 +118,6 @@ const errors = [
 
 		if (!invalid) {
 			announced.delete(field);
-			// A corrected field's message is not left behind to be found later.
 			if (announcing === field) {
 				window.clearTimeout(timer);
 				announcer.textContent = "";
@@ -143,7 +129,6 @@ const errors = [
 		announcing = field;
 		window.clearTimeout(timer);
 		announcer.textContent = "";
-		// Waits until the field that takes focus next has been read out.
 		timer = window.setTimeout(() => {
 			announcer.textContent = `${field.labels?.[0]?.textContent?.trim()}: ${error.textContent}`;
 		}, 500);
@@ -155,8 +140,6 @@ const errors = [
 		else if (found) sync(found);
 	}
 
-	// Leaving a field by pressing a button shows its message after the click,
-	// so the message cannot push the button out from under the pointer.
 	let pressed: (() => void)[] | undefined;
 	const release = () => {
 		const tasks = pressed ?? [];
@@ -187,8 +170,6 @@ const errors = [
 		const field = control(event.target);
 		if (field) afterPress(() => sync(field, true));
 	});
-	// A failed submit fires invalid on each failing field, untouched ones too,
-	// and focuses the first, which reads out its error: none is announced.
 	document.addEventListener(
 		"invalid",
 		(event) => {
@@ -199,7 +180,6 @@ const errors = [
 		},
 		true,
 	);
-	// A reset clears :user-invalid only after its event.
 	document.addEventListener("reset", (event) => {
 		const form = event.target;
 		if (!(form instanceof HTMLFormElement)) return;
@@ -216,10 +196,6 @@ const errors = [
 
 <style>
 	@layer components {
-		/* The error message is rendered empty as well,
-		   for the script to show a constraint error in. Empty, it takes no place in
-		   the field's stack, so the stack's gap does not open below the input. It
-		   is not a live region: Field's script announces through its own. */
 		.field-error:empty {
 			display: none;
 		}

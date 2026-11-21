@@ -4,13 +4,11 @@ import LogoutButton from "./LogoutButton.astro";
 
 interface Props {
 	organizationSlug?: string | undefined;
-	// Passed in because a deferred island sees its own URL, not the page's.
 	pathname: string;
 }
 
 const { organizationSlug, pathname } = Astro.props;
 const dashboard = organizationSlug ? `/dash/org/${organizationSlug}` : "/dash";
-// "page" marks the link to this very page, "true" the section it lies in.
 const current = (href: string, section = href) =>
 	pathname === href
 		? "page"
@@ -44,7 +42,6 @@ const session =
 				)}
 			</ul>
 		</li>
-		{/* Only where Shell mounts the palette: a deferred island's request is not gated, so it has no session local. */}
 		{Astro.locals.session && (
 			<li>
 				{/* fallback: CommandPalette's script opens the palette where invoker commands are missing. */}

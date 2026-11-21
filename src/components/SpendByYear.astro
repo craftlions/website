@@ -19,7 +19,6 @@ const projectNameCollator = new Intl.Collator("de-DE", {
 });
 const currentYear = new Date().getUTCFullYear();
 
-// Distinct ink colors keep projects easy to separate at a glance.
 const segmentMarks = [
 	"text-chart-1",
 	"text-chart-2",
@@ -136,9 +135,6 @@ const hasNegativeSpend = bars.some((bar) =>
 				</p>
 			) : (
 				<div class="box stack" data-spend-chart>
-					{/* One row per year, the current one first: its year and total,
-					   then the bar across the whole width, so every year fits however
-					   narrow the box is. */}
 					<ol class="stack" data-space="xs">
 						{bars.toReversed().map((bar) => {
 							const segments = bar.segments.filter(
@@ -238,17 +234,11 @@ const hasNegativeSpend = bars.some((bar) =>
 <script>
 	for (const chart of document.querySelectorAll("[data-spend-chart]")) {
 		const items = chart.querySelectorAll<HTMLElement>("[data-project]");
-		// The status line has a fixed height of two truncated lines, so changing
-		// its text never moves the bars or the legend. It is not a live region:
-		// it changes on every pointer move, and the legend already lists each
-		// project's total.
 		const [name, figure] = chart.querySelectorAll<HTMLElement>(
 			"[data-spend-status] > span",
 		);
 		const defaults = [name?.textContent, figure?.textContent];
 
-		// Only colour, opacity, filter and text change here; no state affects
-		// an element's box.
 		const setActive = (active: HTMLElement | null) => {
 			for (const item of items) {
 				const match = item.dataset.project === active?.dataset.project;
@@ -272,13 +262,6 @@ const hasNegativeSpend = bars.some((bar) =>
 
 <style>
 	@layer components {
-		/* A hatched bar per year stacked from the
-		   projects' segments, a status line and the legend. Pointing at a segment
-		   or a legend entry marks that project data-state="active" and every other
-		   one "dimmed". */
-
-		/* The track a year's bar grows along from the axis, the full width of the
-		   box, so the bars stay comparable at any width. */
 		.spend-plot {
 			display: grid;
 			block-size: 1.25rem;
@@ -290,8 +273,6 @@ const hasNegativeSpend = bars.some((bar) =>
 			column-gap: var(--hairline);
 		}
 
-		/* Hatching in the project's chart colour, which a text-chart-* role sets;
-		   forced-line keeps it drawn in CanvasText under forced colors. */
 		.spend-segment,
 		.spend-swatch {
 			background-image: repeating-linear-gradient(
@@ -314,18 +295,15 @@ const hasNegativeSpend = bars.some((bar) =>
 			}
 		}
 
-		/* The current year's total is underlined by a dashed rule. */
 		.spend-total[data-current] {
 			border-block-end: var(--rule) var(--line-strong);
 		}
 
-		/* Two status lines of fixed height, so a longer name never moves the chart. */
 		.spend-line {
 			display: block;
 			block-size: 1.25rem;
 		}
 
-		/* A legend entry: the swatch, then the name over its total. */
 		.spend-key {
 			display: grid;
 			grid-template-columns: auto minmax(0, 1fr);

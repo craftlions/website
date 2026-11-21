@@ -1,8 +1,5 @@
-// P-6: the interactive primitives on /brand/specimen, which renders each in a
-// light and a dark section inside `method="dialog"` forms that never navigate.
 import { expect, type Page, test } from "@playwright/test";
 
-// The section is named by its heading, the scheme capitalized.
 const section = (page: Page, scheme: string) =>
 	page.getByRole("region", {
 		name: `${scheme[0]?.toUpperCase()}${scheme.slice(1)}`,
@@ -35,7 +32,6 @@ for (const scheme of ["light", "dark"]) {
 			dialog.getByRole("button", { name: "Keep member" }),
 		).toBeFocused();
 
-		// Enter activates the focused cancel, never the confirm.
 		await page.keyboard.press("Enter");
 		await expect(dialog).toBeHidden();
 		await expect(trigger).toBeFocused();
@@ -125,16 +121,12 @@ test("type-to-confirm accepts only the exact text", async ({ page }) => {
 	);
 	await confirm.click();
 	await submitted;
-	// The demo form sits outside the dialog, so `method="dialog"` closes nothing.
 	await expect(page).toHaveURL("/brand/specimen/");
 	await dialog.getByRole("button", { name: "Keep client" }).click();
 	await expect(dialog).toBeHidden();
 	await expect(trigger).toBeFocused();
 });
 
-// The palette and the confirmations behave alike with the native features and
-// with the components' fallbacks, so both runs share these tests. Signed out,
-// the palette's search answers 401, so it offers only Sign in.
 const dialogTests = () => {
 	test("the palette opens from its trigger, closes and returns focus", async ({
 		page,
@@ -238,8 +230,6 @@ const dialogTests = () => {
 
 dialogTests();
 
-// Browsers without invoker commands or closedby ignore `command`, `commandfor`
-// and `closedby`; the components open and close the dialogs themselves there.
 test.describe("without invoker commands or closedby", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.addInitScript(() => {
@@ -312,7 +302,6 @@ test("a disclosure opens its form on the first field and cancel resets it", asyn
 	await expect(form.getByLabel("Email")).toBeFocused();
 
 	await form.getByLabel("Email").fill("jane@example.com");
-	// The form posts to no dialog, so submitting neither navigates nor closes it.
 	await form.getByRole("button", { name: "Add member" }).click();
 	await expect(page).toHaveURL("/brand/specimen/");
 	await expect(form).toBeVisible();

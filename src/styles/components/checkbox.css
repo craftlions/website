@@ -1,6 +1,4 @@
 @layer components {
-	/* src/components/Checkbox.astro: a dashed square that fills with ink when
-	   checked, its tick laid over it in the same grid cell. */
 	.checkbox {
 		display: grid;
 		inline-size: max-content;
@@ -37,7 +35,6 @@
 			}
 		}
 
-		/* The tick: the canvas color cut to shape by a mask. */
 		& input + span {
 			grid-column-start: 1;
 			grid-row-start: 1;

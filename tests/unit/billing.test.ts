@@ -1,5 +1,3 @@
-// The billing state of a phase's cost parts and of an invoice, which the
-// worklists, the invoice lines and the badges all derive from.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { formatMoney, sumByCurrency } from "../../src/lib/format.ts";
@@ -99,7 +97,6 @@ test("an open invoice past its due date is overdue by whole days, at least 1", (
 		invoiceStatus({ status: "paid", dueAt: null }, now).badge,
 		"success",
 	);
-	// A status Stripe adds later shows as it comes.
 	assert.equal(
 		invoiceStatus({ status: "refunded", dueAt: null }, now).label,
 		"refunded",

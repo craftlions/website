@@ -1,7 +1,3 @@
-// The client worklist: what the organization dashboard lists for the client,
-// split by who acts next. The client's wording deliberately differs from the
-// admin vocabulary in status.ts.
-
 import { formatDate, formatDays } from "./format.ts";
 import {
 	type BadgeType,
@@ -10,7 +6,6 @@ import {
 	type PhaseState,
 } from "./status.ts";
 
-// The client's own wording for a phase state, in sentence case.
 export const clientPhaseLabel: Record<PhaseState, string> = {
 	submitted: "Submitted",
 	planned: "Planned",
@@ -21,17 +16,12 @@ export const clientPhaseLabel: Record<PhaseState, string> = {
 	cancelled: "Cancelled",
 };
 
-// The client's own wording for an invoice's cost part; the admin says
-// "Upfront" etc. (costPartLabel in status.ts).
 export const clientCostPartLabel: Record<string, string> = {
 	upfront: "Upfront part",
 	delivery: "Delivery part",
 	acceptance: "Acceptance part",
 };
 
-// Phase states that are a worklist item, in priority order after overdue
-// invoices: the client decides on planned and delivered phases, craftlions
-// moves the others on. Open invoices rank between the two groups.
 const worklistPhaseStates = {
 	planned: { actor: "client", label: "To approve", priority: 1 },
 	delivered: { actor: "client", label: "To review", priority: 2 },
@@ -86,19 +76,14 @@ type WorklistInvoiceInput = {
 };
 
 type ItemBase = {
-	// Unique per page, for keys and ids.
 	key: string;
 	actor: "client" | "craftlions";
 	label: string;
-	// info = the client acts, gray = craftlions acts, error = overdue.
 	badge: BadgeType;
-	// The phase on its project page; null for an invoice without a phase.
 	href: string | null;
 	priority: number;
 	amount: number;
 	currency: string;
-	// The due date or days overdue, worded to stand alone: "due 26.11.2026",
-	// "5 days overdue".
 	due: string;
 	overdue: boolean;
 };
@@ -114,19 +99,12 @@ export type ClientWorklistItem<
 	  })
 	| (ItemBase & { kind: "invoice"; invoice: Invoice });
 
-/**
- * Phases waiting on the client's decision and open invoices waiting on
- * payment ("client"), plus phases craftlions moves on next ("craftlions").
- * Overdue invoices first, then decisions, open invoices and craftlions'
- * phases; ties keep project and phase order, invoices oldest first.
- */
 export const deriveClientWorklist = <
 	Project extends WorklistProjectInput,
 	Invoice extends WorklistInvoiceInput,
 >(input: {
 	slug: string;
 	projects: ReadonlyArray<Project>;
-	// Every invoice of the organization, newest first.
 	invoices: ReadonlyArray<Invoice>;
 	now?: Date;
 }): ClientWorklistItem<Project, Invoice>[] => {

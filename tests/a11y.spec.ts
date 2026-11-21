@@ -1,13 +1,3 @@
-// Scans the routes in routes.ts with axe-core; the light and dark projects in
-// playwright.config.ts run each route in both schemes, and each scheme once
-// more with prefers-contrast: more. Axe tests only what is rendered, so the
-// states a visitor opens are scanned once open: the specimen's disclosures,
-// confirmations and palette, and the auth forms showing their errors.
-// Every violation fails, best-practice included, so fix it instead of excluding it.
-// What axe cannot decide (incomplete, "needs review") does not fail; each test
-// attaches it as axe-incomplete.json and names the rules in an annotation, for
-// a person to check. A clean scan is not proof of accessibility: keyboard,
-// screen reader and zoom still need a person.
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import { routes } from "./routes.ts";
@@ -20,12 +10,9 @@ const tags = [
 	"wcag22aa",
 	"best-practice",
 ];
-// Each exclusion names its rule and says why: { id: "rule-id", reason: "…" }.
 const excluded: { id: string; reason: string }[] = [];
 
-// Scans the page, or only what include selects, such as an open modal.
 const scan = async (page: Page, include?: string) => {
-	// Waits for the deferred nav island so the scan sees the final page.
 	await expect(page.getByText("Loading…")).toHaveCount(0);
 	const builder = new AxeBuilder({ page })
 		.withTags(tags)
@@ -75,8 +62,6 @@ for (const route of routes) {
 	}
 }
 
-// The specimen's required fields, left malformed, show the browser's error
-// on the danger line in both schemes.
 test("/brand/specimen/ with fields left invalid", async ({ page }) => {
 	await page.goto("/brand/specimen/");
 	for (const input of await page
@@ -151,8 +136,6 @@ test("/brand/specimen/ with the palette open on a query", async ({ page }) => {
 	await scan(page, "dialog[open]");
 });
 
-// The auth forms submitted empty, with each required field marked, and with
-// their request aborted before the auth API, as when offline.
 for (const { path, form, submit, fill } of [
 	{
 		path: "/login",

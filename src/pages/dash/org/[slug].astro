@@ -51,8 +51,6 @@ if (!session.session.activeOrganizationId) {
 	}
 }
 
-// One read resolves the slug, checks this user's membership, and loads the
-// project tree; it replaces better-auth's multi-query getFullOrganization.
 const organization = await Astro.locals.db.query.organization.findFirst({
 	columns: {
 		id: true,
@@ -110,10 +108,7 @@ if (!organization || !currentMember) {
 }
 
 const [spendRows, stripeRows] = await Promise.all([
-	// S-004 R2/R3: one shared-module read returns the full spend history for
-	// this organization; all budget figures derive from it.
 	getSpendByYear(Astro.locals.db, organization.id),
-	// The worklist lists open invoices only; the Invoices page lists them all.
 	Astro.locals.db.query.stripeInvoices.findMany({
 		...stripeInvoiceFields,
 		with: {
@@ -186,8 +181,6 @@ const completedProjectCount = projects.filter(
 	(project) => project.state === "completed",
 ).length;
 const yearlyBudget = organization.data?.yearlyBudget ?? 0;
-// S-004 R3 + R5: current-year total, remaining budget, and usage percentage
-// derive from the module's full-history rows (D-budget-consumption-definition).
 const { currentYearTotal, remainingBudget, usagePercentage } =
 	deriveBudgetConsumption(spendRows, yearlyBudget);
 const budgetPacePercentage = ((now.getMonth() + 1) / 12) * 100;

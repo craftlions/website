@@ -48,25 +48,18 @@ type WorklistProject = {
 };
 
 interface Props {
-	// From `deriveWorklist`; items that carry their organization show the
-	// client's name, for the cross-client list on /admin.
 	items: ReadonlyArray<
 		WorklistItem<WorklistProject> & {
 			organization?: { id: string; name: string };
 		}
 	>;
-	// Shows at most this many items, the admin's moves first.
 	limit?: number | undefined;
-	// The full worklist, linked below a limited list.
 	allHref?: string | undefined;
-	// Prefix for element ids; unique per page.
 	id?: string;
 }
 
 const { items, limit, allHref, id = "worklist" } = Astro.props;
 
-// A failed delivery reopens the delivery form of the phase it was submitted
-// for, since the page reloads.
 const deliveryResult = Astro.getActionResult(actions.recordDelivery);
 const failedDeliveryPhaseId = submittedValues(
 	Astro.locals,
@@ -77,7 +70,6 @@ const ordered = [
 	...items.filter((item) => item.actor === "client"),
 ];
 const visible = ordered.slice(0, limit ?? ordered.length);
-// An invoice item's amount is its invoice's total, a phase item's the cost.
 const amount = (item: (typeof items)[number]) =>
 	item.invoice
 		? {
@@ -89,8 +81,6 @@ const groups = [
 	{
 		id: `${id}-your-move`,
 		label: "Your move",
-		// Every item of the group, also those a limited list leaves out, for
-		// its count and total.
 		total: items.filter((item) => item.actor === "admin"),
 		items: visible.filter((item) => item.actor === "admin"),
 		empty: "Nothing for you to do: every open item waits on the client.",

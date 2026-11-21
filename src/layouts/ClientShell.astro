@@ -14,7 +14,6 @@ interface Props {
 
 const { title, breadcrumbs = [], organization, wide = false } = Astro.props;
 const session = Astro.locals.session;
-// Members of several organizations switch between them on /dash.
 const memberships =
 	organization && session
 		? await Astro.locals.db.query.member.findMany({
@@ -69,8 +68,6 @@ const trail = organization
 			return;
 		}
 
-		// Disabling waits a task, because the form leaves a disabled submitter's
-		// name and value out of the data it sends.
 		const { elements } = event.target;
 		window.setTimeout(() => {
 			for (const element of elements) {

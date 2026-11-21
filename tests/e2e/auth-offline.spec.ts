@@ -1,5 +1,3 @@
-// The auth forms when their request never gets an answer, as when offline:
-// the browser aborts it before the auth API, so no database is needed.
 import { expect, test } from "@playwright/test";
 
 for (const { path, form, fill, submit, pending, message } of [
@@ -59,8 +57,6 @@ for (const { path, form, fill, submit, pending, message } of [
 		await expect(button).toBeEnabled();
 	});
 
-	// A request that hangs keeps the button busy, so Enter cannot send it
-	// twice; once it fails, the form is usable again.
 	test(`${path} sends one request while the first hangs`, async ({ page }) => {
 		let attempts = 0;
 		let release = () => {};
@@ -94,8 +90,6 @@ for (const { path, form, fill, submit, pending, message } of [
 	});
 }
 
-// Sign-in puts focus back on the email address after a failure, so the
-// message and the field to correct are next to each other.
 test("/login returns focus to the email address when the server cannot be reached", async ({
 	page,
 }) => {

@@ -4,11 +4,6 @@ import Button from "./Button.astro";
 import Checkbox from "./Checkbox.astro";
 import Field from "./Field.astro";
 
-// Uploads files into a client's drive from the browser, in parts, so a file
-// of any size passes under the Worker's request limit: start an upload, send
-// each part, complete it (src/pages/api/admin/org/[id]/uploads). A file over
-// R2's limit is refused before anything is sent. The page reloads once every
-// file is in, and shows the new cards.
 interface Props {
 	organizationId: string;
 }
@@ -44,8 +39,6 @@ const { organizationId } = Astro.props;
 <script>
 	type Part = { partNumber: number; etag: string };
 
-	// Parts go up a few at a time: one at a time leaves the line idle between
-	// parts, many at once only queue in the browser.
 	const parallelParts = 3;
 
 	const fail = async (response: Response) => {
@@ -112,7 +105,6 @@ const { organizationId } = Astro.props;
 
 				status.textContent = `Uploading ${name}: 0%.`;
 
-				// Once one part fails, every worker stops before its next part.
 				const worker = async () => {
 					while (!stopped && next < count) {
 						const partNumber = ++next;
@@ -138,7 +130,6 @@ const { organizationId } = Astro.props;
 				};
 
 				try {
-					// Waits for the parts still in flight, so the abort comes last.
 					const failed = (
 						await Promise.allSettled(
 							Array.from({ length: Math.min(parallelParts, count) }, worker),
@@ -157,7 +148,6 @@ const { organizationId } = Astro.props;
 						}),
 					});
 				} catch (error) {
-					// The parts already sent would wait for R2's cleanup otherwise.
 					fetch(`${uploadUrl}?key=${encodeURIComponent(key)}`, {
 						method: "DELETE",
 					}).catch(() => {});
@@ -210,8 +200,6 @@ const { organizationId } = Astro.props;
 			display: grid;
 		}
 
-		/* The live regions are rendered empty, so a script can fill them and be
-		   heard; they take room only once they have something to say. */
 		file-upload > p:not(:empty) {
 			margin-block-start: var(--space-xs);
 		}

@@ -3,11 +3,6 @@ import { actions } from "astro:actions";
 import { fileFacts, fileKind } from "../lib/files.ts";
 import ConfirmAction from "./ConfirmAction.astro";
 
-// A client's drive as small cards that wrap to the room they have, newest
-// first. Each card names the kind of file, links its name to `base` plus the
-// public id, and states its size and upload date. With `deleteFrom`, the admin
-// can delete a file from its card. A `preview` (the specimen) links each name
-// to its own card and only closes the confirmation, so nothing is sent.
 type Props = {
 	files: {
 		id: string;
@@ -66,13 +61,10 @@ const { files, base, deleteFrom, preview } = Astro.props;
 
 <style>
 	@layer components {
-		/* Cards keep 13rem and wrap like words; one card fills a narrow row. */
 		.file-cards {
 			--grid-min: 13rem;
 		}
 
-		/* The facts and the delete action sit at the foot of every card, so a
-		   row of cards with long and short names ends on one line. */
 		.file-card {
 			grid-template-rows: auto 1fr auto;
 			align-content: start;

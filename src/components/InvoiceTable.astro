@@ -53,7 +53,6 @@ interface Invoice {
 interface Props {
 	invoices: Invoice[];
 	slug: string;
-	// Prefix for the group headings' ids; unique per page.
 	id?: string;
 }
 
@@ -83,9 +82,6 @@ const totalWhere = (statuses: string[]) =>
 		rows[0]?.currency,
 	);
 const hasOverdue = rows.some((row) => row.status === "overdue");
-// Open first, since it answers what is owed, and always while there are
-// invoices; then paid, then void and uncollectible ones, each in the order
-// given (newest first).
 const groups = [
 	{
 		key: "open",
@@ -107,8 +103,6 @@ const groups = [
 	}))
 	.filter((group) => group.empty || group.items.length > 0);
 
-// Invoiced totals grouped by cost part show all three types at a glance;
-// unattached invoices carry no component and stay a separate bucket.
 const totalsByPart = new Map<string, number>();
 let unassignedTotal = 0;
 let unassignedCurrency = rows[0]?.currency ?? "EUR";
@@ -344,9 +338,6 @@ const partSummaryTotal = partSummaryItems.reduce(
 
 <style>
 	@layer components {
-		/* The client's invoices as ledger
-		   lines (lines.css), with their totals above. The cost splits keep a
-		   readable width, the one in a line's details too. */
 		.invoice-table-parts {
 			max-inline-size: 28rem;
 		}

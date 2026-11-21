@@ -1,20 +1,13 @@
 @layer components {
-	/* The admin project list, project page and invoices page, composed from
-	   the layout primitives; their lists are lines (lines.css). */
-
-	/* The create-project form's name field. */
 	.project-name-field {
 		max-inline-size: 28rem;
 	}
 
-	/* Add phase: the cost split below the fields, under a rule. */
 	.phase-form-split {
 		padding-block-start: var(--space-s);
 		border-block-start: var(--rule) var(--line);
 	}
 
-	/* Phases, on lines. A custom element is inline until styled. A
-	   cancelled phase's title is struck through. */
 	.admin-phases {
 		display: block;
 
@@ -27,12 +20,10 @@
 		justify-items: start;
 	}
 
-	/* Invoices: the three sections the page index jumps to. */
 	.invoices-section {
 		scroll-margin-block-start: var(--space-2xl);
 	}
 
-	/* To attach: one dashed plane, its items divided by dashed rules. */
 	.invoice-list {
 		display: grid;
 		border: var(--rule) var(--line);
@@ -42,7 +33,6 @@
 		}
 	}
 
-	/* The invoice beside the cost part to attach it to, or both stacked. */
 	.attach-row {
 		padding: var(--space-s);
 
@@ -51,8 +41,6 @@
 		}
 	}
 
-	/* The select of due cost parts, grouped by project, fills its column and
-	   may shrink below its longest option. */
 	.attach-field {
 		min-inline-size: 0;
 

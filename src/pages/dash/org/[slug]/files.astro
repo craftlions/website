@@ -34,8 +34,6 @@ if (!session.session.activeOrganizationId) {
 	}
 }
 
-// One read resolves the slug, checks this user's membership and loads the
-// files, newest first.
 const organization = await Astro.locals.db.query.organization.findFirst({
 	columns: {
 		name: true,

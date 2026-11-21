@@ -1,7 +1,3 @@
-// The caller's authorised search slice, read with the page queries' shapes,
-// and the items the ranker in search-query.ts searches. The slice is loaded
-// per request and never cached: an isolate serves many users.
-
 import type { Db } from "./database.ts";
 import { clientPhaseLabel } from "./client-worklist.ts";
 import { formatDate, formatDays, formatMoney } from "./format.ts";
@@ -30,10 +26,6 @@ const phaseColumns = {
 	currency: true,
 } as const;
 
-// Every organization, as admin/index.astro, admin/org/[id]/members.astro and
-// admin/org/[id]/projects(/[publicId]).astro list them, and every invoice the
-// organizations' Invoices tabs show (attached ones of any status, unattached
-// ones except drafts). Only for a session whose user is an admin.
 const loadAdminSlice = (db: Db) =>
 	Promise.all([
 		db.query.organization.findMany({
@@ -86,10 +78,6 @@ const loadAdminSlice = (db: Db) =>
 		}),
 	]);
 
-// The organizations the user is a member of, with their projects and phases
-// as dash/org/[slug].astro and its project pages show them, and the invoices
-// their Invoices tabs show (organizationStripeInvoices: no drafts). Both
-// queries are bound to the session's user id and nothing else.
 const loadMemberSlice = (db: Db, userId: string) =>
 	Promise.all([
 		db.query.member.findMany({
@@ -151,8 +139,6 @@ export interface SearchSlice {
 	currencies: Set<string>;
 }
 
-// Paid date, days overdue, due date or issue date, as the admin Invoices tab
-// words it; the client's invoice list shows due and paid dates only.
 const invoiceDate = (invoice: Invoice, now: Date, admin: boolean) =>
 	invoice.status === "paid" && invoice.paidAt
 		? `Paid ${formatDate(invoice.paidAt)}`
@@ -165,7 +151,6 @@ const invoiceDate = (invoice: Invoice, now: Date, admin: boolean) =>
 const createItems = () => {
 	const items: RankItem[] = [];
 	const currencies = new Set<string>();
-	// The label and each sublabel part are fields; the label is primary.
 	const add = (
 		item: Omit<RankItem, "fields" | "order" | "sublabel">,
 		parts: string[],
@@ -211,7 +196,6 @@ const createItems = () => {
 		sublabel: string,
 		href: string,
 		home = false,
-		// Pages of an organization are found by either word.
 		primarySublabel = false,
 	) =>
 		add(
@@ -224,8 +208,6 @@ const createItems = () => {
 
 type Page = ReturnType<typeof createItems>["page"];
 
-// The pages each kind of user starts from. The full slice and the empty query
-// list them from here, so both show the same home pages.
 const adminPages = (page: Page) => {
 	page("Admin", "All clients", "/admin", true);
 	page("Dashboard", "Your organizations", "/dash", true);
@@ -248,8 +230,6 @@ const memberPages = (
 	page("Profile", "Account", "/settings/profile", true);
 };
 
-// What the palette shows before anything is typed: only the home pages, so
-// the admin's need no query and a member's only their organizations' names.
 export const loadSearchHome = async (
 	db: Db,
 	session: { user: { id: string; role?: string | null | undefined } },
@@ -345,7 +325,6 @@ export const loadSearchSlice = async (
 					},
 					[org.name, projectStatus[project.state].label],
 				);
-				// As canAddPhase on the project page.
 				if (project.state === "draft" || project.state === "active") {
 					add(
 						{
@@ -391,9 +370,6 @@ export const loadSearchSlice = async (
 		}
 
 		for (const { link, metadata, ...invoice } of invoices) {
-			// An attached invoice belongs to the client of its cost part and shows
-			// only while that part is priced, as the Invoices tab lists it; an
-			// unattached one to the client its Stripe customer is linked to.
 			const phase = link?.phase;
 			const org = byId.get(
 				(link ? phase?.project?.organizationId : metadata?.organizationId) ??
@@ -473,7 +449,6 @@ export const loadSearchSlice = async (
 	}
 
 	for (const { link, metadata, ...invoice } of invoices) {
-		// The query already keeps only the user's organizations' invoices.
 		const org = byId.get(metadata?.organizationId ?? "");
 		if (!org) continue;
 		const phase = link?.phase;

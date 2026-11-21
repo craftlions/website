@@ -7,8 +7,6 @@ import { createDb } from "./lib/database.ts";
 import { isPrivatePath } from "./lib/indexing.ts";
 import { submittedEntries } from "./lib/submitted-values.ts";
 
-// One session entry holds the last form action's result and, when it failed,
-// the submitted values (see submitted-values.ts).
 const actionResultSessionKey = "form-action";
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -21,8 +19,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	const needsSession = ["/admin", "/dash", "/settings"].some(matches);
 	const isPersonalized = needsSession || matches("/api");
-	// Every answer on these paths carries the headers, the admin gate's
-	// redirects included.
 	const withHeaders = (response: Response) => {
 		if (isPersonalized) {
 			response.headers.set("Cache-Control", "no-store");
@@ -54,20 +50,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	const { action, serializeActionResult, setActionResult } =
 		getActionContext(context);
 
-	// Form actions follow post/redirect/get: the result is stored in the
-	// session and the browser is sent to a page that shows it.
-	// - Success goes to the `next` path the action's data names, when it is a
-	//   same-origin path (see `nextPath`), else back to the posting page.
-	// - Failure goes back to the referring page, so the form is there again,
-	//   and the entry also keeps the submitted text fields so the page can
-	//   fill the form in again (`submittedValues`, `Field`).
-	// - The stored result survives redirects: the GET branch below hands it to
-	//   every request but deletes it only once a page answers with something
-	//   other than a redirect. A page that redirects first (a deleted client's
-	//   settings page sending the admin to /admin) passes it on, and the page
-	//   that renders shows it.
 	if (action?.calledFrom === "form" && context.session) {
-		// The handler reads the body, so the submitted values come from a copy.
 		const submission = context.request.clone();
 		const actionResult = await action.handler();
 
@@ -83,8 +66,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 			{ ttl: 60 },
 		);
 
-		// Every target goes through `sameOriginPath`, so a path like `//host`
-		// never reaches the Location header.
 		let redirectPath =
 			(!actionResult.error && nextPath(actionResult.data, context.url)) ||
 			sameOriginPath(context.originPathname, context.url) ||
@@ -113,8 +94,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		return response;
 	}
 
-	// The result belongs to the page the browser lands on, so an /api request
-	// (a search between the 303 and that page) neither reads nor deletes it.
 	const storedResult =
 		context.request.method === "GET" && context.session && !matches("/api")
 			? await context.session.get(actionResultSessionKey)

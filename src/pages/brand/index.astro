@@ -29,7 +29,6 @@ import {
 import { phaseStatus } from "../../lib/status.ts";
 import tokensCss from "../../styles/tokens.css?raw";
 
-// The page lists its sections in this order; the contents are built from it.
 const sections = [
 	["logo", "Logo"],
 	["clear-space", "Clear space and minimum size"],
@@ -43,8 +42,6 @@ const sections = [
 	["use", "Use and licence"],
 ] as const;
 
-// Colour comes from the same sources as the specimen and design:lint: the
-// tokens, the DESIGN.md contrast map, and the logo tokens for the gradient.
 const tokens = parseTokens(tokensCss);
 const requirements = parseContrast(designMd);
 const [light, dark] = (["light", "dark"] as const).map((scheme) =>
@@ -62,8 +59,6 @@ const [start, end] = ["logo-start", "logo-end"].map((stop) => {
 });
 const ratio = (value = 0) => `${value.toFixed(2)}:1`;
 
-// The logo files in public/brand/, derived from src/assets/logoWithTextVertical.svg
-// with their viewBox sizes, and the variant each comes in, on its background.
 const logoFiles = [
 	[
 		"logo-vertical",
@@ -97,7 +92,6 @@ const logoVariants = [
 	],
 ] as const;
 
-// Each type role in its own class, with the step it is set in.
 const typeRoles = [
 	["text-display", "Display", "step-3"],
 	["text-headline", "Headline", "step-2"],

@@ -1,6 +1,3 @@
-/* The browser defaults reset to what the markup relies on, plus the fixes for
-   the controls the site has (number, date, search). Rules for elements it never
-   renders are left out. */
 @layer reset {
 	*,
 	::before,
@@ -39,7 +36,6 @@
 		text-decoration: underline dotted;
 	}
 
-	/* One family: code reads in the surrounding text's font. */
 	code,
 	kbd,
 	samp,
@@ -51,7 +47,6 @@
 		font-size: 80%;
 	}
 
-	/* Collapsed, so a row's border draws; separated borders skip rows. */
 	table {
 		text-indent: 0;
 		border-color: inherit;
@@ -96,7 +91,6 @@
 		opacity: 1;
 	}
 
-	/* iOS Safari keeps its own button radius otherwise. */
 	button,
 	input:where([type="button"], [type="reset"], [type="submit"]) {
 		appearance: button;
@@ -111,7 +105,6 @@
 		resize: vertical;
 	}
 
-	/* Hidden stays hidden, also on an element whose class sets a display. */
 	[hidden]:where(:not([hidden="until-found"])) {
 		display: none !important;
 	}
@@ -133,8 +126,6 @@
 		block-size: auto;
 	}
 
-	/* Date input: an empty one keeps its height in iOS Safari, and the fields
-	   lose their extra padding. */
 	::-webkit-date-and-time-value {
 		min-block-size: 1lh;
 		text-align: inherit;

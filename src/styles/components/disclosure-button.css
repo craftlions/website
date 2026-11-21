@@ -1,10 +1,5 @@
 @layer components {
-	/* src/components/DisclosureButton.astro, and the phase overview's Details
-	   toggle, which has its own script: a Button with a chevron that turns
-	   while its panel is open. */
 	.disclosure {
-		/* The quiet variant is inline text; this keeps the chevron on the
-		   label's line (default and danger already lay out as this grid). */
 		&[data-variant="quiet"] {
 			display: inline-grid;
 			grid-auto-flow: column;

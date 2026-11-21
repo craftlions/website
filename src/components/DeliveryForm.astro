@@ -8,9 +8,6 @@ import Button from "./Button.astro";
 import Field from "./Field.astro";
 
 interface Props extends HTMLAttributes<"form"> {
-	// "record" moves an in-progress phase to delivered (recordDelivery);
-	// "edit" corrects the delivery of a delivered or accepted phase
-	// (updatePhaseDelivery).
 	mode: "record" | "edit";
 	phase: {
 		id: string;
@@ -19,9 +16,6 @@ interface Props extends HTMLAttributes<"form"> {
 		deliveryState?: phaseSelectType["deliveryState"];
 		deliveryUrl?: string | null;
 	};
-	// The mode's action result. Every phase's form posts the same action, so
-	// only the form whose phase was submitted shows its typed values and
-	// field errors.
 	result?: ComponentProps<typeof Field>["result"];
 }
 
@@ -95,7 +89,6 @@ const submitLabel = mode === "record" ? recordDeliveryLabel : "Update delivery";
 </delivery-form>
 
 <script>
-	// The URL field shows, and is required, only for a delivery link.
 	class DeliveryForm extends HTMLElement {
 		connectedCallback() {
 			if (this.dataset.initialized === "true") return;
@@ -103,7 +96,6 @@ const submitLabel = mode === "record" ? recordDeliveryLabel : "Update delivery";
 
 			const select = this.querySelector("[data-delivery-choice]");
 			const input = this.querySelector("[data-delivery-url]");
-			// Field's wrapper holds the URL's label, input, hint and error.
 			const field = input?.parentElement;
 
 			if (
@@ -136,10 +128,6 @@ const submitLabel = mode === "record" ? recordDeliveryLabel : "Update delivery";
 
 <style>
 	@layer components {
-		/* A stack whose delivery choice keeps
-		   its width beside the URL (with-sidebar) and moves above it when the URL
-		   would get less than half the row; the note and the submit button below
-		   them. */
 		delivery-form {
 			display: grid;
 		}

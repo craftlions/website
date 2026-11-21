@@ -1,13 +1,7 @@
-// T5, token audit: every computed font size is a --step-*, every padding,
-// block margin, gap and scroll margin a --space-* at the current width, every
-// weight 400 or 600, and nothing has a radius or a shadow. A failure lists
-// each off-token value with up to three of its elements.
 import { expect, test } from "@playwright/test";
 import { px, tokens } from "../../scripts/fluid-scale.js";
 import { routes } from "../routes.ts";
 
-// Kept off the scale on purpose (DESIGN.md#1-overview): the badge's inline
-// padding and the list indent.
 const constants = [10, 20];
 
 for (const route of routes) {

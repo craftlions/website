@@ -81,7 +81,6 @@ if (session) {
 					<Button type="submit" id="login-submit"> Sign in </Button>
 				</form>
 
-				{/* The script signs in; a submit without it lands here as a POST. */}
 				<p id="login-message" class="text-sm text-fg-danger" role="alert">
 					{Astro.request.method === "POST" &&
 						"Signing in needs JavaScript. Turn it on and try again."}
@@ -129,7 +128,6 @@ if (session) {
 					(form.dataset.returnTo?.includes("#") ? "" : location.hash),
 			})
 			.catch(() => ({
-				// The request never got an answer, such as when offline.
 				error: {
 					message:
 						"Could not reach the server. Check your connection and try again.",
@@ -139,7 +137,6 @@ if (session) {
 		if (error) {
 			submitBtn.disabled = false;
 			submitBtn.textContent = "Sign in";
-			// The live region is always rendered, so changing its text announces it.
 			message.textContent =
 				error.message || "Something went wrong. Please try again.";
 			document.getElementById("email")?.focus();

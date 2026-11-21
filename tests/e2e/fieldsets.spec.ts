@@ -1,5 +1,3 @@
-// A fieldset names its group with a legend; fields that are no group in the
-// accessibility sense sit in a plain element instead (WCAG 1.3.1).
 import { expect, test } from "@playwright/test";
 import { routes } from "../routes.ts";
 

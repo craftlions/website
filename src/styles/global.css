@@ -1,9 +1,3 @@
-/* Layer order, first in the bundle: a later layer wins over an earlier one
-   whatever the specificity. components holds the shared stylesheets below and
-   each component's scoped <style>; page holds the scoped <style> of a page.
-   Shell.astro repeats the statement ahead of every stylesheet, so a
-   component's or a page's own <style>, which Astro may inline before this
-   file, can never set the order. */
 @layer reset, tokens, base, layout, components, page, utilities;
 @import "./reset.css";
 @import "./tokens.css";
@@ -21,7 +15,6 @@
 @import "./components/shell.css";
 @import "./utilities.css";
 
-/* Same-origin page loads cross-fade, unless the reader asks for less motion. */
 @media (prefers-reduced-motion: no-preference) {
 	/* enhancement: the cross-fade between pages (Chrome 126, Safari 18.2);
 	   Firefox changes pages without it. */

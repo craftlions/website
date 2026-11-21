@@ -45,9 +45,6 @@ const buttonClass = [
 
 <style>
 	@layer components {
-		/* One class, the variant in data-variant. A
-		   pointer that can hover highlights an enabled button; pressed and current
-		   match only their "true" and "page" values. */
 		.button {
 			cursor: pointer;
 			transition-property:
@@ -62,7 +59,6 @@ const buttonClass = [
 			}
 		}
 
-		/* A dashed box around a label, its parts in one row. */
 		.button:is([data-variant="default"], [data-variant="danger"]) {
 			display: inline-grid;
 			inline-size: max-content;
@@ -106,7 +102,6 @@ const buttonClass = [
 			}
 		}
 
-		/* Muted text; the link class draws the underline. */
 		.button[data-variant="quiet"] {
 			inline-size: max-content;
 			color: var(--fg-muted);
@@ -127,7 +122,6 @@ const buttonClass = [
 			}
 		}
 
-		/* A small square beside a label, holding one character. */
 		.button[data-variant="hint"] {
 			display: grid;
 			inline-size: 1.5rem;

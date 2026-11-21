@@ -1,5 +1,3 @@
-// What the admin does to the drive: upload a file in parts, delete a file.
-// Clients only read; see serveFile in files.ts.
 import type { Db } from "./database.ts";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { assertAdminUser, DomainError } from "./domain.ts";
@@ -22,8 +20,6 @@ const cleanContentType = (contentType: string) => {
 	return contentTypePattern.test(type) ? type : "application/octet-stream";
 };
 
-// The key comes back from the browser between the steps of an upload, so each
-// step checks it names a file of this organization.
 const uploadOf = (
 	bucket: R2Bucket,
 	input: { organizationId: string; key: string; uploadId: string },
@@ -96,8 +92,6 @@ export const uploadPart = async (
 		);
 	}
 
-	// The runtime holds the body to its Content-Length, so parts of at most
-	// partSize keep a file within maxFileSize, as the form promises.
 	if (
 		!Number.isInteger(input.size) ||
 		input.size < 0 ||
@@ -115,11 +109,6 @@ export const uploadPart = async (
 	);
 };
 
-// Completes the object, then records it. With `replace`, the files of this
-// client with the same name go in the same transaction, objects before the
-// commit: if any step fails, nothing is recorded or replaced, and the new
-// object is deleted again, so a failed upload never loses the file it was
-// meant to replace and leaves no object without a row.
 export const completeUpload = async (
 	db: Db,
 	bucket: R2Bucket,
@@ -195,7 +184,6 @@ export const completeUpload = async (
 
 		return { filename, replaced };
 	} catch (error) {
-		// Logs the key, so the object can be removed by hand.
 		await bucket.delete(object.key).catch(() => {
 			console.error("Deleting an unrecorded upload failed", object.key);
 		});
@@ -213,9 +201,6 @@ export const abortUpload = async (
 	await uploadOf(bucket, input).upload.abort();
 };
 
-// The row and the object go in one transaction, the object before the
-// commit: if R2 fails, the row stays and the admin can try again, so no object
-// is left without a row.
 export const deleteFile = async (
 	db: Db,
 	bucket: R2Bucket,

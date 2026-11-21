@@ -1,23 +1,13 @@
 @layer components {
-	/* The admin overview pages: src/pages/admin/index.astro and the client's
-	   overview, members, settings and worklist tabs under
-	   src/pages/admin/org/[id]. */
-
-	/* Shared by these pages. */
-
-	/* The page header above a rule. */
 	.admin-masthead {
 		border-block-end: var(--rule) var(--line);
 		padding-block-end: var(--space-m);
 	}
 
-	/* A field across every column of an admin form, an .auto-grid; a plain
-	   element there takes data-span="full" instead. */
 	.admin-form-full {
 		grid-column: 1 / -1;
 	}
 
-	/* A dashed list whose items are divided by rules. */
 	.admin-list {
 		display: grid;
 		border: var(--rule) var(--line);
@@ -33,25 +23,18 @@
 		}
 	}
 
-	/* A button whose label can be longer than its column stops at the column
-	   and wraps. */
 	.admin-long-label {
 		max-inline-size: 100%;
 	}
 
-	/* /admin: the client ledger, with its name filter. */
 	client-ledger {
 		display: grid;
 	}
 
-	/* The client count, and the 16rem filter beside it while the count keeps
-	   half the row (a with-sidebar); the count sits on the filter's baseline
-	   row. */
 	.ledger-toolbar {
 		align-items: end;
 	}
 
-	/* The ledger table scrolls sideways inside its dashed line below 48rem. */
 	.ledger {
 		overflow-x: auto;
 		border: var(--rule) var(--line);
@@ -78,9 +61,6 @@
 			text-align: start;
 		}
 
-		/* The client column stays while the figures scroll under it, on the
-		   canvas and with a dashed rule at its end. A fifth of the table, so a
-		   long name wraps rather than cover the figures in a narrow region. */
 		& tr > :first-child {
 			inline-size: 20%;
 			position: sticky;
@@ -98,8 +78,6 @@
 		}
 	}
 
-	/* A figure column: right-aligned, and the outstanding total above its
-	   overdue part. */
 	.ledger-number {
 		text-align: end;
 
@@ -108,7 +86,6 @@
 		}
 	}
 
-	/* A row that holds only a note across the table. */
 	.ledger-note {
 		padding-block: var(--space-m);
 		text-align: center;
@@ -118,13 +95,10 @@
 		inline-size: 6rem;
 	}
 
-	/* /admin/org/[id]: the overview's parts may shrink below their longest word
-	   inside the shell's grid. */
 	.org-overview {
 		min-inline-size: 0;
 	}
 
-	/* The money figures, each above a rule. */
 	.org-money {
 		display: grid;
 		border-block-start: var(--rule) var(--line);
@@ -140,7 +114,6 @@
 		display: grid;
 	}
 
-	/* A current project: name and status, its phases below both. */
 	.org-projects > li {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;
@@ -156,20 +129,16 @@
 		grid-column: span 2 / span 2;
 	}
 
-	/* /admin/org/[id]/members: a member's "View as" button, and its error
-	   below it, in a line's actions. */
 	impersonate-user {
 		display: grid;
 		max-inline-size: 100%;
 		justify-items: start;
 
-		/* The error, once there is one. */
 		& > p:not(:empty) {
 			margin-block-start: var(--space-3xs);
 		}
 	}
 
-	/* /admin/org/[id]/settings: deleting the client, below a rule. */
 	.settings-delete {
 		border-block-start: var(--rule) var(--line);
 		padding-block-start: var(--space-m);

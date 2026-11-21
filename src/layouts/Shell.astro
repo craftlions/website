@@ -13,7 +13,6 @@ interface Props {
 
 const { bodyClass } = Astro.props;
 const session = Astro.locals.session;
-// Without the query string, so tracking and form parameters share one URL.
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 
@@ -24,8 +23,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<meta name="color-scheme" content="light dark">
 		<meta name="text-scale" content="scale">
 		<meta name="generator" content={Astro.generator}>
-		{/* The layer order of src/styles/global.css, ahead of every stylesheet,
-		   so a page's own one cannot come first and reorder the layers. */}
 		<style is:inline>
 			@layer reset, tokens, base, layout, components, page, utilities;
 		</style>
@@ -36,7 +33,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<link rel="expect" href="#main" blocking="render">
 
 		<slot name="head" />
-		{/* Prerendered pages skip the middleware's X-Robots-Tag, so this carries it. */}
 		{isPrivatePath(Astro.url.pathname) && (
 			<meta name="robots" content="noindex">
 		)}
@@ -45,9 +41,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<meta property="og:site_name" content="craftlions">
 		<meta name="twitter:card" content="summary">
 		<link rel="sitemap" href="/sitemap-index.xml">
-		{/* The SVG mark follows the browser's scheme, ink on light and the
-		   gradient on dark; browsers without SVG icons (Safari before 26) keep
-		   the 32px raster, so it names its size and Chrome prefers the SVG. */}
 		<link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="32x32">
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 	</head>
@@ -70,7 +63,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 				</aside>
 			)}
 			<slot name="body" />
-			{/* Only gated routes set a session, so public pages ship no palette. */}
 			{session && <CommandPalette />}
 		</body>
 	) : (

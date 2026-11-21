@@ -38,8 +38,6 @@ if (!id) {
 }
 
 const attachResult = Astro.getActionResult(actions.attachInvoiceToPhase);
-// After a failed attach, only that invoice's row shows the error and keeps
-// the part that was picked.
 const attachInput = submittedValues(Astro.locals, attachResult);
 
 const [organization, organizationData, projects, unattachedInvoices] =
@@ -111,7 +109,6 @@ if (!organization) {
 }
 
 const now = new Date();
-// Stripe dashboard paths: /customers/{cus_…} and /invoices/{in_…}.
 const stripeDashboard = "https://dashboard.stripe.com";
 const phaseHref = (
 	project: { publicId: string },
@@ -119,7 +116,6 @@ const phaseHref = (
 ) =>
 	`/admin/org/${organization.id}/projects/${project.publicId}#phase-${phase.publicId}`;
 
-// One entry per priced cost part, in project and phase order.
 const parts = projects.flatMap((project) =>
 	project.phases.flatMap((phase) =>
 		invoiceComponents.flatMap((component) => {
@@ -150,8 +146,6 @@ const recorded = parts
 		part.link?.stripe ? [{ ...part, invoice: part.link.stripe }] : [],
 	)
 	.toSorted((a, b) => {
-		// Overdue first (longest overdue on top), then open by due date, then
-		// everything else newest first.
 		const rank = (invoice: typeof a.invoice) =>
 			isInvoiceOverdue(invoice, now) ? 0 : invoice.status === "open" ? 1 : 2;
 		return (
@@ -162,9 +156,6 @@ const recorded = parts
 				: b.invoice.invoicedAt.getTime() - a.invoice.invoicedAt.getTime())
 		);
 	});
-// Open (overdue included) above paid; void and uncollectible ones, if any,
-// last and without a total, since they are not owed. Each group keeps the
-// order above.
 const invoiceGroups = [
 	{ id: "open", label: "Open", empty: "Nothing is open." },
 	{ id: "paid", label: "Paid", empty: "Nothing is paid yet." },
@@ -191,8 +182,6 @@ const liveInvoices = [
 const defaultCurrency =
 	parts[0]?.phase.currency ?? unattachedInvoices[0]?.currency ?? "EUR";
 
-// Paid date, days overdue, due date or issue date: the one fact that matters
-// for the invoice's current status, worded to stand alone ("paid 10.01.2026").
 const statusDetail = (invoice: {
 	status: string;
 	dueAt: Date | null;
@@ -207,7 +196,6 @@ const statusDetail = (invoice: {
 				? `due ${formatDate(invoice.dueAt)}`
 				: `issued ${formatDate(invoice.invoicedAt)}`;
 
-// Why an unattached invoice has no due cost part in its currency.
 const attachBlocker = (invoice: { currency: string }) => {
 	const pending = unbilledParts.filter(
 		(part) => part.phase.currency === invoice.currency,
@@ -408,9 +396,6 @@ const attachBlocker = (invoice: { currency: string }) => {
 							Math.abs(a.amount - invoice.total) -
 							Math.abs(b.amount - invoice.total),
 					)[0];
-					// After a failed attach of this invoice, the part that was picked,
-					// matched by phase and cost part only: the phase version in the
-					// submitted value is stale when the phase changed meanwhile.
 					const [pickedPhaseId, pickedComponent] =
 						attachInput?.get("stripeId") === invoice.id
 							? (attachInput.get("target") ?? "").split(":")

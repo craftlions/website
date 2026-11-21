@@ -11,8 +11,6 @@ export interface PhaseComponentItem {
 	status: ComponentBillingStatus;
 }
 
-// Due-ness derives from the phase's persisted state, never from the events
-// table — events is an audit log and must not feed UI or domain state.
 const dueStates: Record<
 	InvoiceComponent,
 	ReadonlySet<phaseSelectType["state"]>
@@ -32,8 +30,6 @@ export const componentBillingStatus = (input: {
 	state: phaseSelectType["state"];
 	invoice?: { stripe: { status: string } | null } | null;
 }): ComponentBillingStatus => {
-	// D-phase-billing-truth: the tagged invoice and Stripe outrank the trigger;
-	// billing state is derived here and is never persisted on the component.
 	if (input.invoice?.stripe?.status === "paid") return "paid";
 	if (input.invoice) return "invoiced";
 	return isInvoiceComponentDue(input.component, input.state)
@@ -57,8 +53,6 @@ export const buildPhaseComponents = (input: {
 	return invoiceComponents
 		.map((component) => {
 			const amount = input[`${component}Amount`];
-			// A zero amount is nothing to bill; zero-cost phases must still store
-			// one 0 component to satisfy the cost-components check constraint.
 			return amount === null || amount === 0
 				? null
 				: {
@@ -74,8 +68,6 @@ export const buildPhaseComponents = (input: {
 		.filter((item): item is PhaseComponentItem => item !== null);
 };
 
-// What the admin still has to invoice: the phase's priced cost parts that are
-// due and have no linked invoice.
 export const costPartsToInvoice = (
 	phase: Parameters<typeof buildPhaseComponents>[0],
 ) => buildPhaseComponents(phase).filter((part) => part.status === "due");

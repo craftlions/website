@@ -1,5 +1,3 @@
-// publicId makes the prefixed ids that URLs show: the prefix, an underscore
-// and six random characters from the look-alike-free alphabet.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { publicId, publicIdAlphabet } from "../../src/lib/public-id.ts";

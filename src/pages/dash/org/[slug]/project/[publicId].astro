@@ -37,8 +37,6 @@ if (!session.session.activeOrganizationId) {
 	}
 }
 
-// One read resolves the project within the slug's organization, this user's
-// membership, and every phase invoice its payment schedule needs.
 const project = await Astro.locals.db.query.projects.findFirst({
 	columns: {
 		name: true,

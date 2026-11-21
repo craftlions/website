@@ -3,9 +3,7 @@ import type { HTMLAttributes } from "astro/types";
 import { formatPercent } from "../lib/format.ts";
 
 interface Props extends Omit<HTMLAttributes<"progress">, "value" | "max"> {
-	// Percent of the budget used; above 100 the bar fills red.
 	percent: number;
-	// Months of the year elapsed (1-12), drawn as the calendar pace marker.
 	pace?: number | undefined;
 }
 
@@ -23,8 +21,6 @@ const { percent, pace, class: className, ...attrs } = Astro.props;
 	>
 		{`${formatPercent(percent)} used`}
 	</progress>
-	{/* The marker sits on the left edge of the month after `pace`, so
-	    December lands on the end of the track. */}
 	{pace !== undefined && (
 		<span aria-hidden="true">
 			<span class="forced-ink" style={`--pace: ${pace + 1}`} />
@@ -34,8 +30,6 @@ const { percent, pace, class: className, ...attrs } = Astro.props;
 
 <style>
 	@layer components {
-		/* A dashed track filled with ink, or with
-		   danger above 100%, and an optional pace marker over a 12-month grid. */
 		.progress {
 			position: relative;
 			display: grid;
@@ -61,7 +55,6 @@ const { percent, pace, class: className, ...attrs } = Astro.props;
 					background-color: var(--progress-fill);
 				}
 
-				/* Forced colors repaint the fill as Canvas; ink keeps it visible. */
 				@media (forced-colors: active) {
 					&::-webkit-progress-value {
 						forced-color-adjust: none;
@@ -76,8 +69,6 @@ const { percent, pace, class: className, ...attrs } = Astro.props;
 				}
 			}
 
-			/* The months, a little taller than the track. --pace is the column the
-			   marker starts in. */
 			& > span {
 				position: absolute;
 				inset-block: calc(-1 * var(--space-3xs));

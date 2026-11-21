@@ -1,6 +1,3 @@
-// T6, target size (WCAG 2.5.8): every target is at least 24×24px, or a 24px
-// circle centred on it touches no other target and no other such circle.
-// A link inside a sentence is exempt, as the criterion allows.
 import { expect, test } from "@playwright/test";
 import { routes } from "../routes.ts";
 
@@ -38,7 +35,6 @@ for (const route of routes) {
 							y: box.top + box.height / 2,
 						};
 					});
-				// The distance from a circle's centre to the nearest point of a box.
 				const reach = (x: number, y: number, box: DOMRect) =>
 					Math.hypot(
 						Math.max(box.left - x, 0, x - box.right),

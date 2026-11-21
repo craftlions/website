@@ -13,8 +13,6 @@ interface Props extends HTMLAttributes<"form"> {
 const { phase, nextState, ...attrs } = Astro.props;
 const { label } = phaseTransitions[nextState];
 
-// Acting for the client and cancelling are confirmed first, naming what
-// happens; the other transitions submit directly.
 const confirmation = {
 	approved: {
 		title: `Approve ${phase.title} for the client?`,

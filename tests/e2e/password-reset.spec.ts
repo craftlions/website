@@ -1,5 +1,3 @@
-// P-4: the reset request and the new-password form up to the auth API.
-// Sending the mail and spending a token need the database and stay out.
 import { expect, test } from "@playwright/test";
 
 test("the request form validates the address before sending", async ({
@@ -117,7 +115,6 @@ test.describe("with a token", () => {
 		);
 		await expect(page.getByRole("status")).toBeEmpty();
 
-		// Fixing the new password rather than the confirmation clears it too.
 		await password.fill("longpassword2");
 		await expect(confirmation).toHaveAttribute("aria-invalid", "false");
 		await expect(confirmation).toHaveAccessibleDescription("");
@@ -132,8 +129,6 @@ test.describe("with a token", () => {
 test("Show passwords reveals both fields and submitting hides them", async ({
 	page,
 }) => {
-	// Only a submit that passes validation hides them; the request it sends is
-	// aborted before the auth API.
 	await page.route("**/api/auth/**", (route) => route.abort());
 	await page.goto("/reset-password?token=dummy");
 	const toggle = page.getByRole("button", { name: "Show passwords" });
@@ -152,7 +147,6 @@ test("Show passwords reveals both fields and submitting hides them", async ({
 		"text",
 	);
 
-	// Submitted as text, a password could land in the form history.
 	await page.getByRole("button", { name: "Reset password" }).click();
 	await expect(toggle).toHaveAttribute("aria-pressed", "false");
 	await expect(page.getByLabel("New password")).toHaveAttribute(
@@ -204,7 +198,6 @@ test.describe("without scripts", () => {
 			await element.getByRole("button", { name: submit }).click();
 			expect((await request).method()).toBe("POST");
 			await expect(page.getByRole("status")).toHaveText(message);
-			// Nothing typed lands in the address.
 			expect(page.url()).toBe(new URL(path, page.url()).href);
 		});
 	}

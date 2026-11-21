@@ -1,9 +1,4 @@
 ---
-// The client's decision on a phase: Approve or Decline a planned phase,
-// Accept a delivered one. Approve and Accept are primary and confirmed with
-// the amount they make due; Decline is quiet and confirmed as final. Renders
-// nothing in other states or without the permission. The caller lays the
-// forms out.
 import type { PhaseState } from "../lib/status.ts";
 import { actions } from "astro:actions";
 import { formatMoney } from "../lib/format.ts";
@@ -21,9 +16,7 @@ interface Props {
 		deliveryAmount: number | null;
 		acceptanceAmount: number | null;
 	};
-	// Names the phase in the controls' accessible names, e.g. "Project · Phase".
 	name?: string | undefined;
-	// Prefix for the dialog ids; unique per page.
 	id: string;
 	canApprove: boolean;
 	canAccept: boolean;

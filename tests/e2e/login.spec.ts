@@ -1,5 +1,3 @@
-// P-3: the sign-in form's behaviour before it reaches Better Auth. Signing in
-// itself needs a user in the database and stays out of this suite.
 import { expect, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {

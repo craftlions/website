@@ -69,8 +69,6 @@ const phaseStateToBadgeType = (phaseState: phaseSelectType["state"]) => {
 	}
 };
 
-// Each cost part has at most one invoice (invoices_phase_component_uidx), so
-// a phase's invoices fold into its payment schedule part by part.
 const rows = phases.map((phase) => {
 	const parts = buildPhaseComponents(phase).map((part) => {
 		const invoice = phase.invoices.find(
@@ -405,15 +403,8 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 </phase-overview>
 
 <script>
-	// Compact shows one line per phase; Detailed opens every payment schedule.
-	// Single phases still toggle on their own, and the chosen view is a
-	// per-viewer convenience that survives reloads when storage is available.
 	const viewStorageKey = "phase-overview-view";
 
-	// Exact phase evidence target: worklist and invoice links point at the
-	// stable `phase-<publicId>` fragment. The targeted phase opens its details
-	// and is marked with a background tint plus a non-color outline cue,
-	// without motion. Runs on landing and on every fragment change.
 	class PhaseOverview extends HTMLElement {
 		currentTarget: HTMLElement | null = null;
 
@@ -453,8 +444,6 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 			this.applyTarget();
 			window.addEventListener("hashchange", () => this.applyTarget());
 
-			// Find in page or a text fragment is about to reveal a closed panel,
-			// so its toggle opens with it.
 			this.addEventListener("beforematch", (event) => {
 				if (!(event.target instanceof HTMLElement)) return;
 				const toggle = this.querySelector<HTMLButtonElement>(
@@ -523,19 +512,11 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 
 <style>
 	@layer components {
-		/* Totals and the view switch, then one
-		   inbox line per phase (DESIGN.md#lines), each with a hidden payment
-		   schedule of ledger lines. */
-
 		phase-overview h3[data-state="cancelled"] {
 			color: var(--fg-muted);
 			text-decoration-line: line-through;
 		}
 
-		/* One mark per cost part, under the phase's amount. Shape carries the
-		   state without colour: paid is a solid block, overdue a solid outline,
-		   invoiced a dashed one and not yet invoiced a dotted one. A fixed width,
-		   since a percentage has nothing to resolve against inside the figure. */
 		.phase-payments {
 			display: grid;
 			inline-size: 6rem;
@@ -550,7 +531,6 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 				&[data-state="overdue"] {
 					border-color: var(--fill-danger);
 				}
-				/* forced-ink keeps it solid under forced colors. */
 				&[data-state="paid"] {
 					border-color: var(--fill-success);
 					background-color: var(--fill-success);

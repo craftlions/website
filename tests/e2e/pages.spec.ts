@@ -1,5 +1,3 @@
-// P-1: the public pages render their title, heading and landmarks, the nav
-// offers a signed-out visitor only Login, and every link on them resolves.
 import { expect, test } from "@playwright/test";
 import { routes } from "../routes.ts";
 
@@ -47,7 +45,6 @@ for (const { path, title, heading } of pages) {
 		await expect(
 			nav.getByRole("link", { name: "craftlions home" }),
 		).toHaveAttribute("href", "/");
-		// On /, /changelog/ and /imprint/ the links come from a deferred island.
 		await expect(nav.getByRole("link", { name: "Login" })).toHaveAttribute(
 			"href",
 			"/login",

@@ -1,6 +1,4 @@
 @layer components {
-	/* src/components/Badge.astro: a one-line status in a dashed box, colored by
-	   data-type. */
 	.badge {
 		display: inline-grid;
 		inline-size: max-content;

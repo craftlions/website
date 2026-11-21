@@ -1,8 +1,3 @@
-// The inbox and ledger lines of src/styles/components/lines.css on their
-// /brand/specimen fixtures, with each wide frame swept from 320 to 960px: the
-// same structure at every width, every figure and group total on one end
-// edge, the actions beside the figure or whole below it, and nothing wider
-// than its line.
 import { readFileSync } from "node:fs";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
@@ -31,8 +26,6 @@ const resize = (locator: Locator, width: number) =>
 		(element as HTMLElement).style.inlineSize = `${size}px`;
 	}, width);
 
-// Every list in the frame, nested ones included, with the boxes of its
-// lines and group headings and of their parts.
 const measure = (locator: Locator) =>
 	locator.evaluate((root) => {
 		const box = (node: Element) => {
@@ -65,8 +58,6 @@ const measure = (locator: Locator) =>
 				const amount = line.querySelector(
 					":scope > .line-figure > :not(.sr-only)",
 				);
-				// What the figure needs beside the text: its max-content width
-				// and the margin that keeps it clear of the slot.
 				const figure = line.querySelector(":scope > .line-figure");
 				const needs = figure?.checkVisibility()
 					? (() => {
@@ -82,8 +73,6 @@ const measure = (locator: Locator) =>
 							);
 						})()
 					: null;
-				// Everything inside the line but the details, whose own lines
-				// are measured as their own list.
 				const inside = [...line.querySelectorAll("*")].filter(
 					(node) =>
 						node.checkVisibility() &&
@@ -114,8 +103,6 @@ const measure = (locator: Locator) =>
 
 type Box = { left: number; right: number; top: number; bottom: number };
 
-// Beside: on the figure's row, after it. Below: under the text and the
-// figure, across the whole line.
 const placement = (
 	line: Awaited<ReturnType<typeof measure>>[number]["lines"][number],
 ) => {
@@ -155,7 +142,6 @@ for (const fixture of fixtures) {
 				await measure(frame(page, fixture))
 			).entries()) {
 				const where = `${width}px, list ${index}`;
-				// Every amount and every group total ends on the same edge.
 				const edges = list.lines.flatMap(({ figure }) =>
 					figure ? [figure.right] : [],
 				);
@@ -168,25 +154,18 @@ for (const fixture of fixtures) {
 							Math.abs(line.amount.right - line.figure.right),
 						).toBeLessThan(0.5);
 					}
-					// The figure sits beside the text, after it, or on a row of
-					// its own below it; either way on the shared edge above.
 					if (line.figure && line.text) {
 						const beside =
 							line.figure.top < line.text.bottom &&
 							line.figure.left >= line.text.right - 0.5;
 						const below = line.figure.top >= line.text.bottom - 0.5;
 						expect(beside || below, where).toBe(true);
-						// Lines of one list may differ (DESIGN.md#lines): a figure
-						// drops below only where beside it the text would get
-						// less than 12rem, or less than the whole line.
 						const room = line.content.right - line.content.left;
 						const short = Math.min(12 * 16, room) + (line.needs ?? 0) - room;
 						if (!line.heading && Math.abs(short) > 1) {
 							expect(below, `${where}: figure below`).toBe(short > 0);
 						}
 					}
-					// A line's text keeps 12rem, or the whole line where that is
-					// less.
 					if (line.text && !line.heading) {
 						expect(
 							line.text.right - line.text.left,
@@ -203,8 +182,6 @@ for (const fixture of fixtures) {
 						);
 					}
 				}
-				// Every line of a list places its actions the same way, and a
-				// ledger always below.
 				const states = new Set(
 					list.lines.map(placement).filter((state) => state !== "none"),
 				);
@@ -214,7 +191,6 @@ for (const fixture of fixtures) {
 				for (const state of states) seen.add(`${list.ledger}-${state}`);
 			}
 		}
-		// The sweep crosses the threshold of every inbox list.
 		if (fixture === "lines-worklist" || fixture === "lines-phases") {
 			expect([...seen]).toEqual(
 				expect.arrayContaining(["false-beside", "false-below"]),
@@ -222,8 +198,6 @@ for (const fixture of fixtures) {
 		}
 	});
 
-	// Tab order is the DOM order; each next target sits below the last one or
-	// to its right on the same row, whether the actions sit beside or below.
 	test(`${fixture}: reading order follows the visual order`, async ({
 		page,
 	}) => {
@@ -252,9 +226,6 @@ for (const fixture of fixtures) {
 		}
 	});
 
-	// WCAG 2.5.8: at least 24×24px, or a 24px circle on a smaller target
-	// touches no other target and no other such circle; in the actions slot,
-	// at least 24×24px without exception.
 	test(`${fixture}: targets are at least 24px`, async ({ page }) => {
 		for (const width of [320, 480, 960]) {
 			await resize(frame(page, fixture), width);
@@ -293,7 +264,6 @@ for (const fixture of fixtures) {
 					.map(({ html, box }) => `${box.width}×${box.height} ${html}`);
 			});
 			expect(failures, `${width}px`).toEqual([]);
-			// In the actions slot every control is 24px, quiet ones too.
 			const small = await frame(page, fixture)
 				.locator(".line-actions :is(a, button)")
 				.evaluateAll((nodes) =>
@@ -308,8 +278,6 @@ for (const fixture of fixtures) {
 	});
 }
 
-// A list without actions reserves no slot: every figure and the group
-// total end on the line's own end edge at every width.
 test("a list without actions ends its figures on the line's edge", async ({
 	page,
 }) => {

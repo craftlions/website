@@ -1,7 +1,3 @@
-// The search query language and ranking behind /api/search: a deterministic
-// rule parser and a typo-tolerant ranker over items the endpoint already
-// authorised. This module has no runtime imports and does no I/O, so the
-// palette script can share its types and Node can run it directly.
 import type { PhaseState, ProjectState } from "./status.ts";
 
 export type SearchGroupId =
@@ -14,12 +10,9 @@ export type SearchGroupId =
 	| "actions";
 
 export interface SearchItem {
-	// Stable key, e.g. "project:<publicId>" or "invoice:<stripeId>".
 	id: string;
 	label: string;
-	// The muted second line, in the pages' own wording.
 	sublabel: string;
-	// A same-origin path, optionally with a fragment.
 	href: string;
 }
 
@@ -27,23 +20,18 @@ export interface SearchGroup {
 	id: SearchGroupId;
 	label: string;
 	items: SearchItem[];
-	// Matches before the cap.
 	total: number;
 }
 
 export interface SearchResponse {
-	// The trimmed query, echoed so the palette can drop stale responses.
 	query: string;
-	// The parsed filters in words, in the order they were typed.
 	filters: string[];
-	// Non-empty groups only, in rank order.
 	groups: SearchGroup[];
 }
 
 export interface SearchField {
 	text: string;
 	words: string[];
-	// Where each word starts in `text`.
 	starts: number[];
 	primary: boolean;
 }
@@ -51,10 +39,7 @@ export interface SearchField {
 export interface RankItem extends SearchItem {
 	group: SearchGroupId;
 	fields: SearchField[];
-	// Position in the group's natural order, the tie-breaker after the
-	// score; invoices order by their dates instead (see `invoiceOrder`).
 	order: number;
-	// A page shown before anything is typed.
 	home?: boolean;
 	projectState?: ProjectState;
 	phaseState?: PhaseState;
@@ -71,25 +56,19 @@ export interface RankItem extends SearchItem {
 export interface QueryContext {
 	admin: boolean;
 	now: Date;
-	// Currency codes present in the caller's slice. ISO codes include words
-	// such as ALL, TRY or TOP, so only these count as currencies.
 	currencies: Iterable<string>;
 }
 
 export interface ParsedQuery {
 	admin: boolean;
-	// Folded free-text terms, all of which must match.
 	terms: string[];
-	// What pages and actions match against: every text and scope word.
 	pageTerms: string[];
-	// Empty means every group.
 	scopes: Set<SearchGroupId>;
 	projectStates: Set<ProjectState>;
 	phaseStates: Set<PhaseState>;
 	stripeStatuses: Set<string>;
 	overdue: boolean;
 	year?: number;
-	// 1–12.
 	month?: number;
 	amount?: {
 		min?: number;
@@ -98,7 +77,6 @@ export interface ParsedQuery {
 		maxExclusive?: boolean;
 		eq?: number;
 	};
-	// Upper-case ISO code.
 	currency?: string;
 	labels: string[];
 }
@@ -230,12 +208,6 @@ const currencySymbols: Record<string, string> = {
 const sentence = (word: string) =>
 	word.charAt(0).toUpperCase() + word.slice(1).replace(/_/g, " ");
 
-// A number with optional thousands or decimal separators and an optional
-// "k": with both "." and ",", the last one is the decimal separator; with
-// one kind, groups of exactly three digits are thousands and one separator
-// before one or two digits is a decimal point. A leading zero before another
-// digit, as in "0012", marks an identifier, not a number; "0,50" is one.
-// Anything else is not a number.
 const parseNumber = (text: string) => {
 	const match = /^(?!0\d)(\d[\d.,]*)(k?)$/i.exec(text);
 	if (!match?.[1]) return undefined;
@@ -270,8 +242,6 @@ const parseNumber = (text: string) => {
 
 type Amount = NonNullable<ParsedQuery["amount"]>;
 
-// A token read as an amount: a range, a comparison or a plain number, with
-// the currency symbol or code written onto it, if any.
 const parseAmount = (
 	token: string,
 	currencyOf: (text: string) => string | undefined,
@@ -347,7 +317,6 @@ const amountLabel = (amount: Amount, currency: string | undefined) => {
 
 const maxTerms = 8;
 
-// With `asText`, every word is text and nothing is a filter.
 export const parseQuery = (
 	q: string,
 	context: QueryContext,
@@ -373,12 +342,9 @@ export const parseQuery = (
 		overdue: false,
 		labels: [],
 	};
-	// Labels are resolved at the end, once a month knows its year.
 	const labels: Array<() => string> = [];
 	let monthYear: number | undefined;
 
-	// Double quotes, straight or curly, force text: "may release" is never a
-	// month. An unclosed quote runs to the end.
 	const tokens = q.split(/["“”]/).flatMap((part, index) =>
 		(index % 2 ? part : part.replace(/([<>]=?|=)\s+/g, "$1"))
 			.split(/\s+/)
@@ -417,7 +383,6 @@ export const parseQuery = (
 			: undefined;
 		if (scope) {
 			parsed.scopes.add(scope);
-			// Naming pages or actions lists them; it is not text they must contain.
 			if (scope !== "pages" && scope !== "actions") parsed.pageTerms.push(word);
 			labels.push(() => groupLabel(scope, context.admin));
 			continue;
@@ -426,7 +391,6 @@ export const parseQuery = (
 		if (Object.hasOwn(projectStates, word)) {
 			const state = projectStates[word] as ProjectState;
 			parsed.projectStates.add(state);
-			// A draft is also a Stripe status, which only the admin sees.
 			if (state === "draft" && context.admin)
 				parsed.stripeStatuses.add("draft");
 			labels.push(() => sentence(state));
@@ -471,7 +435,6 @@ export const parseQuery = (
 		if (Object.hasOwn(months, word)) {
 			const month = months[word] as number;
 			parsed.month = month;
-			// Without a year, the month's most recent occurrence, in UTC.
 			monthYear =
 				month <= context.now.getUTCMonth() + 1
 					? context.now.getUTCFullYear()
@@ -480,7 +443,6 @@ export const parseQuery = (
 			continue;
 		}
 
-		// A currency on its own token joins the amount after it ("eur 1200").
 		const currency = currencyOf(word);
 		if (currency) {
 			const following = next && parseAmount(next, currencyOf);
@@ -496,7 +458,6 @@ export const parseQuery = (
 
 		const amount = parseAmount(token, currencyOf);
 		if (amount) {
-			// …and a currency on the token after an amount joins it ("1200 eur").
 			const trailing =
 				!amount.currency && next ? currencyOf(fold(next)) : undefined;
 			if (trailing) {
@@ -504,7 +465,6 @@ export const parseQuery = (
 				index++;
 				continue;
 			}
-			// A bare number stays text, so "1200" also finds titles and numbers.
 			if (!amount.bare) {
 				setAmount(amount.amount, amount.currency);
 				continue;
@@ -523,8 +483,6 @@ export const parseQuery = (
 	return parsed;
 };
 
-// Optimal string alignment distance, given up as k + 1 once a whole row
-// exceeds k.
 const boundedDistance = (a: string, b: string, k: number) => {
 	if (Math.abs(a.length - b.length) > k) return k + 1;
 	let before: number[] = [];
@@ -551,8 +509,6 @@ const boundedDistance = (a: string, b: string, k: number) => {
 	return previous[b.length] ?? k + 1;
 };
 
-// The letters of `term` in order inside the field, starting at a word start;
-// the fewest characters skipped between them, or Infinity.
 const subsequenceGap = (term: string, field: SearchField) => {
 	let best = Number.POSITIVE_INFINITY;
 	for (const start of field.starts) {
@@ -578,7 +534,6 @@ const termScore = (term: string, field: SearchField) => {
 	if (field.text.startsWith(term)) return 90;
 	if (field.words.some((word) => word.startsWith(term))) return 80;
 	if (field.text.includes(term)) return 60;
-	// Numbers are exact: a typo-tolerant "0012" would also find ABCD-0013.
 	if (/\d/.test(term)) return 0;
 	if (term.length >= 3) {
 		const gap = subsequenceGap(term, field);
@@ -596,8 +551,6 @@ const termScore = (term: string, field: SearchField) => {
 	return best;
 };
 
-// The item's score for every term together, or undefined when a term
-// matches no field.
 const itemScore = (item: RankItem, terms: string[]) => {
 	let total = 0;
 	let allPrimary = true;
@@ -618,9 +571,6 @@ const itemScore = (item: RankItem, terms: string[]) => {
 	return terms.length > 0 && allPrimary ? total + 5 : total;
 };
 
-// Whether the item passes the parsed filters, and which terms it must match:
-// a filter its type does not own excludes it, and a year is text for every
-// type but invoices.
 const candidateTerms = (item: RankItem, parsed: ParsedQuery) => {
 	const otherStripe = [...parsed.stripeStatuses].some((s) => s !== "draft");
 	const invoiceOnly =
@@ -702,7 +652,6 @@ const candidateTerms = (item: RankItem, parsed: ParsedQuery) => {
 				parsed.stripeStatuses.size ||
 				parsed.year !== undefined ||
 				invoiceOnly;
-			// Listed when named as a scope, otherwise only for typed text.
 			return filtered ||
 				(parsed.pageTerms.length === 0 && !parsed.scopes.has(item.group))
 				? undefined
@@ -711,7 +660,6 @@ const candidateTerms = (item: RankItem, parsed: ParsedQuery) => {
 	}
 };
 
-// Overdue invoices first, longest overdue on top, then newest first.
 const invoiceOrder = (
 	a: NonNullable<RankItem["invoice"]>,
 	b: NonNullable<RankItem["invoice"]>,
@@ -779,10 +727,8 @@ export const rank = (
 			};
 		})
 		.filter((group) => group.total > 0)
-		// Stable, so equal scores keep the fixed group order.
 		.sort((a, b) => b.best - a.best);
 
-	// Over the overall cap, the lowest-ranked groups lose their tails first.
 	let excess =
 		groups.reduce((sum, group) => sum + group.items.length, 0) - maxItems;
 	for (const group of groups.toReversed()) {
@@ -807,10 +753,6 @@ export const rank = (
 		}));
 };
 
-// The query read with its filters first. When they leave nothing, it is read
-// again with every word as text, since "May release", "Open banking" or
-// "Sprint 10-12" are titles as often as filters; the filters then come back
-// empty, so the palette does not claim one was applied.
 export const searchItems = (
 	items: readonly RankItem[],
 	q: string,

@@ -1,8 +1,5 @@
-// P-1: the indexing and caching rules of src/lib/indexing.ts and the
-// middleware, the sitemap, unknown routes and trailing slashes.
 import { expect, test } from "@playwright/test";
 
-// Anonymous answers on these paths: a page, a redirect to login or a 401.
 const privateResponses = [
 	["/login", 200],
 	["/forgot-password", 200],
@@ -24,7 +21,6 @@ for (const [path, status] of privateResponses) {
 	});
 }
 
-// The middleware sends no-store only where the answer depends on the session.
 for (const [path] of privateResponses.filter(([path]) =>
 	/^\/(dash|settings|admin|api)\b/.test(path),
 )) {
@@ -44,8 +40,6 @@ for (const path of ["/", "/changelog/", "/imprint/"]) {
 	});
 }
 
-// Prerendered, so the middleware never sees them; the meta tag carries
-// noindex. /brand stays unlisted until its content is final.
 for (const path of ["/brand/", "/brand/specimen/"]) {
 	test(`${path} is noindex through its meta tag`, async ({ page }) => {
 		await page.goto(path);
@@ -91,8 +85,6 @@ for (const path of ["/does-not-exist", "/changelog/missing", "/design"]) {
 	});
 }
 
-// No page answers the section roots, so they are 404s that keep the
-// section's headers; /settings/api went with the API keys.
 for (const path of ["/settings", "/settings/api", "/api"]) {
 	test(`${path} is a private 404`, async ({ request }) => {
 		const response = await request.get(path, { maxRedirects: 0 });
@@ -102,7 +94,6 @@ for (const path of ["/settings", "/settings/api", "/api"]) {
 	});
 }
 
-// Prerendered pages live at their trailing-slash URL; the others answer both.
 for (const [path, location] of [
 	["/changelog", "/changelog/"],
 	["/imprint", "/imprint/"],

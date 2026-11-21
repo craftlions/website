@@ -99,8 +99,6 @@ if (!project) {
 	return Astro.redirect(`/admin/org/${organization.id}/projects`);
 }
 
-// Accepted and cancelled phases are settled. The server completes a project
-// only once every phase is settled (transitionProject in admin-mutations.ts).
 const settledStates = ["accepted", "cancelled"];
 const openPhaseCount = project.phases.filter(
 	(phase) => !settledStates.includes(phase.state),
@@ -109,14 +107,10 @@ const openPhaseCount = project.phases.filter(
 const createResult = Astro.getActionResult(actions.createPhase);
 const projectResult = Astro.getActionResult(actions.createProject);
 const canAddPhase = project.state === "draft" || project.state === "active";
-// The add-phase form starts open after a failed add and right after the
-// project was created, since adding phases is the next step.
 const isAddPhaseOpen =
 	Boolean(createResult?.error) || (projectResult && !projectResult.error);
-// New phases default to the currency the project already bills in.
 const defaultCurrency = project.phases.at(-1)?.currency ?? "EUR";
 
-// Cost parts as a failed form submitted them; an empty part is not billed.
 const submittedSplit = (values: URLSearchParams) => ({
 	upfrontAmount: values.get("upfrontAmount")
 		? Number(values.get("upfrontAmount"))
@@ -134,8 +128,6 @@ const amountsInput = submittedValues(
 	Astro.getActionResult(actions.updatePhaseAmounts),
 );
 
-// The phase row the last phase action came from: its data names the phase
-// on success, its submitted `phaseId` on failure. Only that row is marked.
 const phaseResult = [
 	Astro.getActionResult(actions.transitionPhase),
 	Astro.getActionResult(actions.recordDelivery),
@@ -147,22 +139,17 @@ const actedPhase = project.phases.find(
 	(phase) =>
 		phase.id === (phaseResult?.data?.phaseId ?? phaseInput?.get("phaseId")),
 );
-// After a failure the row's More panel renders open when the failed form
-// lives there: every form but the row's transition buttons, of which only
-// "Cancel phase" sits in the panel.
 const reopenedPhase =
 	phaseInput && [null, "cancelled"].includes(phaseInput.get("nextState"))
 		? actedPhase
 		: undefined;
 
-// When a phase billed in one part bills it, for the line's secondary figure.
 const billedOn = {
 	upfront: "approval",
 	delivery: "delivery",
 	acceptance: "acceptance",
 } as const;
 
-// Open phases first, settled ones after; each group keeps creation order.
 const phases = project.phases
 	.map((phase) => ({
 		...phase,
@@ -522,14 +509,6 @@ const phases = project.phases
 </AdminOrgShell>
 
 <script>
-	// Deep links (`#phase-<publicId>`, from the worklist and invoices) and the
-	// row the last action came from (`data-acted`, set by the server) are
-	// marked with `data-highlight`, which src/styles/base.css draws as a
-	// background tint plus a non-color outline cue, without motion. A
-	// deep-linked row also opens its More panel, the way its DisclosureButton
-	// does; the server already rendered the acted row's panel open when its
-	// failed form lives there.
-
 	class AdminPhaseList extends HTMLElement {
 		currentTarget: HTMLElement | null = null;
 
