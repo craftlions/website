@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 import {
+	collectFiles,
 	isAllowedComment,
 	lintComments,
 	scanComments,
@@ -197,6 +199,35 @@ describe("lintComments ratchet", () => {
 				".cloudflare/types/index.d.ts",
 			]);
 			assert.deepEqual(outsideGlobs.violations, []);
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+
+	it("skips files .gitattributes marks as generated", () => {
+		const dir = mkdtempSync(path.join(tmpdir(), "comment-lint-"));
+		try {
+			execFileSync("git", ["init", "--quiet"], { cwd: dir });
+			mkdirSync(path.join(dir, "src"), { recursive: true });
+			writeFileSync(
+				path.join(dir, ".gitattributes"),
+				"src/generated.ts linguist-generated=true\n",
+			);
+			writeFileSync(
+				path.join(dir, "src/generated.ts"),
+				"// generated\nexport const a = 1;\n",
+			);
+			writeFileSync(
+				path.join(dir, "src/written.ts"),
+				"// written\nexport const b = 2;\n",
+			);
+
+			assert.deepEqual(collectFiles(dir), ["src/written.ts"]);
+			assert.deepEqual(
+				lintComments(dir, {}, ["src/generated.ts"]).violations,
+				[],
+			);
+			assert.equal(lintComments(dir, {}).violations.length, 1);
 		} finally {
 			rmSync(dir, { recursive: true, force: true });
 		}

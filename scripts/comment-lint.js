@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { globSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -270,6 +271,22 @@ const isIgnored = (file) =>
 	IGNORED_FILES.has(file) ||
 	IGNORED_PREFIXES.some((prefix) => file.startsWith(prefix));
 
+const generatedFiles = (rootDir, files) => {
+	const { status, stdout } = spawnSync(
+		"git",
+		["check-attr", "-z", "--stdin", "linguist-generated"],
+		{ cwd: rootDir, input: files.join("\0"), encoding: "utf8" },
+	);
+	const fields = status === 0 ? stdout.split("\0") : [];
+	const generated = new Set();
+	for (let index = 0; index + 2 < fields.length; index += 3) {
+		if (["set", "true"].includes(fields[index + 2])) {
+			generated.add(fields[index]);
+		}
+	}
+	return generated;
+};
+
 export const collectFiles = (rootDir) => {
 	const seen = new Set();
 	for (const pattern of DEFAULT_GLOBS) {
@@ -278,7 +295,8 @@ export const collectFiles = (rootDir) => {
 			if (!isIgnored(normalized)) seen.add(normalized);
 		}
 	}
-	return [...seen].sort();
+	const generated = generatedFiles(rootDir, [...seen]);
+	return [...seen].filter((file) => !generated.has(file)).sort();
 };
 
 export const lintComments = (rootDir, baseline = {}, explicitFiles) => {

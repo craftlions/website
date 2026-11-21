@@ -1,2 +1,5 @@
 aube-lock.yaml linguist-generated=true
 .github/workflows/actions.lock linguist-generated=true
+mise.lock linguist-generated=true
+.cloudflare/types/** linguist-generated=true
+drizzle/** linguist-generated=true
