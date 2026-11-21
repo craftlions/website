@@ -1,8 +1,8 @@
 import type { Auth } from "./auth.ts";
-import type { Db } from "./database.ts";
 import type { PublicIdPrefix } from "./public-id.ts";
 import { getOrgAdapter } from "better-auth/plugins/organization";
 import { and, eq, sql } from "drizzle-orm";
+import { type Db, fulfilled } from "./database.ts";
 import { resolveDelivery } from "./delivery.ts";
 import { assertAdminUser, DomainError } from "./domain.ts";
 import {
@@ -1259,16 +1259,18 @@ export const updateOrganizationSettings = async (
 			: input.stripeCustomerId?.trim() || null;
 
 	if (stripeCustomerId !== undefined) {
-		const [metadata, attachedInvoice] = await Promise.all([
-			db.query.organizationMetadata.findFirst({
-				columns: { stripeCustomerId: true },
-				where: { organizationId: input.organizationId },
-			}),
-			db.query.invoices.findFirst({
-				columns: { id: true },
-				where: { organizationId: input.organizationId },
-			}),
-		]);
+		const [metadata, attachedInvoice] = await db
+			.pipeline([
+				db.query.organizationMetadata.findFirst({
+					columns: { stripeCustomerId: true },
+					where: { organizationId: input.organizationId },
+				}),
+				db.query.invoices.findFirst({
+					columns: { id: true },
+					where: { organizationId: input.organizationId },
+				}),
+			])
+			.then(fulfilled);
 
 		if (
 			attachedInvoice &&

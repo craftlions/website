@@ -1,5 +1,5 @@
-import type { Db } from "./database.ts";
 import { clientPhaseLabel } from "./client-worklist.ts";
+import { type Db, fulfilled } from "./database.ts";
 import { formatDate, formatDays, formatMoney } from "./format.ts";
 import { type RankItem, searchField } from "./search-query.ts";
 import {
@@ -27,101 +27,109 @@ const phaseColumns = {
 } as const;
 
 const loadAdminSlice = (db: Db) =>
-	Promise.all([
-		db.query.organization.findMany({
-			columns: { id: true, name: true, slug: true },
-			with: {
-				members: {
-					columns: { id: true, role: true },
-					with: { user: { columns: { name: true, email: true } } },
-					orderBy: { createdAt: "asc" },
+	db
+		.pipeline([
+			db.query.organization.findMany({
+				columns: { id: true, name: true, slug: true },
+				with: {
+					members: {
+						columns: { id: true, role: true },
+						with: { user: { columns: { name: true, email: true } } },
+						orderBy: { createdAt: "asc" },
+					},
+					projects: {
+						columns: { publicId: true, name: true, state: true },
+						with: { phases: { columns: phaseColumns, orderBy: { id: "asc" } } },
+						orderBy: { name: "asc" },
+					},
 				},
-				projects: {
-					columns: { publicId: true, name: true, state: true },
-					with: { phases: { columns: phaseColumns, orderBy: { id: "asc" } } },
-					orderBy: { name: "asc" },
-				},
-			},
-			orderBy: { name: "asc" },
-		}),
-		db.query.stripeInvoices.findMany({
-			...invoiceColumns,
-			with: {
-				link: {
-					columns: { component: true },
-					with: {
-						phase: {
-							columns: {
-								publicId: true,
-								title: true,
-								upfrontAmount: true,
-								deliveryAmount: true,
-								acceptanceAmount: true,
-							},
-							with: {
-								project: {
-									columns: { publicId: true, name: true, organizationId: true },
+				orderBy: { name: "asc" },
+			}),
+			db.query.stripeInvoices.findMany({
+				...invoiceColumns,
+				with: {
+					link: {
+						columns: { component: true },
+						with: {
+							phase: {
+								columns: {
+									publicId: true,
+									title: true,
+									upfrontAmount: true,
+									deliveryAmount: true,
+									acceptanceAmount: true,
+								},
+								with: {
+									project: {
+										columns: {
+											publicId: true,
+											name: true,
+											organizationId: true,
+										},
+									},
 								},
 							},
 						},
 					},
+					metadata: { columns: { organizationId: true } },
 				},
-				metadata: { columns: { organizationId: true } },
-			},
-			where: {
-				OR: [
-					{ link: true },
-					{ NOT: { link: true }, status: { ne: "draft" }, metadata: true },
-				],
-			},
-			orderBy: { invoicedAt: "desc" },
-		}),
-	]);
+				where: {
+					OR: [
+						{ link: true },
+						{ NOT: { link: true }, status: { ne: "draft" }, metadata: true },
+					],
+				},
+				orderBy: { invoicedAt: "desc" },
+			}),
+		])
+		.then(fulfilled);
 
 const loadMemberSlice = (db: Db, userId: string) =>
-	Promise.all([
-		db.query.member.findMany({
-			columns: { role: true },
-			with: {
-				organization: {
-					columns: { id: true, name: true, slug: true },
-					with: {
-						projects: {
-							columns: { publicId: true, name: true, state: true },
-							with: {
-								phases: {
-									columns: phaseColumns,
-									orderBy: { dueAt: "asc", id: "asc" },
+	db
+		.pipeline([
+			db.query.member.findMany({
+				columns: { role: true },
+				with: {
+					organization: {
+						columns: { id: true, name: true, slug: true },
+						with: {
+							projects: {
+								columns: { publicId: true, name: true, state: true },
+								with: {
+									phases: {
+										columns: phaseColumns,
+										orderBy: { dueAt: "asc", id: "asc" },
+									},
 								},
+								orderBy: { name: "asc" },
 							},
-							orderBy: { name: "asc" },
 						},
 					},
 				},
-			},
-			where: { userId },
-		}),
-		db.query.stripeInvoices.findMany({
-			...invoiceColumns,
-			with: {
-				link: {
-					columns: { component: true },
-					with: {
-						phase: {
-							columns: { publicId: true, title: true },
-							with: { project: { columns: { publicId: true, name: true } } },
+				where: { userId },
+			}),
+			db.query.stripeInvoices.findMany({
+				...invoiceColumns,
+				with: {
+					link: {
+						columns: { component: true },
+						with: {
+							phase: {
+								columns: { publicId: true, title: true },
+								with: { project: { columns: { publicId: true, name: true } } },
+							},
 						},
 					},
+					metadata: { columns: { organizationId: true } },
 				},
-				metadata: { columns: { organizationId: true } },
-			},
-			where: {
-				status: { ne: "draft" },
-				metadata: { organization: { members: { userId } } },
-			},
-			orderBy: { invoicedAt: "desc" },
-		}),
-	]);
+				where: {
+					status: { ne: "draft" },
+					metadata: { organization: { members: { userId } } },
+				},
+				orderBy: { invoicedAt: "desc" },
+			}),
+		])
+		.then(fulfilled);
 
 interface Invoice {
 	id: string;
