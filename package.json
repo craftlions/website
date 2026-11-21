@@ -20,7 +20,7 @@
     "cf-check": "cf workers types --include-runtime && git diff --exit-code -- .cloudflare/types"
   },
   "devDependencies": {
-    "@astrojs/cloudflare": "15.0.0-beta.5",
+    "@astrojs/cloudflare": "15.0.0-beta.6",
     "@astrojs/compiler-rs": "0.5.3",
     "@astrojs/markdown-satteri": "0.4.10",
     "@astrojs/sitemap": "3.7.6",
@@ -29,7 +29,7 @@
     "@better-auth/drizzle-adapter": "1.7.27",
     "@better-auth/infra": "0.4.31",
     "@biomejs/biome": "2.6.8",
-    "@cloudflare/vite-plugin": "2.0.0-beta.v.9",
+    "@cloudflare/vite-plugin": "2.0.0-rc.3",
     "@drizzle-team/minipg": "0.4.4",
     "@playwright/test": "1.65.1",
     "@types/node": "26.6.6",
@@ -37,7 +37,7 @@
     "auth": "1.7.27",
     "better-auth": "1.7.27",
     "browserslist": "4.29.6",
-    "cf": "1.0.0-beta.32",
+    "cf": "1.0.0-rc.2",
     "drizzle-kit": "1.0.0-rc.5",
     "drizzle-orm": "1.0.0-rc.5",
     "lightningcss": "1.33.0",
@@ -49,7 +49,7 @@
     "vite": "8.3.8"
   },
   "overrides": {
-    "@cloudflare/runtime-types": "0.1.28",
+    "@cloudflare/runtime-types": "0.1.32",
     "zod": "4.6.7"
   }
 }
