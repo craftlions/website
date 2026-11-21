@@ -464,9 +464,10 @@ export const organizationMetadata = t.pgTable(
 );
 
 // One row per object in the drive bucket. The row decides who may read the
-// object: a file belongs to one organization, and its key never comes from
-// the request (see src/lib/files.ts). The id is set by the upload, because
-// the key holds it before the row exists.
+// object: a file belongs to one organization. The server makes the key when
+// the upload starts; each later step checks that the key the browser sends
+// back belongs to this organization (see src/lib/files.ts). The id is set by
+// the upload, because the key holds it before the row exists.
 export const files = t.pgTable(
 	"files",
 	{

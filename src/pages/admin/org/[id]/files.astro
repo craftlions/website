@@ -53,8 +53,8 @@ if (!organization) {
 	<section aria-labelledby="upload-heading">
 		<h2 id="upload-heading" class="label-caps">Upload</h2>
 		<p class="measure text-sm text-fg-muted">
-			Every member of {organization.name} can open the files here, and nobody
-			else.
+			Every member of {organization.name} can open the files here. Other clients
+			cannot.
 		</p>
 		<FileUpload organizationId={organization.id} />
 	</section>
