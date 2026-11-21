@@ -108,11 +108,13 @@ const { organizationId } = Astro.props;
 				const parts: Part[] = [];
 				let next = 0;
 				let sent = 0;
+				let stopped = false;
 
 				status.textContent = `Uploading ${name}: 0%.`;
 
+				// Once one part fails, every worker stops before its next part.
 				const worker = async () => {
-					while (next < count) {
+					while (!stopped && next < count) {
 						const partNumber = ++next;
 						const chunk = file.slice(
 							(partNumber - 1) * partSize,
@@ -125,7 +127,10 @@ const { organizationId } = Astro.props;
 								headers: { "Content-Type": "application/octet-stream" },
 								body: chunk,
 							},
-						);
+						).catch((error: unknown) => {
+							stopped = true;
+							throw error;
+						});
 						parts.push((await response.json()) as Part);
 						sent += chunk.size;
 						status.textContent = `Uploading ${name}: ${Math.floor((sent / Math.max(file.size, 1)) * 100)}%.`;
@@ -133,9 +138,13 @@ const { organizationId } = Astro.props;
 				};
 
 				try {
-					await Promise.all(
-						Array.from({ length: Math.min(parallelParts, count) }, worker),
-					);
+					// Waits for the parts still in flight, so the abort comes last.
+					const failed = (
+						await Promise.allSettled(
+							Array.from({ length: Math.min(parallelParts, count) }, worker),
+						)
+					).find((result) => result.status === "rejected");
+					if (failed) throw failed.reason;
 					await send(uploadUrl, {
 						method: "POST",
 						headers: json,
