@@ -120,8 +120,6 @@ const eventValues = (input: EventInput) => ({
 	actorId: input.actorId,
 });
 
-// Accepts the plain db too: a lone event insert is atomic on its own and
-// skips the BEGIN/COMMIT round trips of a transaction.
 const insertEvent = async (
 	tx: Db | Parameters<Parameters<Db["transaction"]>[0]>[0],
 	input: EventInput,
@@ -147,9 +145,17 @@ const insertEvent = async (
 	}
 };
 
-// Six random characters can repeat. Each insert skips a taken public id with
-// ON CONFLICT DO NOTHING, which keeps the transaction usable, and returns no
-// row; then it runs again with a new id.
+const isUniqueViolation = (error: unknown) => {
+	const cause =
+		error instanceof Error && "cause" in error ? error.cause : error;
+	return (
+		typeof cause === "object" &&
+		cause !== null &&
+		"code" in cause &&
+		cause.code === "23505"
+	);
+};
+
 const insertWithPublicId = async <Row>(
 	prefix: PublicIdPrefix,
 	insert: (id: string) => Promise<Row[]>,
@@ -332,8 +338,6 @@ export const transitionProject = async (
 			project.state === input.nextState &&
 			project.version === input.expectedVersion + 1
 		) {
-			// Activating and reopening both end in `active`; the recorded event
-			// tells which one the retried request was.
 			const recorded = await tx.query.events.findFirst({
 				columns: { event: true },
 				where: {
@@ -528,8 +532,6 @@ export const updatePhaseAmounts = async (
 			);
 		}
 
-		// The row lock makes the approval transition and this edit serialize;
-		// once approval wins, this guard rejects the amount change.
 		const rows = await tx
 			.update(phases)
 			.set({
@@ -641,7 +643,6 @@ export const transitionPhaseAsAdmin = async (
 ) => {
 	await assertAdminUser(db, actorId);
 
-	// The same table the admin UI offers transitions from (status.ts).
 	const transition = phaseTransitions[input.nextState];
 
 	return transitionPhase(
@@ -656,12 +657,6 @@ export const transitionPhaseAsAdmin = async (
 	);
 };
 
-/**
- * Delivery recording is its own mutation (S-005 R7): it requires no invoice
- * and transitions `in_progress → delivered`. The `deliveryState`/
- * `deliveryUrl` columns stay the delivery record, consistent with the schema
- * CHECK constraint; a same-delivery retry after success is idempotent.
- */
 export const recordDelivery = async (
 	db: Db,
 	actorId: string,
@@ -693,7 +688,6 @@ export const recordDelivery = async (
 			throw new DomainError("NotFound", "Phase not found.");
 		}
 
-		// Delivery already recorded with the same choice: idempotent retry.
 		if (
 			phase.state === "delivered" &&
 			phase.version === input.expectedVersion + 1 &&
@@ -795,8 +789,6 @@ export const attachInvoiceToPhase = async (
 			where: { phaseId: phase.id, component: input.component },
 		});
 
-		// Already attached to this phase: idempotent retry. Attachment no longer
-		// moves the lifecycle (S-005 R5/R7), so no Delivery or state is written.
 		if (existing?.stripeId === input.stripeId) {
 			return {
 				invoice: { id: existing.id, publicId: existing.publicId },
@@ -847,35 +839,29 @@ export const attachInvoiceToPhase = async (
 			);
 		}
 
-		// The untargeted conflict also catches a Stripe invoice that another
-		// request attached first; only a taken public id is drawn again.
 		const invoice = await insertWithPublicId("inv", async (id) => {
-			const rows = await tx
-				.insert(invoices)
-				.values({
-					publicId: id,
-					organizationId: phase.organizationId,
-					phaseId: phase.id,
-					component: input.component,
-					stripeId: input.stripeId,
-				})
-				.onConflictDoNothing()
-				.returning({ id: invoices.id, publicId: invoices.publicId });
+			try {
+				return await tx
+					.insert(invoices)
+					.values({
+						publicId: id,
+						organizationId: phase.organizationId,
+						phaseId: phase.id,
+						component: input.component,
+						stripeId: input.stripeId,
+					})
+					.onConflictDoNothing({ target: invoices.publicId })
+					.returning({ id: invoices.id, publicId: invoices.publicId });
+			} catch (error) {
+				if (isUniqueViolation(error)) {
+					throw new DomainError(
+						"Conflict",
+						"This invoice was attached by another request. Refresh and try again.",
+					);
+				}
 
-			if (
-				rows[0] ||
-				(await tx.query.invoices.findFirst({
-					columns: { id: true },
-					where: { publicId: id },
-				}))
-			) {
-				return rows;
+				throw error;
 			}
-
-			throw new DomainError(
-				"Conflict",
-				"This invoice was attached by another request. Refresh and try again.",
-			);
 		});
 
 		return { invoice, created: true };
@@ -913,10 +899,6 @@ export const updatePhaseDelivery = async (
 			throw new DomainError("NotFound", "Phase not found.");
 		}
 
-		// Delivery correction (S-003 AC7) only applies once delivery is recorded;
-		// recording is its own mutation (`recordDelivery`), and this correction
-		// never changes the lifecycle state. Legacy `accepted` rows carry a
-		// delivery record from the old invoice-coupled capture and stay correctable.
 		if (phase.state !== "delivered" && phase.state !== "accepted") {
 			throw new DomainError(
 				"InvalidTransition",
@@ -924,7 +906,6 @@ export const updatePhaseDelivery = async (
 			);
 		}
 
-		// Same Delivery already stored: nothing to change, stay idempotent on retry.
 		if (
 			phase.deliveryState === delivery.deliveryState &&
 			phase.deliveryUrl === delivery.deliveryUrl
@@ -1055,9 +1036,6 @@ export const onboardOrganization = async (
 				"That organization slug is taken.",
 			);
 		}
-
-		// A retried onboarding: the organization keeps its stored name, which
-		// may differ from the one submitted again.
 	} else {
 		if (!selectedUser) {
 			const result = await auth.api.createUser({
@@ -1084,9 +1062,6 @@ export const onboardOrganization = async (
 		yearlyBudget: input.yearlyBudget,
 	});
 
-	// Sent while the account is unused, not only when this call created it: a
-	// retry after a failure between creating the user and sending the email
-	// finds the user and the organization and still sends it.
 	if (!selectedUser.lastActiveAt) {
 		await auth.api.requestPasswordReset({
 			body: { email, redirectTo: "/reset-password" },
@@ -1157,8 +1132,6 @@ export const addOrganizationMember = async (
 		});
 	}
 
-	// "invited": a new account was created and sent a password email;
-	// "added": an existing account became a member; "unchanged": it already was.
 	return {
 		email,
 		outcome: createdUser
@@ -1207,8 +1180,6 @@ export const removeNeverLoggedInUser = async (
 	db: Db,
 	auth: Auth,
 	actorId: string,
-	// The admin form passes the typed confirmation, which must be the
-	// account's email.
 	input: { userId: string; confirmation: string },
 ) => {
 	const [, selectedUser] = await Promise.all([
@@ -1257,9 +1228,6 @@ export const updateOrganizationSettings = async (
 	db: Db,
 	auth: Auth,
 	actorId: string,
-	// Each setting left undefined keeps its stored value, so a form that owns
-	// some settings (the settings page saves the client URL on its own) never
-	// writes the others from a stale page.
 	input: {
 		organizationId: string;
 		name?: string | undefined;
@@ -1302,8 +1270,6 @@ export const updateOrganizationSettings = async (
 			}),
 		]);
 
-		// Attached invoices belong to the current customer; moving it would show
-		// this organization's work on another organization's invoices.
 		if (
 			attachedInvoice &&
 			(metadata?.stripeCustomerId ?? null) !== stripeCustomerId
@@ -1314,8 +1280,6 @@ export const updateOrganizationSettings = async (
 			);
 		}
 
-		// Invoice visibility follows the customer id, so it can only belong to
-		// one organization.
 		if (stripeCustomerId) {
 			const customerOwner = await db.query.organizationMetadata.findFirst({
 				columns: { organizationId: true },
