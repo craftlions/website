@@ -15,8 +15,11 @@
 import { formatDate } from "./format.ts";
 import { getUuidV7Date } from "./uuid.ts";
 
-// R2 needs every part but the last to be the same size, of at least 5 MiB.
+// R2 needs every part but the last to be the same size, of at least 5 MiB,
+// and takes at most 10,000 parts, so one file holds up to about 167.8 GB.
 export const partSize = 16 * 1024 * 1024;
+export const maxParts = 10_000;
+export const maxFileSize = partSize * maxParts;
 
 const uuidPattern =
 	"[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
@@ -91,10 +94,10 @@ export const formatBytes = (bytes: number) => {
 
 // What kind of file it is, in a few letters: the extension, else the subtype
 // in words people use.
-const subtypeKinds: Record<string, string> = {
-	"octet-stream": "file",
-	plain: "text",
-};
+const subtypeKinds = new Map([
+	["octet-stream", "file"],
+	["plain", "text"],
+]);
 
 export const fileKind = (filename: string, contentType: string) => {
 	const extension = filename.includes(".")
@@ -105,7 +108,7 @@ export const fileKind = (filename: string, contentType: string) => {
 	return (
 		extension && extension.length <= 5
 			? extension
-			: (subtypeKinds[subtype] ?? subtype)
+			: (subtypeKinds.get(subtype) ?? subtype)
 	).toUpperCase();
 };
 
@@ -121,9 +124,32 @@ export const fileFacts = (file: { id: string; size: number }) => {
 		.join(" · ");
 };
 
+// When R2 sends no body, one of the request's conditions failed. A failed
+// If-Match or If-Unmodified-Since answers 412 (RFC 9110 checks them first);
+// otherwise If-None-Match or If-Modified-Since failed, and that answers 304.
+const preconditionFailed = (object: R2Object, headers: Headers) => {
+	const ifMatch = headers.get("If-Match");
+
+	if (ifMatch) {
+		return (
+			ifMatch.trim() !== "*" &&
+			ifMatch.split(",").every((tag) => tag.trim() !== object.httpEtag)
+		);
+	}
+
+	const ifUnmodifiedSince = Date.parse(
+		headers.get("If-Unmodified-Since") ?? "",
+	);
+
+	return (
+		!Number.isNaN(ifUnmodifiedSince) &&
+		Math.floor(object.uploaded.getTime() / 1000) * 1000 > ifUnmodifiedSince
+	);
+};
+
 // Streams a file the caller's query already found. Range requests answer 206
-// so video seeks and large PDFs load in pieces; a matching If-None-Match
-// answers 304.
+// so video seeks and large PDFs load in pieces; failed conditions answer 304
+// or 412.
 export const serveFile = async (
 	bucket: R2Bucket,
 	file: { r2Key: string; filename: string; contentType: string },
@@ -136,9 +162,14 @@ export const serveFile = async (
 			range: request.headers,
 			onlyIf: request.headers,
 		});
-	} catch {
-		// R2 rejects a range outside the object.
-		return new Response(null, { status: 416 });
+	} catch (error) {
+		// R2 rejects a range outside the object with InvalidRange, whose code
+		// ends the message; any other error is a failure.
+		if (error instanceof Error && error.message.endsWith("(10039)")) {
+			return new Response(null, { status: 416 });
+		}
+
+		throw error;
 	}
 
 	if (!object) {
@@ -164,7 +195,9 @@ export const serveFile = async (
 	);
 
 	if (!("body" in object)) {
-		return new Response(null, { status: 304, headers });
+		return preconditionFailed(object, request.headers)
+			? new Response(null, { status: 412 })
+			: new Response(null, { status: 304, headers });
 	}
 
 	const range = object.range;

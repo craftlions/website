@@ -85,6 +85,7 @@ test("the kind is the extension, else the subtype", () => {
 	assert.equal(fileKind("LICENSE", "text/plain"), "TEXT");
 	assert.equal(fileKind("data", "application/octet-stream"), "FILE");
 	assert.equal(fileKind("archive.backup-2026", "application/zip"), "ZIP");
+	assert.equal(fileKind("data", "x/constructor"), "CONSTRUCTOR");
 });
 
 test("a made uuidv7 carries the time it was made", () => {
