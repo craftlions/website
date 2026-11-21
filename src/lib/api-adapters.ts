@@ -39,13 +39,13 @@ export const withSession =
 			return problem(403, "Forbidden", "Requests come from this site only.");
 		}
 
-		const session = await context.locals.auth.api.getSession({
-			headers: context.request.headers,
-		});
-
-		if (!session) return problem(401, "Unauthorized", "Sign in first.");
-
 		try {
+			const session = await context.locals.auth.api.getSession({
+				headers: context.request.headers,
+			});
+
+			if (!session) return problem(401, "Unauthorized", "Sign in first.");
+
 			return await handler(context, session);
 		} catch (error) {
 			if (error instanceof DomainError) {
