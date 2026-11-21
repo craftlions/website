@@ -1211,7 +1211,8 @@ export const removeNeverLoggedInUser = async (
 	await context.internalAdapter.deleteUser(input.userId);
 
 	if (selectedUser.memberships.length > 0) {
-		await db.insert(events).values(
+		await db.bulkInsert(
+			events,
 			selectedUser.memberships.map((membership) =>
 				eventValues({
 					aggregateType: "organization",
