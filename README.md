@@ -71,9 +71,8 @@ aubx auth generate
 
 aubx drizzle-kit up
 aubx drizzle-kit generate
-mise run db:check
 
-aubx drizzle-kit migrate
+mise run db:migrate
 ```
 
 ```shell

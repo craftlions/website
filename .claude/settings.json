@@ -12,6 +12,8 @@
 			"Bash(mise * --secrets*)",
 			"Bash(mise run dev *)",
 			"Bash(mise dev *)",
+			"Bash(mise run db:migrate *)",
+			"Bash(mise db:migrate *)",
 			"Bash(mise run secrets:push *)",
 			"Bash(mise secrets:push *)"
 		]

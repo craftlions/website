@@ -2,12 +2,12 @@
 
 Four values are secret. Three are Worker secrets that Cloudflare keeps between deploys; the fourth is the PlanetScale connection string that local dev and Drizzle use.
 
-| Name                                                       | Used by                                         |
-| ---------------------------------------------------------- | ----------------------------------------------- |
-| `BETTER_AUTH_SECRETS`                                      | Worker, `mise run dev`, `mise run secrets:push` |
-| `BETTER_AUTH_API_KEY`                                      | Worker, `mise run dev`, `mise run secrets:push` |
-| `GITHUB_CLIENT_SECRET`                                     | Worker, `mise run dev`, `mise run secrets:push` |
-| `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` | `mise run dev`, `mise run db:check`             |
+| Name                                                       | Used by                                           |
+| ---------------------------------------------------------- | ------------------------------------------------- |
+| `BETTER_AUTH_SECRETS`                                      | Worker, `mise run dev`, `mise run secrets:push`   |
+| `BETTER_AUTH_API_KEY`                                      | Worker, `mise run dev`, `mise run secrets:push`   |
+| `GITHUB_CLIENT_SECRET`                                     | Worker, `mise run dev`, `mise run secrets:push`   |
+| `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` | `mise run dev`, `mise run db:check`, `db:migrate` |
 
 `BETTER_AUTH_API_KEY` is the key of Better Auth Infrastructure, which the `dash` plugin in `src/lib/auth.ts` reads; it is not a key of this site's own API, which does not exist yet. `GITHUB_CLIENT_ID` is public and set in `cloudflare.config.ts`, which declares the three Worker secrets as `bindings.secret()`. CI holds only `CLOUDFLARE_API_TOKEN`: `.github/workflows/deploy.yml` builds and deploys with `--prebuilt` and never touches a Worker secret.
 
@@ -18,14 +18,15 @@ Four values are secret. Three are Worker secrets that Cloudflare keeps between d
 - mise reads fnox through `[secrets.fnox]`. A task receives only the keys in its `secrets` list, and mise prints `[redacted]` wherever a value appears in its output. A task's dependencies receive nothing.
   - `mise run dev` gets all four and runs `aubr dev` (owner only).
   - `mise run db:check` gets only the database URL and runs `aubx drizzle-kit check`. It is the only secret-granted task agents run.
+  - `mise run db:migrate` runs `db:check` first, asks, then gets only the database URL and runs `aubx drizzle-kit migrate` (owner only). A second run waits until the first one exits.
   - `mise run secrets:push` builds without secrets, asks before it deploys, and runs `cf deploy --prebuilt --secrets-file cloudflare.secrets.env` with the three Worker secrets (owner only). That file holds only `NAME=${NAME}` lines; `cf` fills them from the task's environment and uploads them with the new version. Worker secrets that are not in the file stay as they are. A second run waits until the first one exits, in any worktree of the repository, so two deploys never overlap.
 - The hk pre-commit step `fnox-scan` runs `fnox scan --values --staged`. It decrypts the values with the age key and rejects a commit whose staged changes contain one, printing only the secret's name. Without the age key it fails.
-- `.claude/settings.json` denies agents reading `.env` files and `~/.config/fnox/`, running `fnox get`, `fnox export`, `fnox exec` and `op read`, passing `--secrets` to mise, and running `dev` and `secrets:push`.
+- `.claude/settings.json` denies agents reading `.env` files and `~/.config/fnox/`, running `fnox get`, `fnox export`, `fnox exec` and `op read`, passing `--secrets` to mise, and running `dev`, `db:migrate` and `secrets:push`.
 
 ## Agents
 
 - Never read, print, copy or write a secret value: no `.env` files, no `~/.config/fnox/`, no `fnox get`, `fnox export`, `fnox exec` or `op read`, no `--secrets` flags.
-- Run `mise run db:check` as part of Validation; it is the only task that hands an agent a secret. `mise run dev` and `mise run secrets:push` are the owner's.
+- Run `mise run db:check` as part of Validation; it is the only task that hands an agent a secret. `mise run dev`, `mise run db:migrate` and `mise run secrets:push` are the owner's.
 
 ## When `fnox-scan` rejects a commit
 
