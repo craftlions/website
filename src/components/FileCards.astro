@@ -6,8 +6,9 @@ import ConfirmAction from "./ConfirmAction.astro";
 // A client's drive as small cards that wrap to the room they have, newest
 // first. Each card names the kind of file, links its name to `base` plus the
 // public id, and states its size and upload date. With `deleteFrom`, the admin
-// can delete a file from its card.
-interface Props {
+// can delete a file from its card. A `preview` (the specimen) links each name
+// to its own card and only closes the confirmation, so nothing is sent.
+type Props = {
 	files: {
 		id: string;
 		publicId: string;
@@ -15,11 +16,10 @@ interface Props {
 		contentType: string;
 		size: number;
 	}[];
-	base: string;
 	deleteFrom?: { organizationId: string; organizationName: string };
-}
+} & ({ base: string; preview?: never } | { base?: never; preview: true });
 
-const { files, base, deleteFrom } = Astro.props;
+const { files, base, deleteFrom, preview } = Astro.props;
 ---
 
 <ul class="file-cards auto-grid">
@@ -30,13 +30,17 @@ const { files, base, deleteFrom } = Astro.props;
 			</p>
 			<a
 				class="link text-label wrap-anywhere"
-				href={`${base}/${file.publicId}`}
+				href={preview ? `#${file.publicId}` : `${base}/${file.publicId}`}
 			>
 				{file.filename}
 			</a>
 			<p class="text-xs text-fg-muted">{fileFacts(file)}</p>
 			{deleteFrom && (
-				<form method="POST" action={actions.deleteFile}>
+				<form
+					{...(preview
+						? { method: "dialog" }
+						: { method: "POST", action: actions.deleteFile })}
+				>
 					<input
 						type="hidden"
 						name="organizationId"
