@@ -185,8 +185,8 @@ export const serveFile = async (
 	});
 
 	// Chromium's PDF viewer does not open in a sandboxed document or under
-	// `object-src 'none'`, so a PDF keeps only who may frame it; a PDF runs no
-	// script of the page's origin.
+	// `object-src 'none'`, so a PDF keeps only who may frame it. A PDF's own
+	// script runs inside the viewer, not as a page of this site's origin.
 	headers.set(
 		"Content-Security-Policy",
 		file.contentType === "application/pdf"
