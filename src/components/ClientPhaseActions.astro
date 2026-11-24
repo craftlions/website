@@ -1,4 +1,5 @@
 ---
+import type { phaseSelectType } from "../lib/schema.ts";
 import type { PhaseState } from "../lib/status.ts";
 import { actions } from "astro:actions";
 import { formatMoney } from "../lib/format.ts";
@@ -15,6 +16,9 @@ interface Props {
 		upfrontAmount: number | null;
 		deliveryAmount: number | null;
 		acceptanceAmount: number | null;
+		externalUrl: phaseSelectType["externalUrl"];
+		deliveryState: phaseSelectType["deliveryState"];
+		deliveryUrl: phaseSelectType["deliveryUrl"];
 	};
 	name?: string | undefined;
 	id: string;
@@ -54,7 +58,25 @@ const later = [
 					: "Nothing becomes due now."}{" "}
 				{later.length > 0 &&
 					`The rest is billed later: ${later.join(" and ")}.`}{" "}
-				An approval cannot be withdrawn.
+				An approval cannot be withdrawn.{" "}
+				{phase.externalUrl ? (
+					<>
+						<a
+							href={phase.externalUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label={`Review the Epic for ${name} (opens in a new tab)`}
+							class="link hover-text-fg"
+						>
+							Review the Epic
+						</a>{" "}
+						before approving.
+					</>
+				) : (
+					<span class="text-fg-warning">
+						No Epic is linked to this phase yet.
+					</span>
+				)}
 			</ConfirmAction>
 		</form>
 		<form method="POST" action={actions.declinePhase}>
@@ -93,7 +115,27 @@ const later = [
 			undone.{" "}
 			{phase.acceptanceAmount
 				? `The acceptance part of ${formatMoney(phase.acceptanceAmount, phase.currency)} becomes due and is invoiced to you.`
-				: "No further payment becomes due."}
+				: "No further payment becomes due."}{" "}
+			{phase.deliveryState === "url" && phase.deliveryUrl ? (
+				<>
+					<a
+						href={phase.deliveryUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						aria-label={`Review the Delivery for ${name} (opens in a new tab)`}
+						class="link hover-text-fg"
+					>
+						Review the Delivery
+					</a>{" "}
+					before accepting.
+				</>
+			) : phase.deliveryState === "none" ? (
+				"No delivery PR/MR was recorded for this phase."
+			) : (
+				<span class="text-fg-warning">
+					No Delivery link is recorded for this phase yet.
+				</span>
+			)}
 		</ConfirmAction>
 	</form>
 )}

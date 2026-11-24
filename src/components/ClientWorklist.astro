@@ -1,4 +1,5 @@
 ---
+import type { phaseSelectType } from "../lib/schema.ts";
 import type { PhaseState } from "../lib/status.ts";
 import {
 	type ClientWorklistItem,
@@ -23,6 +24,9 @@ type WorklistProject = {
 		upfrontAmount: number | null;
 		deliveryAmount: number | null;
 		acceptanceAmount: number | null;
+		externalUrl: phaseSelectType["externalUrl"];
+		deliveryState: phaseSelectType["deliveryState"];
+		deliveryUrl: phaseSelectType["deliveryUrl"];
 	}>;
 };
 
@@ -104,6 +108,40 @@ const groups = [
 									</h4>
 									<p class="cluster text-sm text-fg-muted">
 										<Badge type={item.badge}>{item.label}</Badge>
+										{item.kind === "phase" &&
+											(item.phase.externalUrl ? (
+												<a
+													href={item.phase.externalUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													aria-label={`Epic: ${item.project.name} · ${item.phase.title} (opens in a new tab)`}
+													class="link hover-text-fg"
+												>
+													Epic
+												</a>
+											) : (
+												<span class="text-fg-warning">Epic missing</span>
+											))}
+										{item.kind === "phase" &&
+											(item.phase.deliveryState === "url" &&
+											item.phase.deliveryUrl ? (
+												<a
+													href={item.phase.deliveryUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													aria-label={`Delivery: ${item.project.name} · ${item.phase.title} (opens in a new tab)`}
+													class="link hover-text-fg"
+												>
+													Delivery
+												</a>
+											) : item.phase.deliveryState === "none" ? (
+												<span>No delivery PR/MR</span>
+											) : (
+												(item.phase.state === "delivered" ||
+													item.phase.state === "accepted") && (
+													<span class="text-fg-warning">Delivery missing</span>
+												)
+											))}
 										{item.kind === "invoice" && item.href && (
 											<span>
 												Invoice {item.invoice.number}

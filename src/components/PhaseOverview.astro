@@ -172,6 +172,39 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 										? `due ${formatDate(phase.dueAt)}`
 										: "not scheduled"}
 								</span>
+								{phase.externalUrl ? (
+									<a
+										href={phase.externalUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-label={`Epic: ${phase.title} (opens in a new tab)`}
+										class="link hover-text-fg"
+									>
+										Epic
+									</a>
+								) : phase.state === "cancelled" ? (
+									<span>No epic linked</span>
+								) : (
+									<span class="text-fg-warning">Epic missing</span>
+								)}
+								{phase.deliveryState === "url" && phase.deliveryUrl ? (
+									<a
+										href={phase.deliveryUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-label={`Delivery: ${phase.title} (opens in a new tab)`}
+										class="link hover-text-fg"
+									>
+										Delivery
+									</a>
+								) : phase.deliveryState === "none" ? (
+									<span>No delivery PR/MR</span>
+								) : (
+									(phase.state === "delivered" ||
+										phase.state === "accepted") && (
+										<span class="text-fg-warning">Delivery missing</span>
+									)
+								)}
 							</p>
 						</div>
 						<div class="line-figure">
@@ -264,13 +297,15 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 												href={phase.externalUrl}
 												target="_blank"
 												rel="noopener noreferrer"
-												aria-label={`Open Epic for ${phase.title}`}
+												aria-label={`Open Epic for ${phase.title} (opens in a new tab)`}
 												class="link"
 											>
 												Open
 											</a>
-										) : (
+										) : phase.state === "cancelled" ? (
 											<span class="text-fg-muted">None</span>
+										) : (
+											<span class="text-fg-warning">Missing</span>
 										)}
 									</dd>
 								</div>
@@ -282,13 +317,16 @@ const hasOverdue = rows.some((row) => row.overdueCount > 0);
 												href={phase.deliveryUrl}
 												target="_blank"
 												rel="noopener noreferrer"
-												aria-label={`Open Delivery for ${phase.title}`}
+												aria-label={`Open Delivery for ${phase.title} (opens in a new tab)`}
 												class="link"
 											>
 												Open
 											</a>
 										) : phase.deliveryState === "none" ? (
 											<span class="text-fg-muted">No delivery</span>
+										) : phase.state === "delivered" ||
+											phase.state === "accepted" ? (
+											<span class="text-fg-warning">Missing</span>
 										) : (
 											<span class="text-fg-muted">Not recorded</span>
 										)}

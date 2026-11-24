@@ -889,6 +889,9 @@ const ledgerInvoices = (frame: string) => [
 													<p class="cluster text-sm text-fg-muted">
 														<Badge type="info">To send</Badge>
 														<span>Northwind Logistics GmbH</span>
+														<a href="#lines" class="link hover-text-fg">
+															Epic
+														</a>
 													</p>
 												</div>
 												<p class="line-figure">
@@ -1023,6 +1026,12 @@ const ledgerInvoices = (frame: string) => [
 												<p class="cluster text-sm text-fg-muted">
 													<Badge type="info">Awaiting acceptance</Badge>
 													<span>delivered 31.10.2026</span>
+													<a href="#lines" class="link hover-text-fg">
+														Epic
+													</a>
+													<a href="#lines" class="link hover-text-fg">
+														Delivery
+													</a>
 												</p>
 											</div>
 											<p class="line-figure">
@@ -1114,6 +1123,7 @@ const ledgerInvoices = (frame: string) => [
 												<p class="cluster text-sm text-fg-muted">
 													<Badge type="info">To approve</Badge>
 													<span>due 15.03.2027</span>
+													<span class="text-fg-warning">Epic missing</span>
 												</p>
 											</div>
 											<p class="line-figure">
@@ -1155,6 +1165,7 @@ const ledgerInvoices = (frame: string) => [
 												<p class="cluster text-sm text-fg-muted">
 													<Badge type="error">Cancelled</Badge>
 													<span>cancelled 03.08.2026</span>
+													<span>No epic linked</span>
 												</p>
 											</div>
 											<p class="line-figure text-fg-muted">
